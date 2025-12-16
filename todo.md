@@ -305,3 +305,40 @@
 - [ ] Authorization Testing - Testes de autorização
 - [ ] PCI-DSS Testing - Conformidade PCI-DSS
 - [ ] LGPD Compliance Testing - Conformidade LGPD
+
+
+## Tradução e Melhoria Didática - Português do Brasil
+
+### Página de Regras
+- [x] Traduzir todos os textos para Português do Brasil
+- [x] Adicionar explicações didáticas de cada regra
+- [x] Adicionar exemplos práticos de quando a regra é acionada
+- [x] Adicionar indicadores visuais de impacto
+- [x] Melhorar visualização do que a regra faz
+
+### Outras Páginas
+- [x] Traduzir Dashboard para Português
+- [x] Traduzir Transações para Português
+- [x] Traduzir Simulador para Português
+- [x] Traduzir Auditoria para Português
+
+### Regras no Banco de Dados
+- [x] Atualizar descrições das 39 regras para Português didático
+- [x] Adicionar exemplos práticos em cada regra
+
+## Página de Regras Didáticas - ✅ CONCLUÍDO
+
+### Nova Interface RulesDidactic.tsx
+- [x] Criação da página RulesDidactic.tsx com design profissional
+- [x] Todos os textos em Português do Brasil
+- [x] Explicações detalhadas de cada regra
+- [x] Visualização clara das condições com operadores traduzidos
+- [x] Exemplos práticos de quando cada regra é acionada
+- [x] Indicadores visuais de impacto (cores por classificação)
+- [x] Categorização das regras (Autenticação, Geográfica, MCC, etc.)
+- [x] Tooltips com descrições dos campos do payload
+- [x] Fontes de referência (FEBRABAN, Mastercard, Visa, EMVCo)
+- [x] Filtros por classificação e categoria
+- [x] Busca por nome ou descrição
+- [x] Dica de uso explicando como as regras funcionam
+- [x] Documentação integrada com todos os campos disponíveis
