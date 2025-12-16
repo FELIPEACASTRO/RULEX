@@ -224,3 +224,62 @@
 - [ ] Testar todos os endpoints
 - [ ] Validar tratamento de erros
 - [ ] Verificar loading states
+
+
+## Criação de Regras no Banco de Dados - ✅ CONCLUÍDO
+
+### Schema e Seed
+- [x] Criar tabela de regras no schema Drizzle (rules, ruleHistory, transactionAudits)
+- [x] Criar seed com as 39 regras duras (seed-rules.ts)
+- [x] Executar migração do banco de dados (pnpm db:push)
+
+### Integração tRPC
+- [x] Criar router de regras no tRPC (routers.ts)
+- [x] Implementar CRUD completo (list, create, update, delete, toggle)
+- [x] Conectar frontend com API tRPC
+
+### Validação
+- [x] Testar listagem de regras na interface
+- [x] Testar criação de novas regras
+- [x] Testar edição e exclusão de regras
+
+### Regras Criadas no Banco (39 Total)
+- [x] MICRO_TRANSACTION - Card Testing
+- [x] HIGH_AMOUNT_THRESHOLD - Valor alto
+- [x] VERY_HIGH_AMOUNT - Valor muito alto
+- [x] ROUND_AMOUNT_SUSPICIOUS - Valor redondo
+- [x] LATE_NIGHT_TRANSACTION - Madrugada
+- [x] WEEKEND_HIGH_VALUE - Fim de semana
+- [x] HIGH_RISK_COUNTRY - País de risco
+- [x] CROSS_BORDER_ECOMMERCE - Cross-border
+- [x] HIGH_RISK_MCC_GAMBLING - Jogos
+- [x] HIGH_RISK_MCC_CRYPTO - Cripto
+- [x] HIGH_RISK_MCC_MONEY_TRANSFER - Transferência
+- [x] LOW_AUTHENTICATION_SCORE - Score baixo
+- [x] MEDIUM_LOW_AUTH_SCORE - Score médio
+- [x] LOW_EXTERNAL_SCORE - Score externo baixo
+- [x] CAVV_FAILED - CAVV falhou
+- [x] ECI_NO_AUTH - Sem autenticação
+- [x] CRYPTOGRAM_INVALID - Criptograma inválido
+- [x] CVV_MISMATCH - CVV não confere
+- [x] CVV_NOT_PROCESSED - CVV não processado
+- [x] CVV_ENTRY_LIMIT_EXCEEDED - Limite CVV
+- [x] PIN_ENTRY_LIMIT_EXCEEDED - Limite PIN
+- [x] POS_SECURITY_LOW - Segurança POS baixa
+- [x] POS_OFF_PREMISES - POS fora
+- [x] MANUAL_ENTRY_HIGH_VALUE - Entrada manual
+- [x] CARD_CAPTURED - Cartão capturado
+- [x] EMV_AIP_MISMATCH - AIP divergente
+- [x] TVR_FAILED - TVR falhou
+- [x] EXPIRED_CARD - Cartão expirado
+- [x] CARD_EXPIRING_SOON - Expirando
+- [x] CNP_HIGH_VALUE - CNP alto valor
+- [x] RECURRING_FIRST_HIGH_VALUE - Recorrente alto
+- [x] CARD_TESTING_PATTERN - Padrão Card Testing
+- [x] ATO_PATTERN - Padrão ATO
+- [x] HIGH_RISK_COMBO - Combo alto risco
+- [x] BRAZIL_PIX_PATTERN - Padrão Pix Brasil
+- [x] BRAZIL_BOLETO_FRAUD - Fraude Boleto
+- [x] ACQUIRER_COUNTRY_MISMATCH - País adquirente
+- [x] ECOMMERCE_NO_3DS - E-commerce sem 3DS
+- [x] FALLBACK_TRANSACTION - Fallback

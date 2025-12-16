@@ -205,11 +205,27 @@ export default function RulesAdvanced() {
   const fetchRules = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/rules?page=0&size=100');
+      const response = await fetch('/api/trpc/rules.list');
       const data = await response.json();
-      setRules(data.content || []);
+      // tRPC retorna { result: { data: [...] } }
+      const rulesData = data?.result?.data || [];
+      // Mapear para o formato esperado pelo componente
+      const mappedRules = rulesData.map((r: any) => ({
+        id: r.id,
+        ruleName: r.name,
+        description: r.description,
+        conditions: r.conditions || [],
+        weight: r.weight,
+        enabled: r.isActive,
+        classification: r.classification,
+        version: r.version,
+        category: r.category,
+        source: r.source,
+      }));
+      setRules(mappedRules);
     } catch (error) {
       console.error('Erro ao buscar regras:', error);
+      setRules([]);
     } finally {
       setLoading(false);
     }
