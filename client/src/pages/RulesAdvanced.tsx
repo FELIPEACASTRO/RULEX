@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit2, Trash2, ToggleRight, Copy, HelpCircle } from 'lucide-react';
+import RuleBuilder from '@/components/RuleBuilder';
 import {
   Dialog,
   DialogContent,
@@ -187,6 +188,7 @@ export default function RulesAdvanced() {
   const [editingRule, setEditingRule] = useState<Rule | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showRuleBuilder, setShowRuleBuilder] = useState(false);
   const [formData, setFormData] = useState({
     ruleName: '',
     description: '',
@@ -812,6 +814,26 @@ export default function RulesAdvanced() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Rule Builder Modal */}
+      {showRuleBuilder && (
+        <RuleBuilder
+          onSave={(newRule) => {
+            // Converter para o formato esperado
+            const ruleToSave = {
+              ruleName: newRule.name,
+              description: newRule.description,
+              conditions: newRule.conditions,
+              weight: newRule.weight,
+              enabled: newRule.enabled,
+              classification: newRule.classification,
+            };
+            handleSave();
+            setShowRuleBuilder(false);
+          }}
+          onCancel={() => setShowRuleBuilder(false)}
+        />
+      )}
     </div>
   );
 }
