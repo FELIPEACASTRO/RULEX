@@ -56,4 +56,24 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("merchantId") String merchantId,
             @Param("since") LocalDateTime since);
 
+    // ==================== MÉTODOS PARA AS 28 NOVAS REGRAS ====================
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.pan = :pan AND t.posCardCapture = 1 AND t.createdAt >= CURRENT_DATE - 30")
+    long countCardCapturesInLast30Days(@Param("pan") String pan);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.externalTransactionId = :externalTransactionId AND t.transactionDate = :transactionDate")
+    long countDuplicateTransactions(@Param("externalTransactionId") String externalTransactionId, @Param("transactionDate") int transactionDate);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.customerIdFromHeader = :customerId AND t.transactionDate = :transactionDate AND t.transactionTime >= :startTime")
+    long countTransactionsInTimeWindow(@Param("customerId") String customerId, @Param("transactionDate") int transactionDate, @Param("startTime") int startTime, @Param("minutes") int minutes);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.customerIdFromHeader = :customerId AND t.transactionDate = :transactionDate")
+    long countDailyTransactions(@Param("customerId") String customerId, @Param("transactionDate") int transactionDate);
+
+    @Query("SELECT AVG(t.transactionAmount) FROM Transaction t WHERE t.customerIdFromHeader = :customerId AND t.createdAt >= CURRENT_DATE - :days")
+    Optional<BigDecimal> getCustomerAverageAmount(@Param("customerId") String customerId, @Param("days") int days);
+
+    @Query("SELECT AVG(t.transactionCurrencyConversionRate) FROM Transaction t WHERE t.transactionCurrencyCode = :currencyCode AND t.createdAt >= CURRENT_DATE - :days")
+    Optional<BigDecimal> getAverageCurrencyConversionRate(@Param("currencyCode") int currencyCode, @Param("days") int days);
+
 }
