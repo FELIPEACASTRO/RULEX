@@ -1,0 +1,24 @@
+package com.rulex.repository;
+
+import com.rulex.entity.RuleConfiguration;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Repositório para acesso aos dados de Configuração de Regras.
+ */
+@Repository
+public interface RuleConfigurationRepository extends JpaRepository<RuleConfiguration, Long> {
+
+    Optional<RuleConfiguration> findByRuleName(String ruleName);
+
+    List<RuleConfiguration> findByEnabled(Boolean enabled);
+
+    List<RuleConfiguration> findByRuleType(RuleConfiguration.RuleType ruleType);
+
+    List<RuleConfiguration> findByEnabledAndRuleType(Boolean enabled, RuleConfiguration.RuleType ruleType);
+
+}
