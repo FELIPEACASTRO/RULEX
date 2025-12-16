@@ -7,7 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
-import Rules from "./pages/Rules";
+import RulesAdvanced from "./pages/RulesAdvanced";
 import Audit from "./pages/Audit";
 
 function Router() {
@@ -16,7 +16,7 @@ function Router() {
     <Switch>
       <Route path="/" component={() => <DashboardLayout><Dashboard /></DashboardLayout>} />
       <Route path="/transactions" component={() => <DashboardLayout><Transactions /></DashboardLayout>} />
-      <Route path="/rules" component={() => <DashboardLayout><Rules /></DashboardLayout>} />
+      <Route path="/rules" component={() => <DashboardLayout><RulesAdvanced /></DashboardLayout>} />
       <Route path="/audit" component={() => <DashboardLayout><Audit /></DashboardLayout>} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}

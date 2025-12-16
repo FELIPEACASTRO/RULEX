@@ -92,3 +92,21 @@
 - [x] Documentação finalizada
 
 ## Status Final: ✅ PROJETO COMPLETO
+
+
+## Melhorias Solicitadas
+
+### Página de Regras - Redesenho Completo
+- [x] Redesenho da interface de Regras para ser didática e clara
+- [x] Formulário avançado com validação de parâmetros
+- [x] Descrição detalhada de cada regra com exemplos
+- [x] Suporte a criação de todas as 12 regras
+- [x] Componentes de ajuda e documentação integrada
+- [x] Validação de thresholds e weights
+- [x] Preview de impacto da regra
+- [x] Motor de regras genérico baseado em qualquer campo do payload
+- [x] Seleção dinâmica de campos com categorias
+- [x] Operadores de comparação por tipo de campo
+- [x] Combinação de múltiplas condições (AND/OR)
+- [x] Templates pré-configurados das 12 regras
+- [x] Tooltips e documentação integrada
