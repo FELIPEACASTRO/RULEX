@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { trpc } from '@/lib/trpc';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -198,18 +199,11 @@ export default function RulesAdvanced() {
     classification: 'SUSPICIOUS',
   });
 
-  useEffect(() => {
-    fetchRules();
-  }, []);
+  // Usando tRPC para buscar regras
+  const { data: rulesData, isLoading: rulesLoading, refetch } = trpc.rules.list.useQuery();
 
-  const fetchRules = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/trpc/rules.list');
-      const data = await response.json();
-      // tRPC retorna { result: { data: [...] } }
-      const rulesData = data?.result?.data || [];
-      // Mapear para o formato esperado pelo componente
+  useEffect(() => {
+    if (rulesData) {
       const mappedRules = rulesData.map((r: any) => ({
         id: r.id,
         ruleName: r.name,
@@ -223,13 +217,9 @@ export default function RulesAdvanced() {
         source: r.source,
       }));
       setRules(mappedRules);
-    } catch (error) {
-      console.error('Erro ao buscar regras:', error);
-      setRules([]);
-    } finally {
-      setLoading(false);
     }
-  };
+    setLoading(rulesLoading);
+  }, [rulesData, rulesLoading]);
 
   const handleEdit = (rule: Rule) => {
     setEditingRule(rule);
@@ -301,7 +291,7 @@ export default function RulesAdvanced() {
       });
 
       if (response.ok) {
-        fetchRules();
+        refetch();
         setShowDialog(false);
         setEditingRule(null);
         setFormData({
@@ -324,7 +314,7 @@ export default function RulesAdvanced() {
     try {
       const response = await fetch(`/api/rules/${id}`, { method: 'DELETE' });
       if (response.ok) {
-        fetchRules();
+        refetch();
       }
     } catch (error) {
       console.error('Erro ao deletar regra:', error);
@@ -335,7 +325,7 @@ export default function RulesAdvanced() {
     try {
       const response = await fetch(`/api/rules/${id}/toggle`, { method: 'PATCH' });
       if (response.ok) {
-        fetchRules();
+        refetch();
       }
     } catch (error) {
       console.error('Erro ao alternar regra:', error);

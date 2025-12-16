@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, name, classification, weight, isActive FROM rules LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user HCPjGP3pJc8FiT4.root --database M6MbayrWiFBTEW7Low3efT --execute SELECT id, name, classification, weight, isActive FROM rules LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "MICRO_TRANSACTION",
+      "classification": "SUSPICIOUS",
+      "weight": "75",
+      "isActive": "1"
+    },
+    {
+      "id": "2",
+      "name": "HIGH_AMOUNT_THRESHOLD",
+      "classification": "SUSPICIOUS",
+      "weight": "60",
+      "isActive": "1"
+    },
+    {
+      "id": "3",
+      "name": "VERY_HIGH_AMOUNT",
+      "classification": "FRAUD",
+      "weight": "85",
+      "isActive": "1"
+    },
+    {
+      "id": "4",
+      "name": "ROUND_AMOUNT_SUSPICIOUS",
+      "classification": "SUSPICIOUS",
+      "weight": "45",
+      "isActive": "1"
+    },
+    {
+      "id": "5",
+      "name": "LATE_NIGHT_TRANSACTION",
+      "classification": "SUSPICIOUS",
+      "weight": "55",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tclassification\tweight\tisActive\n1\tMICRO_TRANSACTION\tSUSPICIOUS\t75\t1\n2\tHIGH_AMOUNT_THRESHOLD\tSUSPICIOUS\t60\t1\n3\tVERY_HIGH_AMOUNT\tFRAUD\t85\t1\n4\tROUND_AMOUNT_SUSPICIOUS\tSUSPICIOUS\t45\t1\n5\tLATE_NIGHT_TRANSACTION\tSUSPICIOUS\t55\t1\n",
+  "stderr": "",
+  "execution_time_ms": 123
+}

@@ -283,3 +283,25 @@
 - [x] ACQUIRER_COUNTRY_MISMATCH - País adquirente
 - [x] ECOMMERCE_NO_3DS - E-commerce sem 3DS
 - [x] FALLBACK_TRANSACTION - Fallback
+
+
+## Execução de Testes de TI (546 tipos - Literatura de QA)
+
+### Testes Aplicáveis ao RULEX - A Executar
+- [ ] Unit Testing - Testes unitários do motor de regras
+- [ ] Integration Testing - Testes de integração frontend-backend
+- [ ] API Testing - Testes de endpoints tRPC
+- [ ] Database Testing - Testes de banco de dados
+- [ ] Security Testing - Testes de segurança
+- [ ] Functional Testing - Testes funcionais
+- [ ] Regression Testing - Testes de regressão
+- [ ] Smoke Testing - Testes de fumaça
+- [ ] Data Validation Testing - Validação de dados
+- [ ] Input Validation Testing - Validação de entrada
+- [ ] Boundary Value Analysis - Análise de valores limite
+- [ ] Equivalence Partitioning - Particionamento de equivalência
+- [ ] SQL Injection Testing - Testes de SQL Injection
+- [ ] Authentication Testing - Testes de autenticação
+- [ ] Authorization Testing - Testes de autorização
+- [ ] PCI-DSS Testing - Conformidade PCI-DSS
+- [ ] LGPD Compliance Testing - Conformidade LGPD
