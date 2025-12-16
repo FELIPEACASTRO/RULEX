@@ -187,3 +187,40 @@
 - [x] Grupo 10: Regras de Contexto (2 regras)
 - [x] Grupo 11: Regras Combinadas (3 regras)
 - [x] Grupo 12: Regras Específicas Brasil (2 regras)
+
+
+## Integração Frontend-Backend Java
+
+### Serviço de API
+- [x] Criar serviço de comunicação com backend Java (javaApi.ts)
+- [x] Configurar URL base da API Java
+- [x] Implementar interceptors para tratamento de erros
+- [x] Criar tipos TypeScript para DTOs
+
+### Integração Dashboard
+- [ ] Conectar com endpoint GET /api/metrics
+- [ ] Atualizar métricas em tempo real
+- [ ] Implementar loading states
+
+### Integração Transações
+- [ ] Conectar com endpoint GET /api/transactions
+- [ ] Implementar filtros (data, status, merchantId, customerId)
+- [ ] Conectar com endpoint GET /api/transactions/{id}
+
+### Integração Regras
+- [ ] Conectar com endpoint GET /api/rules
+- [ ] Conectar com endpoint POST /api/rules
+- [ ] Conectar com endpoint PUT /api/rules/{id}
+- [ ] Conectar com endpoint DELETE /api/rules/{id}
+
+### Análise de Transação
+- [x] Criar formulário de análise em tempo real (TransactionSimulator.tsx)
+- [x] Conectar com endpoint POST /api/transactions/analyze
+- [x] Exibir resultado com regras acionadas e score
+- [x] Templates de teste (Legítima, Card Testing, Alto Risco, ATO)
+- [x] Simulação local quando API não disponível
+
+### Testes de Integração
+- [ ] Testar todos os endpoints
+- [ ] Validar tratamento de erros
+- [ ] Verificar loading states

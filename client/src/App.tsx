@@ -9,6 +9,7 @@ import DashboardProfessional from "./pages/DashboardProfessional";
 import TransactionsProfessional from "./pages/TransactionsProfessional";
 import RulesAdvanced from "./pages/RulesAdvanced";
 import Audit from "./pages/Audit";
+import TransactionSimulator from "./pages/TransactionSimulator";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
         <Route path={"/transactions"} component={TransactionsProfessional} />
         <Route path={"/rules"} component={RulesAdvanced} />
         <Route path={"/audit"} component={Audit} />
+        <Route path={"/simulator"} component={TransactionSimulator} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>
