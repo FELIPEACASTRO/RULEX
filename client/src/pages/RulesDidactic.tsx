@@ -8,8 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Shield, Search, AlertTriangle, CheckCircle, XCircle, Info, 
   HelpCircle, Lightbulb, CreditCard, Globe, Clock, DollarSign,
-  Lock, Smartphone, ShoppingCart, AlertOctagon, Eye, BookOpen
+  Lock, Smartphone, ShoppingCart, AlertOctagon, Eye, BookOpen,
+  Edit, Save, X, Plus, Trash2
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+
 
 // ==================== EXPLICAÇÕES DIDÁTICAS PARA LEIGOS ====================
 const EXPLICACOES_REGRAS: Record<string, {
@@ -440,13 +447,199 @@ const formatarValor = (campo: string, valor: string): string => {
   return valor;
 };
 
+// Campos válidos do payload de entrada
+const CAMPOS_PAYLOAD = [
+  { value: 'transactionAmount', label: 'Valor da Transação', tipo: 'number' },
+  { value: 'transactionTime', label: 'Horário da Transação', tipo: 'string' },
+  { value: 'transactionDate', label: 'Data da Transação', tipo: 'string' },
+  { value: 'mcc', label: 'Código MCC do Comerciante', tipo: 'string' },
+  { value: 'merchantCountryCode', label: 'País do Comerciante', tipo: 'string' },
+  { value: 'merchantId', label: 'ID do Comerciante', tipo: 'string' },
+  { value: 'merchantName', label: 'Nome do Comerciante', tipo: 'string' },
+  { value: 'customerPresent', label: 'Cliente Presente (Y/N)', tipo: 'string' },
+  { value: 'consumerAuthenticationScore', label: 'Score de Autenticação', tipo: 'number' },
+  { value: 'externalScore3', label: 'Score Externo', tipo: 'number' },
+  { value: 'cvv2Response', label: 'Resposta CVV2', tipo: 'string' },
+  { value: 'cvv2EntryLimitExceeded', label: 'Limite CVV Excedido', tipo: 'boolean' },
+  { value: 'pinEntryLimitExceeded', label: 'Limite PIN Excedido', tipo: 'boolean' },
+  { value: 'cryptogramValid', label: 'Criptograma Válido', tipo: 'boolean' },
+  { value: 'cavvResult', label: 'Resultado CAVV (3D Secure)', tipo: 'string' },
+  { value: 'eciIndicator', label: 'Indicador ECI', tipo: 'number' },
+  { value: 'posSecurity', label: 'Segurança do Terminal', tipo: 'number' },
+  { value: 'posOffPremises', label: 'Terminal Fora da Loja', tipo: 'number' },
+  { value: 'posEntryMode', label: 'Modo de Entrada', tipo: 'string' },
+  { value: 'cardAipStatic', label: 'AIP Estático do Cartão', tipo: 'number' },
+  { value: 'cardAipDynamic', label: 'AIP Dinâmico do Cartão', tipo: 'number' },
+  { value: 'terminalVerificationResults', label: 'Verificação do Terminal', tipo: 'string' },
+  { value: 'cardExpireDate', label: 'Data de Expiração', tipo: 'string' },
+  { value: 'cardCaptured', label: 'Cartão Capturado', tipo: 'boolean' },
+  { value: 'recurringTransaction', label: 'Transação Recorrente', tipo: 'boolean' },
+  { value: 'acquirerCountryCode', label: 'País do Adquirente', tipo: 'string' },
+];
+
+const OPERADORES = [
+  { value: '==', label: 'Igual a' },
+  { value: '!=', label: 'Diferente de' },
+  { value: '>', label: 'Maior que' },
+  { value: '<', label: 'Menor que' },
+  { value: '>=', label: 'Maior ou igual a' },
+  { value: '<=', label: 'Menor ou igual a' },
+  { value: 'IN', label: 'Está na lista' },
+  { value: 'NOT_IN', label: 'Não está na lista' },
+];
+
+const CATEGORIAS = [
+  'VALUE', 'TEMPORAL', 'GEOGRAPHIC', 'MCC', 'AUTHENTICATION',
+  'CVV_PIN', 'TERMINAL', 'EMV', 'CARD', 'CONTEXT', 'COMBINED', 'BRAZIL_SPECIFIC'
+];
+
+const CLASSIFICACOES = ['APPROVED', 'SUSPICIOUS', 'FRAUD'];
+
+interface Condicao {
+  field: string;
+  operator: string;
+  value: string | number | boolean | string[];
+}
+
+interface RegraEditando {
+  id?: number;
+  name: string;
+  description: string;
+  category: string;
+  classification: string;
+  weight: number;
+  conditions: Condicao[];
+  logicOperator: string;
+  isActive: boolean;
+  source: string;
+}
+
 export default function RulesDidactic() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroClassificacao, setFiltroClassificacao] = useState<string>('all');
   const [filtroCategoria, setFiltroCategoria] = useState<string>('all');
   const [regraExpandida, setRegraExpandida] = useState<number | null>(null);
+  
+  // Estados do modal de edição
+  const [modalAberto, setModalAberto] = useState(false);
+  const [regraEditando, setRegraEditando] = useState<RegraEditando | null>(null);
+  const [salvando, setSalvando] = useState(false);
 
-  const { data: rules, isLoading } = trpc.rules.list.useQuery();
+  const { data: rules, isLoading, refetch } = trpc.rules.list.useQuery();
+  const updateMutation = trpc.rules.update.useMutation({
+    onSuccess: () => {
+      refetch();
+      setModalAberto(false);
+      setRegraEditando(null);
+    },
+  });
+  const createMutation = trpc.rules.create.useMutation({
+    onSuccess: () => {
+      refetch();
+      setModalAberto(false);
+      setRegraEditando(null);
+    },
+  });
+
+  // Função para abrir modal de edição
+  const abrirEdicao = (rule: typeof rules extends (infer T)[] | undefined ? T : never) => {
+    const conditions = rule.conditions as unknown as Condicao[];
+    setRegraEditando({
+      id: rule.id,
+      name: rule.name,
+      description: rule.description || '',
+      category: rule.category,
+      classification: rule.classification,
+      weight: rule.weight,
+      conditions: conditions || [],
+      logicOperator: rule.logicOperator,
+      isActive: rule.isActive,
+      source: rule.source || '',
+    });
+    setModalAberto(true);
+  };
+
+  // Função para criar nova regra
+  const criarNovaRegra = () => {
+    setRegraEditando({
+      name: '',
+      description: '',
+      category: 'VALUE',
+      classification: 'SUSPICIOUS',
+      weight: 50,
+      conditions: [{ field: 'transactionAmount', operator: '>', value: '' }],
+      logicOperator: 'AND',
+      isActive: true,
+      source: '',
+    });
+    setModalAberto(true);
+  };
+
+  // Função para salvar regra
+  const salvarRegra = async () => {
+    if (!regraEditando) return;
+    setSalvando(true);
+    try {
+      if (regraEditando.id) {
+        await updateMutation.mutateAsync({
+          id: regraEditando.id,
+          data: {
+            name: regraEditando.name,
+            description: regraEditando.description,
+            category: regraEditando.category as any,
+            classification: regraEditando.classification as any,
+            weight: regraEditando.weight,
+            conditions: regraEditando.conditions as any,
+            logicOperator: regraEditando.logicOperator as any,
+            isActive: regraEditando.isActive,
+            source: regraEditando.source,
+          },
+        });
+      } else {
+        await createMutation.mutateAsync({
+          name: regraEditando.name,
+          description: regraEditando.description,
+          category: regraEditando.category as any,
+          classification: regraEditando.classification as any,
+          weight: regraEditando.weight,
+          conditions: regraEditando.conditions as any,
+          logicOperator: regraEditando.logicOperator as any,
+          isActive: regraEditando.isActive,
+          source: regraEditando.source,
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao salvar regra:', error);
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  // Função para adicionar condição
+  const adicionarCondicao = () => {
+    if (!regraEditando) return;
+    setRegraEditando({
+      ...regraEditando,
+      conditions: [...regraEditando.conditions, { field: 'transactionAmount', operator: '>', value: '' }],
+    });
+  };
+
+  // Função para remover condição
+  const removerCondicao = (index: number) => {
+    if (!regraEditando) return;
+    setRegraEditando({
+      ...regraEditando,
+      conditions: regraEditando.conditions.filter((_, i) => i !== index),
+    });
+  };
+
+  // Função para atualizar condição
+  const atualizarCondicao = (index: number, campo: keyof Condicao, valor: string | number | boolean | string[]) => {
+    if (!regraEditando) return;
+    const novasCondicoes = [...regraEditando.conditions];
+    novasCondicoes[index] = { ...novasCondicoes[index], [campo]: valor };
+    setRegraEditando({ ...regraEditando, conditions: novasCondicoes });
+  };
 
   // Filtrar regras
   const regrasFiltradas = rules?.filter(rule => {
@@ -706,9 +899,23 @@ export default function RulesDidactic() {
                         </div>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      {isExpanded ? '▲ Menos detalhes' : '▼ Mais detalhes'}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          abrirEdicao(rule);
+                        }}
+                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                      >
+                        <Edit className="w-4 h-4 mr-1" />
+                        Editar
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        {isExpanded ? '▲ Menos detalhes' : '▼ Mais detalhes'}
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Resumo sempre visível */}
@@ -825,7 +1032,257 @@ export default function RulesDidactic() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Botão para criar nova regra */}
+        <div className="mt-8 flex justify-center">
+          <Button 
+            onClick={criarNovaRegra}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Criar Nova Regra
+          </Button>
+        </div>
       </div>
+
+      {/* Modal de Edição de Regra */}
+      <Dialog open={modalAberto} onOpenChange={setModalAberto}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              {regraEditando?.id ? '✏️ Editar Regra' : '➕ Criar Nova Regra'}
+            </DialogTitle>
+            <DialogDescription>
+              {regraEditando?.id 
+                ? 'Modifique os campos abaixo para atualizar a regra. Apenas campos do payload são permitidos nas condições.'
+                : 'Preencha os campos abaixo para criar uma nova regra de detecção de fraude.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {regraEditando && (
+            <div className="space-y-6 py-4">
+              {/* Nome e Descrição */}
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label htmlFor="name" className="text-sm font-medium">Nome da Regra *</Label>
+                  <Input
+                    id="name"
+                    value={regraEditando.name}
+                    onChange={(e) => setRegraEditando({ ...regraEditando, name: e.target.value })}
+                    placeholder="Ex: HIGH_VALUE_TRANSACTION"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description" className="text-sm font-medium">Descrição</Label>
+                  <Textarea
+                    id="description"
+                    value={regraEditando.description}
+                    onChange={(e) => setRegraEditando({ ...regraEditando, description: e.target.value })}
+                    placeholder="Descreva o que esta regra faz..."
+                    className="mt-1"
+                    rows={2}
+                  />
+                </div>
+              </div>
+
+              {/* Categoria, Classificação e Peso */}
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Categoria *</Label>
+                  <Select
+                    value={regraEditando.category}
+                    onValueChange={(value) => setRegraEditando({ ...regraEditando, category: value })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIAS.map((cat) => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Classificação *</Label>
+                  <Select
+                    value={regraEditando.classification}
+                    onValueChange={(value) => setRegraEditando({ ...regraEditando, classification: value })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="APPROVED">🟢 Aprovada</SelectItem>
+                      <SelectItem value="SUSPICIOUS">🟡 Suspeita</SelectItem>
+                      <SelectItem value="FRAUD">🔴 Fraude</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Peso (0-100)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={regraEditando.weight}
+                    onChange={(e) => setRegraEditando({ ...regraEditando, weight: parseInt(e.target.value) || 0 })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              {/* Condições */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <Label className="text-sm font-medium">Condições da Regra *</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500">Operador Lógico:</span>
+                    <Select
+                      value={regraEditando.logicOperator}
+                      onValueChange={(value) => setRegraEditando({ ...regraEditando, logicOperator: value })}
+                    >
+                      <SelectTrigger className="w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="AND">E (AND)</SelectItem>
+                        <SelectItem value="OR">OU (OR)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+                  {regraEditando.conditions.map((cond, index) => (
+                    <div key={index} className="flex items-center gap-2 bg-white p-3 rounded border">
+                      <span className="text-sm text-gray-500 w-6">{index + 1}.</span>
+                      
+                      {/* Campo */}
+                      <Select
+                        value={cond.field}
+                        onValueChange={(value) => atualizarCondicao(index, 'field', value)}
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="Campo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CAMPOS_PAYLOAD.map((campo) => (
+                            <SelectItem key={campo.value} value={campo.value}>
+                              {campo.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      {/* Operador */}
+                      <Select
+                        value={cond.operator}
+                        onValueChange={(value) => atualizarCondicao(index, 'operator', value)}
+                      >
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="Operador" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {OPERADORES.map((op) => (
+                            <SelectItem key={op.value} value={op.value}>
+                              {op.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      {/* Valor */}
+                      <Input
+                        value={String(cond.value)}
+                        onChange={(e) => atualizarCondicao(index, 'value', e.target.value)}
+                        placeholder="Valor"
+                        className="flex-1"
+                      />
+
+                      {/* Botão remover */}
+                      {regraEditando.conditions.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removerCondicao(index)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={adicionarCondicao}
+                    className="w-full mt-2"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Condição
+                  </Button>
+                </div>
+              </div>
+
+              {/* Fonte e Ativa */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="source" className="text-sm font-medium">Fonte/Referência</Label>
+                  <Input
+                    id="source"
+                    value={regraEditando.source}
+                    onChange={(e) => setRegraEditando({ ...regraEditando, source: e.target.value })}
+                    placeholder="Ex: FEBRABAN, Mastercard..."
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex items-center gap-3 pt-6">
+                  <Switch
+                    checked={regraEditando.isActive}
+                    onCheckedChange={(checked) => setRegraEditando({ ...regraEditando, isActive: checked })}
+                  />
+                  <Label className="text-sm">Regra Ativa</Label>
+                </div>
+              </div>
+
+              {/* Aviso sobre campos do payload */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-2">
+                  <Info className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div className="text-sm text-blue-800">
+                    <strong>Campos válidos do Payload:</strong> Apenas os campos listados no seletor podem ser usados nas condições. 
+                    Todos os 26 campos disponíveis foram validados e correspondem ao payload de entrada do sistema.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setModalAberto(false);
+                setRegraEditando(null);
+              }}
+            >
+              <X className="w-4 h-4 mr-2" />
+              Cancelar
+            </Button>
+            <Button
+              onClick={salvarRegra}
+              disabled={salvando || !regraEditando?.name || regraEditando?.conditions.length === 0}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {salvando ? 'Salvando...' : 'Salvar Regra'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

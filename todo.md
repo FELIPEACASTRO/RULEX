@@ -362,3 +362,21 @@
 - [x] "MCC de alto risco" → "Compra em loja de tipo suspeito (jogos, cripto)"
 - [x] "Card Not Present" → "Compra feita pela internet (sem cartão físico)"
 - [x] "Cross-border" → "Compra feita em outro país"
+
+
+## Edição de Regras e Validação de Payload - NOVA SOLICITAÇÃO
+
+### Validação de Payload
+- [x] Verificar o payload de entrada definido no sistema (59 campos)
+- [x] Listar todos os campos válidos do payload
+- [x] Validar se todas as 39 regras usam campos válidos (✅ TODAS VÁLIDAS)
+- [x] Corrigir regras que usam campos inválidos (não necessário)
+
+### Funcionalidade de Edição de Regras
+- [x] Adicionar botão de edição em cada regra
+- [x] Criar modal/formulário de edição de regras
+- [x] Permitir editar nome, descrição, condições
+- [x] Validar campos do payload ao editar condições (seletor com 26 campos válidos)
+- [x] Salvar alterações no banco de dados
+- [x] Botão "Criar Nova Regra" adicionado
+- [x] Modal completo com todos os campos editáveis
