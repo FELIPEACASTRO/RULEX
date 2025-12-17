@@ -342,3 +342,23 @@
 - [x] Busca por nome ou descrição
 - [x] Dica de uso explicando como as regras funcionam
 - [x] Documentação integrada com todos os campos disponíveis
+
+
+## Página de Regras para Leigos - NOVA SOLICITAÇÃO
+
+### Requisitos de Didática
+- [x] Linguagem simples do dia-a-dia (sem termos técnicos)
+- [x] Explicação "O que isso significa?" em cada regra
+- [x] Explicação "Quando é acionada?" com cenários reais
+- [x] Exemplos práticos que qualquer pessoa entende
+- [x] Ícones visuais intuitivos para cada tipo de regra
+- [x] Cores claras indicando nível de risco
+- [x] Tradução de todos os termos técnicos para português simples
+- [x] Analogias do mundo real para explicar conceitos
+
+### Exemplos de Linguagem Didática
+- [x] "Score de autenticação baixo" → "O sistema não conseguiu confirmar que é você"
+- [x] "CVV não confere" → "O código de segurança do cartão está errado"
+- [x] "MCC de alto risco" → "Compra em loja de tipo suspeito (jogos, cripto)"
+- [x] "Card Not Present" → "Compra feita pela internet (sem cartão físico)"
+- [x] "Cross-border" → "Compra feita em outro país"
