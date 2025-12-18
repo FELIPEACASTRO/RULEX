@@ -1,0 +1,148 @@
+# Export de Regras Duras (payload-only)
+# Formato: lista de regras com when/then determinísticos.
+# Fontes usadas: artefatos internos do repositório.
+
+rules:
+  - rule_id: CARD-P0-001
+    description: "Cartão expirado (inconsistência objetiva)"
+    channel: CREDIT_DEBIT
+    severity: HIGH
+    when: "cardExpireDate IS NOT NULL AND transactionDate IS NOT NULL AND cardExpireDate < transactionDate"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [cardExpireDate, transactionDate]
+    evidence_sources:
+      - "repo:DOUBLE_CHECK_RIGOROSO_60_REGRAS.md (coerência cardExpireDate)"
+
+  - rule_id: CARD-P0-002
+    description: "CVV2 mismatch com valor não-trivial"
+    channel: CREDIT_DEBIT
+    severity: HIGH
+    when: "cvv2Response IS NOT NULL AND cvv2Response != 'M' AND transactionAmount >= 100"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [cvv2Response, transactionAmount]
+    evidence_sources:
+      - "repo:PESQUISA_FRAUDES_BRASIL.md (2.7)"
+
+  - rule_id: CARD-P0-003
+    description: "PIN offline falhou"
+    channel: CREDIT_DEBIT
+    severity: HIGH
+    when: "cvrofflinePinVerificationPerformed == 1 AND cvrofflinePinVerificationFailed == 1"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [cvrofflinePinVerificationPerformed, cvrofflinePinVerificationFailed]
+    evidence_sources:
+      - "repo:IMPLEMENTACAO_28_REGRAS.md (OFFLINE_PIN_FAILED)"
+
+  - rule_id: CARD-P0-004
+    description: "Criptograma inválido"
+    channel: CREDIT_DEBIT
+    severity: HIGH
+    when: "cryptogramValid IS NOT NULL AND cryptogramValid != 'V'"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [cryptogramValid]
+    evidence_sources:
+      - "repo:DOCUMENTACAO_TECNICA.md (INVALID_CRYPTOGRAM)"
+
+  - rule_id: CARD-P0-005
+    description: "Conversão de moeda anômala (fora de faixa grosseira)"
+    channel: CREDIT_DEBIT
+    severity: MEDIUM
+    when: "transactionCurrencyConversionRate IS NOT NULL AND (transactionCurrencyConversionRate <= 0 OR transactionCurrencyConversionRate >= 10)"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [transactionCurrencyConversionRate]
+    evidence_sources:
+      - "repo:IMPLEMENTACAO_28_REGRAS.md (ANOMALOUS_CONVERSION_RATE)"
+
+  - rule_id: CARD-P1-001
+    description: "Não presencial sem 3DS (ECI=0) com valor alto"
+    channel: CREDIT_DEBIT
+    severity: MEDIUM
+    when: "customerPresent == 'N' AND eciIndicator == 0 AND transactionAmount >= 500"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [customerPresent, eciIndicator, transactionAmount]
+    evidence_sources:
+      - "repo:PESQUISA_FRAUDES_BRASIL.md (2.3)"
+
+  - rule_id: CARD-P1-002
+    description: "CAVV inválido em contexto de e-commerce/autenticação"
+    channel: CREDIT_DEBIT
+    severity: HIGH
+    when: "cavvResult IS NOT NULL AND cavvResult != 0"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [cavvResult]
+    evidence_sources:
+      - "repo:DOCUMENTACAO_TECNICA.md (INVALID_CAVV)"
+
+  - rule_id: CARD-P1-003
+    description: "MCC alto risco com valor não-trivial"
+    channel: CREDIT_DEBIT
+    severity: HIGH
+    when: "mcc IN [7995,7994,5967,6051,4829] AND transactionAmount >= 50"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [mcc, transactionAmount]
+    evidence_sources:
+      - "repo:PESQUISA_FRAUDES_BRASIL.md (MCCs alto risco)"
+
+  - rule_id: CARD-P1-004
+    description: "Tarja magnética (posEntryMode=M) acima de piso"
+    channel: CREDIT_DEBIT
+    severity: MEDIUM
+    when: "posEntryMode == 'M' AND transactionAmount >= 100"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [posEntryMode, transactionAmount]
+    evidence_sources:
+      - "repo:PESQUISA_FRAUDES_BRASIL.md (2.1)"
+
+  - rule_id: CARD-P1-005
+    description: "Off-premises + POS sem segurança + valor alto"
+    channel: CREDIT_DEBIT
+    severity: MEDIUM
+    when: "posOffPremises == 1 AND posSecurity == 0 AND transactionAmount >= 500"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [posOffPremises, posSecurity, transactionAmount]
+    evidence_sources:
+      - "repo:PESQUISA_FRAUDES_BRASIL.md (2.5)"
+
+  - rule_id: CARD-P1-006
+    description: "CVV/PIN try limit excedido"
+    channel: CREDIT_DEBIT
+    severity: HIGH
+    when: "cvvPinTryLimitExceeded == 1"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [cvvPinTryLimitExceeded]
+    evidence_sources:
+      - "repo:IMPLEMENTACAO_28_REGRAS.md (PIN_CVV_LIMIT_EXCEEDED)"
+
+  - rule_id: CARD-P1-007
+    description: "ATC incoerente (diferença grosseira)"
+    channel: CREDIT_DEBIT
+    severity: MEDIUM
+    when: "atcCard IS NOT NULL AND atcHost IS NOT NULL AND ABS(atcCard - atcHost) >= 5"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [atcCard, atcHost]
+    evidence_sources:
+      - "repo:IMPLEMENTACAO_28_REGRAS.md (INCOHERENT_AUTH_SEQUENCE)"
+
+  - rule_id: CARD-P1-008
+    description: "País do merchant em lista de alto risco + valor elevado"
+    channel: CREDIT_DEBIT
+    severity: HIGH
+    when: "merchantCountryCode IN ['RU','CN','NG','PK','VN','ID','UA','RO','BG'] AND transactionAmount >= 500"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [merchantCountryCode, transactionAmount]
+    evidence_sources:
+      - "repo:PESQUISA_FRAUDES_BRASIL.md (países alto risco)"
+
+  - rule_id: CARD-P2-001
+    description: "Lag de processamento anômalo (sinal de integridade)"
+    channel: CREDIT_DEBIT
+    severity: LOW
+    when: "recordCreationDate IS NOT NULL AND transactionDate IS NOT NULL AND recordCreationDate > transactionDate"
+    then: "classification = 'SUSPICIOUS'"
+    fields_used: [recordCreationDate, transactionDate]
+    evidence_sources:
+      - "repo:IMPLEMENTACAO_28_REGRAS.md (PROCESSING_LAG_ANOMALY)"
+
+notes:
+  - "Export contém apenas regras payload-only (sem histórico/velocity)."
+  - "Pix não é coberto por este payload; requer schema específico." 

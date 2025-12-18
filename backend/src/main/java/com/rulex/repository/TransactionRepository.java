@@ -56,16 +56,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("merchantId") String merchantId,
             @Param("since") LocalDateTime since);
 
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.createdAt >= :since")
+    Long countSince(@Param("since") LocalDateTime since);
+
     // ==================== MÉTODOS PARA AS 28 NOVAS REGRAS ====================
 
-    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.pan = :pan AND t.posCardCapture = 1 AND t.createdAt >= CURRENT_DATE - 30")
-    long countCardCapturesInLast30Days(@Param("pan") String pan);
+        @Query("SELECT COUNT(t) FROM Transaction t WHERE t.pan = :pan AND t.posCardCapture = 1 AND t.createdAt >= :since")
+        long countCardCapturesSince(@Param("pan") String pan, @Param("since") LocalDateTime since);
 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.externalTransactionId = :externalTransactionId AND t.transactionDate = :transactionDate")
     long countDuplicateTransactions(@Param("externalTransactionId") String externalTransactionId, @Param("transactionDate") int transactionDate);
-
-    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.customerIdFromHeader = :customerId AND t.transactionDate = :transactionDate AND t.transactionTime >= :startTime")
-    long countTransactionsInTimeWindow(@Param("customerId") String customerId, @Param("transactionDate") int transactionDate, @Param("startTime") int startTime, @Param("minutes") int minutes);
 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.customerIdFromHeader = :customerId AND t.transactionDate = :transactionDate")
     long countDailyTransactions(@Param("customerId") String customerId, @Param("transactionDate") int transactionDate);

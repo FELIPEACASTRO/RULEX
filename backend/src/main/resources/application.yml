@@ -19,10 +19,16 @@ spring:
     show-sql: false
   
   jackson:
+    deserialization:
+      fail-on-unknown-properties: true
     serialization:
       write-dates-as-timestamps: false
       indent-output: true
     default-property-inclusion: non_null
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
 
 server:
   port: 8080

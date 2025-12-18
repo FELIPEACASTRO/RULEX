@@ -1,7 +1,6 @@
 package com.rulex.controller;
 
 import com.rulex.dto.RuleConfigurationDTO;
-import com.rulex.entity.RuleConfiguration;
 import com.rulex.service.RuleConfigurationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,6 @@ import java.util.List;
 @RequestMapping("/rules")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class RuleController {
 
     private final RuleConfigurationService ruleConfigurationService;
@@ -154,6 +152,20 @@ public class RuleController {
         } catch (Exception e) {
             log.error("Erro ao listar regras habilitadas", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Retorna histórico (append-only) de uma regra.
+     * GET /api/rules/{id}/history
+     */
+    @GetMapping("/{id}/history")
+    public ResponseEntity<?> getRuleHistory(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(ruleConfigurationService.getRuleHistory(id));
+        } catch (Exception e) {
+            log.error("Erro ao obter histórico da regra: {}", id, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 

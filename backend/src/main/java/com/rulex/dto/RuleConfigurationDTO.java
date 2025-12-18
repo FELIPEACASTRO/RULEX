@@ -1,13 +1,13 @@
 package com.rulex.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.rulex.entity.RuleConfiguration;
-import com.rulex.entity.TransactionDecision;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 /**
  * DTO para RuleConfiguration.
@@ -53,6 +53,14 @@ public class RuleConfigurationDTO {
 
     @JsonProperty("parameters")
     private String parameters;
+
+    @NotNull(message = "conditions é obrigatório")
+    @JsonProperty("conditions")
+    private List<RuleConditionDTO> conditions;
+
+    @NotBlank(message = "logicOperator é obrigatório")
+    @JsonProperty("logicOperator")
+    private String logicOperator; // AND | OR
 
     @JsonProperty("version")
     private Integer version;

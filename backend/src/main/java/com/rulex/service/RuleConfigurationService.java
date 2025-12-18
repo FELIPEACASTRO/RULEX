@@ -1,13 +1,16 @@
 package com.rulex.service;
 
 import com.rulex.dto.RuleConfigurationDTO;
+import com.rulex.dto.RuleConditionDTO;
 import com.rulex.entity.RuleConfiguration;
+import com.rulex.entity.RuleConfigurationHistory;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.RuleConfigurationRepository;
+import com.rulex.repository.RuleConfigurationHistoryRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +28,9 @@ import java.util.stream.Collectors;
 public class RuleConfigurationService {
 
     private final RuleConfigurationRepository ruleConfigRepository;
+    private final RuleConfigurationHistoryRepository historyRepository;
     private final AuditService auditService;
+    private final ObjectMapper objectMapper;
 
     /**
      * Lista todas as regras.
@@ -62,9 +67,20 @@ public class RuleConfigurationService {
             .enabled(dto.getEnabled())
             .classification(TransactionDecision.TransactionClassification.valueOf(dto.getClassification()))
             .parameters(dto.getParameters())
+            .conditionsJson(writeConditionsJson(dto.getConditions()))
+            .logicOperator(parseLogicOperator(dto.getLogicOperator()))
             .build();
 
         rule = ruleConfigRepository.save(rule);
+
+        historyRepository.save(RuleConfigurationHistory.builder()
+            .ruleId(rule.getId())
+            .ruleName(rule.getRuleName())
+            .version(rule.getVersion())
+            .previousJson(null)
+            .currentJson(serializeRule(rule))
+            .performedBy("SYSTEM")
+            .build());
         
         auditService.logRuleCreated(dto.getRuleName(), "SYSTEM");
         log.info("Regra criada: {}", dto.getRuleName());
@@ -79,15 +95,28 @@ public class RuleConfigurationService {
         RuleConfiguration rule = ruleConfigRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Regra não encontrada"));
 
+        String previous = serializeRule(rule);
+
         rule.setDescription(dto.getDescription());
         rule.setThreshold(dto.getThreshold());
         rule.setWeight(dto.getWeight());
         rule.setEnabled(dto.getEnabled());
         rule.setClassification(TransactionDecision.TransactionClassification.valueOf(dto.getClassification()));
         rule.setParameters(dto.getParameters());
+        rule.setConditionsJson(writeConditionsJson(dto.getConditions()));
+        rule.setLogicOperator(parseLogicOperator(dto.getLogicOperator()));
         rule.setVersion(rule.getVersion() + 1);
 
         rule = ruleConfigRepository.save(rule);
+
+        historyRepository.save(RuleConfigurationHistory.builder()
+            .ruleId(rule.getId())
+            .ruleName(rule.getRuleName())
+            .version(rule.getVersion())
+            .previousJson(previous)
+            .currentJson(serializeRule(rule))
+            .performedBy("SYSTEM")
+            .build());
         
         auditService.logRuleUpdated(rule.getRuleName(), 
             java.util.Map.of(
@@ -108,7 +137,18 @@ public class RuleConfigurationService {
         RuleConfiguration rule = ruleConfigRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Regra não encontrada"));
 
+        String previous = serializeRule(rule);
+
         ruleConfigRepository.delete(rule);
+
+        historyRepository.save(RuleConfigurationHistory.builder()
+            .ruleId(id)
+            .ruleName(rule.getRuleName())
+            .version(rule.getVersion())
+            .previousJson(previous)
+            .currentJson(null)
+            .performedBy("SYSTEM")
+            .build());
         
         auditService.logRuleDeleted(rule.getRuleName(), "SYSTEM");
         log.info("Regra deletada: {}", rule.getRuleName());
@@ -121,8 +161,20 @@ public class RuleConfigurationService {
         RuleConfiguration rule = ruleConfigRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Regra não encontrada"));
 
+        String previous = serializeRule(rule);
+
         rule.setEnabled(!rule.getEnabled());
+        rule.setVersion(rule.getVersion() + 1);
         rule = ruleConfigRepository.save(rule);
+
+        historyRepository.save(RuleConfigurationHistory.builder()
+            .ruleId(rule.getId())
+            .ruleName(rule.getRuleName())
+            .version(rule.getVersion())
+            .previousJson(previous)
+            .currentJson(serializeRule(rule))
+            .performedBy("SYSTEM")
+            .build());
         
         auditService.logRuleUpdated(rule.getRuleName(), 
             java.util.Map.of("enabled", rule.getEnabled()), "SYSTEM");
@@ -156,8 +208,59 @@ public class RuleConfigurationService {
             .enabled(rule.getEnabled())
             .classification(rule.getClassification().name())
             .parameters(rule.getParameters())
+            .conditions(readConditions(rule.getConditionsJson()))
+            .logicOperator((rule.getLogicOperator() != null ? rule.getLogicOperator() : RuleConfiguration.LogicOperator.AND).name())
             .version(rule.getVersion())
             .build();
+    }
+
+    private String writeConditionsJson(List<RuleConditionDTO> conditions) {
+        try {
+            if (conditions == null) {
+                return "[]";
+            }
+            return objectMapper.writeValueAsString(conditions);
+        } catch (Exception e) {
+            throw new RuntimeException("Condições inválidas", e);
+        }
+    }
+
+    private List<RuleConditionDTO> readConditions(String conditionsJson) {
+        try {
+            if (conditionsJson == null || conditionsJson.isBlank()) {
+                return List.of();
+            }
+            return objectMapper.readValue(
+                conditionsJson,
+                objectMapper.getTypeFactory().constructCollectionType(List.class, RuleConditionDTO.class)
+            );
+        } catch (Exception e) {
+            // manter comportamento tolerante para dados legados
+            return List.of();
+        }
+    }
+
+    private RuleConfiguration.LogicOperator parseLogicOperator(String logicOperator) {
+        if (logicOperator == null || logicOperator.isBlank()) {
+            return RuleConfiguration.LogicOperator.AND;
+        }
+        return RuleConfiguration.LogicOperator.valueOf(logicOperator);
+    }
+
+    private String serializeRule(RuleConfiguration rule) {
+        try {
+            return objectMapper.writeValueAsString(rule);
+        } catch (Exception e) {
+            return "{}";
+        }
+    }
+
+    /**
+     * Histórico append-only (mais recente primeiro).
+     */
+    @Transactional(readOnly = true)
+    public List<RuleConfigurationHistory> getRuleHistory(Long ruleId) {
+        return historyRepository.findByRuleIdOrderByCreatedAtDesc(ruleId);
     }
 
 }

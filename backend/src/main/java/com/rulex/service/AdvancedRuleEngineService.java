@@ -1,20 +1,15 @@
 package com.rulex.service;
 
 import com.rulex.dto.TransactionRequest;
-import com.rulex.entity.Transaction;
 import com.rulex.repository.TransactionRepository;
+import com.rulex.util.PanMaskingUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Serviço avançado de motor de regras duras com as 28 novas regras identificadas no triple check.
@@ -215,7 +210,8 @@ public class AdvancedRuleEngineService {
         log.debug("Executando regra: CARD_CAPTURE_FRAUD");
 
         if (transaction.getPosCardCapture() == 1) {
-            long captureCount = transactionRepository.countCardCapturesInLast30Days(transaction.getPan());
+            String maskedPan = PanMaskingUtil.mask(transaction.getPan());
+            long captureCount = transactionRepository.countCardCapturesSince(maskedPan, LocalDateTime.now().minusDays(30));
             if (captureCount > 2) {
                 auditService.logRule("CARD_CAPTURE_FRAUD", transaction, "FRAUD");
                 return RuleResult.FRAUD;
@@ -265,7 +261,7 @@ public class AdvancedRuleEngineService {
     public RuleResult checkMissingCvv2HighRisk(TransactionRequest transaction) {
         log.debug("Executando regra: MISSING_CVV2_HIGH_RISK");
 
-        if (transaction.getCvv2Present() == 0 &&
+        if ("0".equals(transaction.getCvv2Present()) &&
                 isHighRiskMCC(transaction.getMcc()) &&
                 transaction.getTransactionAmount().compareTo(new BigDecimal("1000")) > 0) {
             auditService.logRule("MISSING_CVV2_HIGH_RISK", transaction, "SUSPICIOUS");
@@ -571,24 +567,24 @@ public class AdvancedRuleEngineService {
     public RuleResult checkVelocityConsolidated(TransactionRequest transaction) {
         log.debug("Executando regra: VELOCITY_CHECK_CONSOLIDATED");
 
-        long count5min = transactionRepository.countTransactionsInTimeWindow(
+        long count5min = Optional.ofNullable(
+            transactionRepository.countTransactionsByCustomerSince(
                 transaction.getCustomerIdFromHeader(),
-                transaction.getTransactionDate(),
-                transaction.getTransactionTime(),
-                5
-        );
+                LocalDateTime.now().minusMinutes(5)
+            )
+        ).orElse(0L);
 
         if (count5min >= 3) {
             auditService.logRule("VELOCITY_CHECK_CONSOLIDATED", transaction, "FRAUD");
             return RuleResult.FRAUD;
         }
 
-        long count1hour = transactionRepository.countTransactionsInTimeWindow(
-                transaction.getCustomerIdFromHeader(),
-                transaction.getTransactionDate(),
-                transaction.getTransactionTime(),
-                60
-        );
+    long count1hour = Optional.ofNullable(
+        transactionRepository.countTransactionsByCustomerSince(
+            transaction.getCustomerIdFromHeader(),
+            LocalDateTime.now().minusMinutes(60)
+        )
+    ).orElse(0L);
 
         if (count1hour >= 10) {
             auditService.logRule("VELOCITY_CHECK_CONSOLIDATED", transaction, "SUSPICIOUS");

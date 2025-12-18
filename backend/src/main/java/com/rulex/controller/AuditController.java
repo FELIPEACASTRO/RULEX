@@ -21,7 +21,6 @@ import java.time.format.DateTimeFormatter;
 @RequestMapping("/audit")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class AuditController {
 
     private final AuditQueryService auditQueryService;

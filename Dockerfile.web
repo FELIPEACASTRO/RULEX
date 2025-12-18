@@ -1,0 +1,19 @@
+# Frontend (Vite React)
+FROM node:20-bookworm-slim
+WORKDIR /app
+
+# pnpm via corepack
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml ./
+COPY patches ./patches
+COPY client ./client
+COPY shared ./shared
+COPY vite.config.ts tsconfig.json components.json ./
+
+RUN pnpm install --frozen-lockfile
+
+EXPOSE 5173
+# Vite dev server (homolog local). Proxy target via env.
+ENV VITE_API_PROXY_TARGET=http://backend:8080
+CMD ["pnpm","vite","--host","0.0.0.0","--port","5173"]

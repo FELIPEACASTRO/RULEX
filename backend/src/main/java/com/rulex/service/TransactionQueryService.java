@@ -1,5 +1,7 @@
 package com.rulex.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rulex.dto.TriggeredRuleDTO;
 import com.rulex.dto.TransactionResponse;
 import com.rulex.entity.Transaction;
 import com.rulex.entity.TransactionDecision;
@@ -8,7 +10,6 @@ import com.rulex.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Serviço para consulta de transações e decisões.
@@ -29,6 +29,7 @@ public class TransactionQueryService {
 
     private final TransactionRepository transactionRepository;
     private final TransactionDecisionRepository decisionRepository;
+    private final ObjectMapper objectMapper;
 
     /**
      * Busca transações com filtros.
@@ -77,16 +78,35 @@ public class TransactionQueryService {
             .orElse(null);
         
         return TransactionResponse.builder()
-            .externalTransactionId(transaction.getExternalTransactionId())
+            .transactionId(transaction.getExternalTransactionId())
             .classification(decision != null ? decision.getClassification().name() : "UNKNOWN")
             .riskScore(decision != null ? decision.getRiskScore() : 0)
-            .rulesApplied(decision != null ? 
-                List.of(decision.getRulesApplied().split(", ")) : List.of())
+            .triggeredRules(decision != null ? readTriggeredRules(decision.getRulesApplied()) : List.of())
             .reason(decision != null ? decision.getReason() : "Sem decisão registrada")
-            .rulesVersion(decision != null ? decision.getRulesVersion() : "1.0.0")
-            .timestamp(transaction.getCreatedAt())
+            .rulesetVersion(decision != null ? decision.getRulesVersion() : "1")
+            .processingTimeMs(0L)
+            .timestamp(decision != null ? decision.getCreatedAt() : transaction.getCreatedAt())
             .success(true)
             .build();
+    }
+
+    private List<TriggeredRuleDTO> readTriggeredRules(String rulesApplied) {
+        if (rulesApplied == null || rulesApplied.isBlank()) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(
+                rulesApplied,
+                objectMapper.getTypeFactory().constructCollectionType(List.class, TriggeredRuleDTO.class)
+            );
+        } catch (Exception e) {
+            // fallback legado: string CSV
+            return List.of(rulesApplied.split(",")).stream()
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .map(name -> TriggeredRuleDTO.builder().name(name).weight(0).contribution(0).build())
+                .toList();
+        }
     }
 
 }

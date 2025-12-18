@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public class MetricsService {
     public MetricsDTO getMetrics(String period) {
         LocalDateTime since = calculateSince(period != null ? period : "24h");
         
-        Long totalTransactions = transactionRepository.findAll().stream().count();
+        Long totalTransactions = transactionRepository.countSince(since);
         Long approvedCount = decisionRepository.countByClassificationSince(
             TransactionDecision.TransactionClassification.APPROVED, since);
         Long suspiciousCount = decisionRepository.countByClassificationSince(
@@ -63,10 +64,24 @@ public class MetricsService {
      */
     public Map<Integer, Map<String, Object>> getMetricsByMcc(String period) {
         Map<Integer, Map<String, Object>> mccMetrics = new HashMap<>();
-        
-        // Implementar lógica de agrupamento por MCC
-        // Este é um exemplo simplificado
-        
+
+        LocalDateTime since = calculateSince(period != null ? period : "24h");
+        for (Object[] row : decisionRepository.aggregateByMccSince(since)) {
+            Integer mcc = ((Number) row[0]).intValue();
+            long total = ((Number) row[1]).longValue();
+            long fraud = ((Number) row[2]).longValue();
+            long suspicious = ((Number) row[3]).longValue();
+            long approved = ((Number) row[4]).longValue();
+
+            mccMetrics.put(mcc, Map.of(
+                "total", total,
+                "approved", approved,
+                "suspicious", suspicious,
+                "fraud", fraud,
+                "fraudRate", calculatePercentage(fraud, total)
+            ));
+        }
+
         return mccMetrics;
     }
 
@@ -75,10 +90,23 @@ public class MetricsService {
      */
     public Map<String, Map<String, Object>> getMetricsByMerchant(String period) {
         Map<String, Map<String, Object>> merchantMetrics = new HashMap<>();
-        
-        // Implementar lógica de agrupamento por merchant
-        // Este é um exemplo simplificado
-        
+
+        LocalDateTime since = calculateSince(period != null ? period : "24h");
+        for (Object[] row : decisionRepository.aggregateByMerchantSince(since)) {
+            String merchantId = (String) row[0];
+            String merchantName = (String) row[1];
+            long total = ((Number) row[2]).longValue();
+            long fraud = ((Number) row[3]).longValue();
+
+            merchantMetrics.put(merchantId != null ? merchantId : "UNKNOWN", Map.of(
+                "merchantId", merchantId,
+                "merchantName", merchantName,
+                "total", total,
+                "fraud", fraud,
+                "fraudRate", calculatePercentage(fraud, total)
+            ));
+        }
+
         return merchantMetrics;
     }
 
@@ -87,10 +115,33 @@ public class MetricsService {
      */
     public Map<String, Object> getMetricsTimeline(String granularity) {
         Map<String, Object> timeline = new HashMap<>();
-        
-        // Implementar lógica de timeline
-        // Este é um exemplo simplificado
-        
+
+        String g = (granularity == null || granularity.isBlank()) ? "hour" : granularity;
+        LocalDateTime since = calculateSince("24h");
+
+        var formatter = DateTimeFormatter.ISO_DATE_TIME;
+        var buckets = new java.util.ArrayList<Map<String, Object>>();
+
+        var rows = switch (g) {
+            case "day" -> decisionRepository.timelineDailySince(since.minusDays(30));
+            default -> decisionRepository.timelineHourlySince(since);
+        };
+
+        for (Object[] row : rows) {
+            java.sql.Timestamp bucketTs = (java.sql.Timestamp) row[0];
+            long total = ((Number) row[1]).longValue();
+            long fraud = ((Number) row[2]).longValue();
+
+            buckets.add(Map.of(
+                "bucket", bucketTs.toLocalDateTime().format(formatter),
+                "total", total,
+                "fraud", fraud
+            ));
+        }
+
+        timeline.put("granularity", g);
+        timeline.put("buckets", buckets);
+
         return timeline;
     }
 

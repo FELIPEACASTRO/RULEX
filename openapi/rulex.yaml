@@ -1,0 +1,462 @@
+openapi: 3.0.3
+info:
+  title: RULEX API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Java Core (dev)
+paths:
+  /api/transactions/analyze:
+    post:
+      summary: Analyze a transaction
+      operationId: analyzeTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeTransactionRequest'
+      responses:
+        '200':
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeTransactionResponse'
+  /api/transactions:
+    get:
+      summary: List transactions
+      operationId: listTransactions
+      parameters:
+        - in: query
+          name: customerId
+          schema: { type: string }
+        - in: query
+          name: merchantId
+          schema: { type: string }
+        - in: query
+          name: mcc
+          schema: { type: integer }
+        - in: query
+          name: minAmount
+          schema: { type: number }
+        - in: query
+          name: maxAmount
+          schema: { type: number }
+        - in: query
+          name: startDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: endDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: page
+          schema: { type: integer, default: 0 }
+        - in: query
+          name: size
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Paged transactions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageAnalyzeTransactionResponse'
+  /api/transactions/{id}:
+    get:
+      summary: Get transaction by internal id
+      operationId: getTransaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: Transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeTransactionResponse'
+  /api/rules:
+    get:
+      summary: List rules
+      operationId: listRules
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 0 }
+        - in: query
+          name: size
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Paged rules
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageRule'
+    post:
+      summary: Create rule
+      operationId: createRule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Rule'
+      responses:
+        '201':
+          description: Rule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+  /api/rules/{id}:
+    get:
+      summary: Get rule
+      operationId: getRule
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: Rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+    put:
+      summary: Update rule
+      operationId: updateRule
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Rule'
+      responses:
+        '200':
+          description: Rule updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+    delete:
+      summary: Delete rule
+      operationId: deleteRule
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '204':
+          description: Deleted
+  /api/rules/{id}/toggle:
+    patch:
+      summary: Toggle rule enabled
+      operationId: toggleRule
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: Updated rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+  /api/audit:
+    get:
+      summary: List audit events
+      operationId: listAudit
+      parameters:
+        - in: query
+          name: actionType
+          schema: { type: string }
+        - in: query
+          name: result
+          schema: { type: string }
+        - in: query
+          name: startDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: endDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: page
+          schema: { type: integer, default: 0 }
+        - in: query
+          name: size
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Paged audit logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageAuditLog'
+  /api/metrics:
+    get:
+      summary: Get system metrics
+      operationId: getMetrics
+      parameters:
+        - in: query
+          name: period
+          schema: { type: string, example: 24h }
+      responses:
+        '200':
+          description: Metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Metrics'
+components:
+  schemas:
+    AnalyzeTransactionRequest:
+      type: object
+      required:
+        - externalTransactionId
+        - customerIdFromHeader
+        - customerAcctNumber
+        - pan
+        - transactionAmount
+        - transactionDate
+        - transactionTime
+        - transactionCurrencyCode
+        - mcc
+        - consumerAuthenticationScore
+        - externalScore3
+        - cavvResult
+        - eciIndicator
+        - atcCard
+        - atcHost
+        - tokenAssuranceLevel
+        - availableCredit
+        - cardCashBalance
+        - cardDelinquentAmount
+      properties:
+        workflow: { type: string }
+        recordType: { type: string }
+        dataSpecificationVersion: { type: number }
+        clientIdFromHeader: { type: string }
+        externalTransactionId: { type: string }
+        customerIdFromHeader: { type: string }
+        customerAcctNumber: { type: integer, format: int64 }
+        pan: { type: string, description: 'Tokenizado/mascarado; nunca armazenar PAN em claro.' }
+        merchantId: { type: string }
+        merchantName: { type: string }
+        transactionAmount: { type: number }
+        transactionDate: { type: integer, description: 'YYYYMMDD' }
+        transactionTime: { type: integer, description: 'HHMMSS' }
+        gmtOffset: { type: string }
+        transactionCurrencyCode: { type: integer }
+        transactionCurrencyConversionRate: { type: number }
+        merchantCountryCode: { type: string }
+        merchantCity: { type: string }
+        merchantState: { type: string }
+        merchantPostalCode: { type: string }
+        mcc: { type: integer }
+        posEntryMode: { type: string }
+        customerPresent: { type: string }
+        authPostFlag: { type: string }
+        authDecisionCode: { type: string }
+        authResponseCode: { type: string }
+        authId: { type: string }
+        authIndicator: { type: integer }
+        processorAuthReasonCode: { type: string }
+        standinAdvice: { type: string }
+        transactionType: { type: string }
+        transactionCategory: { type: string }
+        consumerAuthenticationScore: { type: integer }
+        externalScore3: { type: integer }
+        cavvResult: { type: integer }
+        cavvKeyIndicator: { type: integer }
+        secondFactorAuthCode: { type: string }
+        cryptogramValid: { type: string }
+        cvv2Response: { type: string }
+        cvv2Present: { type: integer }
+        pinVerifyCode: { type: string }
+        cvvVerifyCode: { type: string }
+        cvrofflinePinVerificationPerformed: { type: integer }
+        cvrofflinePinVerificationFailed: { type: integer }
+        cvvPinTryLimitExceeded: { type: integer }
+        eciIndicator: { type: integer }
+        atcCard: { type: integer }
+        atcHost: { type: integer }
+        tokenAssuranceLevel: { type: integer }
+        tokenizationIndicator: { type: string }
+        tokenId: { type: string }
+        tokenRequestorId: { type: string }
+        paymentInstrumentId: { type: string }
+        availableCredit: { type: number }
+        cardCashBalance: { type: number }
+        cardDelinquentAmount: { type: number }
+        cardSeqNum: { type: integer, nullable: true }
+        cardExpireDate: { type: integer }
+        cardMediaType: { type: string }
+        cardAipStatic: { type: string }
+        cardAipDynamic: { type: string }
+        cardAipVerify: { type: string }
+        cardAipRisk: { type: string }
+        cardAipIssuerAuthentication: { type: string }
+        cardAipCombined: { type: string }
+        terminalId: { type: string }
+        terminalType: { type: string }
+        terminalEntryCapability: { type: string }
+        posConditionCode: { type: string }
+        posOffPremises: { type: integer }
+        posCardCapture: { type: integer }
+        posSecurity: { type: integer }
+        terminalVerificationResults: { type: string }
+        cardVerificationResults: { type: string }
+        networkId: { type: string }
+        atmOwner: { type: string }
+        acquirerId: { type: string }
+        acquirerCountry: { type: string }
+        acquirerBin: { type: string, nullable: true }
+        expandedBIN: { type: string }
+        tranCode: { type: string }
+        avsRequest: { type: string }
+        checkNumber: { type: string }
+        recordCreationDate: { type: integer }
+        recordCreationTime: { type: integer }
+        recordCreationMilliseconds: { type: integer }
+        portfolio: { type: string }
+        onUsMerchantId: { type: string }
+        userIndicator01: { type: string }
+        userIndicator03: { type: string }
+        userIndicator04: { type: string }
+        userIndicator05: { type: string }
+        userIndicator08: { type: string }
+        idMethod: { type: integer }
+        userData01: { type: string }
+        userData02: { type: string }
+        userData03: { type: string }
+        userData04: { type: string }
+        userData05: { type: string }
+        userData06: { type: string }
+        userData06_2: { type: string }
+        userData09: { type: string }
+    TriggeredRule:
+      type: object
+      required: [name, weight, contribution]
+      properties:
+        name: { type: string }
+        weight: { type: integer, minimum: 0, maximum: 100 }
+        contribution: { type: integer, minimum: 0, maximum: 100 }
+        detail: { type: string }
+    AnalyzeTransactionResponse:
+      type: object
+      required:
+        - transactionId
+        - classification
+        - riskScore
+        - triggeredRules
+        - reason
+        - rulesetVersion
+        - processingTimeMs
+        - timestamp
+        - success
+      properties:
+        transactionId: { type: string }
+        classification: { type: string, enum: [APPROVED, SUSPICIOUS, FRAUD] }
+        riskScore: { type: integer, minimum: 0, maximum: 100 }
+        triggeredRules:
+          type: array
+          items: { $ref: '#/components/schemas/TriggeredRule' }
+        reason: { type: string }
+        rulesetVersion: { type: string }
+        processingTimeMs: { type: integer, format: int64 }
+        timestamp: { type: string, format: date-time }
+        success: { type: boolean }
+    RuleCondition:
+      type: object
+      required: [field, operator, value]
+      properties:
+        field: { type: string }
+        operator: { type: string, enum: ['==','!=','>','<','>=','<=','IN','NOT_IN','CONTAINS','NOT_CONTAINS'] }
+        value: { type: string }
+    Rule:
+      type: object
+      required: [ruleName, ruleType, weight, enabled, classification, conditions, logicOperator]
+      properties:
+        id: { type: integer, format: int64 }
+        ruleName: { type: string }
+        description: { type: string }
+        ruleType: { type: string, enum: [SECURITY, CONTEXT, VELOCITY, ANOMALY] }
+        weight: { type: integer, minimum: 0, maximum: 100 }
+        enabled: { type: boolean }
+        classification: { type: string, enum: [APPROVED, SUSPICIOUS, FRAUD] }
+        conditions:
+          type: array
+          items: { $ref: '#/components/schemas/RuleCondition' }
+        logicOperator: { type: string, enum: [AND, OR] }
+        version: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    AuditLog:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        transactionId: { type: integer, format: int64 }
+        actionType: { type: string }
+        description: { type: string }
+        details: { type: string }
+        performedBy: { type: string }
+        result: { type: string }
+        errorMessage: { type: string }
+        sourceIp: { type: string }
+        createdAt: { type: string, format: date-time }
+    Metrics:
+      type: object
+      properties:
+        totalTransactions: { type: integer, format: int64 }
+        approvedTransactions: { type: integer, format: int64 }
+        suspiciousTransactions: { type: integer, format: int64 }
+        fraudTransactions: { type: integer, format: int64 }
+        approvalRate: { type: number }
+        suspiciousRate: { type: number }
+        fraudRate: { type: number }
+        period: { type: string }
+        timestamp: { type: string, format: date-time }
+    PageAnalyzeTransactionResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items: { $ref: '#/components/schemas/AnalyzeTransactionResponse' }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+        size: { type: integer }
+        number: { type: integer }
+    PageRule:
+      type: object
+      properties:
+        content:
+          type: array
+          items: { $ref: '#/components/schemas/Rule' }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+        size: { type: integer }
+        number: { type: integer }
+    PageAuditLog:
+      type: object
+      properties:
+        content:
+          type: array
+          items: { $ref: '#/components/schemas/AuditLog' }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+        size: { type: integer }
+        number: { type: integer }

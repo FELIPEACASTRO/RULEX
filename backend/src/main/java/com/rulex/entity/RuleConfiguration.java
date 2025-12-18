@@ -77,6 +77,19 @@ public class RuleConfiguration {
     private String parameters;
 
     /**
+     * Condições genéricas da regra (JSON array de {field, operator, value}).
+     */
+    @Column(columnDefinition = "TEXT")
+    private String conditionsJson;
+
+    /**
+     * Operador lógico para combinar condições.
+     */
+    @Column(length = 3)
+    @Enumerated(EnumType.STRING)
+    private LogicOperator logicOperator;
+
+    /**
      * Versão da configuração
      */
     @Column(nullable = false)
@@ -96,6 +109,9 @@ public class RuleConfiguration {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         version = 1;
+        if (logicOperator == null) {
+            logicOperator = LogicOperator.AND;
+        }
     }
 
     @PreUpdate
@@ -118,6 +134,11 @@ public class RuleConfiguration {
         public String getLabel() {
             return label;
         }
+    }
+
+    public enum LogicOperator {
+        AND,
+        OR
     }
 
 }

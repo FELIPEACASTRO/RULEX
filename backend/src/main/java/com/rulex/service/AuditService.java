@@ -5,6 +5,7 @@ import com.rulex.entity.Transaction;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.AuditLogRepository;
 import com.rulex.service.RuleEngineService.RuleEvaluationResult;
+import com.rulex.dto.TransactionRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,9 +40,9 @@ public class AuditService {
             details.put("amount", transaction.getTransactionAmount());
             details.put("classification", decision.getClassification().name());
             details.put("riskScore", decision.getRiskScore());
-            details.put("rulesApplied", result.getAppliedRules());
+            details.put("rulesApplied", extractAppliedRuleNames(result));
 
-            AuditLog log = AuditLog.builder()
+            AuditLog auditLog = AuditLog.builder()
                 .transactionId(transaction.getId())
                 .actionType(AuditLog.AuditActionType.TRANSACTION_PROCESSED)
                 .description(String.format("Transação %s processada com classificação %s", 
@@ -50,11 +51,25 @@ public class AuditService {
                 .result(AuditLog.AuditResult.SUCCESS)
                 .build();
 
-            auditLogRepository.save(log);
+            auditLogRepository.save(auditLog);
             log.info("Auditoria registrada para transação: {}", transaction.getExternalTransactionId());
         } catch (Exception e) {
             log.error("Erro ao registrar auditoria de transação", e);
         }
+    }
+
+    private Object extractAppliedRuleNames(RuleEvaluationResult result) {
+        if (result == null || result.getTriggeredRules() == null || result.getTriggeredRules().isEmpty()) {
+            return java.util.List.of();
+        }
+
+        java.util.List<String> names = new java.util.ArrayList<>(result.getTriggeredRules().size());
+        for (var rule : result.getTriggeredRules()) {
+            if (rule != null && rule.getName() != null && !rule.getName().isBlank()) {
+                names.add(rule.getName());
+            }
+        }
+        return names;
     }
 
     /**
@@ -62,14 +77,14 @@ public class AuditService {
      */
     public void logError(String transactionId, Exception exception) {
         try {
-            AuditLog log = AuditLog.builder()
+            AuditLog auditLog = AuditLog.builder()
                 .actionType(AuditLog.AuditActionType.TRANSACTION_PROCESSED)
                 .description(String.format("Erro ao processar transação %s", transactionId))
                 .result(AuditLog.AuditResult.FAILURE)
                 .errorMessage(exception.getMessage())
                 .build();
 
-            auditLogRepository.save(log);
+            auditLogRepository.save(auditLog);
         } catch (Exception e) {
             log.error("Erro ao registrar auditoria de erro", e);
         }
@@ -80,14 +95,14 @@ public class AuditService {
      */
     public void logRuleCreated(String ruleName, String performedBy) {
         try {
-            AuditLog log = AuditLog.builder()
+            AuditLog auditLog = AuditLog.builder()
                 .actionType(AuditLog.AuditActionType.RULE_CREATED)
                 .description(String.format("Regra '%s' criada", ruleName))
                 .performedBy(performedBy)
                 .result(AuditLog.AuditResult.SUCCESS)
                 .build();
 
-            auditLogRepository.save(log);
+            auditLogRepository.save(auditLog);
         } catch (Exception e) {
             log.error("Erro ao registrar auditoria de criação de regra", e);
         }
@@ -98,7 +113,7 @@ public class AuditService {
      */
     public void logRuleUpdated(String ruleName, Map<String, Object> changes, String performedBy) {
         try {
-            AuditLog log = AuditLog.builder()
+            AuditLog auditLog = AuditLog.builder()
                 .actionType(AuditLog.AuditActionType.RULE_UPDATED)
                 .description(String.format("Regra '%s' atualizada", ruleName))
                 .details(objectMapper.writeValueAsString(changes))
@@ -106,7 +121,7 @@ public class AuditService {
                 .result(AuditLog.AuditResult.SUCCESS)
                 .build();
 
-            auditLogRepository.save(log);
+            auditLogRepository.save(auditLog);
         } catch (Exception e) {
             log.error("Erro ao registrar auditoria de atualização de regra", e);
         }
@@ -117,16 +132,40 @@ public class AuditService {
      */
     public void logRuleDeleted(String ruleName, String performedBy) {
         try {
-            AuditLog log = AuditLog.builder()
+            AuditLog auditLog = AuditLog.builder()
                 .actionType(AuditLog.AuditActionType.RULE_DELETED)
                 .description(String.format("Regra '%s' deletada", ruleName))
                 .performedBy(performedBy)
                 .result(AuditLog.AuditResult.SUCCESS)
                 .build();
 
-            auditLogRepository.save(log);
+            auditLogRepository.save(auditLog);
         } catch (Exception e) {
             log.error("Erro ao registrar auditoria de deleção de regra", e);
+        }
+    }
+
+    /**
+     * Registra a execução de uma regra específica (motor avançado).
+     */
+    public void logRule(String ruleName, TransactionRequest transaction, String outcome) {
+        try {
+            Map<String, Object> details = new HashMap<>();
+            details.put("ruleName", ruleName);
+            details.put("externalTransactionId", transaction.getExternalTransactionId());
+            details.put("outcome", outcome);
+
+            AuditLog auditLog = AuditLog.builder()
+                .actionType(AuditLog.AuditActionType.DECISION_MADE)
+                .description(String.format("Regra '%s' executada com resultado %s", ruleName, outcome))
+                .details(objectMapper.writeValueAsString(details))
+                .performedBy("SYSTEM")
+                .result(AuditLog.AuditResult.SUCCESS)
+                .build();
+
+            auditLogRepository.save(auditLog);
+        } catch (Exception e) {
+            log.error("Erro ao registrar auditoria da regra", e);
         }
     }
 

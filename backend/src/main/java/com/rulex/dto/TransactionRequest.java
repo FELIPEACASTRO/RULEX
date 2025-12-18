@@ -40,6 +40,205 @@ public class TransactionRequest {
     @JsonProperty("merchantName")
     private String merchantName;
 
+    @NotNull(message = "transactionCurrencyCode é obrigatório")
+    @JsonProperty("transactionCurrencyCode")
+    private Integer transactionCurrencyCode;
+
+    @JsonProperty("dataSpecificationVersion")
+    private BigDecimal dataSpecificationVersion;
+
+    @JsonProperty("authPostFlag")
+    private String authPostFlag;
+
+    @JsonProperty("cardSeqNum")
+    private Integer cardSeqNum;
+
+    @JsonProperty("cardExpireDate")
+    private Integer cardExpireDate;
+
+    @JsonProperty("authDecisionCode")
+    private String authDecisionCode;
+
+    @JsonProperty("transactionType")
+    private String transactionType;
+
+    @JsonProperty("transactionCategory")
+    private String transactionCategory;
+
+    @JsonProperty("atmOwner")
+    private String atmOwner;
+
+    @JsonProperty("acquirerBin")
+    private String acquirerBin;
+
+    @JsonProperty("userIndicator01")
+    private String userIndicator01;
+
+    @JsonProperty("userIndicator03")
+    private String userIndicator03;
+
+    @JsonProperty("userIndicator04")
+    private String userIndicator04;
+
+    @JsonProperty("userIndicator05")
+    private String userIndicator05;
+
+    @JsonProperty("userIndicator08")
+    private String userIndicator08;
+
+    @JsonProperty("idMethod")
+    private Integer idMethod;
+
+    @JsonProperty("tokenId")
+    private String tokenId;
+
+    @JsonProperty("cardAipStatic")
+    private String cardAipStatic;
+
+    @JsonProperty("cardAipDynamic")
+    private String cardAipDynamic;
+
+    @JsonProperty("cardAipVerify")
+    private String cardAipVerify;
+
+    @JsonProperty("cardAipRisk")
+    private String cardAipRisk;
+
+    @JsonProperty("cardAipIssuerAuthentication")
+    private String cardAipIssuerAuthentication;
+
+    @JsonProperty("cardAipCombined")
+    private String cardAipCombined;
+
+    @JsonProperty("cardMediaType")
+    private String cardMediaType;
+
+    @JsonProperty("tokenRequestorId")
+    private String tokenRequestorId;
+
+    @JsonProperty("tokenizationIndicator")
+    private String tokenizationIndicator;
+
+    @JsonProperty("paymentInstrumentId")
+    private String paymentInstrumentId;
+
+    @JsonProperty("acquirerId")
+    private String acquirerId;
+
+    @JsonProperty("acquirerCountry")
+    private String acquirerCountry;
+
+    @JsonProperty("terminalId")
+    private String terminalId;
+
+    @JsonProperty("terminalType")
+    private String terminalType;
+
+    @JsonProperty("terminalEntryCapability")
+    private String terminalEntryCapability;
+
+    @JsonProperty("posConditionCode")
+    private String posConditionCode;
+
+    @JsonProperty("networkId")
+    private String networkId;
+
+    @JsonProperty("terminalVerificationResults")
+    private String terminalVerificationResults;
+
+    @JsonProperty("cardVerificationResults")
+    private String cardVerificationResults;
+
+    @JsonProperty("authIndicator")
+    private Integer authIndicator;
+
+    @JsonProperty("secondFactorAuthCode")
+    private String secondFactorAuthCode;
+
+    @JsonProperty("cavvKeyIndicator")
+    private Integer cavvKeyIndicator;
+
+    @JsonProperty("processorAuthReasonCode")
+    private String processorAuthReasonCode;
+
+    @JsonProperty("standinAdvice")
+    private String standinAdvice;
+
+    @JsonProperty("avsRequest")
+    private String avsRequest;
+
+    @JsonProperty("cvrofflinePinVerificationPerformed")
+    private Integer cvrofflinePinVerificationPerformed;
+
+    @JsonProperty("cvrofflinePinVerificationFailed")
+    private Integer cvrofflinePinVerificationFailed;
+
+    @JsonProperty("cvvPinTryLimitExceeded")
+    private Integer cvvPinTryLimitExceeded;
+
+    @JsonProperty("posOffPremises")
+    private Integer posOffPremises;
+
+    @JsonProperty("posCardCapture")
+    private Integer posCardCapture;
+
+    @JsonProperty("posSecurity")
+    private Integer posSecurity;
+
+    @JsonProperty("authResponseCode")
+    private String authResponseCode;
+
+    @JsonProperty("authId")
+    private String authId;
+
+    @JsonProperty("checkNumber")
+    private String checkNumber;
+
+    @JsonProperty("recordCreationDate")
+    private Integer recordCreationDate;
+
+    @JsonProperty("recordCreationTime")
+    private Integer recordCreationTime;
+
+    @JsonProperty("recordCreationMilliseconds")
+    private Integer recordCreationMilliseconds;
+
+    @JsonProperty("userData01")
+    private String userData01;
+
+    @JsonProperty("userData02")
+    private String userData02;
+
+    @JsonProperty("userData03")
+    private String userData03;
+
+    @JsonProperty("userData04")
+    private String userData04;
+
+    @JsonProperty("userData05")
+    private String userData05;
+
+    @JsonProperty("userData06")
+    private String userData06;
+
+    @JsonProperty("userData06_2")
+    private String userData06_2;
+
+    @JsonProperty("userData09")
+    private String userData09;
+
+    @JsonProperty("portfolio")
+    private String portfolio;
+
+    @JsonProperty("onUsMerchantId")
+    private String onUsMerchantId;
+
+    @JsonProperty("expandedBIN")
+    private String expandedBIN;
+
+    @JsonProperty("tranCode")
+    private String tranCode;
+
     @NotNull(message = "transactionAmount é obrigatório")
     @DecimalMin(value = "0.0", inclusive = false, message = "transactionAmount deve ser maior que 0")
     @JsonProperty("transactionAmount")
@@ -55,10 +254,6 @@ public class TransactionRequest {
 
     @JsonProperty("gmtOffset")
     private String gmtOffset;
-
-    @NotNull(message = "transactionCurrencyCode é obrigatório")
-    @JsonProperty("transactionCurrencyCode")
-    private Integer transactionCurrencyCode;
 
     @JsonProperty("transactionCurrencyConversionRate")
     private BigDecimal transactionCurrencyConversionRate;
@@ -131,9 +326,6 @@ public class TransactionRequest {
     @NotNull(message = "tokenAssuranceLevel é obrigatório")
     @JsonProperty("tokenAssuranceLevel")
     private Integer tokenAssuranceLevel;
-
-    @JsonProperty("tokenizationIndicator")
-    private String tokenizationIndicator;
 
     @NotNull(message = "availableCredit é obrigatório")
     @JsonProperty("availableCredit")

@@ -90,6 +90,30 @@ public class Transaction {
     @Column(length = 1)
     private String customerPresent; // Y/N
 
+    // POS / Terminal (CRTRAN25)
+    @Column
+    private Integer posOffPremises;
+
+    @Column
+    private Integer posCardCapture;
+
+    @Column
+    private Integer posSecurity;
+
+    // PIN/CVV (CRTRAN25)
+    @Column
+    private Integer cvvPinTryLimitExceeded;
+
+    @Column
+    private Integer cvrofflinePinVerificationPerformed;
+
+    @Column
+    private Integer cvrofflinePinVerificationFailed;
+
+    // Card media
+    @Column(length = 1)
+    private String cardMediaType;
+
     // Segurança e Autenticação
     @Column(nullable = false)
     private Integer consumerAuthenticationScore;

@@ -1,5 +1,8 @@
 package com.rulex.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rulex.dto.RuleConditionDTO;
+import com.rulex.dto.TriggeredRuleDTO;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
 import com.rulex.entity.RuleConfiguration;
@@ -8,11 +11,14 @@ import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
+import com.rulex.util.PanMaskingUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.beans.PropertyDescriptor;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -30,6 +36,7 @@ public class RuleEngineService {
     private final TransactionDecisionRepository decisionRepository;
     private final RuleConfigurationRepository ruleConfigRepository;
     private final AuditService auditService;
+    private final ObjectMapper objectMapper;
 
     /**
      * Processa uma transação e retorna a classificação de fraude.
@@ -71,20 +78,31 @@ public class RuleEngineService {
         List<RuleConfiguration> enabledRules = ruleConfigRepository.findByEnabled(true);
         
         int totalScore = 0;
-        List<String> appliedRules = new ArrayList<>();
+        List<TriggeredRuleDTO> triggeredRules = new ArrayList<>();
         Map<String, Object> scoreDetails = new HashMap<>();
+        TransactionDecision.TransactionClassification maxByRule = TransactionDecision.TransactionClassification.APPROVED;
         
         for (RuleConfiguration rule : enabledRules) {
-            boolean ruleTriggered = evaluateRule(transaction, rule);
+            RuleMatch ruleMatch = evaluateRuleGeneric(transaction, rule);
             
-            if (ruleTriggered) {
-                appliedRules.add(rule.getRuleName());
-                int contribution = (rule.getWeight() * rule.getThreshold()) / 100;
+            if (ruleMatch.triggered) {
+                int contribution = clampScore(rule.getWeight());
                 totalScore += contribution;
+
+                triggeredRules.add(TriggeredRuleDTO.builder()
+                    .name(rule.getRuleName())
+                    .weight(rule.getWeight())
+                    .contribution(contribution)
+                    .detail(ruleMatch.detail)
+                    .build());
+
+                maxByRule = maxSeverity(maxByRule, rule.getClassification());
+
                 scoreDetails.put(rule.getRuleName(), Map.of(
                     "triggered", true,
                     "weight", rule.getWeight(),
-                    "contribution", contribution
+                    "contribution", contribution,
+                    "detail", ruleMatch.detail
                 ));
             } else {
                 scoreDetails.put(rule.getRuleName(), Map.of("triggered", false));
@@ -95,10 +113,10 @@ public class RuleEngineService {
         totalScore = Math.min(totalScore, 100);
         
         result.setRiskScore(totalScore);
-        result.setAppliedRules(appliedRules);
+        result.setTriggeredRules(triggeredRules);
         result.setScoreDetails(scoreDetails);
-        result.setClassification(classifyRisk(totalScore));
-        result.setReason(generateReason(totalScore, appliedRules));
+        result.setClassification(maxSeverity(classifyRiskByScore(totalScore), maxByRule));
+        result.setReason(generateReason(totalScore, triggeredRules));
         
         return result;
     }
@@ -106,8 +124,43 @@ public class RuleEngineService {
     /**
      * Avalia uma regra específica contra a transação.
      */
-    private boolean evaluateRule(Transaction transaction, RuleConfiguration rule) {
-        return switch (rule.getRuleName()) {
+    private RuleMatch evaluateRuleGeneric(Transaction transaction, RuleConfiguration rule) {
+        // 1) Preferir condições genéricas (configuráveis)
+        if (rule.getConditionsJson() != null && !rule.getConditionsJson().isBlank()) {
+            List<RuleConditionDTO> conditions = readConditions(rule.getConditionsJson());
+            RuleConfiguration.LogicOperator op = rule.getLogicOperator() != null
+                ? rule.getLogicOperator()
+                : RuleConfiguration.LogicOperator.AND;
+
+            if (!conditions.isEmpty()) {
+                List<String> explanations = new ArrayList<>();
+
+                boolean triggered = (op == RuleConfiguration.LogicOperator.AND);
+                for (RuleConditionDTO condition : conditions) {
+                    boolean condResult = evaluateCondition(transaction, condition);
+                    explanations.add(explainCondition(transaction, condition, condResult));
+
+                    if (op == RuleConfiguration.LogicOperator.AND) {
+                        triggered = triggered && condResult;
+                        if (!triggered) {
+                            // AND: early exit
+                            break;
+                        }
+                    } else {
+                        triggered = triggered || condResult;
+                        if (triggered) {
+                            // OR: early exit
+                            break;
+                        }
+                    }
+                }
+
+                return new RuleMatch(triggered, String.join(" | ", explanations));
+            }
+        }
+
+        // 2) Fallback legada por nome (compatibilidade)
+        boolean legacy = switch (rule.getRuleName()) {
             case "LOW_AUTHENTICATION_SCORE" -> 
                 transaction.getConsumerAuthenticationScore() < rule.getThreshold();
             
@@ -146,6 +199,8 @@ public class RuleEngineService {
             
             default -> false;
         };
+
+        return new RuleMatch(legacy, legacy ? "regra legada por nome" : null);
     }
 
     /**
@@ -175,20 +230,21 @@ public class RuleEngineService {
     /**
      * Classifica o risco baseado no score.
      */
-    private TransactionDecision.TransactionClassification classifyRisk(int riskScore) {
+    private TransactionDecision.TransactionClassification classifyRiskByScore(int riskScore) {
         if (riskScore < 30) {
             return TransactionDecision.TransactionClassification.APPROVED;
-        } else if (riskScore < 70) {
-            return TransactionDecision.TransactionClassification.SUSPICIOUS;
-        } else {
-            return TransactionDecision.TransactionClassification.FRAUD;
         }
+        if (riskScore < 70) {
+            return TransactionDecision.TransactionClassification.SUSPICIOUS;
+        }
+        return TransactionDecision.TransactionClassification.FRAUD;
     }
 
     /**
      * Gera uma descrição do motivo da decisão.
      */
-    private String generateReason(int riskScore, List<String> appliedRules) {
+    private String generateReason(int riskScore, List<TriggeredRuleDTO> triggeredRules) {
+        List<String> appliedRules = triggeredRules.stream().map(TriggeredRuleDTO::getName).toList();
         if (riskScore < 30) {
             return "Transação aprovada. Score de risco baixo.";
         } else if (riskScore < 70) {
@@ -208,21 +264,18 @@ public class RuleEngineService {
             .transaction(transaction)
             .classification(result.getClassification())
             .riskScore(result.getRiskScore())
-            .rulesApplied(String.join(", ", result.getAppliedRules()))
-            .scoreDetails(convertMapToJson(result.getScoreDetails()))
+            .rulesApplied(writeJson(result.getTriggeredRules()))
+            .scoreDetails(writeJson(result.getScoreDetails()))
             .reason(result.getReason())
-            .rulesVersion("1.0.0")
+            .rulesVersion("1")
             .build();
     }
 
-    /**
-     * Converte um mapa para JSON string.
-     */
-    private String convertMapToJson(Map<String, Object> map) {
+    private String writeJson(Object value) {
         try {
-            return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(map);
+            return objectMapper.writeValueAsString(value);
         } catch (Exception e) {
-            log.error("Erro ao converter mapa para JSON", e);
+            log.error("Erro ao serializar JSON", e);
             return "{}";
         }
     }
@@ -233,14 +286,13 @@ public class RuleEngineService {
     private TransactionResponse buildResponse(Transaction transaction, TransactionDecision decision, 
                                             RuleEvaluationResult result, long processingTime) {
         return TransactionResponse.builder()
-            .externalTransactionId(transaction.getExternalTransactionId())
+            .transactionId(transaction.getExternalTransactionId())
             .classification(decision.getClassification().name())
             .riskScore(decision.getRiskScore())
-            .rulesApplied(result.getAppliedRules())
-            .scoreDetails(result.getScoreDetails())
+            .triggeredRules(result.getTriggeredRules())
             .reason(decision.getReason())
-            .rulesVersion(decision.getRulesVersion())
-            .processingTime(processingTime)
+            .rulesetVersion(decision.getRulesVersion())
+            .processingTimeMs(processingTime)
             .timestamp(LocalDateTime.now())
             .success(true)
             .build();
@@ -254,7 +306,7 @@ public class RuleEngineService {
             .externalTransactionId(request.getExternalTransactionId())
             .customerIdFromHeader(request.getCustomerIdFromHeader())
             .customerAcctNumber(request.getCustomerAcctNumber())
-            .pan(request.getPan())
+            .pan(PanMaskingUtil.mask(request.getPan()))
             .merchantId(request.getMerchantId())
             .merchantName(request.getMerchantName())
             .transactionAmount(request.getTransactionAmount())
@@ -270,6 +322,13 @@ public class RuleEngineService {
             .mcc(request.getMcc())
             .posEntryMode(request.getPosEntryMode())
             .customerPresent(request.getCustomerPresent())
+            .posOffPremises(request.getPosOffPremises())
+            .posCardCapture(request.getPosCardCapture())
+            .posSecurity(request.getPosSecurity())
+            .cvvPinTryLimitExceeded(request.getCvvPinTryLimitExceeded())
+            .cvrofflinePinVerificationPerformed(request.getCvrofflinePinVerificationPerformed())
+            .cvrofflinePinVerificationFailed(request.getCvrofflinePinVerificationFailed())
+            .cardMediaType(request.getCardMediaType())
             .consumerAuthenticationScore(request.getConsumerAuthenticationScore())
             .externalScore3(request.getExternalScore3())
             .cavvResult(request.getCavvResult())
@@ -292,6 +351,122 @@ public class RuleEngineService {
             .build();
     }
 
+    private int clampScore(Integer weight) {
+        if (weight == null) {
+            return 0;
+        }
+        return Math.max(0, Math.min(weight, 100));
+    }
+
+    private TransactionDecision.TransactionClassification maxSeverity(
+        TransactionDecision.TransactionClassification a,
+        TransactionDecision.TransactionClassification b
+    ) {
+        int sa = severity(a);
+        int sb = severity(b);
+        return sa >= sb ? a : b;
+    }
+
+    private int severity(TransactionDecision.TransactionClassification c) {
+        return switch (c) {
+            case APPROVED -> 0;
+            case SUSPICIOUS -> 1;
+            case FRAUD -> 2;
+        };
+    }
+
+    private List<RuleConditionDTO> readConditions(String conditionsJson) {
+        try {
+            if (conditionsJson == null || conditionsJson.isBlank()) {
+                return List.of();
+            }
+            return objectMapper.readValue(
+                conditionsJson,
+                objectMapper.getTypeFactory().constructCollectionType(List.class, RuleConditionDTO.class)
+            );
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    private boolean evaluateCondition(Transaction transaction, RuleConditionDTO condition) {
+        Object fieldValue = readFieldValue(transaction, condition.getField());
+        if (fieldValue == null) {
+            return false;
+        }
+
+        String operator = condition.getOperator();
+        String rawValue = condition.getValue();
+
+        if (fieldValue instanceof Number || fieldValue instanceof BigDecimal) {
+            BigDecimal left = (fieldValue instanceof BigDecimal)
+                ? (BigDecimal) fieldValue
+                : new BigDecimal(fieldValue.toString());
+
+            try {
+                return switch (operator) {
+                    case "==" -> left.compareTo(new BigDecimal(rawValue)) == 0;
+                    case "!=" -> left.compareTo(new BigDecimal(rawValue)) != 0;
+                    case ">" -> left.compareTo(new BigDecimal(rawValue)) > 0;
+                    case "<" -> left.compareTo(new BigDecimal(rawValue)) < 0;
+                    case ">=" -> left.compareTo(new BigDecimal(rawValue)) >= 0;
+                    case "<=" -> left.compareTo(new BigDecimal(rawValue)) <= 0;
+                    case "IN" -> inListNumber(left, rawValue);
+                    case "NOT_IN" -> !inListNumber(left, rawValue);
+                    default -> false;
+                };
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        String left = String.valueOf(fieldValue);
+        return switch (operator) {
+            case "==" -> left.equals(rawValue);
+            case "!=" -> !left.equals(rawValue);
+            case "CONTAINS" -> left.contains(rawValue);
+            case "NOT_CONTAINS" -> !left.contains(rawValue);
+            case "IN" -> inListString(left, rawValue);
+            case "NOT_IN" -> !inListString(left, rawValue);
+            default -> false;
+        };
+    }
+
+    private boolean inListNumber(BigDecimal left, String csv) {
+        for (String token : csv.split(",")) {
+            String t = token.trim();
+            if (t.isEmpty()) continue;
+            if (left.compareTo(new BigDecimal(t)) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean inListString(String left, String csv) {
+        for (String token : csv.split(",")) {
+            if (left.equals(token.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String explainCondition(Transaction transaction, RuleConditionDTO condition, boolean result) {
+        Object fieldValue = readFieldValue(transaction, condition.getField());
+        return condition.getField() + " " + condition.getOperator() + " " + condition.getValue() +
+            " (actual=" + fieldValue + ") => " + result;
+    }
+
+    private Object readFieldValue(Transaction transaction, String fieldName) {
+        try {
+            PropertyDescriptor pd = new PropertyDescriptor(fieldName, Transaction.class);
+            return pd.getReadMethod().invoke(transaction);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     /**
      * Classe interna para armazenar resultado da avaliação de regras.
      */
@@ -300,10 +475,12 @@ public class RuleEngineService {
     @lombok.AllArgsConstructor
     public static class RuleEvaluationResult {
         private int riskScore;
-        private List<String> appliedRules;
+        private List<TriggeredRuleDTO> triggeredRules;
         private Map<String, Object> scoreDetails;
         private TransactionDecision.TransactionClassification classification;
         private String reason;
     }
+
+    private record RuleMatch(boolean triggered, String detail) {}
 
 }

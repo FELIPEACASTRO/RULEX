@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
 
 /**
  * Controller REST para processamento e consulta de transações.
@@ -27,7 +26,6 @@ import java.util.Map;
 @RequestMapping("/transactions")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class TransactionController {
 
     private final RuleEngineService ruleEngineService;
@@ -134,18 +132,24 @@ public class TransactionController {
      * POST /api/transactions/analyze-advanced
      */
     @PostMapping("/analyze-advanced")
-    public ResponseEntity<?> analyzeTransactionAdvanced(
+    public ResponseEntity<TransactionResponse> analyzeTransactionAdvanced(
             @Valid @RequestBody TransactionRequest request) {
         
         log.info("Analisando transação com regras avançadas: {}", request.getExternalTransactionId());
         
         try {
             AdvancedRuleEngineService.RuleResult result = advancedRuleEngineService.executeAllAdvancedRules(request);
-            return ResponseEntity.ok(Map.of(
-                "externalTransactionId", request.getExternalTransactionId(),
-                "classification", result.toString(),
-                "timestamp", LocalDateTime.now()
-            ));
+            return ResponseEntity.ok(TransactionResponse.builder()
+                .transactionId(request.getExternalTransactionId())
+                .classification(result.name())
+                .riskScore(result == AdvancedRuleEngineService.RuleResult.FRAUD ? 90 : (result == AdvancedRuleEngineService.RuleResult.SUSPICIOUS ? 60 : 10))
+                .triggeredRules(java.util.List.of())
+                .reason("Resultado de regras avançadas")
+                .rulesetVersion("advanced")
+                .processingTimeMs(0L)
+                .timestamp(LocalDateTime.now())
+                .success(true)
+                .build());
         } catch (Exception e) {
             log.error("Erro ao analisar transação com regras avançadas: {}", request.getExternalTransactionId(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

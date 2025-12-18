@@ -1,13 +1,11 @@
 package com.rulex.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 /**
  * DTO para resposta de análise de transação.
@@ -19,34 +17,29 @@ import java.util.Map;
 @Builder
 public class TransactionResponse {
 
-    @JsonProperty("transactionId")
-    private String externalTransactionId;
+    /** ID externo da transação (canônico). */
+    private String transactionId;
 
-    @JsonProperty("classification")
-    private String classification; // APPROVED, SUSPICIOUS, FRAUD
+    /** APPROVED, SUSPICIOUS, FRAUD */
+    private String classification;
 
-    @JsonProperty("riskScore")
-    private Integer riskScore; // 0-100
+    /** 0-100 */
+    private Integer riskScore;
 
-    @JsonProperty("rulesApplied")
-    private List<String> rulesApplied;
+    /** Detalhamento das regras que dispararam. */
+    private List<TriggeredRuleDTO> triggeredRules;
 
-    @JsonProperty("scoreDetails")
-    private Map<String, Object> scoreDetails;
-
-    @JsonProperty("reason")
+    /** Texto explicativo (sintético). */
     private String reason;
 
-    @JsonProperty("rulesVersion")
-    private String rulesVersion;
+    /** Versão do conjunto de regras usado na decisão. */
+    private String rulesetVersion;
 
-    @JsonProperty("processingTime")
-    private Long processingTime; // em milissegundos
+    /** Tempo de processamento em ms. */
+    private Long processingTimeMs;
 
-    @JsonProperty("timestamp")
     private LocalDateTime timestamp;
 
-    @JsonProperty("success")
     private Boolean success;
 
 }
