@@ -1,6 +1,10 @@
 spring:
   application:
     name: rulex-fraud-detection
+
+  threads:
+    virtual:
+      enabled: true
   
   datasource:
     url: jdbc:postgresql://localhost:5432/rulex_db

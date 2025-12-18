@@ -1,11 +1,10 @@
 package com.rulex.entity.homolog;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.UuidGenerator;
-
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
 
 @Entity
 @Table(name = "roles")
@@ -15,21 +14,18 @@ import java.util.UUID;
 @Builder
 public class RoleEntity {
 
-    @Id
-    @UuidGenerator
-    @GeneratedValue
-    private UUID id;
+  @Id @UuidGenerator @GeneratedValue private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String name;
+  @Column(nullable = false, unique = true)
+  private String name;
 
-    @Column(nullable = false)
-    private OffsetDateTime createdAt;
+  @Column(nullable = false)
+  private OffsetDateTime createdAt;
 
-    @PrePersist
-    void onCreate() {
-        if (createdAt == null) {
-            createdAt = OffsetDateTime.now();
-        }
+  @PrePersist
+  void onCreate() {
+    if (createdAt == null) {
+      createdAt = OffsetDateTime.now();
     }
+  }
 }

@@ -1,9 +1,7 @@
 package com.rulex.repository.homolog;
 
 import com.rulex.entity.homolog.AuditEntryEntity;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.UUID;
-
-public interface AuditEntryRepository extends JpaRepository<AuditEntryEntity, UUID> {
-}
+public interface AuditEntryRepository extends JpaRepository<AuditEntryEntity, UUID> {}

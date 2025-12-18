@@ -1,10 +1,8 @@
 package com.rulex.entity.homolog;
 
-/**
- * Decisão final canônica (português), para homologação.
- */
+/** Decisão final canônica (português), para homologação. */
 public enum DecisionOutcome {
-    APROVADO,
-    SUSPEITA_DE_FRAUDE,
-    FRAUDE
+  APROVADO,
+  SUSPEITA_DE_FRAUDE,
+  FRAUDE
 }

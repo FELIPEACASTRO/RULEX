@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class HomologEngineConfig {
 
-    @Bean
-    public SafeRuleDslEvaluator safeRuleDslEvaluator(ObjectMapper objectMapper) {
-        return new SafeRuleDslEvaluator(objectMapper);
-    }
+  @Bean
+  public SafeRuleDslEvaluator safeRuleDslEvaluator(ObjectMapper objectMapper) {
+    return new SafeRuleDslEvaluator(objectMapper);
+  }
 }

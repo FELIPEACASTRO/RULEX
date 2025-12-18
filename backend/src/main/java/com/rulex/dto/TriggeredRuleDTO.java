@@ -5,23 +5,21 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Regra disparada durante a avaliação.
- */
+/** Regra disparada durante a avaliação. */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class TriggeredRuleDTO {
 
-    private String name;
+  private String name;
 
-    /** Peso (0-100). */
-    private Integer weight;
+  /** Peso (0-100). */
+  private Integer weight;
 
-    /** Contribuição efetiva no score (0-100). */
-    private Integer contribution;
+  /** Contribuição efetiva no score (0-100). */
+  private Integer contribution;
 
-    /** Texto explicativo opcional. */
-    private String detail;
+  /** Texto explicativo opcional. */
+  private String detail;
 }
