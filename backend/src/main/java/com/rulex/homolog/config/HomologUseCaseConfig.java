@@ -1,4 +1,4 @@
-package com.rulex.homolog.usecase;
+package com.rulex.homolog.config;
 
 import com.rulex.homolog.port.ActiveRuleSetPersistencePort;
 import com.rulex.homolog.port.ActorResolverPort;
@@ -13,6 +13,8 @@ import com.rulex.homolog.port.RuleSetVersionItemPersistencePort;
 import com.rulex.homolog.port.RuleSetVersionPersistencePort;
 import com.rulex.homolog.port.RuleVersionPersistencePort;
 import com.rulex.homolog.port.SimulationRunPersistencePort;
+import com.rulex.homolog.usecase.HomologRuleSetUseCase;
+import com.rulex.homolog.usecase.HomologRuleUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

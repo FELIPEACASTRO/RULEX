@@ -15,18 +15,52 @@ Backend da plataforma RULEX, um sistema de regras duras para análise e prevenç
 ```
 backend/
 ├── src/main/java/com/rulex/
-│   ├── controller/          # Controllers REST
-│   ├── service/             # Lógica de negócio
-│   ├── repository/          # Acesso aos dados (JPA)
-│   ├── entity/              # Entidades JPA
-│   ├── dto/                 # Data Transfer Objects
-│   ├── exception/           # Tratamento de exceções
-│   ├── config/              # Configurações
-│   └── util/                # Utilitários
+│   ├── controller/                  # Controllers REST (Delivery)
+│   ├── homolog/
+│   │   ├── application/             # Application services (fronteira transacional)
+│   │   ├── usecase/                 # Use cases (core, sem Spring)
+│   │   ├── port/                    # Ports (abstrações)
+│   │   └── adapter/                 # Adapters Spring (infra)
+│   │   └── config/                  # Wiring Spring dos use cases (infra)
+│   ├── repository/                  # Acesso aos dados (JPA)
+│   ├── entity/                      # Entidades JPA
+│   ├── dto/                         # Data Transfer Objects
+│   ├── api/                         # Contratos/erros HTTP
+│   └── config/                      # Configurações
 ├── src/main/resources/
 │   └── application.yml      # Configuração da aplicação
 └── pom.xml                  # Dependências Maven
 ```
+
+## Qualidade e critérios “homologável”
+
+- Java 21 obrigatório via Maven Enforcer.
+- Build estrito: compilação com `-Werror` e `-Xlint:all,-processing`.
+- Formatação: Spotless (google-java-format) no `verify`.
+- Arquitetura: teste ArchUnit impede dependências proibidas nos `*UseCase` e `port`.
+
+Comandos:
+
+```bash
+mvn -q clean test
+mvn -q clean verify
+```
+
+## Testes (unidade e integração)
+
+- Integração: Testcontainers (Postgres) valida o fluxo de homologação.
+- Unidade: use cases podem ser testados com mocks/stubs das portas (sem subir Spring).
+
+## Cobertura de testes (JaCoCo)
+
+Relatório de cobertura é gerado via profile opcional:
+
+```bash
+mvn -q -Pcoverage test
+```
+
+Saída:
+- `target/site/jacoco/index.html`
 
 ## Configuração
 
