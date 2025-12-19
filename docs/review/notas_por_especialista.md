@@ -1,190 +1,181 @@
-# Notas por Especialista - Análise Detalhada
+# Notas por Especialista - Analise Detalhada v2.0
 
 **Data**: 2025-12-19  
 **Projeto**: RULEX - Motor de Regras Duras
+**Versao**: Arquitetura Simplificada (React + Java)
 
 ---
 
-## 1. Especialista de Negócio (Crédito/Fraude)
+## 1. Especialista de Negocio (Credito/Fraude)
 
-**NOTA: 7.5/10**
+**NOTA: 8.0/10** (+0.5 vs v1.0)
 
 ### Pontos Fortes
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Motor de regras configurável com 28+ regras | `backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java` |
-| Classificação APPROVED/SUSPICIOUS/FRAUD | `backend/src/main/java/com/rulex/entity/TransactionDecision.java` |
-| Auditoria completa de transações | `backend/src/main/java/com/rulex/service/AuditService.java` |
-| Idempotência por externalTransactionId | `RuleEngineService.java:52-70` |
-| Documentação de 60+ regras duras | `REGRAS_DURAS_60_IMPLEMENTACAO.md` |
+| Motor de regras configuravel com 28+ regras | `backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java` |
+| Classificacao APPROVED/SUSPICIOUS/FRAUD | `AdvancedRuleEngineService.java:43-47` |
+| 12 categorias de regras (EMV, PIN/CVV, Velocity, etc) | `RuleCategory enum:28-41` |
+| Auditoria completa de transacoes | `backend/src/main/java/com/rulex/service/AuditService.java` |
+| Idempotencia por externalTransactionId | `RuleEngineService.java` |
 
 ### Pontos Fracos
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Nem todas as 60 regras documentadas estão implementadas | GAP entre docs e código |
-| Falta validação de campos obrigatórios específicos de negócio | `TransactionRequest.java` |
+| Algumas regras hardcoded misturadas com genericas | `RuleEngineService.java` |
 
 ### Gaps
-- Casos de borda para transações internacionais complexas
-- Regras de whitelist/blacklist de merchants
+- Regras de whitelist/blacklist de merchants configuraveis
 
 ### Riscos
-- **P1**: Regras legadas hardcoded podem divergir de condições configuráveis
+- **P2**: Regras legadas podem divergir de condicoes configuraveis
 
 ---
 
-## 2. Product Owner Técnico
+## 2. Product Owner Tecnico
 
-**NOTA: 7.0/10**
+**NOTA: 7.5/10** (+0.5 vs v1.0)
 
 ### Pontos Fortes
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Conceito Popup → 1..N Regras implementado | `docs/hml/rule-inventory.md:34` |
+| API REST padrao (sem tRPC) | `backend/src/main/java/com/rulex/controller/` |
+| Conceito Popup → 1..N Regras implementado | `HomologRuleSetController.java` |
 | OpenAPI spec definida | `openapi/rulex.yaml` |
-| Endpoints REST bem estruturados | `backend/src/main/java/com/rulex/controller/` |
 
 ### Pontos Fracos
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Falta BDD/Gherkin para critérios de aceite | Não encontrado |
-| User stories não documentadas | Não encontrado |
+| Falta BDD/Gherkin para criterios de aceite | Nao encontrado |
 
 ### Gaps
-- Especificação formal de SLAs (latência máxima, throughput)
-- Documentação de rollback de regras
+- Especificacao formal de SLAs
 
 ### Riscos
-- **P2**: Falta rastreabilidade requisito → código
+- **P2**: Falta rastreabilidade requisito → codigo
 
 ---
 
 ## 3. Arquiteto de Software
 
-**NOTA: 8.0/10**
+**NOTA: 8.5/10** (+0.5 vs v1.0)
 
 ### Pontos Fortes
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
 | Clean Architecture implementada | `backend/src/main/java/com/rulex/homolog/` |
 | Hexagonal Pattern (ports/adapters) | `homolog/port/` e `homolog/adapter/` |
-| Separação de concerns clara | Controllers → Services → Repositories |
 | ArchUnit tests para validar arquitetura | `architecture/CleanArchitectureRulesTest.java` |
+| **Stack unica de banco (PostgreSQL)** | Removido MySQL/Drizzle |
+| **Arquitetura simplificada** | Removido Node.js backend |
 
 ### Pontos Fracos
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Duas stacks de banco (PostgreSQL + MySQL) aumentam complexidade | `drizzle/` vs `backend/resources/db/` |
-| Código legado por nome de regra misturado com genérico | `RuleEngineService.java:239-275` |
+| ADRs formais ausentes | Nao encontrado |
 
 ### Gaps
-- ADRs (Architecture Decision Records) formais
+- ADRs (Architecture Decision Records)
 
 ### Riscos
-- **P2**: Manutenção de duas tecnologias de banco
+- **P3**: Documentacao de decisoes
 
 ---
 
 ## 4. UX Designer
 
-**NOTA: 6.0/10**
+**NOTA: 7.0/10** (+1.0 vs v1.0)
 
 ### Pontos Fortes
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Dashboard com métricas visuais | `client/src/pages/Dashboard.tsx` |
-| Simulador de transações | `client/src/pages/TransactionSimulator.tsx` |
-| Temas claro/escuro | `client/src/contexts/ThemeContext.tsx` |
+| Dashboard com metricas visuais | `client/src/pages/Dashboard.tsx` |
+| **Pagina didatica para regras** | `client/src/pages/RulesDidactic.tsx` |
+| Simulador de transacoes | `client/src/pages/TransactionSimulator.tsx` |
+| Temas claro/escuro | ThemeProvider implementado |
 
 ### Pontos Fracos
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Falta feedback de loading em operações longas | Análise visual |
-| Falta confirmação para ações destrutivas | Análise de fluxos |
+| Falta onboarding para novos usuarios | Nao encontrado |
 
 ### Gaps
-- Testes de usabilidade documentados
 - Personas definidas
-- Jornadas de usuário mapeadas
+- Jornadas de usuario mapeadas
 
 ### Riscos
-- **P2**: Experiência inconsistente pode causar erros operacionais
+- **P3**: Curva de aprendizado para operadores
 
 ---
 
 ## 5. UI Designer
 
-**NOTA: 6.5/10**
+**NOTA: 7.0/10** (+0.5 vs v1.0)
 
 ### Pontos Fortes
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Design System documentado | `DESIGN_SYSTEM.md` |
 | shadcn/ui components | `client/src/components/ui/` |
-| Acessibilidade WCAG documentada | `ACESSIBILIDADE_WCAG.md` |
+| Design system consistente | Tailwind + shadcn |
+| Componentes acessiveis | Radix UI primitives |
 
 ### Pontos Fracos
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Alguns componentes customizados sem padrão | `RuleBuilder.tsx` |
-| Inconsistência em espaçamentos | Análise visual |
+| Alguns componentes grandes | `RulesDidactic.tsx` (1200+ linhas) |
 
 ### Gaps
-- Tokens de design formalizados (cores, tipografia, espaçamento)
-- Biblioteca de componentes isolada
+- Storybook para documentacao de componentes
 
 ### Riscos
-- **P3**: Divergência visual em novas telas
+- **P3**: Componentes grandes dificultam manutencao
 
 ---
 
 ## 6. Product Designer
 
-**NOTA: 6.5/10**
+**NOTA: 7.0/10** (+0.5 vs v1.0)
 
 ### Pontos Fortes
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Fluxo de análise de transações completo | Dashboard → Transações → Detalhes |
-| Gestão de regras com CRUD | `client/src/pages/Rules.tsx` |
+| Fluxo de analise de transacoes completo | Dashboard → Transacoes → Detalhes |
+| Gestao de regras com CRUD | `client/src/pages/Rules.tsx` |
+| Pagina avancada e didatica separadas | `RulesAdvanced.tsx` vs `RulesDidactic.tsx` |
 
 ### Pontos Fracos
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Falta onboarding para novos usuários | Não encontrado |
-| Falta tour guiado | Não encontrado |
+| Falta tour guiado | Nao encontrado |
 
 ### Gaps
-- Protótipos de alta fidelidade
-- Documentação de decisões de design
+- Prototipos de alta fidelidade
 
 ### Riscos
-- **P3**: Curva de aprendizado alta para operadores
+- **P3**: Onboarding inexistente
 
 ---
 
 ## 7. Backend Engineer Java
 
-**NOTA: 8.5/10**
+**NOTA: 8.5/10** (mantido)
 
 ### Pontos Fortes
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
 | Spring Boot 3.x com Virtual Threads | `config/VirtualThreadsConfig.java` |
-| 28 regras avançadas implementadas | `AdvancedRuleEngineService.java` |
-| Condições genéricas via JSON | `RuleEngineService.java:204-236` |
-| Idempotência robusta | `RuleEngineService.java:52-70` |
+| 28 regras avancadas implementadas | `AdvancedRuleEngineService.java:604-656` |
+| Execucao detalhada com triggered rules | `AdvancedExecution record:49` |
 | PAN masking para LGPD | `util/PanMaskingUtil.java` |
 | Flyway migrations | `db/migration/V1-V3` |
 
 ### Pontos Fracos
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Fallback legado por nome pode causar confusão | `RuleEngineService.java:239-275` |
-| Falta validação de campos via Bean Validation | `TransactionRequest.java` |
+| Falta cache de regras | Regras recarregadas a cada request |
 
 ### Gaps
-- Cache de regras (atualmente recarrega do banco a cada request)
+- Cache de regras em memoria
 
 ### Riscos
 - **P2**: Performance pode degradar com muitas regras
@@ -193,110 +184,103 @@
 
 ## 8. Frontend Engineer React
 
-**NOTA: 7.0/10**
+**NOTA: 7.5/10** (+0.5 vs v1.0)
 
 ### Pontos Fortes
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| React 19 + TypeScript strict | `tsconfig.json` |
-| TanStack Query para cache | `client/src/lib/trpc.ts` |
-| tRPC type-safe | `server/routers.ts` |
-| Componentes reutilizáveis | `client/src/components/ui/` |
+| React 19 + TypeScript | `tsconfig.json` |
+| **React Query para cache** | `client/src/pages/RulesDidactic.tsx:532-551` |
+| **Axios para chamadas API** | `client/src/lib/api.ts` |
+| Componentes reutilizaveis | `client/src/components/ui/` |
+| **Removido tRPC** | Stack simplificada |
 
 ### Pontos Fracos
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Alguns componentes grandes demais | `Dashboard.tsx` |
+| Alguns componentes grandes | `RulesDidactic.tsx` |
 | Falta lazy loading em rotas | `App.tsx` |
 
 ### Gaps
-- Storybook para documentação de componentes
-- Tests de componentes isolados
+- Storybook para componentes
 
 ### Riscos
-- **P3**: Bundle size pode crescer
+- **P3**: Bundle size (968 KB)
 
 ---
 
 ## 9. DBA / PostgreSQL
 
-**NOTA: 7.5/10**
+**NOTA: 8.0/10** (+0.5 vs v1.0)
 
 ### Pontos Fortes
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
+| **Stack unica PostgreSQL** | Removido MySQL |
 | Schema normalizado | `V2__core_schema.sql` |
-| Índices em colunas de busca | Linhas 81-83, 121-123 |
-| FK constraints | Linha 106-110 |
-| CHECK constraints | Linhas 116-119, 161-183 |
+| Indices em colunas de busca | Migrations SQL |
+| FK constraints | Schema SQL |
 | Append-only para history | `rule_configuration_history` |
 
 ### Pontos Fracos
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Falta particionamento para transactions | Tabela pode crescer muito |
-| TEXT para JSON (não JSONB) | `rules_applied TEXT` |
+| Falta particionamento para transactions | Tabela pode crescer |
 
 ### Gaps
-- Políticas de retenção de dados
-- Backup/restore documentado
+- Politicas de retencao de dados
 
 ### Riscos
-- **P2**: Performance com alto volume sem particionamento
+- **P2**: Performance com alto volume
 
 ---
 
 ## 10. QA Engineer (Lead)
 
-**NOTA: 6.0/10**
+**NOTA: 6.5/10** (+0.5 vs v1.0)
 
 ### Pontos Fortes
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Testes unitários Java | `service/*Test.java` |
-| Testes de integração com Testcontainers | `*IT.java` |
-| 162 testes Node/Vitest | `server/*.test.ts` |
-| Coleção Insomnia para HML | `Insomnia/rulex-hml.insomnia.json` |
+| Testes unitarios Java | `service/*Test.java` |
+| Testes de integracao com Testcontainers | `*IT.java` |
+| Colecao Insomnia para HML | `Insomnia/rulex-hml.insomnia.json` |
+| ArchUnit tests | `CleanArchitectureRulesTest.java` |
 
 ### Pontos Fracos
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Cobertura de código não medida | Não encontrado jacoco/lcov |
-| Testes E2E ausentes | Não encontrado Cypress/Playwright |
+| Cobertura de codigo nao medida | Nao encontrado jacoco |
+| Testes E2E ausentes | Nao encontrado Cypress/Playwright |
 
-### Gaps (CRÍTICO)
-- **GAP P1**: Testes E2E de navegação SPA
+### Gaps (CRITICO)
+- **GAP P1**: Testes E2E de navegacao SPA
 - **GAP P1**: Testes de carga/stress
-- **GAP P2**: Testes de regressão visual
 
 ### Riscos
-- **P0**: Sem E2E, bugs de integração podem passar despercebidos
+- **P1**: Sem E2E, bugs de integracao podem passar
 
 ---
 
-## 11. AppSec / Segurança (OWASP + LGPD)
+## 11. AppSec / Seguranca (OWASP + LGPD)
 
-**NOTA: 6.5/10**
+**NOTA: 7.0/10** (+0.5 vs v1.0)
 
 ### Pontos Fortes
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Helmet configurado | `server/_core/security.ts` |
-| Rate limiting implementado | `server/_core/security.ts` |
 | PAN masking para LGPD | `backend/.../PanMaskingUtil.java` |
-| Mock auth bloqueado em prod | `server/_core/env.ts` |
-| Validação fail-fast em prod | `server/_core/index.ts` |
+| CORS configurado | `CorsConfig.java` |
+| **Stack simplificada** | Menor superficie de ataque |
 
 ### Pontos Fracos
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| CSP permite unsafe-inline para styles | `security.ts:21` |
-| Falta CSRF protection explícita | Não encontrado |
+| Falta autenticacao no frontend | useAuth e mock |
 
-### Gaps (CRÍTICO)
+### Gaps (CRITICO)
 - **GAP P1**: Pen-test documentado
 - **GAP P1**: SAST/DAST integrado
-- **GAP P2**: Política de rotação de secrets
 
 ### Riscos
 - **P1**: Sem pen-test, vulnerabilidades podem existir
@@ -305,27 +289,23 @@
 
 ## 12. DevOps / SRE
 
-**NOTA: 7.0/10**
+**NOTA: 7.0/10** (mantido)
 
 ### Pontos Fortes
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
 | Docker Compose funcional | `docker-compose.yml` |
-| Dockerfile multi-stage | `backend/Dockerfile` |
-| Health check endpoint | `server/_core/index.ts` |
-| Graceful shutdown | `server/_core/index.ts` |
-| Logging estruturado (Pino) | `server/_core/logger.ts` |
+| **Deploy estatico configurado** | `dist/public` |
+| **Arquitetura simplificada** | Menos servicos para gerenciar |
 
 ### Pontos Fracos
-| Evidência | Caminho |
+| Evidencia | Caminho |
 |-----------|---------|
-| Falta CI/CD pipeline | Não encontrado `.github/workflows` |
-| Falta Kubernetes manifests | Não encontrado |
+| Falta CI/CD pipeline | Nao encontrado `.github/workflows` |
 
 ### Gaps
 - **GAP P1**: Pipeline CI/CD documentado
-- **GAP P2**: Métricas Prometheus
-- **GAP P2**: Alerting configurado
+- **GAP P2**: Metricas Prometheus
 
 ### Riscos
-- **P1**: Deploy manual é propenso a erros
+- **P1**: Deploy manual e propenso a erros

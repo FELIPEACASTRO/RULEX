@@ -1,94 +1,98 @@
-# Votação Consolidada do Painel Multidisciplinar
+# Votacao Consolidada do Painel Multidisciplinar
 
 **Data**: 2025-12-19  
-**Projeto**: RULEX - Motor de Regras Duras para Detecção de Fraude  
-**Versão Avaliada**: Commit atual do repositório
+**Projeto**: RULEX - Motor de Regras Duras para Deteccao de Fraude  
+**Versao**: v2.0 - Arquitetura Simplificada (Frontend React + Backend Java)
 
 ---
 
-## Inventário do Repositório
+## Inventario do Repositorio
 
 ### Contagem de Arquivos por Tipo
 | Tipo | Quantidade |
 |------|------------|
 | Java (Backend) | 110 |
-| TypeScript/TSX (Frontend) | 85 |
-| TypeScript (Server Node) | 24 |
-| SQL (Migrations) | 5 |
-| YAML/YML | 16 |
-| Markdown (Docs) | 36 |
+| TypeScript/TSX (Frontend) | 65 |
+| SQL (Migrations) | 3 |
+| YAML/YML | 8 |
+| Markdown (Docs) | 30+ |
 
 ### Estrutura Identificada
 - **Backend Java**: `backend/src/main/java/com/rulex/` - Spring Boot 3.x + PostgreSQL
-- **Frontend React**: `client/src/` - React 19 + Vite + TailwindCSS
-- **Server Node**: `server/` - Express + tRPC (autenticação/APIs auxiliares)
-- **Database**: PostgreSQL (Flyway migrations) + MySQL/TiDB (Drizzle)
-- **Testes Java**: 8 arquivos (unitários + integração)
-- **Testes Node**: 4 arquivos (162 testes Vitest)
-- **Insomnia**: Coleção completa para homologação
+- **Frontend React**: `client/src/` - React 19 + Vite + TailwindCSS + React Query
+- **Database**: PostgreSQL (Flyway migrations)
+- **Testes Java**: 8 arquivos (unitarios + integracao com Testcontainers)
+- **Insomnia**: Colecao completa para homologacao
+
+### Mudanca Arquitetural v2.0
+- Removido: Backend Node.js (Express + tRPC + MySQL)
+- Simplificado: Frontend agora se comunica diretamente com Java via Axios/React Query
+- Deploy: Frontend estatico + Backend Java separado
 
 ---
 
-## Tabela de Votação Consolidada
+## Tabela de Votacao Consolidada
 
 | # | ESPECIALISTA | NOTA | PESO | SCORE PONDERADO | PRINCIPAL ARGUMENTO |
 |---|--------------|------|------|-----------------|---------------------|
-| 1 | Negócio (Crédito/Fraude) | 7.5 | 1.3 | 9.75 | Motor implementa 28+ regras duras cobrindo EMV, CVV, PIN, MCC, velocidade. Falta documentação de casos de negócio edge. |
-| 2 | Product Owner Técnico | 7.0 | 1.0 | 7.00 | Endpoints bem definidos, fluxo Popup→Rules implementado. Falta especificação formal de critérios de aceite. |
-| 3 | Arquiteto de Software | 8.0 | 1.2 | 9.60 | Clean Architecture + Hexagonal no Java bem implementado. Separação de concerns adequada. Código legível. |
-| 4 | UX Designer | 6.0 | 1.0 | 6.00 | Dashboard funcional. Falta feedback visual em operações críticas. Simulador existe mas precisa de refinamento. |
-| 5 | UI Designer | 6.5 | 0.9 | 5.85 | shadcn/ui bem aplicado. Design system documentado. Falta consistência em alguns componentes customizados. |
-| 6 | Product Designer | 6.5 | 0.9 | 5.85 | Fluxos principais cobertos. Falta jornada de onboarding e documentação de personas. |
-| 7 | Backend Engineer Java | 8.5 | 1.2 | 10.20 | RuleEngineService robusto, idempotência implementada, auditoria completa, 28 regras avançadas funcionais. |
-| 8 | Frontend Engineer React | 7.0 | 1.0 | 7.00 | React Query + tRPC bem integrados. Componentes reutilizáveis. Falta tratamento de erros em alguns fluxos. |
-| 9 | DBA / PostgreSQL | 7.5 | 1.1 | 8.25 | Schema bem normalizado, índices criados, FK com constraints. Migrations Flyway funcionais. |
-| 10 | QA Engineer (Lead) | 6.0 | 1.3 | 7.80 | Testes unitários Java existem. Testes de integração com Testcontainers. **GAP: Falta cobertura E2E automatizada.** |
-| 11 | AppSec / Segurança | 6.5 | 1.2 | 7.80 | Helmet configurado, rate limiting implementado, PAN masking. **GAP: CSP pode ser mais restritivo. Falta pen-test.** |
-| 12 | DevOps / SRE | 7.0 | 1.0 | 7.00 | Docker Compose funcional, health checks implementados, graceful shutdown. Falta CI/CD pipeline documentado. |
+| 1 | Negocio (Credito/Fraude) | 8.0 | 1.3 | 10.40 | Motor implementa 28+ regras duras cobrindo EMV, CVV, PIN, MCC, velocidade. Arquitetura simplificada. |
+| 2 | Product Owner Tecnico | 7.5 | 1.0 | 7.50 | Endpoints bem definidos, fluxo Popup→Rules implementado. API REST padrao. |
+| 3 | Arquiteto de Software | 8.5 | 1.2 | 10.20 | Clean Architecture + Hexagonal no Java. Remocao do Node simplificou stack. |
+| 4 | UX Designer | 7.0 | 1.0 | 7.00 | Dashboard funcional. Pagina didatica excelente para explicacao de regras. |
+| 5 | UI Designer | 7.0 | 0.9 | 6.30 | shadcn/ui bem aplicado. Design system coeso. |
+| 6 | Product Designer | 7.0 | 0.9 | 6.30 | Fluxos principais cobertos. Simulador de transacoes presente. |
+| 7 | Backend Engineer Java | 8.5 | 1.2 | 10.20 | RuleEngineService robusto, idempotencia, auditoria completa, 28 regras avancadas. |
+| 8 | Frontend Engineer React | 7.5 | 1.0 | 7.50 | React Query + Axios bem integrados. Migracao de tRPC bem executada. |
+| 9 | DBA / PostgreSQL | 8.0 | 1.1 | 8.80 | Schema bem normalizado, indices criados. Stack unica de banco. |
+| 10 | QA Engineer (Lead) | 6.5 | 1.3 | 8.45 | Testes Java existem. **GAP: Falta cobertura E2E automatizada.** |
+| 11 | AppSec / Seguranca | 7.0 | 1.2 | 8.40 | PAN masking implementado, CORS configurado. **GAP: Falta pen-test.** |
+| 12 | DevOps / SRE | 7.0 | 1.0 | 7.00 | Docker Compose funcional, deploy estatico configurado. Falta CI/CD documentado. |
 
 ---
 
-## Cálculos
+## Calculos
 
 ### Soma dos Pesos
 1.3 + 1.0 + 1.2 + 1.0 + 0.9 + 0.9 + 1.2 + 1.0 + 1.1 + 1.3 + 1.2 + 1.0 = **13.1**
 
 ### Soma dos Scores Ponderados
-9.75 + 7.00 + 9.60 + 6.00 + 5.85 + 5.85 + 10.20 + 7.00 + 8.25 + 7.80 + 7.80 + 7.00 = **92.10**
+10.40 + 7.50 + 10.20 + 7.00 + 6.30 + 6.30 + 10.20 + 7.50 + 8.80 + 8.45 + 8.40 + 7.00 = **98.05**
 
-### Média Ponderada Final
-**92.10 / 13.1 = 7.03**
+### Media Ponderada Final
+**98.05 / 13.1 = 7.48**
 
 ---
 
-## Divergências Entre Especialistas
+## Divergencias Entre Especialistas
 
-| Área | Divergência | Especialistas |
+| Area | Divergencia | Especialistas |
 |------|-------------|---------------|
-| Testes | Backend Java vs Node discordam sobre cobertura | QA (6.0) vs Backend Java (8.5) |
-| Segurança | CSP e autenticação mock em dev | AppSec (6.5) vs Arquiteto (8.0) |
-| UX/UI | Completude do design system | UX (6.0) vs UI (6.5) |
+| Testes | Cobertura de E2E | QA (6.5) vs Backend Java (8.5) |
+| Arquitetura | Stack simplificada | Arquiteto (8.5) vs DevOps (7.0) |
+| UX/UI | Feedback visual | UX (7.0) vs UI (7.0) - Alinhados |
 
 ---
 
 ## Top 3 Maiores Riscos
 
-1. **P1 - Ausência de Testes E2E Automatizados**: Não há Cypress/Playwright para fluxos críticos.
-2. **P1 - Mock Auth Habilitado por Padrão em Dev**: Risco de vazamento para produção (mitigado com validação).
-3. **P2 - Falta de Pen-Test Documentado**: Não há evidência de testes de segurança OWASP.
+1. **P1 - Ausencia de Testes E2E Automatizados**: Nao ha Cypress/Playwright para fluxos criticos.
+2. **P1 - Pipeline CI/CD Nao Documentado**: Deploy manual aumenta risco.
+3. **P1 - Pen-Test Nao Realizado**: Sistema bancario requer validacao OWASP.
 
 ---
 
 ## Top 3 Maiores Gaps
 
-1. **GAP P1 - Testes E2E/Navegação SPA**: Não encontrado no código.
-2. **GAP P1 - Pipeline CI/CD Documentado**: Não encontrado (sem .github/workflows ou similar).
-3. **GAP P2 - Métricas Prometheus/Grafana**: Health check existe mas não há exportação de métricas.
+1. **GAP P1 - Testes E2E/Navegacao SPA**: Nao encontrado no codigo.
+2. **GAP P1 - Pipeline CI/CD Documentado**: Nao encontrado (.github/workflows).
+3. **GAP P2 - Metricas Prometheus/Grafana**: Health check existe mas nao ha exportacao.
 
 ---
 
-## Áreas com Maior Divergência
+## Melhoria vs Versao Anterior
 
-1. **Testes**: QA vê gaps críticos; Backend Java considera testes unitários suficientes.
-2. **Segurança**: AppSec quer CSP mais restritivo; Arquiteto aceita configuração atual.
-3. **Design**: UX quer mais feedback visual; UI considera design system adequado.
+| Metrica | v1.0 | v2.0 | Variacao |
+|---------|------|------|----------|
+| Media Ponderada | 7.03 | 7.48 | +0.45 |
+| Complexidade (stacks) | 2 | 1 | -50% |
+| Pontos de falha | 3 | 2 | -33% |
