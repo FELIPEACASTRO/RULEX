@@ -7,7 +7,7 @@ A avaliação principal (`POST /transactions/analyze`) carrega regras habilitada
 2) **Fallback legado por nome** (compatibilidade): quando não há `conditionsJson`, algumas regras por `ruleName` possuem mapeamento hard-coded.
 
 ### Operadores suportados (condições)
-O motor avalia `field`, `operator`, `value` contra os campos da entidade `Transaction` (via reflexão). Os operadores dependem da implementação de `evaluateCondition(...)`.
+O motor avalia `field`, `operator`, `value` contra os campos do `TransactionRequest` (payload CRTRAN), via reflexão. Assim é possível criar regra para qualquer campo do payload, mesmo que ele não seja persistido na entidade `Transaction`.
 
 ### Regras legadas por nome (fallback)
 - `LOW_AUTHENTICATION_SCORE`

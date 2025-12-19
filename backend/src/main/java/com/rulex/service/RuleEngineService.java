@@ -2,6 +2,9 @@ package com.rulex.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rulex.dto.RuleConditionDTO;
+import com.rulex.dto.EvaluateResponse;
+import com.rulex.dto.PopupDTO;
+import com.rulex.dto.RuleHitDTO;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
 import com.rulex.dto.TriggeredRuleDTO;
@@ -17,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -66,7 +70,7 @@ public class RuleEngineService {
       }
 
       // 2. Avaliar regras
-      RuleEvaluationResult result = evaluateRules(transaction);
+      RuleEvaluationResult result = evaluateRules(transaction, request);
 
       // 3. Salvar decisão
       TransactionDecision decision = createDecision(transaction, result);
@@ -86,8 +90,59 @@ public class RuleEngineService {
     }
   }
 
+  /**
+   * Avalia uma transação e retorna decisão final + rule hits + popups agregados.
+   *
+   * <p>Observação: mantém o mesmo comportamento de persistência/idempotência de
+   * {@link #analyzeTransaction(TransactionRequest)}.
+   */
+  public EvaluateResponse evaluate(TransactionRequest request) {
+    long startTime = System.currentTimeMillis();
+
+    try {
+      // Idempotência por externalTransactionId (canônico)
+      Optional<Transaction> existingTxOpt =
+          transactionRepository.findByExternalTransactionId(request.getExternalTransactionId());
+      if (existingTxOpt.isPresent()) {
+        return buildEvaluateResponseFromExisting(existingTxOpt.get(), startTime);
+      }
+
+      // 1. Salvar a transação
+      Transaction transaction = convertRequestToEntity(request);
+      try {
+        transaction = transactionRepository.save(transaction);
+      } catch (DataIntegrityViolationException e) {
+        // Condição de corrida: outra thread/processo inseriu o mesmo externalTransactionId.
+        Transaction racedTx =
+            transactionRepository
+                .findByExternalTransactionId(request.getExternalTransactionId())
+                .orElseThrow(() -> e);
+        return buildEvaluateResponseFromExisting(racedTx, startTime);
+      }
+
+      // 2. Avaliar regras
+      RuleEvaluationResult result = evaluateRules(transaction, request);
+
+      // 3. Salvar decisão
+      TransactionDecision decision = createDecision(transaction, result);
+      decisionRepository.save(decision);
+
+      // 4. Registrar auditoria
+      auditService.logTransactionProcessed(transaction, decision, result);
+
+      // 5. Construir resposta
+      long processingTime = System.currentTimeMillis() - startTime;
+      return buildEvaluateResponse(transaction, decision, result, processingTime);
+
+    } catch (Exception e) {
+      log.error("Erro ao avaliar transação: {}", request.getExternalTransactionId(), e);
+      auditService.logError(request.getExternalTransactionId(), e);
+      throw new RuntimeException("Erro ao avaliar transação", e);
+    }
+  }
+
   /** Avalia as regras configuradas contra a transação. */
-  private RuleEvaluationResult evaluateRules(Transaction transaction) {
+  private RuleEvaluationResult evaluateRules(Transaction transaction, TransactionRequest request) {
     RuleEvaluationResult result = new RuleEvaluationResult();
     List<RuleConfiguration> enabledRules = ruleConfigRepository.findByEnabled(true);
 
@@ -98,7 +153,7 @@ public class RuleEngineService {
         TransactionDecision.TransactionClassification.APPROVED;
 
     for (RuleConfiguration rule : enabledRules) {
-      RuleMatch ruleMatch = evaluateRuleGeneric(transaction, rule);
+      RuleMatch ruleMatch = evaluateRuleGeneric(transaction, request, rule);
 
       if (ruleMatch.triggered) {
         int contribution = clampScore(rule.getWeight());
@@ -143,7 +198,8 @@ public class RuleEngineService {
   }
 
   /** Avalia uma regra específica contra a transação. */
-  private RuleMatch evaluateRuleGeneric(Transaction transaction, RuleConfiguration rule) {
+  private RuleMatch evaluateRuleGeneric(
+      Transaction transaction, TransactionRequest request, RuleConfiguration rule) {
     // 1) Preferir condições genéricas (configuráveis)
     if (rule.getConditionsJson() != null && !rule.getConditionsJson().isBlank()) {
       List<RuleConditionDTO> conditions = readConditions(rule.getConditionsJson());
@@ -157,8 +213,8 @@ public class RuleEngineService {
 
         boolean triggered = (op == RuleConfiguration.LogicOperator.AND);
         for (RuleConditionDTO condition : conditions) {
-          boolean condResult = evaluateCondition(transaction, condition);
-          explanations.add(explainCondition(transaction, condition, condResult));
+          boolean condResult = evaluateCondition(request, condition);
+          explanations.add(explainCondition(request, condition, condResult));
 
           if (op == RuleConfiguration.LogicOperator.AND) {
             triggered = triggered && condResult;
@@ -183,34 +239,34 @@ public class RuleEngineService {
     boolean legacy =
         switch (rule.getRuleName()) {
           case "LOW_AUTHENTICATION_SCORE" ->
-              transaction.getConsumerAuthenticationScore() < rule.getThreshold();
+          request.getConsumerAuthenticationScore() < rule.getThreshold();
 
-          case "LOW_EXTERNAL_SCORE" -> transaction.getExternalScore3() < rule.getThreshold();
+        case "LOW_EXTERNAL_SCORE" -> request.getExternalScore3() < rule.getThreshold();
 
-          case "INVALID_CAVV" -> transaction.getCavvResult() != 0;
+        case "INVALID_CAVV" -> request.getCavvResult() != 0;
 
-          case "INVALID_CRYPTOGRAM" -> !"V".equals(transaction.getCryptogramValid());
+        case "INVALID_CRYPTOGRAM" -> !"V".equals(request.getCryptogramValid());
 
-          case "CVV_MISMATCH" -> "N".equals(transaction.getCvv2Response());
+        case "CVV_MISMATCH" -> "N".equals(request.getCvv2Response());
 
           case "HIGH_TRANSACTION_AMOUNT" ->
-              transaction.getTransactionAmount().doubleValue() > rule.getThreshold();
+          request.getTransactionAmount().doubleValue() > rule.getThreshold();
 
-          case "HIGH_RISK_MCC" -> isHighRiskMcc(transaction.getMcc());
+        case "HIGH_RISK_MCC" -> isHighRiskMcc(request.getMcc());
 
-          case "INTERNATIONAL_TRANSACTION" -> isInternationalTransaction(transaction);
+        case "INTERNATIONAL_TRANSACTION" -> isInternationalTransaction(request);
 
-          case "CARD_NOT_PRESENT" -> !"Y".equals(transaction.getCustomerPresent());
+        case "CARD_NOT_PRESENT" -> !"Y".equals(request.getCustomerPresent());
 
-          case "PIN_VERIFICATION_FAILED" -> "I".equals(transaction.getPinVerifyCode());
+        case "PIN_VERIFICATION_FAILED" -> "I".equals(request.getPinVerifyCode());
 
             // Mapear para os campos corretos (sem depender de códigos textuais inconsistentes)
             case "CVV_PIN_LIMIT_EXCEEDED" ->
-              Integer.valueOf(1).equals(transaction.getCvvPinTryLimitExceeded());
+              Integer.valueOf(1).equals(request.getCvvPinTryLimitExceeded());
 
             case "OFFLINE_PIN_FAILED" ->
-              Integer.valueOf(1).equals(transaction.getCvrofflinePinVerificationPerformed())
-                && Integer.valueOf(1).equals(transaction.getCvrofflinePinVerificationFailed());
+              Integer.valueOf(1).equals(request.getCvrofflinePinVerificationPerformed())
+                && Integer.valueOf(1).equals(request.getCvrofflinePinVerificationFailed());
 
           default -> false;
         };
@@ -233,10 +289,9 @@ public class RuleEngineService {
   }
 
   /** Verifica se é uma transação internacional. */
-  private boolean isInternationalTransaction(Transaction transaction) {
+  private boolean isInternationalTransaction(TransactionRequest request) {
     // Assumir que 076 é o código do Brasil
-    return transaction.getMerchantCountryCode() != null
-        && !transaction.getMerchantCountryCode().equals("076");
+    return request.getMerchantCountryCode() != null && !request.getMerchantCountryCode().equals("076");
   }
 
   /** Classifica o risco baseado no score. */
@@ -306,6 +361,154 @@ public class RuleEngineService {
           .timestamp(LocalDateTime.now(clock))
         .success(true)
         .build();
+  }
+
+  private EvaluateResponse buildEvaluateResponse(
+      Transaction transaction,
+      TransactionDecision decision,
+      RuleEvaluationResult result,
+      long processingTime) {
+    List<RuleHitDTO> ruleHits = enrichRuleHits(result.getTriggeredRules());
+    List<PopupDTO> popups = aggregatePopups(ruleHits);
+
+    return EvaluateResponse.builder()
+        .transactionId(transaction.getExternalTransactionId())
+        .classification(decision.getClassification().name())
+        .riskScore(decision.getRiskScore())
+        .reason(decision.getReason())
+        .rulesetVersion(decision.getRulesVersion())
+        .processingTimeMs(processingTime)
+        .timestamp(decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
+        .ruleHits(ruleHits)
+        .popups(popups)
+        .build();
+  }
+
+  private EvaluateResponse buildEvaluateResponseFromExisting(Transaction transaction, long startTime) {
+    TransactionDecision decision =
+        decisionRepository
+            .findByTransactionId(transaction.getId())
+            .orElseThrow(() -> new IllegalStateException("Transação existe sem decisão registrada"));
+
+    long processingTime = System.currentTimeMillis() - startTime;
+    List<TriggeredRuleDTO> triggeredRules = readTriggeredRules(decision.getRulesApplied());
+    List<RuleHitDTO> ruleHits = enrichRuleHits(triggeredRules);
+    List<PopupDTO> popups = aggregatePopups(ruleHits);
+
+    return EvaluateResponse.builder()
+        .transactionId(transaction.getExternalTransactionId())
+        .classification(decision.getClassification().name())
+        .riskScore(decision.getRiskScore())
+        .reason(decision.getReason())
+        .rulesetVersion(decision.getRulesVersion())
+        .processingTimeMs(processingTime)
+        .timestamp(decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
+        .ruleHits(ruleHits)
+        .popups(popups)
+        .build();
+  }
+
+  private List<RuleHitDTO> enrichRuleHits(List<TriggeredRuleDTO> triggeredRules) {
+    if (triggeredRules == null || triggeredRules.isEmpty()) {
+      return List.of();
+    }
+
+    List<String> names =
+        triggeredRules.stream().map(TriggeredRuleDTO::getName).filter(Objects::nonNull).distinct().toList();
+    Map<String, RuleConfiguration> byName =
+        ruleConfigRepository.findByRuleNameIn(names).stream()
+            .collect(
+                java.util.stream.Collectors.toMap(
+                    RuleConfiguration::getRuleName, Function.identity(), (a, b) -> a));
+
+    List<RuleHitDTO> hits = new ArrayList<>();
+    for (TriggeredRuleDTO tr : triggeredRules) {
+      RuleConfiguration rc = tr.getName() != null ? byName.get(tr.getName()) : null;
+      hits.add(
+          RuleHitDTO.builder()
+              .ruleName(tr.getName())
+              .description(rc != null ? rc.getDescription() : null)
+              .ruleType(rc != null && rc.getRuleType() != null ? rc.getRuleType().name() : null)
+              .classification(
+                  rc != null && rc.getClassification() != null ? rc.getClassification().name() : null)
+              .threshold(rc != null ? rc.getThreshold() : null)
+              .weight(tr.getWeight())
+              .contribution(tr.getContribution())
+              .detail(tr.getDetail())
+              .build());
+    }
+    return hits;
+  }
+
+  private List<PopupDTO> aggregatePopups(List<RuleHitDTO> ruleHits) {
+    if (ruleHits == null || ruleHits.isEmpty()) {
+      return List.of();
+    }
+
+    Map<String, List<RuleHitDTO>> grouped = new LinkedHashMap<>();
+    for (RuleHitDTO hit : ruleHits) {
+      String key = hit.getClassification() != null ? hit.getClassification() : "UNKNOWN";
+      grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(hit);
+    }
+
+    List<String> order = List.of("FRAUD", "SUSPICIOUS", "APPROVED", "UNKNOWN");
+    List<PopupDTO> popups = new ArrayList<>();
+    for (String key : order) {
+      List<RuleHitDTO> hits = grouped.get(key);
+      if (hits == null || hits.isEmpty()) continue;
+
+      int total = hits.stream().map(RuleHitDTO::getContribution).filter(Objects::nonNull).mapToInt(Integer::intValue).sum();
+      String title =
+          switch (key) {
+            case "FRAUD" -> "Bloqueio";
+            case "SUSPICIOUS" -> "Suspeita";
+            case "APPROVED" -> "Aprovada";
+            default -> "Atenção";
+          };
+
+      String reason =
+          hits.stream()
+              .map(h -> h.getDetail() != null ? h.getDetail() : h.getDescription())
+              .filter(s -> s != null && !s.isBlank())
+              .distinct()
+              .reduce((a, b) -> a + " | " + b)
+              .orElse(null);
+
+      popups.add(
+          PopupDTO.builder()
+              .key(key)
+              .title(title)
+              .classification(key)
+              .totalContribution(total)
+              .rules(hits)
+              .reason(reason)
+              .build());
+    }
+
+    // Qualquer classificação fora da ordem (extensão futura)
+    for (Map.Entry<String, List<RuleHitDTO>> e : grouped.entrySet()) {
+      if (order.contains(e.getKey())) continue;
+      List<RuleHitDTO> hits = e.getValue();
+      int total = hits.stream().map(RuleHitDTO::getContribution).filter(Objects::nonNull).mapToInt(Integer::intValue).sum();
+      String reason =
+          hits.stream()
+              .map(h -> h.getDetail() != null ? h.getDetail() : h.getDescription())
+              .filter(s -> s != null && !s.isBlank())
+              .distinct()
+              .reduce((a, b) -> a + " | " + b)
+              .orElse(null);
+      popups.add(
+          PopupDTO.builder()
+              .key(e.getKey())
+              .title("Atenção")
+              .classification(e.getKey())
+              .totalContribution(total)
+              .rules(hits)
+              .reason(reason)
+              .build());
+    }
+
+    return popups;
   }
 
   private TransactionResponse buildResponseFromExisting(Transaction transaction, long startTime) {
@@ -440,8 +643,8 @@ public class RuleEngineService {
     }
   }
 
-  private boolean evaluateCondition(Transaction transaction, RuleConditionDTO condition) {
-    Object fieldValue = readFieldValue(transaction, condition.getField());
+  private boolean evaluateCondition(TransactionRequest request, RuleConditionDTO condition) {
+    Object fieldValue = readFieldValue(request, TransactionRequest.class, condition.getField());
     if (fieldValue == null) {
       return false;
     }
@@ -505,8 +708,8 @@ public class RuleEngineService {
   }
 
   private String explainCondition(
-      Transaction transaction, RuleConditionDTO condition, boolean result) {
-    Object fieldValue = readFieldValue(transaction, condition.getField());
+      TransactionRequest request, RuleConditionDTO condition, boolean result) {
+    Object fieldValue = readFieldValue(request, TransactionRequest.class, condition.getField());
     return condition.getField()
         + " "
         + condition.getOperator()
@@ -518,10 +721,10 @@ public class RuleEngineService {
         + result;
   }
 
-  private Object readFieldValue(Transaction transaction, String fieldName) {
+  private Object readFieldValue(Object subject, Class<?> subjectClass, String fieldName) {
     try {
-      PropertyDescriptor pd = new PropertyDescriptor(fieldName, Transaction.class);
-      return pd.getReadMethod().invoke(transaction);
+      PropertyDescriptor pd = new PropertyDescriptor(fieldName, subjectClass);
+      return pd.getReadMethod().invoke(subject);
     } catch (Exception e) {
       return null;
     }

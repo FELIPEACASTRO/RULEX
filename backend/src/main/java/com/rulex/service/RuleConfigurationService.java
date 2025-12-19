@@ -3,13 +3,17 @@ package com.rulex.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rulex.dto.RuleConditionDTO;
 import com.rulex.dto.RuleConfigurationDTO;
+import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.RuleConfiguration;
 import com.rulex.entity.RuleConfigurationHistory;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.RuleConfigurationHistoryRepository;
 import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.api.NotFoundException;
+import java.beans.Introspector;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +56,8 @@ public class RuleConfigurationService {
       throw new IllegalStateException("Já existe uma regra com este nome");
     }
 
+    validateConditionFields(dto.getConditions());
+
     RuleConfiguration rule =
         RuleConfiguration.builder()
             .ruleName(dto.getRuleName())
@@ -93,6 +99,8 @@ public class RuleConfigurationService {
             .orElseThrow(() -> new NotFoundException("Regra não encontrada"));
 
     String previous = serializeRule(rule);
+
+    validateConditionFields(dto.getConditions());
 
     rule.setDescription(dto.getDescription());
     rule.setThreshold(dto.getThreshold());
@@ -223,6 +231,39 @@ public class RuleConfigurationService {
       return objectMapper.writeValueAsString(conditions);
     } catch (Exception e) {
       throw new RuntimeException("Condições inválidas", e);
+    }
+  }
+
+  private void validateConditionFields(List<RuleConditionDTO> conditions) {
+    if (conditions == null || conditions.isEmpty()) {
+      return;
+    }
+
+    final Set<String> allowedFields = getTransactionRequestFieldNames();
+
+    List<String> invalidFields =
+        conditions.stream()
+            .map(RuleConditionDTO::getField)
+            .filter(f -> f != null && !f.isBlank())
+            .filter(f -> !allowedFields.contains(f))
+            .distinct()
+            .toList();
+
+    if (!invalidFields.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Campos inválidos em conditions.field (não existem no payload TransactionRequest): "
+              + String.join(", ", invalidFields));
+    }
+  }
+
+  private Set<String> getTransactionRequestFieldNames() {
+    try {
+      return Arrays.stream(Introspector.getBeanInfo(TransactionRequest.class).getPropertyDescriptors())
+          .map(pd -> pd.getName())
+          .filter(name -> !"class".equals(name))
+          .collect(Collectors.toUnmodifiableSet());
+    } catch (Exception e) {
+      throw new IllegalStateException("Falha ao introspectar TransactionRequest", e);
     }
   }
 
