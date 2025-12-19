@@ -1,63 +1,37 @@
-# RULEX — Antifraude (homologável)
+# RULEX — Antifraude (Java + UI)
 
-## Arquitetura utilizada
+Este repositório contém:
 
-Este repositório é um **multi-serviço** (via `docker compose`) com:
+- **Backend**: Spring Boot (Java 21) em `backend/`
+- **Web UI**: Vite/React em `client/` (proxy para o backend via `/api`)
+- **Banco**: Postgres (via Docker Compose)
 
-- **Web**: Vite/React (UI)
-- **Server Node**: API/integrações (tRPC/Express)
-- **Backend Java**: Spring Boot (domínio de antifraude/homologação) + Postgres
+## Subir local (Docker)
 
-No backend Java, o recorte de “homologação” foi estruturado seguindo **Clean Architecture** (com *ports/adapters*), para manter a lógica de aplicação testável e desacoplada de frameworks.
+Pré-requisito: Docker Desktop.
 
-## Abstração, acoplamento, extensibilidade e coesão
+- `docker compose up --build`
 
-- **Abstração**: contratos em `com.rulex.homolog.port.*` definem o que o core precisa (persistência, auditoria, JSON, sanitização, avaliação de DSL).
-- **Acoplamento**: *use cases* em `com.rulex.homolog.usecase.*` não dependem de Spring/Jackson/repos; dependem apenas das portas.
-- **Extensibilidade**: para trocar detalhes (ex.: auditoria, armazenamento, serialização), cria-se um novo adapter implementando a porta, sem reescrever use cases.
-- **Coesão**: cada classe tem uma responsabilidade clara (use case = regra do fluxo; adapter = integração; application service = transação).
+Serviços:
 
-## Análise assintótica (Big O)
+- Web (Vite): http://localhost:5173
+- Backend (Spring Boot): http://localhost:8080
+- Postgres: `localhost:5432` (db `rulex_db`, user/pass `postgres`)
 
-O caminho crítico típico é a **simulação** de um *RuleSet*:
+## Backend (dev/local sem Docker)
 
-- Seja $n$ o número de itens (regras) no *RuleSet*.
-- Seja $m$ o número de nós/condições na expressão (árvore) de uma regra.
+Pré-requisitos: Java 21 + Maven + Postgres.
 
-Complexidade aproximada:
+- Testes: `mvn -q clean test` (executar em `backend/`)
 
-- **Avaliar regras**: $O(n \cdot m)$ (cada regra avalia uma lógica/árvore de condições).
-- **Persistência**: leituras/gravações principais são $O(n)$ em número de itens (ex.: carregar versões + itens + registrar decisões), desconsiderando custo interno do banco.
+## Web (dev/local)
 
-Observação: o custo real depende também do tamanho do JSON de condições e do payload sanitizado; a implementação atual privilegia determinismo e segurança.
+Pré-requisitos: Node + pnpm.
 
-## Design Patterns
+- Instalar deps: `pnpm install`
+- Rodar UI: `pnpm dev`
 
-- **Ports & Adapters (Hexagonal)**: `com.rulex.homolog.port.*` + `com.rulex.homolog.adapter.*`.
-- **Adapter**: adapters Spring implementam as portas e delegam para repositórios/serviços/framework.
-- **Facade / Application Service**: `com.rulex.homolog.application.*` define a fronteira transacional e expõe um API coesa para os controllers.
-
-## Microservices Patterns
-
-O projeto **não está estruturado como microserviços independentes** (é um repo com múltiplos serviços executáveis). Por isso, padrões como **CQRS** e **SAGA** não são aplicados formalmente aqui.
-
-Ainda assim, há um conceito semelhante a **ACL (Anti‑Corruption Layer)** no backend Java: as portas/adapters evitam que detalhes de Spring/JPA/Jackson “contaminem” o core da aplicação.
-
-## Clean Architecture
-
-Camadas (backend Java, recorte de homologação):
-
-- **Interface/Delivery**: controllers REST (`com.rulex.controller.*`).
-- **Application**: serviços transacionais (`com.rulex.homolog.application.*`).
-- **Use Cases**: casos de uso puros (`com.rulex.homolog.usecase.*`).
-- **Ports**: contratos (`com.rulex.homolog.port.*`).
-- **Adapters/Infra**: integrações e persistência (`com.rulex.homolog.adapter.*`, `com.rulex.repository.*`).
-
-Validação automática: existe teste ArchUnit para impedir dependências proibidas no core.
-
-## Clean Code
-
-- **Formatação automática**: Spotless (google-java-format) no backend Java.
+A UI usa proxy de `/api` para o backend (configurado em `vite.config.ts`).
 - **Build estrito**: compilação com `-Werror` e lint (`-Xlint:all,-processing`) no backend.
 - **Logs/erros**: mensagens em PT‑BR e sem vazamento de dados sensíveis no retorno ao cliente.
 
