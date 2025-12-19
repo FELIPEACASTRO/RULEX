@@ -41,14 +41,20 @@ class RuleEngineServiceTest {
 
   private final Clock clock = Clock.fixed(Instant.parse("2025-12-19T00:00:00Z"), ZoneOffset.UTC);
 
+  private final PayloadHashService payloadHashService = new PayloadHashService(objectMapper);
+  private final TransactionRawStoreService rawStoreService =
+      Mockito.mock(TransactionRawStoreService.class);
+
   private final RuleEngineService service =
       new RuleEngineService(
           transactionRepository,
           decisionRepository,
           ruleConfigRepository,
           auditService,
-        objectMapper,
-        clock);
+          objectMapper,
+          clock,
+          payloadHashService,
+          rawStoreService);
 
   @Test
   void returnsApproved_whenNoEnabledRules() {

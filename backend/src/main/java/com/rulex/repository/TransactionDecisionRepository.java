@@ -17,6 +17,9 @@ public interface TransactionDecisionRepository extends JpaRepository<Transaction
 
   Optional<TransactionDecision> findByTransactionId(Long transactionId);
 
+    Optional<TransactionDecision> findByExternalTransactionIdAndPayloadRawHash(
+            String externalTransactionId, String payloadRawHash);
+
   Page<TransactionDecision> findByClassification(
       TransactionDecision.TransactionClassification classification, Pageable pageable);
 

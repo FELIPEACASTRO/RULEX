@@ -38,6 +38,9 @@ public class Transaction {
   @Column(nullable = false, unique = true, length = 64)
   private String externalTransactionId;
 
+  @Column(name = "payload_raw_hash", length = 64)
+  private String payloadRawHash;
+
   @Column(nullable = false, length = 64)
   private String customerIdFromHeader;
 

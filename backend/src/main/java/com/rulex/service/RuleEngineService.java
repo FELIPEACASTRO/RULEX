@@ -43,21 +43,41 @@ public class RuleEngineService {
   private final AuditService auditService;
   private final ObjectMapper objectMapper;
   private final Clock clock;
+  private final PayloadHashService payloadHashService;
+  private final TransactionRawStoreService rawStoreService;
 
   /** Processa uma transação e retorna a classificação de fraude. */
   public TransactionResponse analyzeTransaction(TransactionRequest request) {
     long startTime = System.currentTimeMillis();
 
     try {
+      PayloadHashService.CanonicalPayload canonical = payloadHashService.canonicalize(request);
+      String payloadHash = canonical.sha256Hex();
+      rawStoreService.store(request.getExternalTransactionId(), payloadHash, canonical.json());
+
+      // Idempotência por (externalTransactionId, payloadHash)
+      Optional<TransactionDecision> existingDecisionOpt =
+          decisionRepository.findByExternalTransactionIdAndPayloadRawHash(
+              request.getExternalTransactionId(), payloadHash);
+      if (existingDecisionOpt.isPresent()) {
+        return buildResponseFromExistingDecision(existingDecisionOpt.get(), startTime);
+      }
+
       // Idempotência por externalTransactionId (canônico)
       Optional<Transaction> existingTxOpt =
           transactionRepository.findByExternalTransactionId(request.getExternalTransactionId());
       if (existingTxOpt.isPresent()) {
+        Transaction existing = existingTxOpt.get();
+        if (existing.getPayloadRawHash() != null && !existing.getPayloadRawHash().equals(payloadHash)) {
+          throw new IllegalStateException(
+              "Idempotency conflict: externalTransactionId reutilizado com payload diferente");
+        }
         return buildResponseFromExisting(existingTxOpt.get(), startTime);
       }
 
       // 1. Salvar a transação
       Transaction transaction = convertRequestToEntity(request);
+      transaction.setPayloadRawHash(payloadHash);
       try {
         transaction = transactionRepository.save(transaction);
       } catch (DataIntegrityViolationException e) {
@@ -66,6 +86,10 @@ public class RuleEngineService {
             transactionRepository
                 .findByExternalTransactionId(request.getExternalTransactionId())
                 .orElseThrow(() -> e);
+        if (racedTx.getPayloadRawHash() != null && !racedTx.getPayloadRawHash().equals(payloadHash)) {
+          throw new IllegalStateException(
+              "Idempotency conflict: externalTransactionId reutilizado com payload diferente");
+        }
         return buildResponseFromExisting(racedTx, startTime);
       }
 
@@ -74,6 +98,8 @@ public class RuleEngineService {
 
       // 3. Salvar decisão
       TransactionDecision decision = createDecision(transaction, result);
+      decision.setExternalTransactionId(transaction.getExternalTransactionId());
+      decision.setPayloadRawHash(payloadHash);
       decisionRepository.save(decision);
 
       // 4. Registrar auditoria
@@ -100,15 +126,33 @@ public class RuleEngineService {
     long startTime = System.currentTimeMillis();
 
     try {
+      PayloadHashService.CanonicalPayload canonical = payloadHashService.canonicalize(request);
+      String payloadHash = canonical.sha256Hex();
+      rawStoreService.store(request.getExternalTransactionId(), payloadHash, canonical.json());
+
+      // Idempotência por (externalTransactionId, payloadHash)
+      Optional<TransactionDecision> existingDecisionOpt =
+          decisionRepository.findByExternalTransactionIdAndPayloadRawHash(
+              request.getExternalTransactionId(), payloadHash);
+      if (existingDecisionOpt.isPresent()) {
+        return buildEvaluateResponseFromExistingDecision(existingDecisionOpt.get(), startTime);
+      }
+
       // Idempotência por externalTransactionId (canônico)
       Optional<Transaction> existingTxOpt =
           transactionRepository.findByExternalTransactionId(request.getExternalTransactionId());
       if (existingTxOpt.isPresent()) {
+        Transaction existing = existingTxOpt.get();
+        if (existing.getPayloadRawHash() != null && !existing.getPayloadRawHash().equals(payloadHash)) {
+          throw new IllegalStateException(
+              "Idempotency conflict: externalTransactionId reutilizado com payload diferente");
+        }
         return buildEvaluateResponseFromExisting(existingTxOpt.get(), startTime);
       }
 
       // 1. Salvar a transação
       Transaction transaction = convertRequestToEntity(request);
+      transaction.setPayloadRawHash(payloadHash);
       try {
         transaction = transactionRepository.save(transaction);
       } catch (DataIntegrityViolationException e) {
@@ -117,6 +161,10 @@ public class RuleEngineService {
             transactionRepository
                 .findByExternalTransactionId(request.getExternalTransactionId())
                 .orElseThrow(() -> e);
+        if (racedTx.getPayloadRawHash() != null && !racedTx.getPayloadRawHash().equals(payloadHash)) {
+          throw new IllegalStateException(
+              "Idempotency conflict: externalTransactionId reutilizado com payload diferente");
+        }
         return buildEvaluateResponseFromExisting(racedTx, startTime);
       }
 
@@ -125,6 +173,8 @@ public class RuleEngineService {
 
       // 3. Salvar decisão
       TransactionDecision decision = createDecision(transaction, result);
+      decision.setExternalTransactionId(transaction.getExternalTransactionId());
+      decision.setPayloadRawHash(payloadHash);
       decisionRepository.save(decision);
 
       // 4. Registrar auditoria
@@ -325,6 +375,8 @@ public class RuleEngineService {
   private TransactionDecision createDecision(Transaction transaction, RuleEvaluationResult result) {
     return TransactionDecision.builder()
         .transaction(transaction)
+        .externalTransactionId(transaction.getExternalTransactionId())
+        .payloadRawHash(transaction.getPayloadRawHash())
         .classification(result.getClassification())
         .riskScore(result.getRiskScore())
         .rulesApplied(writeJson(result.getTriggeredRules()))
@@ -530,6 +582,46 @@ public class RuleEngineService {
         .processingTimeMs(processingTime)
         .timestamp(decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
         .success(true)
+        .build();
+  }
+
+  private TransactionResponse buildResponseFromExistingDecision(
+      TransactionDecision decision, long startTime) {
+    Transaction transaction = decision.getTransaction();
+    long processingTime = System.currentTimeMillis() - startTime;
+    List<TriggeredRuleDTO> triggeredRules = readTriggeredRules(decision.getRulesApplied());
+
+    return TransactionResponse.builder()
+        .transactionId(transaction.getExternalTransactionId())
+        .classification(decision.getClassification().name())
+        .riskScore(decision.getRiskScore())
+        .triggeredRules(triggeredRules)
+        .reason(decision.getReason())
+        .rulesetVersion(decision.getRulesVersion())
+        .processingTimeMs(processingTime)
+        .timestamp(decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
+        .success(true)
+        .build();
+  }
+
+  private EvaluateResponse buildEvaluateResponseFromExistingDecision(
+      TransactionDecision decision, long startTime) {
+    Transaction transaction = decision.getTransaction();
+    long processingTime = System.currentTimeMillis() - startTime;
+    List<TriggeredRuleDTO> triggeredRules = readTriggeredRules(decision.getRulesApplied());
+    List<RuleHitDTO> ruleHits = enrichRuleHits(triggeredRules);
+    List<PopupDTO> popups = aggregatePopups(ruleHits);
+
+    return EvaluateResponse.builder()
+        .transactionId(transaction.getExternalTransactionId())
+        .classification(decision.getClassification().name())
+        .riskScore(decision.getRiskScore())
+        .reason(decision.getReason())
+        .rulesetVersion(decision.getRulesVersion())
+        .processingTimeMs(processingTime)
+        .timestamp(decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
+        .ruleHits(ruleHits)
+        .popups(popups)
         .build();
   }
 

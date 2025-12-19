@@ -33,6 +33,12 @@ public class TransactionDecision {
   @JoinColumn(name = "transaction_id", nullable = false)
   private Transaction transaction;
 
+  @Column(name = "external_transaction_id", length = 64)
+  private String externalTransactionId;
+
+  @Column(name = "payload_raw_hash", length = 64)
+  private String payloadRawHash;
+
   /** Classificação da transação: APPROVED, SUSPICIOUS, FRAUD */
   @Column(nullable = false, length = 20)
   @Enumerated(EnumType.STRING)
