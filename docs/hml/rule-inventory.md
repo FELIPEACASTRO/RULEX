@@ -1,7 +1,7 @@
 # Inventário de Regras (código como verdade)
 
 ## 1) Regras configuráveis (DB) — RuleEngineService
-A avaliação principal (`POST /transactions/analyze`) carrega regras habilitadas via `RuleConfigurationRepository.findByEnabled(true)` e avalia:
+Os endpoints `POST /transactions/analyze` e `POST /evaluate` carregam regras habilitadas via `RuleConfigurationRepository.findByEnabled(true)` e avaliam:
 
 1) **Condições genéricas**: se `conditionsJson` estiver preenchido (lista de `RuleConditionDTO`), aplica AND/OR e operadores.
 2) **Fallback legado por nome** (compatibilidade): quando não há `conditionsJson`, algumas regras por `ruleName` possuem mapeamento hard-coded.
@@ -25,6 +25,13 @@ O motor avalia `field`, `operator`, `value` contra os campos do `TransactionRequ
 Resultado:
 - `riskScore` = soma de pesos (capado em 100)
 - `classification` = severidade máxima entre score e classificação das regras disparadas
+
+### /evaluate (decisão + ruleHits + popups)
+Além dos campos básicos de decisão, o `POST /evaluate` retorna:
+- `ruleHits`: regras disparadas com metadados (nome/descrição/tipo/classificação/peso/threshold) e contribuição.
+- `popups`: agregação de `ruleHits` em grupos (“popups”), com `reason` e soma de contribuição.
+
+Modelagem (contrato): **1 popup → 1..N ruleHits**.
 
 ---
 

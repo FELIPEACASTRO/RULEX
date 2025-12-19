@@ -1,0 +1,234 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Rules popup (Rules.tsx) > snapshot: popup visual regression (modal content) 1`] = `
+<div
+  aria-describedby="radix-_r_b_"
+  aria-labelledby="radix-_r_a_"
+  class="bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg max-w-2xl"
+  data-slot="dialog-content"
+  data-state="open"
+  id="radix-_r_9_"
+  role="dialog"
+  style="pointer-events: auto;"
+  tabindex="-1"
+>
+  <div
+    class="flex flex-col gap-2 text-center sm:text-left"
+    data-slot="dialog-header"
+  >
+    <h2
+      class="text-lg leading-none font-semibold"
+      data-slot="dialog-title"
+      id="radix-_r_a_"
+    >
+      Nova Regra
+    </h2>
+    <p
+      class="text-muted-foreground text-sm"
+      data-slot="dialog-description"
+      id="radix-_r_b_"
+    >
+      Configure os parâmetros da regra de detecção de fraude
+    </p>
+  </div>
+  <div
+    class="space-y-4"
+  >
+    <div>
+      <label
+        class="block text-sm font-medium text-foreground mb-2"
+        for="ruleName"
+      >
+        Nome da Regra
+      </label>
+      <input
+        class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
+        data-slot="input"
+        id="ruleName"
+        placeholder="Ex: LOW_AUTHENTICATION_SCORE"
+        value=""
+      />
+    </div>
+    <div>
+      <label
+        class="block text-sm font-medium text-foreground mb-2"
+        for="description"
+      >
+        Descrição
+      </label>
+      <input
+        class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
+        data-slot="input"
+        id="description"
+        placeholder="Descrição da regra"
+        value=""
+      />
+    </div>
+    <div
+      class="grid grid-cols-2 gap-4"
+    >
+      <div>
+        <label
+          class="block text-sm font-medium text-foreground mb-2"
+          for="ruleType"
+        >
+          Tipo de Regra
+        </label>
+        <select
+          class="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
+          id="ruleType"
+        >
+          <option
+            value="SECURITY"
+          >
+            Segurança
+          </option>
+          <option
+            value="CONTEXT"
+          >
+            Contexto
+          </option>
+          <option
+            value="VELOCITY"
+          >
+            Velocidade
+          </option>
+          <option
+            value="ANOMALY"
+          >
+            Anomalia
+          </option>
+        </select>
+      </div>
+      <div>
+        <label
+          class="block text-sm font-medium text-foreground mb-2"
+          for="classification"
+        >
+          Classificação
+        </label>
+        <select
+          class="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
+          id="classification"
+        >
+          <option
+            value="APPROVED"
+          >
+            Aprovada
+          </option>
+          <option
+            value="SUSPICIOUS"
+          >
+            Suspeita
+          </option>
+          <option
+            value="FRAUD"
+          >
+            Fraude
+          </option>
+        </select>
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-2 gap-4"
+    >
+      <div>
+        <label
+          class="block text-sm font-medium text-foreground mb-2"
+          for="threshold"
+        >
+          Threshold
+        </label>
+        <input
+          class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
+          data-slot="input"
+          id="threshold"
+          placeholder="0"
+          type="number"
+          value="0"
+        />
+      </div>
+      <div>
+        <label
+          class="block text-sm font-medium text-foreground mb-2"
+          for="weight"
+        >
+          Peso (0-100)
+        </label>
+        <input
+          class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
+          data-slot="input"
+          id="weight"
+          max="100"
+          min="0"
+          placeholder="0"
+          type="number"
+          value="0"
+        />
+      </div>
+    </div>
+    <div
+      class="flex items-center gap-2"
+    >
+      <input
+        checked=""
+        class="w-4 h-4 rounded border-input"
+        id="enabled"
+        type="checkbox"
+      />
+      <label
+        class="text-sm font-medium text-foreground"
+        for="enabled"
+      >
+        Habilitada
+      </label>
+    </div>
+    <div
+      class="flex justify-end gap-2 pt-4"
+    >
+      <button
+        class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-transparent shadow-xs hover:bg-accent dark:bg-transparent dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[>svg]:px-3"
+        data-slot="button"
+      >
+        Cancelar
+      </button>
+      <button
+        class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[>svg]:px-3"
+        data-slot="button"
+      >
+        Criar
+      </button>
+    </div>
+  </div>
+  <button
+    class="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+    data-slot="dialog-close"
+    type="button"
+  >
+    <svg
+      class="lucide lucide-x"
+      fill="none"
+      height="24"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M18 6 6 18"
+      />
+      <path
+        d="m6 6 12 12"
+      />
+    </svg>
+    <span
+      class="sr-only"
+    >
+      Close
+    </span>
+  </button>
+</div>
+`;

@@ -193,8 +193,11 @@ export default function Rules() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Nome da Regra</label>
+                <label htmlFor="ruleName" className="block text-sm font-medium text-foreground mb-2">
+                  Nome da Regra
+                </label>
                 <Input
+                  id="ruleName"
                   value={formData.ruleName}
                   onChange={(e) => setFormData({ ...formData, ruleName: e.target.value })}
                   placeholder="Ex: LOW_AUTHENTICATION_SCORE"
@@ -202,8 +205,11 @@ export default function Rules() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Descrição</label>
+                <label htmlFor="description" className="block text-sm font-medium text-foreground mb-2">
+                  Descrição
+                </label>
                 <Input
+                  id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Descrição da regra"
@@ -211,8 +217,11 @@ export default function Rules() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Tipo de Regra</label>
+                  <label htmlFor="ruleType" className="block text-sm font-medium text-foreground mb-2">
+                    Tipo de Regra
+                  </label>
                   <select
+                    id="ruleType"
                     value={formData.ruleType}
                     onChange={(e) => setFormData({ ...formData, ruleType: e.target.value })}
                     className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
@@ -224,8 +233,11 @@ export default function Rules() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Classificação</label>
+                  <label htmlFor="classification" className="block text-sm font-medium text-foreground mb-2">
+                    Classificação
+                  </label>
                   <select
+                    id="classification"
                     value={formData.classification}
                     onChange={(e) => setFormData({ ...formData, classification: e.target.value })}
                     className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
@@ -238,22 +250,38 @@ export default function Rules() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Threshold</label>
+                  <label htmlFor="threshold" className="block text-sm font-medium text-foreground mb-2">
+                    Threshold
+                  </label>
                   <Input
+                    id="threshold"
                     type="number"
                     value={formData.threshold}
-                    onChange={(e) => setFormData({ ...formData, threshold: parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        threshold: e.target.value === '' ? 0 : parseInt(e.target.value, 10),
+                      })
+                    }
                     placeholder="0"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Peso (0-100)</label>
+                  <label htmlFor="weight" className="block text-sm font-medium text-foreground mb-2">
+                    Peso (0-100)
+                  </label>
                   <Input
+                    id="weight"
                     type="number"
                     min="0"
                     max="100"
                     value={formData.weight}
-                    onChange={(e) => setFormData({ ...formData, weight: parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        weight: e.target.value === '' ? 0 : parseInt(e.target.value, 10),
+                      })
+                    }
                     placeholder="0"
                   />
                 </div>
