@@ -10,6 +10,8 @@ import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 /** Serviço para consulta de transações e decisões. */
 @Service
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
@@ -83,7 +83,9 @@ public class TransactionQueryService {
         .reason(decision != null ? decision.getReason() : "Sem decisão registrada")
         .rulesetVersion(decision != null ? decision.getRulesVersion() : "1")
         .processingTimeMs(0L)
-        .timestamp(decision != null ? decision.getCreatedAt() : transaction.getCreatedAt())
+        .timestamp(
+            toOffsetDateTime(
+                decision != null ? decision.getCreatedAt() : transaction.getCreatedAt()))
         .success(true)
         .build();
   }
@@ -93,19 +95,11 @@ public class TransactionQueryService {
       return List.of();
     }
     try {
-        .timestamp(
-            toOffsetDateTime(
-                decision != null ? decision.getCreatedAt() : transaction.getCreatedAt()))
+      return objectMapper.readValue(
           rulesApplied,
           objectMapper
               .getTypeFactory()
               .constructCollectionType(List.class, TriggeredRuleDTO.class));
-  private OffsetDateTime toOffsetDateTime(LocalDateTime dt) {
-    if (dt == null) {
-      return null;
-    }
-    return dt.atZone(ZoneId.systemDefault()).toOffsetDateTime();
-  }
     } catch (Exception e) {
       // fallback legado: string CSV
       return List.of(rulesApplied.split(",")).stream()
@@ -114,5 +108,12 @@ public class TransactionQueryService {
           .map(name -> TriggeredRuleDTO.builder().name(name).weight(0).contribution(0).build())
           .toList();
     }
+  }
+
+  private OffsetDateTime toOffsetDateTime(LocalDateTime dt) {
+    if (dt == null) {
+      return null;
+    }
+    return dt.atZone(ZoneId.systemDefault()).toOffsetDateTime();
   }
 }

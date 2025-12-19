@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
+@SuppressWarnings("null")
 public class RuleVersionPersistenceAdapter implements RuleVersionPersistencePort {
 
   private final RuleVersionRepository ruleVersionRepository;

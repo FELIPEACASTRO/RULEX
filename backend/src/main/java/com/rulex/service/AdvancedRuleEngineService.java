@@ -399,12 +399,13 @@ public class AdvancedRuleEngineService {
     boolean cryptogramValidButCvvInvalid =
         "V".equals(transaction.getCryptogramValid()) && "N".equals(transaction.getCvv2Response());
     boolean cavvValidButPinInvalid =
-      Integer.valueOf(0).equals(transaction.getCavvResult()) && "N".equals(transaction.getPinVerifyCode());
+        Integer.valueOf(0).equals(transaction.getCavvResult())
+            && "N".equals(transaction.getPinVerifyCode());
     boolean tokenSecureButScoreLow =
-      transaction.getTokenAssuranceLevel() != null
-        && transaction.getTokenAssuranceLevel() > 50
-        && transaction.getConsumerAuthenticationScore() != null
-        && transaction.getConsumerAuthenticationScore() < 100;
+        transaction.getTokenAssuranceLevel() != null
+            && transaction.getTokenAssuranceLevel() > 50
+            && transaction.getConsumerAuthenticationScore() != null
+            && transaction.getConsumerAuthenticationScore() < 100;
 
     if (cryptogramValidButCvvInvalid || cavvValidButPinInvalid || tokenSecureButScoreLow) {
       auditService.logRule("INCOHERENT_AUTH_SEQUENCE", transaction, "SUSPICIOUS");
@@ -526,7 +527,8 @@ public class AdvancedRuleEngineService {
     long count5min =
         Optional.ofNullable(
                 transactionRepository.countTransactionsByCustomerSince(
-            transaction.getCustomerIdFromHeader(), LocalDateTime.now(clock).minusMinutes(5)))
+                    transaction.getCustomerIdFromHeader(),
+                    LocalDateTime.now(clock).minusMinutes(5)))
             .orElse(0L);
 
     if (count5min >= 3) {
@@ -537,7 +539,8 @@ public class AdvancedRuleEngineService {
     long count1hour =
         Optional.ofNullable(
                 transactionRepository.countTransactionsByCustomerSince(
-            transaction.getCustomerIdFromHeader(), LocalDateTime.now(clock).minusMinutes(60)))
+                    transaction.getCustomerIdFromHeader(),
+                    LocalDateTime.now(clock).minusMinutes(60)))
             .orElse(0L);
 
     if (count1hour >= 10) {
@@ -616,7 +619,8 @@ public class AdvancedRuleEngineService {
 
     RuleResult[] results = {
       track(triggered, "EMV_SECURITY_CHECK", checkEMVSecurity(transaction)),
-      track(triggered, "TERMINAL_VERIFICATION_FAILED", checkTerminalVerificationFailed(transaction)),
+      track(
+          triggered, "TERMINAL_VERIFICATION_FAILED", checkTerminalVerificationFailed(transaction)),
       track(triggered, "EXPIRED_CARD", checkExpiredCard(transaction)),
       track(triggered, "SUSPICIOUS_TRANSACTION_TYPE", checkSuspiciousTransactionType(transaction)),
       track(triggered, "UNUSUAL_CARD_MEDIA", checkUnusualCardMedia(transaction)),
@@ -642,7 +646,10 @@ public class AdvancedRuleEngineService {
       track(triggered, "ACQUIRER_COUNTRY_MISMATCH", checkAcquirerCountryMismatch(transaction)),
       track(triggered, "COMBINED_SCORE_CHECK", checkCombinedScore(transaction)),
       track(triggered, "VELOCITY_CHECK_CONSOLIDATED", checkVelocityConsolidated(transaction)),
-      track(triggered, "CUSTOM_INDICATORS_COMPREHENSIVE", checkCustomIndicatorsComprehensive(transaction))
+      track(
+          triggered,
+          "CUSTOM_INDICATORS_COMPREHENSIVE",
+          checkCustomIndicatorsComprehensive(transaction))
     };
 
     RuleResult mostSevere = RuleResult.APPROVED;

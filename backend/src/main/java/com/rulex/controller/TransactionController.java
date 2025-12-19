@@ -1,26 +1,26 @@
 package com.rulex.controller;
 
+import com.rulex.api.RawPayloadCaptureFilter;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
 import com.rulex.dto.TriggeredRuleDTO;
-import com.rulex.api.RawPayloadCaptureFilter;
 import com.rulex.service.AdvancedRuleEngineService;
 import com.rulex.service.RuleEngineService;
 import com.rulex.service.TransactionQueryService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import jakarta.servlet.http.HttpServletRequest;
 
 /** Controller REST para processamento e consulta de transações. */
 @RestController
@@ -37,14 +37,14 @@ public class TransactionController {
   /** Analisa uma transação e retorna a classificação de fraude. POST /api/transactions/analyze */
   @PostMapping("/analyze")
   public ResponseEntity<TransactionResponse> analyzeTransaction(
-      @Valid @RequestBody TransactionRequest request,
-      HttpServletRequest httpRequest) {
+      @Valid @RequestBody TransactionRequest request, HttpServletRequest httpRequest) {
 
     log.info("Analisando transação: {}", request.getExternalTransactionId());
 
     byte[] rawBytes = (byte[]) httpRequest.getAttribute(RawPayloadCaptureFilter.RAW_BYTES_ATTR);
     String contentType = httpRequest.getContentType();
-    TransactionResponse response = ruleEngineService.analyzeTransaction(request, rawBytes, contentType);
+    TransactionResponse response =
+        ruleEngineService.analyzeTransaction(request, rawBytes, contentType);
     return ResponseEntity.ok(response);
   }
 
@@ -85,7 +85,14 @@ public class TransactionController {
 
     Page<TransactionResponse> transactions =
         transactionQueryService.findTransactions(
-            customerId, merchantId, mcc, minAmount, maxAmount, startDateTime, endDateTime, pageable);
+            customerId,
+            merchantId,
+            mcc,
+            minAmount,
+            maxAmount,
+            startDateTime,
+            endDateTime,
+            pageable);
 
     return ResponseEntity.ok(transactions);
   }
@@ -107,7 +114,8 @@ public class TransactionController {
       @PathVariable String externalId) {
     log.info("Obtendo transação pelo ID externo: {}", externalId);
 
-    TransactionResponse transaction = transactionQueryService.getTransactionByExternalId(externalId);
+    TransactionResponse transaction =
+        transactionQueryService.getTransactionByExternalId(externalId);
     return ResponseEntity.ok(transaction);
   }
 
@@ -143,11 +151,11 @@ public class TransactionController {
                 triggeredRules.isEmpty()
                     ? "Resultado de regras avançadas"
                     : ("Resultado de regras avançadas. Regras acionadas: "
-                        + String.join(", ",
-                            triggeredRules.stream().map(TriggeredRuleDTO::getName).toList())))
+                        + String.join(
+                            ", ", triggeredRules.stream().map(TriggeredRuleDTO::getName).toList())))
             .rulesetVersion("advanced")
             .processingTimeMs(processingTime)
-        .timestamp(OffsetDateTime.now(clock))
+            .timestamp(OffsetDateTime.now(clock))
             .success(true)
             .build());
   }

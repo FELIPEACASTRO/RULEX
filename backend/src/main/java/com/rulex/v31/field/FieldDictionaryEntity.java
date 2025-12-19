@@ -15,8 +15,7 @@ import lombok.Setter;
 @Setter
 public class FieldDictionaryEntity {
 
-  @Id
-  private UUID id;
+  @Id private UUID id;
 
   @Column(name = "workflow")
   private String workflow;

@@ -18,7 +18,7 @@ public class RawPayloadCaptureFilter extends OncePerRequestFilter {
   public static final String RAW_BYTES_ATTR = "RAW_PAYLOAD_BYTES";
 
   @Override
-  protected boolean shouldNotFilter(HttpServletRequest request) {
+  protected boolean shouldNotFilter(@org.springframework.lang.NonNull HttpServletRequest request) {
     if (!"POST".equalsIgnoreCase(request.getMethod())) {
       return true;
     }
@@ -35,7 +35,9 @@ public class RawPayloadCaptureFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(
-      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      @org.springframework.lang.NonNull HttpServletRequest request,
+      @org.springframework.lang.NonNull HttpServletResponse response,
+      @org.springframework.lang.NonNull FilterChain filterChain)
       throws ServletException, IOException {
 
     CachedBodyHttpServletRequest cached = new CachedBodyHttpServletRequest(request);

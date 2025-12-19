@@ -6,6 +6,7 @@ import com.rulex.repository.homolog.SimulationRunRepository;
 import org.springframework.stereotype.Component;
 
 @Component
+@SuppressWarnings("null")
 public class SimulationRunPersistenceAdapter implements SimulationRunPersistencePort {
 
   private final SimulationRunRepository simulationRunRepository;

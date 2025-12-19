@@ -13,7 +13,8 @@ public class FieldDictionaryService {
   }
 
   public List<FieldDictionaryEntity> list(String workflow, String recordType, String portfolio) {
-    return repository.findByFilters(nullIfBlank(workflow), nullIfBlank(recordType), nullIfBlank(portfolio));
+    return repository.findByFilters(
+        nullIfBlank(workflow), nullIfBlank(recordType), nullIfBlank(portfolio));
   }
 
   private String nullIfBlank(String s) {

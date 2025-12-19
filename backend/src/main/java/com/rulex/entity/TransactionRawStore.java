@@ -6,7 +6,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
-import java.util.Arrays;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -45,12 +44,20 @@ public class TransactionRawStore {
 
   @Override
   public String toString() {
-    return "TransactionRawStore{" +
-        "externalTransactionId='" + externalTransactionId + '\'' +
-        ", payloadRawHash='" + payloadRawHash + '\'' +
-        ", payloadRawBytesLength=" + (payloadRawBytes == null ? 0 : payloadRawBytes.length) +
-        ", contentType='" + contentType + '\'' +
-        ", createdAt=" + createdAt +
-        '}';
+    return "TransactionRawStore{"
+        + "externalTransactionId='"
+        + externalTransactionId
+        + '\''
+        + ", payloadRawHash='"
+        + payloadRawHash
+        + '\''
+        + ", payloadRawBytesLength="
+        + (payloadRawBytes == null ? 0 : payloadRawBytes.length)
+        + ", contentType='"
+        + contentType
+        + '\''
+        + ", createdAt="
+        + createdAt
+        + '}';
   }
 }

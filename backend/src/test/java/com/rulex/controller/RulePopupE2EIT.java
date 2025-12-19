@@ -22,12 +22,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class RulePopupE2EIT extends CorePostgresITSupport {
@@ -77,7 +77,8 @@ class RulePopupE2EIT extends CorePostgresITSupport {
     RuleConfigurationDTO created = Objects.requireNonNull(createdResp.getBody());
     assertThat(created.getId()).isNotNull();
     assertThat(created.getRuleName()).isEqualTo("LOW_AUTHENTICATION_SCORE");
-    assertThat(ruleHistoryRepository.findByRuleIdOrderByCreatedAtDesc(created.getId())).isNotEmpty();
+    assertThat(ruleHistoryRepository.findByRuleIdOrderByCreatedAtDesc(created.getId()))
+        .isNotEmpty();
 
     // 2) Analisar transação que dispara a regra (consumerAuthenticationScore < threshold)
     TransactionRequest req = minimalRequest("tx-pop-1");
@@ -94,7 +95,8 @@ class RulePopupE2EIT extends CorePostgresITSupport {
 
     // 3) Desabilitar regra e validar que não é avaliada
     ResponseEntity<RuleConfigurationDTO> toggled =
-        http.exchange(url("/api/rules/" + created.getId() + "/toggle"),
+        http.exchange(
+            url("/api/rules/" + created.getId() + "/toggle"),
             org.springframework.http.HttpMethod.PATCH,
             new HttpEntity<>(null, jsonHeaders()),
             RuleConfigurationDTO.class);
@@ -113,7 +115,7 @@ class RulePopupE2EIT extends CorePostgresITSupport {
   }
 
   @Test
-    void popupEdit_thenAnalyze_riskScoreClampedTo100() {
+  void popupEdit_thenAnalyze_riskScoreClampedTo100() {
     RuleConfigurationDTO createExternalScoreRule =
         RuleConfigurationDTO.builder()
             .ruleName("LOW_EXTERNAL_SCORE")
@@ -129,33 +131,34 @@ class RulePopupE2EIT extends CorePostgresITSupport {
 
     RuleConfigurationDTO createdExternalScoreRule =
         Objects.requireNonNull(
-        http.postForEntity(url("/api/rules"), json(createExternalScoreRule), RuleConfigurationDTO.class)
-          .getBody());
+            http.postForEntity(
+                    url("/api/rules"), json(createExternalScoreRule), RuleConfigurationDTO.class)
+                .getBody());
 
     RuleConfigurationDTO createInvalidCavvRule =
-      RuleConfigurationDTO.builder()
-        .ruleName("INVALID_CAVV")
-        .description("CAVV inválido")
-        .ruleType("SECURITY")
-        .classification("SUSPICIOUS")
-        .threshold(0)
-        .weight(50)
-        .enabled(true)
-        .logicOperator("AND")
-        .conditions(java.util.List.of())
-        .build();
+        RuleConfigurationDTO.builder()
+            .ruleName("INVALID_CAVV")
+            .description("CAVV inválido")
+            .ruleType("SECURITY")
+            .classification("SUSPICIOUS")
+            .threshold(0)
+            .weight(50)
+            .enabled(true)
+            .logicOperator("AND")
+            .conditions(java.util.List.of())
+            .build();
 
     http.postForEntity(url("/api/rules"), json(createInvalidCavvRule), RuleConfigurationDTO.class);
 
     // editar peso para 100 e validar clamp do score quando múltiplas regras disparam
     RuleConfigurationDTO update =
         RuleConfigurationDTO.builder()
-        .ruleName(createdExternalScoreRule.getRuleName())
-        .description(createdExternalScoreRule.getDescription())
-        .ruleType(createdExternalScoreRule.getRuleType())
-        .classification(createdExternalScoreRule.getClassification())
-        .threshold(createdExternalScoreRule.getThreshold())
-        .weight(100)
+            .ruleName(createdExternalScoreRule.getRuleName())
+            .description(createdExternalScoreRule.getDescription())
+            .ruleType(createdExternalScoreRule.getRuleType())
+            .classification(createdExternalScoreRule.getClassification())
+            .threshold(createdExternalScoreRule.getThreshold())
+            .weight(100)
             .enabled(true)
             .logicOperator("AND")
             .conditions(java.util.List.of())
@@ -163,7 +166,7 @@ class RulePopupE2EIT extends CorePostgresITSupport {
 
     ResponseEntity<RuleConfigurationDTO> updatedResp =
         http.exchange(
-        url("/api/rules/" + createdExternalScoreRule.getId()),
+            url("/api/rules/" + createdExternalScoreRule.getId()),
             org.springframework.http.HttpMethod.PUT,
             json(update),
             RuleConfigurationDTO.class);
@@ -209,7 +212,8 @@ class RulePopupE2EIT extends CorePostgresITSupport {
     Long id = Objects.requireNonNull(first.getBody()).getId();
     assertThat(ruleHistoryRepository.findByRuleIdOrderByCreatedAtDesc(id)).isNotEmpty();
 
-    ResponseEntity<String> second = http.postForEntity(url("/api/rules"), json(create), String.class);
+    ResponseEntity<String> second =
+        http.postForEntity(url("/api/rules"), json(create), String.class);
     assertThat(second.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
   }
 

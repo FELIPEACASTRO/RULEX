@@ -2,7 +2,6 @@ package com.rulex.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -17,6 +16,7 @@ import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
+import com.rulex.v31.execlog.RuleExecutionLogService;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -28,6 +28,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+@SuppressWarnings("null")
 class RuleEngineServiceTest {
 
   private final TransactionRepository transactionRepository =
@@ -45,6 +46,9 @@ class RuleEngineServiceTest {
   private final TransactionRawStoreService rawStoreService =
       Mockito.mock(TransactionRawStoreService.class);
 
+  private final RuleExecutionLogService ruleExecutionLogService =
+      Mockito.mock(RuleExecutionLogService.class);
+
   private final RuleEngineService service =
       new RuleEngineService(
           transactionRepository,
@@ -54,7 +58,8 @@ class RuleEngineServiceTest {
           objectMapper,
           clock,
           payloadHashService,
-          rawStoreService);
+          rawStoreService,
+          ruleExecutionLogService);
 
   @Test
   void returnsApproved_whenNoEnabledRules() {
@@ -105,7 +110,8 @@ class RuleEngineServiceTest {
             .threshold(threshold)
             .weight(60)
             .enabled(true)
-            .classification(TransactionDecision.TransactionClassification.valueOf(expectedClassification))
+            .classification(
+                TransactionDecision.TransactionClassification.valueOf(expectedClassification))
             .build();
 
     when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(rule));
@@ -157,8 +163,7 @@ class RuleEngineServiceTest {
             List.of(
                 // mcc must equal 7995 AND transactionAmount must be > 100
                 java.util.Map.of("field", "mcc", "operator", "==", "value", "7995"),
-                java.util.Map.of(
-                    "field", "transactionAmount", "operator", ">", "value", "100")));
+                java.util.Map.of("field", "transactionAmount", "operator", ">", "value", "100")));
 
     RuleConfiguration rule =
         RuleConfiguration.builder()

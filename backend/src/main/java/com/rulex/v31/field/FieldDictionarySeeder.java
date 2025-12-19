@@ -72,8 +72,11 @@ public class FieldDictionarySeeder implements ApplicationRunner {
       repository.save(e);
     }
 
-    log.info("FieldDictionary seeded (best-effort) for workflow={}, recordType={}, portfolio={}",
-        DEFAULT_WORKFLOW, DEFAULT_RECORD_TYPE, DEFAULT_PORTFOLIO);
+    log.info(
+        "FieldDictionary seeded (best-effort) for workflow={}, recordType={}, portfolio={}",
+        DEFAULT_WORKFLOW,
+        DEFAULT_RECORD_TYPE,
+        DEFAULT_PORTFOLIO);
   }
 
   private String mapType(Class<?> t) {
@@ -108,16 +111,7 @@ public class FieldDictionarySeeder implements ApplicationRunner {
       case "number" ->
           ops.addAll(
               List.of(
-                  "EQ",
-                  "NE",
-                  "GT",
-                  "LT",
-                  "GTE",
-                  "LTE",
-                  "IN",
-                  "NOT_IN",
-                  "BETWEEN",
-                  "NOT_BETWEEN"));
+                  "EQ", "NE", "GT", "LT", "GTE", "LTE", "IN", "NOT_IN", "BETWEEN", "NOT_BETWEEN"));
       case "boolean" -> ops.addAll(List.of("IS_TRUE", "IS_FALSE"));
       case "string" ->
           ops.addAll(

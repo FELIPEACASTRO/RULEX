@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 @Component
+@SuppressWarnings("null")
 public class ActiveRuleSetPersistenceAdapter implements ActiveRuleSetPersistencePort {
 
   private final ActiveRuleSetRepository activeRuleSetRepository;
@@ -22,6 +23,6 @@ public class ActiveRuleSetPersistenceAdapter implements ActiveRuleSetPersistence
 
   @Override
   public ActiveRuleSetEntity save(ActiveRuleSetEntity entity) {
-    return activeRuleSetRepository.save(entity);
+    return java.util.Objects.requireNonNull(activeRuleSetRepository.save(entity));
   }
 }

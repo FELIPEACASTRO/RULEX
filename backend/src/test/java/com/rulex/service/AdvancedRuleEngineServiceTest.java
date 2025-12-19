@@ -42,7 +42,8 @@ class AdvancedRuleEngineServiceTest {
         .thenReturn(Optional.of(new BigDecimal("1000")));
     when(transactionRepository.getAverageCurrencyConversionRate(anyInt(), anyInt()))
         .thenReturn(Optional.of(new BigDecimal("1.0")));
-    when(transactionRepository.countTransactionsByCustomerSince(anyString(), any(LocalDateTime.class)))
+    when(transactionRepository.countTransactionsByCustomerSince(
+            anyString(), any(LocalDateTime.class)))
         .thenReturn(0L);
     when(transactionRepository.countDailyTransactions(anyString(), anyInt())).thenReturn(0L);
   }
@@ -52,7 +53,8 @@ class AdvancedRuleEngineServiceTest {
     TransactionRequest req = baseline();
     req.setCardAipStatic("N");
     req.setTransactionAmount(new BigDecimal("1001"));
-    assertThat(service.checkEMVSecurity(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkEMVSecurity(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
     verify(auditService).logRule(eq("EMV_SECURITY_CHECK"), eq(req), eq("SUSPICIOUS"));
   }
 
@@ -60,7 +62,8 @@ class AdvancedRuleEngineServiceTest {
   void rule02_terminalVerificationFailed_fraudWhenFailPresent() {
     TransactionRequest req = baseline();
     req.setTerminalVerificationResults("SOME_FAIL_CODE:FAIL");
-    assertThat(service.checkTerminalVerificationFailed(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
+    assertThat(service.checkTerminalVerificationFailed(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
   }
 
   @Test
@@ -78,7 +81,8 @@ class AdvancedRuleEngineServiceTest {
     when(transactionRepository.getCustomerAverageAmount(eq(req.getCustomerIdFromHeader()), eq(30)))
         .thenReturn(Optional.of(new BigDecimal("10")));
     req.setTransactionAmount(new BigDecimal("25"));
-    assertThat(service.checkSuspiciousTransactionType(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkSuspiciousTransactionType(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -86,7 +90,8 @@ class AdvancedRuleEngineServiceTest {
     TransactionRequest req = baseline();
     req.setCardMediaType("X");
     req.setPosEntryMode("E");
-    assertThat(service.checkUnusualCardMedia(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkUnusualCardMedia(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -95,7 +100,8 @@ class AdvancedRuleEngineServiceTest {
     req.setTerminalType("A");
     req.setPosOffPremises(1);
     req.setTransactionAmount(new BigDecimal("5000.01"));
-    assertThat(service.checkSuspiciousTerminal(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkSuspiciousTerminal(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -104,7 +110,8 @@ class AdvancedRuleEngineServiceTest {
     req.setEciIndicator(5);
     req.setAvsRequest("N");
     req.setTransactionAmount(new BigDecimal("1000.01"));
-    assertThat(service.checkEcommerceNoAVS(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkEcommerceNoAVS(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -113,7 +120,8 @@ class AdvancedRuleEngineServiceTest {
     req.setPosSecurity(0);
     req.setPosEntryMode("C");
     req.setTransactionAmount(new BigDecimal("2000.01"));
-    assertThat(service.checkPOSSecurityMissing(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkPOSSecurityMissing(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -122,14 +130,16 @@ class AdvancedRuleEngineServiceTest {
     req.setPosCardCapture(1);
     when(transactionRepository.countCardCapturesSince(anyString(), any(LocalDateTime.class)))
         .thenReturn(3L);
-    assertThat(service.checkCardCaptureFraud(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
+    assertThat(service.checkCardCaptureFraud(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
   }
 
   @Test
   void rule10_pinCvvLimitExceeded_fraudWhenFlagSet() {
     TransactionRequest req = baseline();
     req.setCvvPinTryLimitExceeded(1);
-    assertThat(service.checkPinCvvLimitExceeded(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
+    assertThat(service.checkPinCvvLimitExceeded(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
   }
 
   @Test
@@ -137,7 +147,8 @@ class AdvancedRuleEngineServiceTest {
     TransactionRequest req = baseline();
     req.setCvrofflinePinVerificationPerformed(1);
     req.setCvrofflinePinVerificationFailed(1);
-    assertThat(service.checkOfflinePinFailed(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
+    assertThat(service.checkOfflinePinFailed(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
   }
 
   @Test
@@ -146,14 +157,16 @@ class AdvancedRuleEngineServiceTest {
     req.setCvv2Present("0");
     req.setMcc(7995);
     req.setTransactionAmount(new BigDecimal("1000.01"));
-    assertThat(service.checkMissingCvv2HighRisk(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkMissingCvv2HighRisk(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
   void rule13_customIndicatorFraud_fraudWhenUserIndicatorFlagsFraud() {
     TransactionRequest req = baseline();
     req.setUserIndicator01("F");
-    assertThat(service.checkCustomIndicatorFraud(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
+    assertThat(service.checkCustomIndicatorFraud(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
   }
 
   @Test
@@ -162,7 +175,8 @@ class AdvancedRuleEngineServiceTest {
     req.setTransactionTime(100000);
     req.setRecordCreationTime(200000);
     req.setTransactionAmount(new BigDecimal("5000.01"));
-    assertThat(service.checkProcessingLagAnomaly(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkProcessingLagAnomaly(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -171,22 +185,26 @@ class AdvancedRuleEngineServiceTest {
     req.setTransactionTime(10000); // 01:00
     req.setGmtOffset("+00.00");
     req.setTransactionAmount(new BigDecimal("2000.01"));
-    assertThat(service.checkTimezoneNormalizedCheck(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkTimezoneNormalizedCheck(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
   void rule16_duplicateTransaction_fraudWhenDuplicateCountPositive() {
     TransactionRequest req = baseline();
-    when(transactionRepository.countDuplicateTransactions(eq(req.getExternalTransactionId()), eq(req.getTransactionDate())))
+    when(transactionRepository.countDuplicateTransactions(
+            eq(req.getExternalTransactionId()), eq(req.getTransactionDate())))
         .thenReturn(1L);
-    assertThat(service.checkDuplicateTransaction(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
+    assertThat(service.checkDuplicateTransaction(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
   }
 
   @Test
   void rule17_suspiciousMerchantPostal_suspiciousWhenPostalCodeInvalid() {
     TransactionRequest req = baseline();
     req.setMerchantPostalCode("00000012");
-    assertThat(service.checkSuspiciousMerchantPostal(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkSuspiciousMerchantPostal(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -194,7 +212,8 @@ class AdvancedRuleEngineServiceTest {
     TransactionRequest req = baseline();
     req.setTokenId("MY_TEST_TOKEN");
     req.setTransactionAmount(new BigDecimal("1000.01"));
-    assertThat(service.checkSuspiciousToken(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkSuspiciousToken(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -203,7 +222,8 @@ class AdvancedRuleEngineServiceTest {
     req.setMerchantCountryCode("076");
     req.setTransactionCurrencyCode(840);
     req.setTransactionAmount(new BigDecimal("1000.01"));
-    assertThat(service.checkUnexpectedCurrency(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkUnexpectedCurrency(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -213,7 +233,8 @@ class AdvancedRuleEngineServiceTest {
     req.setTransactionCurrencyConversionRate(new BigDecimal("2.0"));
     when(transactionRepository.getAverageCurrencyConversionRate(eq(840), eq(30)))
         .thenReturn(Optional.of(new BigDecimal("1.0")));
-    assertThat(service.checkAnomalousConversionRate(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkAnomalousConversionRate(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -221,7 +242,8 @@ class AdvancedRuleEngineServiceTest {
     TransactionRequest req = baseline();
     req.setCryptogramValid("V");
     req.setCvv2Response("N");
-    assertThat(service.checkIncoherentAuthSequence(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkIncoherentAuthSequence(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -229,7 +251,8 @@ class AdvancedRuleEngineServiceTest {
     TransactionRequest req = baseline();
     req.setPosEntryMode("E");
     req.setCustomerPresent("Y");
-    assertThat(service.checkIncoherentContext(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkIncoherentContext(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -237,7 +260,8 @@ class AdvancedRuleEngineServiceTest {
     TransactionRequest req = baseline();
     req.setAuthDecisionCode("A");
     req.setAuthResponseCode("D");
-    assertThat(service.checkContradictoryAuthorization(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkContradictoryAuthorization(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -245,7 +269,8 @@ class AdvancedRuleEngineServiceTest {
     TransactionRequest req = baseline();
     req.setAcquirerCountry("999");
     req.setTransactionAmount(new BigDecimal("10000.01"));
-    assertThat(service.checkSuspiciousAcquirer(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkSuspiciousAcquirer(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -254,7 +279,8 @@ class AdvancedRuleEngineServiceTest {
     req.setAcquirerCountry("840");
     req.setMerchantCountryCode("076");
     req.setTransactionAmount(new BigDecimal("5000.01"));
-    assertThat(service.checkAcquirerCountryMismatch(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
+    assertThat(service.checkAcquirerCountryMismatch(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.SUSPICIOUS);
   }
 
   @Test
@@ -262,29 +288,34 @@ class AdvancedRuleEngineServiceTest {
     TransactionRequest req = baseline();
     req.setConsumerAuthenticationScore(10);
     req.setExternalScore3(10);
-    assertThat(service.checkCombinedScore(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
+    assertThat(service.checkCombinedScore(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
   }
 
   @Test
   void rule27_velocityConsolidated_fraudWhenCount5MinAtLeast3() {
     TransactionRequest req = baseline();
-    when(transactionRepository.countTransactionsByCustomerSince(eq(req.getCustomerIdFromHeader()), any(LocalDateTime.class)))
+    when(transactionRepository.countTransactionsByCustomerSince(
+            eq(req.getCustomerIdFromHeader()), any(LocalDateTime.class)))
         .thenReturn(3L);
-    assertThat(service.checkVelocityConsolidated(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
+    assertThat(service.checkVelocityConsolidated(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
   }
 
   @Test
   void rule28_customIndicatorsComprehensive_fraudWhenAlertPresent() {
     TransactionRequest req = baseline();
     req.setUserIndicator05("ALERT");
-    assertThat(service.checkCustomIndicatorsComprehensive(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
+    assertThat(service.checkCustomIndicatorsComprehensive(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
   }
 
   @Test
   void executeAllAdvancedRules_returnsMostSevere() {
     TransactionRequest req = baseline();
     req.setCvvPinTryLimitExceeded(1);
-    assertThat(service.executeAllAdvancedRules(req)).isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
+    assertThat(service.executeAllAdvancedRules(req))
+        .isEqualTo(AdvancedRuleEngineService.RuleResult.FRAUD);
   }
 
   private static TransactionRequest baseline() {

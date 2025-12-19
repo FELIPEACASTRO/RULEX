@@ -53,7 +53,7 @@ public class MetricsService {
         .fraudRate(fraudRate)
         .suspiciousRate(suspiciousRate)
         .period(period != null ? period : "24h")
-          .timestamp(LocalDateTime.now())
+        .timestamp(LocalDateTime.now())
         .build();
   }
 

@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
+@SuppressWarnings("null")
 public class RuleSetVersionPersistenceAdapter implements RuleSetVersionPersistencePort {
 
   private final RuleSetVersionRepository ruleSetVersionRepository;
@@ -18,11 +19,11 @@ public class RuleSetVersionPersistenceAdapter implements RuleSetVersionPersisten
 
   @Override
   public RuleSetVersionEntity save(RuleSetVersionEntity version) {
-    return ruleSetVersionRepository.save(version);
+    return java.util.Objects.requireNonNull(ruleSetVersionRepository.save(version));
   }
 
   @Override
   public Optional<RuleSetVersionEntity> findById(UUID id) {
-    return ruleSetVersionRepository.findById(id);
+    return ruleSetVersionRepository.findById(java.util.Objects.requireNonNull(id));
   }
 }

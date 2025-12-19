@@ -43,11 +43,11 @@ public class FieldDictionaryController {
       row.put("domain", readJsonOrNull(f.getDomainJson()));
       row.put("sentinelValues", readJsonOrNull(f.getSentinelValuesJson()));
       row.put(
-        "allowedOperators",
-        f.getAllowedOperators() == null ? List.of() : List.of(f.getAllowedOperators()));
+          "allowedOperators",
+          f.getAllowedOperators() == null ? List.of() : List.of(f.getAllowedOperators()));
       row.put(
-        "allowedFunctions",
-        f.getAllowedFunctions() == null ? List.of() : List.of(f.getAllowedFunctions()));
+          "allowedFunctions",
+          f.getAllowedFunctions() == null ? List.of() : List.of(f.getAllowedFunctions()));
       row.put("requirednessByContext", readJsonOrNull(f.getRequirednessByContext()));
       row.put("securityConstraints", readJsonOrNull(f.getSecurityConstraints()));
       row.put("normalizationAllowed", f.isNormalizationAllowed());

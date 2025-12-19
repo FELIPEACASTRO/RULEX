@@ -72,13 +72,7 @@ public class RulesV31Controller {
       AstValidationResult vr = validator.validate(ast);
       if (!vr.isValid()) {
         whyNot.add(
-            Map.of(
-                "ruleName",
-                ruleName,
-                "reason",
-                "AST inválida",
-                "errors",
-                vr.getErrors()));
+            Map.of("ruleName", ruleName, "reason", "AST inválida", "errors", vr.getErrors()));
         continue;
       }
 

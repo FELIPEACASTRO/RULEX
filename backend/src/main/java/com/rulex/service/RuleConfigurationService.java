@@ -1,6 +1,7 @@
 package com.rulex.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rulex.api.NotFoundException;
 import com.rulex.dto.RuleConditionDTO;
 import com.rulex.dto.RuleConfigurationDTO;
 import com.rulex.dto.TransactionRequest;
@@ -9,7 +10,6 @@ import com.rulex.entity.RuleConfigurationHistory;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.RuleConfigurationHistoryRepository;
 import com.rulex.repository.RuleConfigurationRepository;
-import com.rulex.api.NotFoundException;
 import java.beans.Introspector;
 import java.util.Arrays;
 import java.util.List;
@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
+@SuppressWarnings("null")
 public class RuleConfigurationService {
 
   private final RuleConfigurationRepository ruleConfigRepository;
@@ -258,7 +259,8 @@ public class RuleConfigurationService {
 
   private Set<String> getTransactionRequestFieldNames() {
     try {
-      return Arrays.stream(Introspector.getBeanInfo(TransactionRequest.class).getPropertyDescriptors())
+      return Arrays.stream(
+              Introspector.getBeanInfo(TransactionRequest.class).getPropertyDescriptors())
           .map(pd -> pd.getName())
           .filter(name -> !"class".equals(name))
           .collect(Collectors.toUnmodifiableSet());

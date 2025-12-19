@@ -1,9 +1,9 @@
 package com.rulex.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rulex.dto.RuleConditionDTO;
 import com.rulex.dto.EvaluateResponse;
 import com.rulex.dto.PopupDTO;
+import com.rulex.dto.RuleConditionDTO;
 import com.rulex.dto.RuleHitDTO;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
@@ -16,6 +16,8 @@ import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
 import com.rulex.util.PanMaskingUtil;
+import com.rulex.v31.execlog.ExecutionEventType;
+import com.rulex.v31.execlog.RuleExecutionLogService;
 import java.beans.PropertyDescriptor;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +29,7 @@ import java.util.*;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +52,7 @@ public class RuleEngineService {
   private final Clock clock;
   private final PayloadHashService payloadHashService;
   private final TransactionRawStoreService rawStoreService;
+  private final RuleExecutionLogService ruleExecutionLogService;
 
   /** Processa uma transação e retorna a classificação de fraude. */
   public TransactionResponse analyzeTransaction(TransactionRequest request) {
@@ -62,8 +66,8 @@ public class RuleEngineService {
   }
 
   /**
-   * V3.1 entrypoint: receives raw HTTP body bytes (as received) to compute SHA-256 and persist.
-   * If rawBytes is null (e.g., internal callers/tests), falls back to a canonical JSON string.
+   * V3.1 entrypoint: receives raw HTTP body bytes (as received) to compute SHA-256 and persist. If
+   * rawBytes is null (e.g., internal callers/tests), falls back to a canonical JSON string.
    */
   public TransactionResponse analyzeTransaction(
       TransactionRequest request, byte[] rawBytes, String contentType) {
@@ -84,7 +88,10 @@ public class RuleEngineService {
           auditService.logTamperAttempt(
               externalTransactionId, existingRaw.getPayloadRawHash(), payloadHash);
 
-          TransactionDecision tamperDecision = buildTamperDecision(externalTransactionId, payloadHash);
+          safeLogAntiTamper(externalTransactionId, existingRaw.getPayloadRawHash(), payloadHash);
+
+          TransactionDecision tamperDecision =
+              buildTamperDecision(externalTransactionId, payloadHash);
           return buildResponseFromTamperDecision(tamperDecision, startTime);
         }
 
@@ -104,12 +111,17 @@ public class RuleEngineService {
       rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
 
       // Backward compatibility: if transaction already exists (race), ensure hash matches.
-      Optional<Transaction> existingTxOpt = transactionRepository.findByExternalTransactionId(externalTransactionId);
+      Optional<Transaction> existingTxOpt =
+          transactionRepository.findByExternalTransactionId(externalTransactionId);
       if (existingTxOpt.isPresent()) {
         Transaction existing = existingTxOpt.get();
-        if (existing.getPayloadRawHash() != null && !existing.getPayloadRawHash().equals(payloadHash)) {
-          auditService.logTamperAttempt(externalTransactionId, existing.getPayloadRawHash(), payloadHash);
-          TransactionDecision tamperDecision = buildTamperDecision(externalTransactionId, payloadHash);
+        if (existing.getPayloadRawHash() != null
+            && !existing.getPayloadRawHash().equals(payloadHash)) {
+          auditService.logTamperAttempt(
+              externalTransactionId, existing.getPayloadRawHash(), payloadHash);
+          safeLogAntiTamper(externalTransactionId, existing.getPayloadRawHash(), payloadHash);
+          TransactionDecision tamperDecision =
+              buildTamperDecision(externalTransactionId, payloadHash);
           return buildResponseFromTamperDecision(tamperDecision, startTime);
         }
         return buildResponseFromExisting(existing, startTime);
@@ -126,9 +138,13 @@ public class RuleEngineService {
             transactionRepository
                 .findByExternalTransactionId(externalTransactionId)
                 .orElseThrow(() -> e);
-        if (racedTx.getPayloadRawHash() != null && !racedTx.getPayloadRawHash().equals(payloadHash)) {
-          auditService.logTamperAttempt(externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
-          TransactionDecision tamperDecision = buildTamperDecision(externalTransactionId, payloadHash);
+        if (racedTx.getPayloadRawHash() != null
+            && !racedTx.getPayloadRawHash().equals(payloadHash)) {
+          auditService.logTamperAttempt(
+              externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
+          safeLogAntiTamper(externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
+          TransactionDecision tamperDecision =
+              buildTamperDecision(externalTransactionId, payloadHash);
           return buildResponseFromTamperDecision(tamperDecision, startTime);
         }
         return buildResponseFromExisting(racedTx, startTime);
@@ -142,6 +158,14 @@ public class RuleEngineService {
       decision.setExternalTransactionId(transaction.getExternalTransactionId());
       decision.setPayloadRawHash(payloadHash);
       decisionRepository.save(decision);
+
+      safeLogEvaluate(
+          ExecutionEventType.EVALUATE,
+          transaction.getExternalTransactionId(),
+          payloadHash,
+          decision,
+          result.getTriggeredRules(),
+          null);
 
       // 4. Registrar auditoria
       auditService.logTransactionProcessed(transaction, decision, result);
@@ -160,8 +184,8 @@ public class RuleEngineService {
   /**
    * Avalia uma transação e retorna decisão final + rule hits + popups agregados.
    *
-   * <p>Observação: mantém o mesmo comportamento de persistência/idempotência de
-   * {@link #analyzeTransaction(TransactionRequest)}.
+   * <p>Observação: mantém o mesmo comportamento de persistência/idempotência de {@link
+   * #analyzeTransaction(TransactionRequest)}.
    */
   public EvaluateResponse evaluate(TransactionRequest request) {
     try {
@@ -173,7 +197,8 @@ public class RuleEngineService {
     }
   }
 
-  public EvaluateResponse evaluate(TransactionRequest request, byte[] rawBytes, String contentType) {
+  public EvaluateResponse evaluate(
+      TransactionRequest request, byte[] rawBytes, String contentType) {
     long startTime = System.currentTimeMillis();
 
     try {
@@ -188,7 +213,9 @@ public class RuleEngineService {
         if (!existingRaw.getPayloadRawHash().equals(payloadHash)) {
           auditService.logTamperAttempt(
               externalTransactionId, existingRaw.getPayloadRawHash(), payloadHash);
-          TransactionDecision tamperDecision = buildTamperDecision(externalTransactionId, payloadHash);
+          safeLogAntiTamper(externalTransactionId, existingRaw.getPayloadRawHash(), payloadHash);
+          TransactionDecision tamperDecision =
+              buildTamperDecision(externalTransactionId, payloadHash);
           return buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
         }
 
@@ -203,14 +230,19 @@ public class RuleEngineService {
         return buildEvaluateResponseFromExisting(existingTx, startTime);
       }
 
-  rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
+      rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
 
-      Optional<Transaction> existingTxOpt = transactionRepository.findByExternalTransactionId(externalTransactionId);
+      Optional<Transaction> existingTxOpt =
+          transactionRepository.findByExternalTransactionId(externalTransactionId);
       if (existingTxOpt.isPresent()) {
         Transaction existing = existingTxOpt.get();
-        if (existing.getPayloadRawHash() != null && !existing.getPayloadRawHash().equals(payloadHash)) {
-          auditService.logTamperAttempt(externalTransactionId, existing.getPayloadRawHash(), payloadHash);
-          TransactionDecision tamperDecision = buildTamperDecision(externalTransactionId, payloadHash);
+        if (existing.getPayloadRawHash() != null
+            && !existing.getPayloadRawHash().equals(payloadHash)) {
+          auditService.logTamperAttempt(
+              externalTransactionId, existing.getPayloadRawHash(), payloadHash);
+          safeLogAntiTamper(externalTransactionId, existing.getPayloadRawHash(), payloadHash);
+          TransactionDecision tamperDecision =
+              buildTamperDecision(externalTransactionId, payloadHash);
           return buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
         }
         return buildEvaluateResponseFromExisting(existing, startTime);
@@ -227,9 +259,13 @@ public class RuleEngineService {
             transactionRepository
                 .findByExternalTransactionId(externalTransactionId)
                 .orElseThrow(() -> e);
-        if (racedTx.getPayloadRawHash() != null && !racedTx.getPayloadRawHash().equals(payloadHash)) {
-          auditService.logTamperAttempt(externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
-          TransactionDecision tamperDecision = buildTamperDecision(externalTransactionId, payloadHash);
+        if (racedTx.getPayloadRawHash() != null
+            && !racedTx.getPayloadRawHash().equals(payloadHash)) {
+          auditService.logTamperAttempt(
+              externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
+          safeLogAntiTamper(externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
+          TransactionDecision tamperDecision =
+              buildTamperDecision(externalTransactionId, payloadHash);
           return buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
         }
         return buildEvaluateResponseFromExisting(racedTx, startTime);
@@ -243,6 +279,14 @@ public class RuleEngineService {
       decision.setExternalTransactionId(transaction.getExternalTransactionId());
       decision.setPayloadRawHash(payloadHash);
       decisionRepository.save(decision);
+
+      safeLogEvaluate(
+          ExecutionEventType.EVALUATE,
+          transaction.getExternalTransactionId(),
+          payloadHash,
+          decision,
+          result.getTriggeredRules(),
+          null);
 
       // 4. Registrar auditoria
       auditService.logTransactionProcessed(transaction, decision, result);
@@ -261,8 +305,8 @@ public class RuleEngineService {
   /**
    * V3.1 endpoint entrypoint for /evaluate.
    *
-   * <p>Accepts the raw request body string (as received) and MUST NOT use Bean Validation to
-   * reject requests with 400. Any malformed/partial payload is classified deterministically as
+   * <p>Accepts the raw request body string (as received) and MUST NOT use Bean Validation to reject
+   * requests with 400. Any malformed/partial payload is classified deterministically as
    * SUSPICIOUS/FRAUD via synthetic "contract" hits.
    */
   public EvaluateResponse evaluateRaw(String rawBody, byte[] rawBytes, String contentType) {
@@ -279,6 +323,8 @@ public class RuleEngineService {
       parsed = objectMapper.readValue(rawBody, TransactionRequest.class);
     } catch (Exception e) {
       auditService.logError("/evaluate", e);
+      safeLogContractError(
+          null, payloadHash, "CONTRACT_INVALID_JSON", "Payload JSON inválido (parse falhou)");
       return buildContractErrorEvaluateResponse(
           "CONTRACT_INVALID_JSON",
           "Payload JSON inválido (parse falhou)",
@@ -289,6 +335,11 @@ public class RuleEngineService {
 
     String externalTransactionId = parsed == null ? null : parsed.getExternalTransactionId();
     if (externalTransactionId == null || externalTransactionId.isBlank()) {
+      safeLogContractError(
+          null,
+          payloadHash,
+          "CONTRACT_MISSING_EXTERNAL_TRANSACTION_ID",
+          "externalTransactionId ausente ou vazio");
       return buildContractErrorEvaluateResponse(
           "CONTRACT_MISSING_EXTERNAL_TRANSACTION_ID",
           "externalTransactionId ausente ou vazio",
@@ -302,6 +353,11 @@ public class RuleEngineService {
     // NOT NULL constraints in transactions.
     List<String> missing = contractMissingRequiredForPersistence(parsed);
     if (!missing.isEmpty()) {
+      safeLogContractError(
+          externalTransactionId,
+          payloadHash,
+          "CONTRACT_MISSING_REQUIRED_FIELDS",
+          "Campos obrigatórios ausentes para persistência: " + String.join(", ", missing));
       return buildContractErrorEvaluateResponse(
           "CONTRACT_MISSING_REQUIRED_FIELDS",
           "Campos obrigatórios ausentes para persistência: " + String.join(", ", missing),
@@ -324,7 +380,8 @@ public class RuleEngineService {
     if (request.getTransactionDate() == null) missing.add("transactionDate");
     if (request.getTransactionTime() == null) missing.add("transactionTime");
     if (request.getMcc() == null) missing.add("mcc");
-    if (request.getConsumerAuthenticationScore() == null) missing.add("consumerAuthenticationScore");
+    if (request.getConsumerAuthenticationScore() == null)
+      missing.add("consumerAuthenticationScore");
     if (request.getExternalScore3() == null) missing.add("externalScore3");
     if (request.getCavvResult() == null) missing.add("cavvResult");
     if (request.getEciIndicator() == null) missing.add("eciIndicator");
@@ -363,7 +420,10 @@ public class RuleEngineService {
     PopupDTO popup =
         PopupDTO.builder()
             .key(classification.name())
-            .title(classification == TransactionDecision.TransactionClassification.FRAUD ? "Bloqueio" : "Suspeita")
+            .title(
+                classification == TransactionDecision.TransactionClassification.FRAUD
+                    ? "Bloqueio"
+                    : "Suspeita")
             .classification(classification.name())
             .totalContribution(0)
             .rules(List.of(hit))
@@ -488,34 +548,34 @@ public class RuleEngineService {
     boolean legacy =
         switch (rule.getRuleName()) {
           case "LOW_AUTHENTICATION_SCORE" ->
-          request.getConsumerAuthenticationScore() < rule.getThreshold();
+              request.getConsumerAuthenticationScore() < rule.getThreshold();
 
-        case "LOW_EXTERNAL_SCORE" -> request.getExternalScore3() < rule.getThreshold();
+          case "LOW_EXTERNAL_SCORE" -> request.getExternalScore3() < rule.getThreshold();
 
-        case "INVALID_CAVV" -> request.getCavvResult() != 0;
+          case "INVALID_CAVV" -> request.getCavvResult() != 0;
 
-        case "INVALID_CRYPTOGRAM" -> !"V".equals(request.getCryptogramValid());
+          case "INVALID_CRYPTOGRAM" -> !"V".equals(request.getCryptogramValid());
 
-        case "CVV_MISMATCH" -> "N".equals(request.getCvv2Response());
+          case "CVV_MISMATCH" -> "N".equals(request.getCvv2Response());
 
           case "HIGH_TRANSACTION_AMOUNT" ->
-          request.getTransactionAmount().doubleValue() > rule.getThreshold();
+              request.getTransactionAmount().doubleValue() > rule.getThreshold();
 
-        case "HIGH_RISK_MCC" -> isHighRiskMcc(request.getMcc());
+          case "HIGH_RISK_MCC" -> isHighRiskMcc(request.getMcc());
 
-        case "INTERNATIONAL_TRANSACTION" -> isInternationalTransaction(request);
+          case "INTERNATIONAL_TRANSACTION" -> isInternationalTransaction(request);
 
-        case "CARD_NOT_PRESENT" -> !"Y".equals(request.getCustomerPresent());
+          case "CARD_NOT_PRESENT" -> !"Y".equals(request.getCustomerPresent());
 
-        case "PIN_VERIFICATION_FAILED" -> "I".equals(request.getPinVerifyCode());
+          case "PIN_VERIFICATION_FAILED" -> "I".equals(request.getPinVerifyCode());
 
             // Mapear para os campos corretos (sem depender de códigos textuais inconsistentes)
-            case "CVV_PIN_LIMIT_EXCEEDED" ->
+          case "CVV_PIN_LIMIT_EXCEEDED" ->
               Integer.valueOf(1).equals(request.getCvvPinTryLimitExceeded());
 
-            case "OFFLINE_PIN_FAILED" ->
+          case "OFFLINE_PIN_FAILED" ->
               Integer.valueOf(1).equals(request.getCvrofflinePinVerificationPerformed())
-                && Integer.valueOf(1).equals(request.getCvrofflinePinVerificationFailed());
+                  && Integer.valueOf(1).equals(request.getCvrofflinePinVerificationFailed());
 
           default -> false;
         };
@@ -540,7 +600,8 @@ public class RuleEngineService {
   /** Verifica se é uma transação internacional. */
   private boolean isInternationalTransaction(TransactionRequest request) {
     // Assumir que 076 é o código do Brasil
-    return request.getMerchantCountryCode() != null && !request.getMerchantCountryCode().equals("076");
+    return request.getMerchantCountryCode() != null
+        && !request.getMerchantCountryCode().equals("076");
   }
 
   /** Classifica o risco baseado no score. */
@@ -566,11 +627,13 @@ public class RuleEngineService {
               "Transação suspeita. Regras acionadas: %s", String.join(", ", appliedRules));
       case FRAUD ->
           String.format(
-              "Transação bloqueada como fraude. Regras acionadas: %s", String.join(", ", appliedRules));
+              "Transação bloqueada como fraude. Regras acionadas: %s",
+              String.join(", ", appliedRules));
     };
   }
 
-  private TransactionDecision buildTamperDecision(String externalTransactionId, String newPayloadHash) {
+  private TransactionDecision buildTamperDecision(
+      String externalTransactionId, String newPayloadHash) {
     return TransactionDecision.builder()
         .transaction(
             transactionRepository
@@ -592,7 +655,8 @@ public class RuleEngineService {
         .build();
   }
 
-  private TransactionResponse buildResponseFromTamperDecision(TransactionDecision decision, long startTime) {
+  private TransactionResponse buildResponseFromTamperDecision(
+      TransactionDecision decision, long startTime) {
     long processingTime = System.currentTimeMillis() - startTime;
     return TransactionResponse.builder()
         .transactionId(decision.getExternalTransactionId())
@@ -602,12 +666,13 @@ public class RuleEngineService {
         .reason(decision.getReason())
         .rulesetVersion(decision.getRulesVersion())
         .processingTimeMs(processingTime)
-      .timestamp(OffsetDateTime.now(clock))
+        .timestamp(OffsetDateTime.now(clock))
         .success(true)
         .build();
   }
 
-  private EvaluateResponse buildEvaluateResponseFromTamperDecision(TransactionDecision decision, long startTime) {
+  private EvaluateResponse buildEvaluateResponseFromTamperDecision(
+      TransactionDecision decision, long startTime) {
     long processingTime = System.currentTimeMillis() - startTime;
     return EvaluateResponse.builder()
         .transactionId(decision.getExternalTransactionId())
@@ -634,7 +699,7 @@ public class RuleEngineService {
         .scoreDetails(writeJson(result.getScoreDetails()))
         .reason(result.getReason())
         .rulesVersion("1")
-      .createdAt(LocalDateTime.now(clock))
+        .createdAt(LocalDateTime.now(clock))
         .build();
   }
 
@@ -644,6 +709,65 @@ public class RuleEngineService {
     } catch (Exception e) {
       log.error("Erro ao serializar JSON", e);
       return "{}";
+    }
+  }
+
+  private void safeLogEvaluate(
+      ExecutionEventType eventType,
+      String externalTransactionId,
+      String payloadHash,
+      TransactionDecision decision,
+      List<?> rulesFired,
+      com.fasterxml.jackson.databind.JsonNode errorJson) {
+    try {
+      ruleExecutionLogService.logEvaluate(
+          eventType,
+          externalTransactionId,
+          payloadHash,
+          decision != null ? decision.getClassification() : null,
+          decision != null ? decision.getRiskScore() : 0,
+          rulesFired,
+          errorJson);
+    } catch (DataAccessException e) {
+      log.debug("Falha ao registrar rule_execution_log (ignorado)", e);
+    }
+  }
+
+  private void safeLogAntiTamper(
+      String externalTransactionId, String storedPayloadHash, String attemptedPayloadHash) {
+    try {
+      var errorJson = objectMapper.createObjectNode();
+      errorJson.put("code", "ANTI_TAMPER");
+      errorJson.put("message", "externalTransactionId reutilizado com payload diferente");
+      ruleExecutionLogService.logAntiTamper(
+          externalTransactionId, storedPayloadHash, attemptedPayloadHash, errorJson);
+    } catch (DataAccessException e) {
+      log.debug("Falha ao registrar rule_execution_log anti-tamper (ignorado)", e);
+    }
+  }
+
+  private void safeLogContractError(
+      String externalTransactionId, String payloadHash, String code, String message) {
+    try {
+      var errorJson = objectMapper.createObjectNode();
+      errorJson.put("code", code);
+      errorJson.put("message", message);
+
+      TransactionDecision.TransactionClassification classification =
+          "CONTRACT_MISSING_REQUIRED_FIELDS".equals(code)
+              ? TransactionDecision.TransactionClassification.SUSPICIOUS
+              : TransactionDecision.TransactionClassification.FRAUD;
+
+      ruleExecutionLogService.logEvaluate(
+          ExecutionEventType.EVALUATE,
+          externalTransactionId,
+          payloadHash,
+          classification,
+          0,
+          List.of(),
+          errorJson);
+    } catch (DataAccessException e) {
+      log.debug("Falha ao registrar rule_execution_log contract error (ignorado)", e);
     }
   }
 
@@ -661,7 +785,7 @@ public class RuleEngineService {
         .reason(decision.getReason())
         .rulesetVersion(decision.getRulesVersion())
         .processingTimeMs(processingTime)
-          .timestamp(OffsetDateTime.now(clock))
+        .timestamp(OffsetDateTime.now(clock))
         .success(true)
         .build();
   }
@@ -681,22 +805,35 @@ public class RuleEngineService {
         .reason(decision.getReason())
         .rulesetVersion(decision.getRulesVersion())
         .processingTimeMs(processingTime)
-        .timestamp(decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
+        .timestamp(
+            decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
         .ruleHits(ruleHits)
         .popups(popups)
         .build();
   }
 
-  private EvaluateResponse buildEvaluateResponseFromExisting(Transaction transaction, long startTime) {
+  private EvaluateResponse buildEvaluateResponseFromExisting(
+      Transaction transaction, long startTime) {
     TransactionDecision decision =
         decisionRepository
             .findByTransactionId(transaction.getId())
-            .orElseThrow(() -> new IllegalStateException("Transação existe sem decisão registrada"));
+            .orElseThrow(
+                () -> new IllegalStateException("Transação existe sem decisão registrada"));
 
     long processingTime = System.currentTimeMillis() - startTime;
     List<TriggeredRuleDTO> triggeredRules = readTriggeredRules(decision.getRulesApplied());
     List<RuleHitDTO> ruleHits = enrichRuleHits(triggeredRules);
     List<PopupDTO> popups = aggregatePopups(ruleHits);
+
+    safeLogEvaluate(
+        ExecutionEventType.IDEMPOTENT_REPLAY,
+        transaction.getExternalTransactionId(),
+        decision.getPayloadRawHash() != null
+            ? decision.getPayloadRawHash()
+            : transaction.getPayloadRawHash(),
+        decision,
+        triggeredRules,
+        null);
 
     return EvaluateResponse.builder()
         .transactionId(transaction.getExternalTransactionId())
@@ -705,7 +842,8 @@ public class RuleEngineService {
         .reason(decision.getReason())
         .rulesetVersion(decision.getRulesVersion())
         .processingTimeMs(processingTime)
-        .timestamp(decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
+        .timestamp(
+            decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
         .ruleHits(ruleHits)
         .popups(popups)
         .build();
@@ -717,7 +855,11 @@ public class RuleEngineService {
     }
 
     List<String> names =
-        triggeredRules.stream().map(TriggeredRuleDTO::getName).filter(Objects::nonNull).distinct().toList();
+        triggeredRules.stream()
+            .map(TriggeredRuleDTO::getName)
+            .filter(Objects::nonNull)
+            .distinct()
+            .toList();
     Map<String, RuleConfiguration> byName =
         ruleConfigRepository.findByRuleNameIn(names).stream()
             .collect(
@@ -733,7 +875,9 @@ public class RuleEngineService {
               .description(rc != null ? rc.getDescription() : null)
               .ruleType(rc != null && rc.getRuleType() != null ? rc.getRuleType().name() : null)
               .classification(
-                  rc != null && rc.getClassification() != null ? rc.getClassification().name() : null)
+                  rc != null && rc.getClassification() != null
+                      ? rc.getClassification().name()
+                      : null)
               .threshold(rc != null ? rc.getThreshold() : null)
               .weight(tr.getWeight())
               .contribution(tr.getContribution())
@@ -760,7 +904,12 @@ public class RuleEngineService {
       List<RuleHitDTO> hits = grouped.get(key);
       if (hits == null || hits.isEmpty()) continue;
 
-      int total = hits.stream().map(RuleHitDTO::getContribution).filter(Objects::nonNull).mapToInt(Integer::intValue).sum();
+      int total =
+          hits.stream()
+              .map(RuleHitDTO::getContribution)
+              .filter(Objects::nonNull)
+              .mapToInt(Integer::intValue)
+              .sum();
       String title =
           switch (key) {
             case "FRAUD" -> "Bloqueio";
@@ -792,7 +941,12 @@ public class RuleEngineService {
     for (Map.Entry<String, List<RuleHitDTO>> e : grouped.entrySet()) {
       if (order.contains(e.getKey())) continue;
       List<RuleHitDTO> hits = e.getValue();
-      int total = hits.stream().map(RuleHitDTO::getContribution).filter(Objects::nonNull).mapToInt(Integer::intValue).sum();
+      int total =
+          hits.stream()
+              .map(RuleHitDTO::getContribution)
+              .filter(Objects::nonNull)
+              .mapToInt(Integer::intValue)
+              .sum();
       String reason =
           hits.stream()
               .map(h -> h.getDetail() != null ? h.getDetail() : h.getDescription())
@@ -818,10 +972,21 @@ public class RuleEngineService {
     TransactionDecision decision =
         decisionRepository
             .findByTransactionId(transaction.getId())
-            .orElseThrow(() -> new IllegalStateException("Transação existe sem decisão registrada"));
+            .orElseThrow(
+                () -> new IllegalStateException("Transação existe sem decisão registrada"));
 
     long processingTime = System.currentTimeMillis() - startTime;
     List<TriggeredRuleDTO> triggeredRules = readTriggeredRules(decision.getRulesApplied());
+
+    safeLogEvaluate(
+        ExecutionEventType.IDEMPOTENT_REPLAY,
+        transaction.getExternalTransactionId(),
+        decision.getPayloadRawHash() != null
+            ? decision.getPayloadRawHash()
+            : transaction.getPayloadRawHash(),
+        decision,
+        triggeredRules,
+        null);
 
     return TransactionResponse.builder()
         .transactionId(transaction.getExternalTransactionId())
@@ -831,9 +996,11 @@ public class RuleEngineService {
         .reason(decision.getReason())
         .rulesetVersion(decision.getRulesVersion())
         .processingTimeMs(processingTime)
-      .timestamp(
-        toOffsetDateTime(
-          decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt()))
+        .timestamp(
+            toOffsetDateTime(
+                decision.getCreatedAt() != null
+                    ? decision.getCreatedAt()
+                    : transaction.getCreatedAt()))
         .success(true)
         .build();
   }
@@ -852,9 +1019,11 @@ public class RuleEngineService {
         .reason(decision.getReason())
         .rulesetVersion(decision.getRulesVersion())
         .processingTimeMs(processingTime)
-      .timestamp(
-        toOffsetDateTime(
-          decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt()))
+        .timestamp(
+            toOffsetDateTime(
+                decision.getCreatedAt() != null
+                    ? decision.getCreatedAt()
+                    : transaction.getCreatedAt()))
         .success(true)
         .build();
   }
@@ -874,7 +1043,8 @@ public class RuleEngineService {
         .reason(decision.getReason())
         .rulesetVersion(decision.getRulesVersion())
         .processingTimeMs(processingTime)
-        .timestamp(decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
+        .timestamp(
+            decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
         .ruleHits(ruleHits)
         .popups(popups)
         .build();
@@ -954,8 +1124,8 @@ public class RuleEngineService {
         .workflow(request.getWorkflow())
         .recordType(request.getRecordType())
         .clientIdFromHeader(request.getClientIdFromHeader())
-          .createdAt(LocalDateTime.now(clock))
-          .updatedAt(LocalDateTime.now(clock))
+        .createdAt(LocalDateTime.now(clock))
+        .updatedAt(LocalDateTime.now(clock))
         .build();
   }
 

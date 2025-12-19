@@ -14,6 +14,7 @@ import com.rulex.entity.homolog.RuleStatus;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ class HomologSimulationIT {
   private static final ParameterizedTypeReference<Map<String, Object>> MAP_RESPONSE =
       new ParameterizedTypeReference<>() {};
 
+  @SuppressWarnings("resource")
   @Container
   static final PostgreSQLContainer<?> postgres =
       new PostgreSQLContainer<>("postgres:16-alpine")
@@ -81,7 +83,8 @@ class HomologSimulationIT {
             new HttpEntity<>(createRule, headers),
             MAP_RESPONSE);
     assertThat(ruleResp.getStatusCode()).isEqualTo(HttpStatus.OK);
-    UUID ruleVersionId = UUID.fromString(String.valueOf(ruleResp.getBody().get("id")));
+    UUID ruleVersionId =
+        UUID.fromString(String.valueOf(Objects.requireNonNull(ruleResp.getBody()).get("id")));
 
     ResponseEntity<Map<String, Object>> publishResp =
         http.exchange(
@@ -90,7 +93,8 @@ class HomologSimulationIT {
             new HttpEntity<>(null, headers),
             MAP_RESPONSE);
     assertThat(publishResp.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(publishResp.getBody().get("status")).isEqualTo(RuleStatus.PUBLISHED.name());
+    assertThat(Objects.requireNonNull(publishResp.getBody()).get("status"))
+        .isEqualTo(RuleStatus.PUBLISHED.name());
 
     CreateRuleSetRequest createRuleSet =
         new CreateRuleSetRequest("DEFAULT", "RuleSet padrão", List.of(ruleVersionId), "seed");
@@ -102,7 +106,8 @@ class HomologSimulationIT {
             new HttpEntity<>(createRuleSet, headers),
             MAP_RESPONSE);
     assertThat(rsResp.getStatusCode()).isEqualTo(HttpStatus.OK);
-    UUID ruleSetVersionId = UUID.fromString(String.valueOf(rsResp.getBody().get("id")));
+    UUID ruleSetVersionId =
+        UUID.fromString(String.valueOf(Objects.requireNonNull(rsResp.getBody()).get("id")));
 
     ResponseEntity<Map<String, Object>> rsPub =
         http.exchange(
@@ -152,9 +157,9 @@ class HomologSimulationIT {
             MAP_RESPONSE);
 
     assertThat(simResp.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(simResp.getBody().get("decision"))
-        .isEqualTo(DecisionOutcome.SUSPEITA_DE_FRAUDE.name());
-    assertThat(Integer.parseInt(String.valueOf(simResp.getBody().get("riskScore"))))
+    Map<String, Object> simBody = Objects.requireNonNull(simResp.getBody());
+    assertThat(simBody.get("decision")).isEqualTo(DecisionOutcome.SUSPEITA_DE_FRAUDE.name());
+    assertThat(Integer.parseInt(String.valueOf(simBody.get("riskScore"))))
         .isGreaterThanOrEqualTo(40);
   }
 

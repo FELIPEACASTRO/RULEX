@@ -83,11 +83,7 @@ public class AstValidator {
   }
 
   private void validateNode(
-      JsonNode node,
-      String path,
-      int depth,
-      Counter counter,
-      List<AstValidationError> errors) {
+      JsonNode node, String path, int depth, Counter counter, List<AstValidationError> errors) {
 
     if (depth > maxDepth) {
       errors.add(new AstValidationError(path, "AST excede profundidade máxima: " + maxDepth));
@@ -121,11 +117,7 @@ public class AstValidator {
   }
 
   private void validateGroup(
-      JsonNode node,
-      String path,
-      int depth,
-      Counter counter,
-      List<AstValidationError> errors) {
+      JsonNode node, String path, int depth, Counter counter, List<AstValidationError> errors) {
 
     String op = text(node.get("op"));
     if (op == null || !GROUP_OPS.contains(op.toUpperCase(Locale.ROOT))) {
@@ -149,11 +141,7 @@ public class AstValidator {
   }
 
   private void validateCondition(
-      JsonNode node,
-      String path,
-      int depth,
-      Counter counter,
-      List<AstValidationError> errors) {
+      JsonNode node, String path, int depth, Counter counter, List<AstValidationError> errors) {
 
     JsonNode left = node.get("left");
     if (left == null) {
@@ -176,8 +164,7 @@ public class AstValidator {
     if (right.isArray()) {
       if (right.size() > maxInItems) {
         errors.add(
-            new AstValidationError(
-                path + ".right", "Lista excede maxInItems: " + maxInItems));
+            new AstValidationError(path + ".right", "Lista excede maxInItems: " + maxInItems));
       }
       for (int i = 0; i < right.size(); i++) {
         JsonNode item = right.get(i);
@@ -228,11 +215,7 @@ public class AstValidator {
   }
 
   private void validateFunc(
-      JsonNode node,
-      String path,
-      int depth,
-      Counter counter,
-      List<AstValidationError> errors) {
+      JsonNode node, String path, int depth, Counter counter, List<AstValidationError> errors) {
 
     String name = text(node.get("name"));
     if (name == null || !FUNC_ALLOWLIST.contains(name.toUpperCase(Locale.ROOT))) {
@@ -302,8 +285,9 @@ public class AstValidator {
 
     // Very small ReDoS heuristic: reject nested quantifiers like (.+)+ or (a*)+
     String p = pattern;
-    if (p.matches(".*\(.*[+*].*\)[+*].*")) {
-      errors.add(new AstValidationError(path, "Regex potencialmente vulnerável (nested quantifier)"));
+    if (p.matches(".*\\(.*[+*].*\\)[+*].*")) {
+      errors.add(
+          new AstValidationError(path, "Regex potencialmente vulnerável (nested quantifier)"));
     }
 
     // Also reject lookbehinds and backreferences (complexity)

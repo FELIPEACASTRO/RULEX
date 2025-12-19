@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
+@SuppressWarnings("null")
 public class RuleSetPersistenceAdapter implements RuleSetPersistencePort {
 
   private final RuleSetRepository ruleSetRepository;
@@ -18,11 +19,11 @@ public class RuleSetPersistenceAdapter implements RuleSetPersistencePort {
 
   @Override
   public RuleSetEntity save(RuleSetEntity ruleSet) {
-    return ruleSetRepository.save(ruleSet);
+    return java.util.Objects.requireNonNull(ruleSetRepository.save(ruleSet));
   }
 
   @Override
   public Optional<RuleSetEntity> findById(UUID id) {
-    return ruleSetRepository.findById(id);
+    return ruleSetRepository.findById(java.util.Objects.requireNonNull(id));
   }
 }

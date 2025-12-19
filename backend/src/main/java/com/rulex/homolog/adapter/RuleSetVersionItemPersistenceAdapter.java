@@ -4,6 +4,7 @@ import com.rulex.entity.homolog.RuleSetVersionItemEntity;
 import com.rulex.homolog.port.RuleSetVersionItemPersistencePort;
 import com.rulex.repository.homolog.RuleSetVersionItemRepository;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,8 @@ public class RuleSetVersionItemPersistenceAdapter implements RuleSetVersionItemP
 
   @Override
   public RuleSetVersionItemEntity save(RuleSetVersionItemEntity item) {
-    return ruleSetVersionItemRepository.save(item);
+    RuleSetVersionItemEntity entity = Objects.requireNonNull(item, "item");
+    return Objects.requireNonNull(ruleSetVersionItemRepository.save(entity));
   }
 
   @Override

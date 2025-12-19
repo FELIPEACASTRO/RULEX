@@ -3,6 +3,7 @@ package com.rulex.homolog.adapter;
 import com.rulex.entity.homolog.RuleEntity;
 import com.rulex.homolog.port.RulePersistencePort;
 import com.rulex.repository.homolog.RuleRepository;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
@@ -18,11 +19,12 @@ public class RulePersistenceAdapter implements RulePersistencePort {
 
   @Override
   public RuleEntity save(RuleEntity rule) {
-    return ruleRepository.save(rule);
+    RuleEntity entity = Objects.requireNonNull(rule, "rule");
+    return Objects.requireNonNull(ruleRepository.save(entity));
   }
 
   @Override
   public Optional<RuleEntity> findById(UUID id) {
-    return ruleRepository.findById(id);
+    return ruleRepository.findById(Objects.requireNonNull(id, "id"));
   }
 }

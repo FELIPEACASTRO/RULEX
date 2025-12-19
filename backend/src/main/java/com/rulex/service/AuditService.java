@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
+@SuppressWarnings("null")
 public class AuditService {
 
   private final AuditLogRepository auditLogRepository;
@@ -86,7 +87,7 @@ public class AuditService {
               .description(String.format("Erro ao processar transação %s", transactionId))
               .result(AuditLog.AuditResult.FAILURE)
               .errorMessage(exception.getMessage())
-            .createdAt(LocalDateTime.now(clock))
+              .createdAt(LocalDateTime.now(clock))
               .build();
 
       auditLogRepository.save(auditLog);
@@ -104,7 +105,7 @@ public class AuditService {
               .description(String.format("Regra '%s' criada", ruleName))
               .performedBy(performedBy)
               .result(AuditLog.AuditResult.SUCCESS)
-            .createdAt(LocalDateTime.now(clock))
+              .createdAt(LocalDateTime.now(clock))
               .build();
 
       auditLogRepository.save(auditLog);
@@ -123,7 +124,7 @@ public class AuditService {
               .details(objectMapper.writeValueAsString(changes))
               .performedBy(performedBy)
               .result(AuditLog.AuditResult.SUCCESS)
-            .createdAt(LocalDateTime.now(clock))
+              .createdAt(LocalDateTime.now(clock))
               .build();
 
       auditLogRepository.save(auditLog);
@@ -141,7 +142,7 @@ public class AuditService {
               .description(String.format("Regra '%s' deletada", ruleName))
               .performedBy(performedBy)
               .result(AuditLog.AuditResult.SUCCESS)
-            .createdAt(LocalDateTime.now(clock))
+              .createdAt(LocalDateTime.now(clock))
               .build();
 
       auditLogRepository.save(auditLog);
@@ -166,7 +167,7 @@ public class AuditService {
               .details(objectMapper.writeValueAsString(details))
               .performedBy("SYSTEM")
               .result(AuditLog.AuditResult.SUCCESS)
-            .createdAt(LocalDateTime.now(clock))
+              .createdAt(LocalDateTime.now(clock))
               .build();
 
       auditLogRepository.save(auditLog);
@@ -175,7 +176,9 @@ public class AuditService {
     }
   }
 
-  /** V3.1: append-only audit for anti-tamper (externalTransactionId reused with different raw hash). */
+  /**
+   * V3.1: append-only audit for anti-tamper (externalTransactionId reused with different raw hash).
+   */
   public void logTamperAttempt(String externalTransactionId, String oldHash, String newHash) {
     try {
       Map<String, Object> details = new HashMap<>();
