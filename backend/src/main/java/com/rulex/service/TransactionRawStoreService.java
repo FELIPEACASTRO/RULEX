@@ -17,14 +17,25 @@ public class TransactionRawStoreService {
   private final Clock clock;
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void store(String externalTransactionId, String payloadRawHash, String payloadRawJson) {
+  public void store(
+      String externalTransactionId,
+      String payloadRawHash,
+      byte[] payloadRawBytes,
+      String contentType) {
     TransactionRawStore row =
         TransactionRawStore.builder()
             .externalTransactionId(externalTransactionId)
             .payloadRawHash(payloadRawHash)
-            .payloadRawJson(payloadRawJson)
+            .payloadRawBytes(payloadRawBytes)
+            .contentType(contentType)
             .createdAt(LocalDateTime.now(clock))
             .build();
     repository.save(row);
+  }
+
+  @Transactional(readOnly = true)
+  public java.util.Optional<TransactionRawStore> findByExternalTransactionId(
+      String externalTransactionId) {
+    return repository.findById(externalTransactionId);
   }
 }

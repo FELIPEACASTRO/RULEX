@@ -1,6 +1,6 @@
 package com.rulex.dto;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,7 +38,7 @@ public class TransactionResponse {
   /** Tempo de processamento em ms. */
   private Long processingTimeMs;
 
-  private LocalDateTime timestamp;
+  private OffsetDateTime timestamp;
 
   private Boolean success;
 }

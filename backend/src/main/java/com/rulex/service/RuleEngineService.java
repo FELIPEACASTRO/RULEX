@@ -11,14 +11,18 @@ import com.rulex.dto.TriggeredRuleDTO;
 import com.rulex.entity.RuleConfiguration;
 import com.rulex.entity.Transaction;
 import com.rulex.entity.TransactionDecision;
+import com.rulex.entity.TransactionRawStore;
 import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
 import com.rulex.util.PanMaskingUtil;
 import java.beans.PropertyDescriptor;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
@@ -48,31 +52,67 @@ public class RuleEngineService {
 
   /** Processa uma transação e retorna a classificação de fraude. */
   public TransactionResponse analyzeTransaction(TransactionRequest request) {
+    try {
+      // Fallback for non-HTTP/internal callers (e.g., unit tests). This is NOT "as received".
+      byte[] derived = objectMapper.writeValueAsBytes(request);
+      return analyzeTransaction(request, derived, "application/json; charset=utf-8");
+    } catch (Exception e) {
+      throw new RuntimeException("Erro ao serializar payload para fallback interno", e);
+    }
+  }
+
+  /**
+   * V3.1 entrypoint: receives raw HTTP body bytes (as received) to compute SHA-256 and persist.
+   * If rawBytes is null (e.g., internal callers/tests), falls back to a canonical JSON string.
+   */
+  public TransactionResponse analyzeTransaction(
+      TransactionRequest request, byte[] rawBytes, String contentType) {
     long startTime = System.currentTimeMillis();
 
     try {
-      PayloadHashService.CanonicalPayload canonical = payloadHashService.canonicalize(request);
-      String payloadHash = canonical.sha256Hex();
-      rawStoreService.store(request.getExternalTransactionId(), payloadHash, canonical.json());
+      String externalTransactionId = request.getExternalTransactionId();
+      byte[] effectiveRawBytes = rawBytes == null ? new byte[0] : rawBytes;
+      String payloadHash = payloadHashService.sha256Hex(effectiveRawBytes);
 
-      // Idempotência por (externalTransactionId, payloadHash)
-      Optional<TransactionDecision> existingDecisionOpt =
-          decisionRepository.findByExternalTransactionIdAndPayloadRawHash(
-              request.getExternalTransactionId(), payloadHash);
-      if (existingDecisionOpt.isPresent()) {
-        return buildResponseFromExistingDecision(existingDecisionOpt.get(), startTime);
+      // V3.1: anti-tamper/idempotency source of truth is raw store keyed by externalTransactionId.
+      java.util.Optional<TransactionRawStore> existingRawOpt =
+          rawStoreService.findByExternalTransactionId(externalTransactionId);
+      if (existingRawOpt.isPresent()) {
+        TransactionRawStore existingRaw = existingRawOpt.get();
+        if (!existingRaw.getPayloadRawHash().equals(payloadHash)) {
+          // anti-tamper MUST return FRAUD, not HTTP 409
+          auditService.logTamperAttempt(
+              externalTransactionId, existingRaw.getPayloadRawHash(), payloadHash);
+
+          TransactionDecision tamperDecision = buildTamperDecision(externalTransactionId, payloadHash);
+          return buildResponseFromTamperDecision(tamperDecision, startTime);
+        }
+
+        // Idempotency: return same previous decision (no recomputation)
+        Transaction existingTx =
+            transactionRepository
+                .findByExternalTransactionId(externalTransactionId)
+                .orElseThrow(
+                    () ->
+                        new IllegalStateException(
+                            "Raw store exists but transaction row is missing for externalTransactionId="
+                                + externalTransactionId));
+        return buildResponseFromExisting(existingTx, startTime);
       }
 
-      // Idempotência por externalTransactionId (canônico)
-      Optional<Transaction> existingTxOpt =
-          transactionRepository.findByExternalTransactionId(request.getExternalTransactionId());
+      // Store raw payload in an independent transaction for auditability.
+      rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
+
+      // Backward compatibility: if transaction already exists (race), ensure hash matches.
+      Optional<Transaction> existingTxOpt = transactionRepository.findByExternalTransactionId(externalTransactionId);
       if (existingTxOpt.isPresent()) {
         Transaction existing = existingTxOpt.get();
         if (existing.getPayloadRawHash() != null && !existing.getPayloadRawHash().equals(payloadHash)) {
-          throw new IllegalStateException(
-              "Idempotency conflict: externalTransactionId reutilizado com payload diferente");
+          auditService.logTamperAttempt(externalTransactionId, existing.getPayloadRawHash(), payloadHash);
+          TransactionDecision tamperDecision = buildTamperDecision(externalTransactionId, payloadHash);
+          return buildResponseFromTamperDecision(tamperDecision, startTime);
         }
-        return buildResponseFromExisting(existingTxOpt.get(), startTime);
+        return buildResponseFromExisting(existing, startTime);
       }
 
       // 1. Salvar a transação
@@ -84,11 +124,12 @@ public class RuleEngineService {
         // Condição de corrida: outra thread/processo inseriu o mesmo externalTransactionId.
         Transaction racedTx =
             transactionRepository
-                .findByExternalTransactionId(request.getExternalTransactionId())
+                .findByExternalTransactionId(externalTransactionId)
                 .orElseThrow(() -> e);
         if (racedTx.getPayloadRawHash() != null && !racedTx.getPayloadRawHash().equals(payloadHash)) {
-          throw new IllegalStateException(
-              "Idempotency conflict: externalTransactionId reutilizado com payload diferente");
+          auditService.logTamperAttempt(externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
+          TransactionDecision tamperDecision = buildTamperDecision(externalTransactionId, payloadHash);
+          return buildResponseFromTamperDecision(tamperDecision, startTime);
         }
         return buildResponseFromExisting(racedTx, startTime);
       }
@@ -123,31 +164,56 @@ public class RuleEngineService {
    * {@link #analyzeTransaction(TransactionRequest)}.
    */
   public EvaluateResponse evaluate(TransactionRequest request) {
+    try {
+      // Fallback for non-HTTP/internal callers (e.g., unit tests). This is NOT "as received".
+      byte[] derived = objectMapper.writeValueAsBytes(request);
+      return evaluate(request, derived, "application/json; charset=utf-8");
+    } catch (Exception e) {
+      throw new RuntimeException("Erro ao serializar payload para fallback interno", e);
+    }
+  }
+
+  public EvaluateResponse evaluate(TransactionRequest request, byte[] rawBytes, String contentType) {
     long startTime = System.currentTimeMillis();
 
     try {
-      PayloadHashService.CanonicalPayload canonical = payloadHashService.canonicalize(request);
-      String payloadHash = canonical.sha256Hex();
-      rawStoreService.store(request.getExternalTransactionId(), payloadHash, canonical.json());
+      String externalTransactionId = request.getExternalTransactionId();
+      byte[] effectiveRawBytes = rawBytes == null ? new byte[0] : rawBytes;
+      String payloadHash = payloadHashService.sha256Hex(effectiveRawBytes);
 
-      // Idempotência por (externalTransactionId, payloadHash)
-      Optional<TransactionDecision> existingDecisionOpt =
-          decisionRepository.findByExternalTransactionIdAndPayloadRawHash(
-              request.getExternalTransactionId(), payloadHash);
-      if (existingDecisionOpt.isPresent()) {
-        return buildEvaluateResponseFromExistingDecision(existingDecisionOpt.get(), startTime);
+      java.util.Optional<TransactionRawStore> existingRawOpt =
+          rawStoreService.findByExternalTransactionId(externalTransactionId);
+      if (existingRawOpt.isPresent()) {
+        TransactionRawStore existingRaw = existingRawOpt.get();
+        if (!existingRaw.getPayloadRawHash().equals(payloadHash)) {
+          auditService.logTamperAttempt(
+              externalTransactionId, existingRaw.getPayloadRawHash(), payloadHash);
+          TransactionDecision tamperDecision = buildTamperDecision(externalTransactionId, payloadHash);
+          return buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
+        }
+
+        Transaction existingTx =
+            transactionRepository
+                .findByExternalTransactionId(externalTransactionId)
+                .orElseThrow(
+                    () ->
+                        new IllegalStateException(
+                            "Raw store exists but transaction row is missing for externalTransactionId="
+                                + externalTransactionId));
+        return buildEvaluateResponseFromExisting(existingTx, startTime);
       }
 
-      // Idempotência por externalTransactionId (canônico)
-      Optional<Transaction> existingTxOpt =
-          transactionRepository.findByExternalTransactionId(request.getExternalTransactionId());
+  rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
+
+      Optional<Transaction> existingTxOpt = transactionRepository.findByExternalTransactionId(externalTransactionId);
       if (existingTxOpt.isPresent()) {
         Transaction existing = existingTxOpt.get();
         if (existing.getPayloadRawHash() != null && !existing.getPayloadRawHash().equals(payloadHash)) {
-          throw new IllegalStateException(
-              "Idempotency conflict: externalTransactionId reutilizado com payload diferente");
+          auditService.logTamperAttempt(externalTransactionId, existing.getPayloadRawHash(), payloadHash);
+          TransactionDecision tamperDecision = buildTamperDecision(externalTransactionId, payloadHash);
+          return buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
         }
-        return buildEvaluateResponseFromExisting(existingTxOpt.get(), startTime);
+        return buildEvaluateResponseFromExisting(existing, startTime);
       }
 
       // 1. Salvar a transação
@@ -159,11 +225,12 @@ public class RuleEngineService {
         // Condição de corrida: outra thread/processo inseriu o mesmo externalTransactionId.
         Transaction racedTx =
             transactionRepository
-                .findByExternalTransactionId(request.getExternalTransactionId())
+                .findByExternalTransactionId(externalTransactionId)
                 .orElseThrow(() -> e);
         if (racedTx.getPayloadRawHash() != null && !racedTx.getPayloadRawHash().equals(payloadHash)) {
-          throw new IllegalStateException(
-              "Idempotency conflict: externalTransactionId reutilizado com payload diferente");
+          auditService.logTamperAttempt(externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
+          TransactionDecision tamperDecision = buildTamperDecision(externalTransactionId, payloadHash);
+          return buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
         }
         return buildEvaluateResponseFromExisting(racedTx, startTime);
       }
@@ -189,6 +256,132 @@ public class RuleEngineService {
       auditService.logError(request.getExternalTransactionId(), e);
       throw new RuntimeException("Erro ao avaliar transação", e);
     }
+  }
+
+  /**
+   * V3.1 endpoint entrypoint for /evaluate.
+   *
+   * <p>Accepts the raw request body string (as received) and MUST NOT use Bean Validation to
+   * reject requests with 400. Any malformed/partial payload is classified deterministically as
+   * SUSPICIOUS/FRAUD via synthetic "contract" hits.
+   */
+  public EvaluateResponse evaluateRaw(String rawBody, byte[] rawBytes, String contentType) {
+    long startTime = System.currentTimeMillis();
+
+    byte[] effectiveRawBytes = rawBytes;
+    if (effectiveRawBytes == null) {
+      effectiveRawBytes = rawBody == null ? new byte[0] : rawBody.getBytes(StandardCharsets.UTF_8);
+    }
+    String payloadHash = payloadHashService.sha256Hex(effectiveRawBytes);
+
+    TransactionRequest parsed;
+    try {
+      parsed = objectMapper.readValue(rawBody, TransactionRequest.class);
+    } catch (Exception e) {
+      auditService.logError("/evaluate", e);
+      return buildContractErrorEvaluateResponse(
+          "CONTRACT_INVALID_JSON",
+          "Payload JSON inválido (parse falhou)",
+          TransactionDecision.TransactionClassification.FRAUD,
+          payloadHash,
+          startTime);
+    }
+
+    String externalTransactionId = parsed == null ? null : parsed.getExternalTransactionId();
+    if (externalTransactionId == null || externalTransactionId.isBlank()) {
+      return buildContractErrorEvaluateResponse(
+          "CONTRACT_MISSING_EXTERNAL_TRANSACTION_ID",
+          "externalTransactionId ausente ou vazio",
+          TransactionDecision.TransactionClassification.FRAUD,
+          payloadHash,
+          startTime);
+    }
+
+    // If the payload is missing required fields for persistence, we still must return a decision
+    // (no 400). In that scenario we classify as SUSPICIOUS and skip DB writes that would violate
+    // NOT NULL constraints in transactions.
+    List<String> missing = contractMissingRequiredForPersistence(parsed);
+    if (!missing.isEmpty()) {
+      return buildContractErrorEvaluateResponse(
+          "CONTRACT_MISSING_REQUIRED_FIELDS",
+          "Campos obrigatórios ausentes para persistência: " + String.join(", ", missing),
+          TransactionDecision.TransactionClassification.SUSPICIOUS,
+          payloadHash,
+          startTime);
+    }
+
+    // Normal path (raw bytes required by V3.1).
+    return evaluate(parsed, effectiveRawBytes, contentType);
+  }
+
+  private List<String> contractMissingRequiredForPersistence(TransactionRequest request) {
+    List<String> missing = new ArrayList<>();
+    if (isBlank(request.getCustomerIdFromHeader())) missing.add("customerIdFromHeader");
+    if (request.getCustomerAcctNumber() == null) missing.add("customerAcctNumber");
+    if (isBlank(request.getPan())) missing.add("pan");
+    if (request.getTransactionCurrencyCode() == null) missing.add("transactionCurrencyCode");
+    if (request.getTransactionAmount() == null) missing.add("transactionAmount");
+    if (request.getTransactionDate() == null) missing.add("transactionDate");
+    if (request.getTransactionTime() == null) missing.add("transactionTime");
+    if (request.getMcc() == null) missing.add("mcc");
+    if (request.getConsumerAuthenticationScore() == null) missing.add("consumerAuthenticationScore");
+    if (request.getExternalScore3() == null) missing.add("externalScore3");
+    if (request.getCavvResult() == null) missing.add("cavvResult");
+    if (request.getEciIndicator() == null) missing.add("eciIndicator");
+    if (request.getAtcCard() == null) missing.add("atcCard");
+    if (request.getAtcHost() == null) missing.add("atcHost");
+    if (request.getTokenAssuranceLevel() == null) missing.add("tokenAssuranceLevel");
+    if (request.getAvailableCredit() == null) missing.add("availableCredit");
+    if (request.getCardCashBalance() == null) missing.add("cardCashBalance");
+    if (request.getCardDelinquentAmount() == null) missing.add("cardDelinquentAmount");
+    return missing;
+  }
+
+  private boolean isBlank(String s) {
+    return s == null || s.isBlank();
+  }
+
+  private EvaluateResponse buildContractErrorEvaluateResponse(
+      String ruleName,
+      String detail,
+      TransactionDecision.TransactionClassification classification,
+      String payloadHash,
+      long startTime) {
+
+    RuleHitDTO hit =
+        RuleHitDTO.builder()
+            .ruleName(ruleName)
+            .description(detail)
+            .ruleType("CONTRACT")
+            .classification(classification.name())
+            .threshold(null)
+            .weight(100)
+            .contribution(0)
+            .detail(detail)
+            .build();
+
+    PopupDTO popup =
+        PopupDTO.builder()
+            .key(classification.name())
+            .title(classification == TransactionDecision.TransactionClassification.FRAUD ? "Bloqueio" : "Suspeita")
+            .classification(classification.name())
+            .totalContribution(0)
+            .rules(List.of(hit))
+            .reason(detail)
+            .build();
+
+    long processingTime = System.currentTimeMillis() - startTime;
+    return EvaluateResponse.builder()
+        .transactionId(null)
+        .classification(classification.name())
+        .riskScore(0)
+        .reason(detail)
+        .rulesetVersion("contract")
+        .processingTimeMs(processingTime)
+        .timestamp(LocalDateTime.now(clock))
+        .ruleHits(List.of(hit))
+        .popups(List.of(popup))
+        .build();
   }
 
   /** Avalia as regras configuradas contra a transação. */
@@ -219,6 +412,11 @@ public class RuleEngineService {
 
         maxByRule = maxSeverity(maxByRule, rule.getClassification());
 
+        // V3.1: short-circuit on FRAUD.
+        if (maxByRule == TransactionDecision.TransactionClassification.FRAUD) {
+          break;
+        }
+
         scoreDetails.put(
             rule.getRuleName(),
             Map.of(
@@ -241,8 +439,9 @@ public class RuleEngineService {
     result.setRiskScore(totalScore);
     result.setTriggeredRules(triggeredRules);
     result.setScoreDetails(scoreDetails);
-    result.setClassification(maxSeverity(classifyRiskByScore(totalScore), maxByRule));
-    result.setReason(generateReason(totalScore, triggeredRules));
+    // V3.1: decision is ONLY based on severity of triggered rules (score is telemetry).
+    result.setClassification(maxByRule);
+    result.setReason(generateReason(maxByRule, triggeredRules));
 
     return result;
   }
@@ -356,19 +555,71 @@ public class RuleEngineService {
   }
 
   /** Gera uma descrição do motivo da decisão. */
-  private String generateReason(int riskScore, List<TriggeredRuleDTO> triggeredRules) {
+  private String generateReason(
+      TransactionDecision.TransactionClassification classification,
+      List<TriggeredRuleDTO> triggeredRules) {
     List<String> appliedRules = triggeredRules.stream().map(TriggeredRuleDTO::getName).toList();
-    if (riskScore < 30) {
-      return "Transação aprovada. Score de risco baixo.";
-    } else if (riskScore < 70) {
-      return String.format(
-          "Transação suspeita. Score de risco: %d. Regras acionadas: %s",
-          riskScore, String.join(", ", appliedRules));
-    } else {
-      return String.format(
-          "Transação bloqueada como fraude. Score de risco: %d. Regras acionadas: %s",
-          riskScore, String.join(", ", appliedRules));
-    }
+    return switch (classification) {
+      case APPROVED -> "Transação aprovada. Nenhuma regra crítica foi acionada.";
+      case SUSPICIOUS ->
+          String.format(
+              "Transação suspeita. Regras acionadas: %s", String.join(", ", appliedRules));
+      case FRAUD ->
+          String.format(
+              "Transação bloqueada como fraude. Regras acionadas: %s", String.join(", ", appliedRules));
+    };
+  }
+
+  private TransactionDecision buildTamperDecision(String externalTransactionId, String newPayloadHash) {
+    return TransactionDecision.builder()
+        .transaction(
+            transactionRepository
+                .findByExternalTransactionId(externalTransactionId)
+                .orElseThrow(
+                    () ->
+                        new IllegalStateException(
+                            "Tamper detected but transaction row is missing for externalTransactionId="
+                                + externalTransactionId)))
+        .externalTransactionId(externalTransactionId)
+        .payloadRawHash(newPayloadHash)
+        .classification(TransactionDecision.TransactionClassification.FRAUD)
+        .riskScore(100)
+        .rulesApplied(writeJson(java.util.List.of()))
+        .scoreDetails(writeJson(java.util.Map.of()))
+        .reason("ANTI_TAMPER: externalTransactionId reutilizado com payload diferente")
+        .rulesVersion("ANTI_TAMPER_V1")
+        .createdAt(LocalDateTime.now(clock))
+        .build();
+  }
+
+  private TransactionResponse buildResponseFromTamperDecision(TransactionDecision decision, long startTime) {
+    long processingTime = System.currentTimeMillis() - startTime;
+    return TransactionResponse.builder()
+        .transactionId(decision.getExternalTransactionId())
+        .classification(decision.getClassification().name())
+        .riskScore(decision.getRiskScore())
+        .triggeredRules(java.util.List.of())
+        .reason(decision.getReason())
+        .rulesetVersion(decision.getRulesVersion())
+        .processingTimeMs(processingTime)
+      .timestamp(OffsetDateTime.now(clock))
+        .success(true)
+        .build();
+  }
+
+  private EvaluateResponse buildEvaluateResponseFromTamperDecision(TransactionDecision decision, long startTime) {
+    long processingTime = System.currentTimeMillis() - startTime;
+    return EvaluateResponse.builder()
+        .transactionId(decision.getExternalTransactionId())
+        .classification(decision.getClassification().name())
+        .riskScore(decision.getRiskScore())
+        .reason(decision.getReason())
+        .rulesetVersion(decision.getRulesVersion())
+        .processingTimeMs(processingTime)
+        .timestamp(LocalDateTime.now(clock))
+        .ruleHits(java.util.List.of())
+        .popups(java.util.List.of())
+        .build();
   }
 
   /** Cria a entidade de decisão. */
@@ -410,7 +661,7 @@ public class RuleEngineService {
         .reason(decision.getReason())
         .rulesetVersion(decision.getRulesVersion())
         .processingTimeMs(processingTime)
-          .timestamp(LocalDateTime.now(clock))
+          .timestamp(OffsetDateTime.now(clock))
         .success(true)
         .build();
   }
@@ -580,7 +831,9 @@ public class RuleEngineService {
         .reason(decision.getReason())
         .rulesetVersion(decision.getRulesVersion())
         .processingTimeMs(processingTime)
-        .timestamp(decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
+      .timestamp(
+        toOffsetDateTime(
+          decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt()))
         .success(true)
         .build();
   }
@@ -599,7 +852,9 @@ public class RuleEngineService {
         .reason(decision.getReason())
         .rulesetVersion(decision.getRulesVersion())
         .processingTimeMs(processingTime)
-        .timestamp(decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
+      .timestamp(
+        toOffsetDateTime(
+          decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt()))
         .success(true)
         .build();
   }
@@ -623,6 +878,13 @@ public class RuleEngineService {
         .ruleHits(ruleHits)
         .popups(popups)
         .build();
+  }
+
+  private OffsetDateTime toOffsetDateTime(LocalDateTime dt) {
+    if (dt == null) {
+      return null;
+    }
+    return dt.atZone(ZoneId.systemDefault()).toOffsetDateTime();
   }
 
   private List<TriggeredRuleDTO> readTriggeredRules(String rulesApplied) {

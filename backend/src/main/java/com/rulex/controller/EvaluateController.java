@@ -1,9 +1,9 @@
 package com.rulex.controller;
 
+import com.rulex.api.RawPayloadCaptureFilter;
 import com.rulex.dto.EvaluateResponse;
-import com.rulex.dto.TransactionRequest;
 import com.rulex.service.RuleEngineService;
-import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +22,10 @@ public class EvaluateController {
   private final RuleEngineService ruleEngineService;
 
   @PostMapping
-  public ResponseEntity<EvaluateResponse> evaluate(@Valid @RequestBody TransactionRequest request) {
-    log.info("Evaluating transaction: {}", request.getExternalTransactionId());
-    return ResponseEntity.ok(ruleEngineService.evaluate(request));
+  public ResponseEntity<EvaluateResponse> evaluate(
+      @RequestBody String rawBody, HttpServletRequest httpRequest) {
+    byte[] rawBytes = (byte[]) httpRequest.getAttribute(RawPayloadCaptureFilter.RAW_BYTES_ATTR);
+    String contentType = httpRequest.getContentType();
+    return ResponseEntity.ok(ruleEngineService.evaluateRaw(rawBody, rawBytes, contentType));
   }
 }

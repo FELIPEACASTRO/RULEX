@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -26,6 +27,22 @@ public class PayloadHashService {
     } catch (JsonProcessingException e) {
       throw new IllegalArgumentException("Falha ao canonizar payload", e);
     }
+  }
+
+  /** V3.1: SHA-256 of the raw HTTP body bytes, exactly as received. */
+  public String sha256Hex(byte[] rawBytes) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] hashed = digest.digest(rawBytes);
+      return toHex(hashed);
+    } catch (NoSuchAlgorithmException e) {
+      throw new IllegalStateException("SHA-256 indisponível no runtime", e);
+    }
+  }
+
+  /** Convenience for callers that only have a raw string (already as-received) and charset. */
+  public String sha256Hex(String raw, Charset charset) {
+    return sha256Hex(raw.getBytes(charset));
   }
 
   @SuppressWarnings("deprecation")

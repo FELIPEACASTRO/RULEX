@@ -3,6 +3,7 @@ package com.rulex.controller;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
 import com.rulex.dto.TriggeredRuleDTO;
+import com.rulex.api.RawPayloadCaptureFilter;
 import com.rulex.service.AdvancedRuleEngineService;
 import com.rulex.service.RuleEngineService;
 import com.rulex.service.TransactionQueryService;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 
 /** Controller REST para processamento e consulta de transações. */
 @RestController
@@ -35,11 +37,14 @@ public class TransactionController {
   /** Analisa uma transação e retorna a classificação de fraude. POST /api/transactions/analyze */
   @PostMapping("/analyze")
   public ResponseEntity<TransactionResponse> analyzeTransaction(
-      @Valid @RequestBody TransactionRequest request) {
+      @Valid @RequestBody TransactionRequest request,
+      HttpServletRequest httpRequest) {
 
     log.info("Analisando transação: {}", request.getExternalTransactionId());
 
-    TransactionResponse response = ruleEngineService.analyzeTransaction(request);
+    byte[] rawBytes = (byte[]) httpRequest.getAttribute(RawPayloadCaptureFilter.RAW_BYTES_ATTR);
+    String contentType = httpRequest.getContentType();
+    TransactionResponse response = ruleEngineService.analyzeTransaction(request, rawBytes, contentType);
     return ResponseEntity.ok(response);
   }
 
@@ -142,7 +147,7 @@ public class TransactionController {
                             triggeredRules.stream().map(TriggeredRuleDTO::getName).toList())))
             .rulesetVersion("advanced")
             .processingTimeMs(processingTime)
-            .timestamp(LocalDateTime.now(clock))
+        .timestamp(OffsetDateTime.now(clock))
             .success(true)
             .build());
   }

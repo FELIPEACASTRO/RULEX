@@ -174,4 +174,32 @@ public class AuditService {
       log.error("Erro ao registrar auditoria da regra", e);
     }
   }
+
+  /** V3.1: append-only audit for anti-tamper (externalTransactionId reused with different raw hash). */
+  public void logTamperAttempt(String externalTransactionId, String oldHash, String newHash) {
+    try {
+      Map<String, Object> details = new HashMap<>();
+      details.put("externalTransactionId", externalTransactionId);
+      details.put("oldHash", oldHash);
+      details.put("newHash", newHash);
+      details.put("severity", "CRITICAL");
+
+      AuditLog auditLog =
+          AuditLog.builder()
+              .actionType(AuditLog.AuditActionType.DECISION_MADE)
+              .description(
+                  String.format(
+                      "ANTI_TAMPER_VIOLATION: externalTransactionId %s reutilizado com payload diferente",
+                      externalTransactionId))
+              .details(objectMapper.writeValueAsString(details))
+              .performedBy("SYSTEM")
+              .result(AuditLog.AuditResult.SUCCESS)
+              .createdAt(LocalDateTime.now(clock))
+              .build();
+
+      auditLogRepository.save(auditLog);
+    } catch (Exception e) {
+      log.error("Erro ao registrar auditoria de anti-tamper", e);
+    }
+  }
 }

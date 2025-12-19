@@ -20,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /** Serviço para consulta de transações e decisões. */
 @Service
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
@@ -91,11 +93,19 @@ public class TransactionQueryService {
       return List.of();
     }
     try {
-      return objectMapper.readValue(
+        .timestamp(
+            toOffsetDateTime(
+                decision != null ? decision.getCreatedAt() : transaction.getCreatedAt()))
           rulesApplied,
           objectMapper
               .getTypeFactory()
               .constructCollectionType(List.class, TriggeredRuleDTO.class));
+  private OffsetDateTime toOffsetDateTime(LocalDateTime dt) {
+    if (dt == null) {
+      return null;
+    }
+    return dt.atZone(ZoneId.systemDefault()).toOffsetDateTime();
+  }
     } catch (Exception e) {
       // fallback legado: string CSV
       return List.of(rulesApplied.split(",")).stream()
