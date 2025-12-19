@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { trpc } from '@/lib/trpc';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { rulesApi, Rule } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -525,17 +526,23 @@ export default function RulesDidactic() {
   const [regraEditando, setRegraEditando] = useState<RegraEditando | null>(null);
   const [salvando, setSalvando] = useState(false);
 
-  const { data: rules, isLoading, refetch } = trpc.rules.list.useQuery();
-  const updateMutation = trpc.rules.update.useMutation({
+  const queryClient = useQueryClient();
+  const { data: rules, isLoading, refetch } = useQuery({
+    queryKey: ['rules'],
+    queryFn: rulesApi.list,
+  });
+  const updateMutation = useMutation({
+    mutationFn: (data: { id: number; data: any }) => rulesApi.update({ id: data.id, ...data.data }),
     onSuccess: () => {
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['rules'] });
       setModalAberto(false);
       setRegraEditando(null);
     },
   });
-  const createMutation = trpc.rules.create.useMutation({
+  const createMutation = useMutation({
+    mutationFn: (data: any) => rulesApi.create(data),
     onSuccess: () => {
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['rules'] });
       setModalAberto(false);
       setRegraEditando(null);
     },
