@@ -1,331 +1,173 @@
-# Notas por Especialista - Análise Detalhada
-
-**Data**: 2025-12-19  
-**Projeto**: RULEX - Motor de Regras Duras
-
----
+# Notas por Especialista (Painel Multidisciplinar)
 
 ## 1. Especialista de Negócio (Crédito/Fraude)
+**Nota: 7.5**
 
-**NOTA: 7.5/10**
+**Pontos Fortes:**
+- Implementação das 28 regras avançadas (ex: `checkEMVSecurity`, `checkVelocityConsolidated`) cobre bem os cenários de ataque conhecidos (`backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java`).
+- Classificação clara em APPROVED, SUSPICIOUS, FRAUD.
 
-### Pontos Fortes
-| Evidência | Caminho |
-|-----------|---------|
-| Motor de regras configurável com 28+ regras | `backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java` |
-| Classificação APPROVED/SUSPICIOUS/FRAUD | `backend/src/main/java/com/rulex/entity/TransactionDecision.java` |
-| Auditoria completa de transações | `backend/src/main/java/com/rulex/service/AuditService.java` |
-| Idempotência por externalTransactionId | `RuleEngineService.java:52-70` |
-| Documentação de 60+ regras duras | `REGRAS_DURAS_60_IMPLEMENTACAO.md` |
+**Pontos Fracos:**
+- **Fragmentação da Lógica**: Existem dois motores rodando separadamente (`RuleEngineService` e `AdvancedRuleEngineService`). Para ter a proteção completa, seria necessário chamar dois endpoints diferentes ou orquestrar manualmente.
+- As regras avançadas ("regras duras") estão hardcoded no Java. Se eu precisar alterar um threshold de velocidade de 5 para 3 minutos, preciso de um deploy.
 
-### Pontos Fracos
-| Evidência | Caminho |
-|-----------|---------|
-| Nem todas as 60 regras documentadas estão implementadas | GAP entre docs e código |
-| Falta validação de campos obrigatórios específicos de negócio | `TransactionRequest.java` |
+**Gaps:**
+- Ausência do arquivo `crtran.json` (base de conhecimento de transações de fraude) mencionado como referência obrigatória.
 
-### Gaps
-- Casos de borda para transações internacionais complexas
-- Regras de whitelist/blacklist de merchants
-
-### Riscos
-- **P1**: Regras legadas hardcoded podem divergir de condições configuráveis
+**Riscos:**
+- P1: Risco de inconsistência na decisão se apenas um dos motores for acionado.
 
 ---
 
 ## 2. Product Owner Técnico
+**Nota: 6.0**
 
-**NOTA: 7.0/10**
+**Pontos Fortes:**
+- Backlog de regras avançadas foi tecnicamente implementado.
+- Interface de gerenciamento para regras dinâmicas existe (`client/src/pages/Rules.tsx`).
 
-### Pontos Fortes
-| Evidência | Caminho |
-|-----------|---------|
-| Conceito Popup → 1..N Regras implementado | `docs/hml/rule-inventory.md:34` |
-| OpenAPI spec definida | `openapi/rulex.yaml` |
-| Endpoints REST bem estruturados | `backend/src/main/java/com/rulex/controller/` |
+**Pontos Fracos:**
+- **Experiência do Usuário (Operador)**: A interface `Rules.tsx` gerencia apenas as regras simples/dinâmicas. As 28 regras avançadas são invisíveis no painel administrativo. Isso gera uma "caixa preta" para a operação.
+- Não há visão unificada da regra aplicada na transação (depende de qual endpoint foi chamado).
 
-### Pontos Fracos
-| Evidência | Caminho |
-|-----------|---------|
-| Falta BDD/Gherkin para critérios de aceite | Não encontrado |
-| User stories não documentadas | Não encontrado |
-
-### Gaps
-- Especificação formal de SLAs (latência máxima, throughput)
-- Documentação de rollback de regras
-
-### Riscos
-- **P2**: Falta rastreabilidade requisito → código
+**Riscos:**
+- P1: Dificuldade de manutenção e ajuste fino das regras em produção (Time-to-market lento para ajustes de fraude).
 
 ---
 
 ## 3. Arquiteto de Software
+**Nota: 5.0**
 
-**NOTA: 8.0/10**
+**Pontos Fortes:**
+- Código Java moderno (Java 21, Records, Streams).
+- Uso correto de injeção de dependência e separação de camadas (Controller -> Service -> Repository).
 
-### Pontos Fortes
-| Evidência | Caminho |
-|-----------|---------|
-| Clean Architecture implementada | `backend/src/main/java/com/rulex/homolog/` |
-| Hexagonal Pattern (ports/adapters) | `homolog/port/` e `homolog/adapter/` |
-| Separação de concerns clara | Controllers → Services → Repositories |
-| ArchUnit tests para validar arquitetura | `architecture/CleanArchitectureRulesTest.java` |
+**Pontos Fracos:**
+- **Violação DRY / Split Brain**: A existência de dois services independentes (`RuleEngineService` e `AdvancedRuleEngineService`) acessados por endpoints distintos (`/analyze` vs `/analyze-advanced`) em `TransactionController.java` é um erro arquitetural grave. O `AdvancedRuleEngineService` deveria ser injetado no `RuleEngineService` ou ambos implementarem uma interface comum `RuleProvider`.
+- **Hardcoding**: Lógica de negócio (regras avançadas) misturada com código, sem extração de parâmetros para configuração externa.
 
-### Pontos Fracos
-| Evidência | Caminho |
-|-----------|---------|
-| Duas stacks de banco (PostgreSQL + MySQL) aumentam complexidade | `drizzle/` vs `backend/resources/db/` |
-| Código legado por nome de regra misturado com genérico | `RuleEngineService.java:239-275` |
-
-### Gaps
-- ADRs (Architecture Decision Records) formais
-
-### Riscos
-- **P2**: Manutenção de duas tecnologias de banco
+**Riscos:**
+- P1: Dívida técnica elevada. Dificuldade de evoluir o motor de forma coesa.
 
 ---
 
 ## 4. UX Designer
+**Nota: 7.0**
 
-**NOTA: 6.0/10**
+**Pontos Fortes:**
+- Feedback visual claro na criação de regras (badges de cores para status).
 
-### Pontos Fortes
-| Evidência | Caminho |
-|-----------|---------|
-| Dashboard com métricas visuais | `client/src/pages/Dashboard.tsx` |
-| Simulador de transações | `client/src/pages/TransactionSimulator.tsx` |
-| Temas claro/escuro | `client/src/contexts/ThemeContext.tsx` |
+**Pontos Fracos:**
+- Fluxo desconectado. O usuário cria regras em uma tela, mas não tem visibilidade das regras "duras" do sistema.
+- Falta de feedback sobre o impacto de uma regra antes de ativá-la (simulação).
 
-### Pontos Fracos
-| Evidência | Caminho |
-|-----------|---------|
-| Falta feedback de loading em operações longas | Análise visual |
-| Falta confirmação para ações destrutivas | Análise de fluxos |
-
-### Gaps
-- Testes de usabilidade documentados
-- Personas definidas
-- Jornadas de usuário mapeadas
-
-### Riscos
-- **P2**: Experiência inconsistente pode causar erros operacionais
+**Gaps:**
+- Visualização de "Por que fui bloqueado?" (Auditabilidade visual).
 
 ---
 
 ## 5. UI Designer
+**Nota: 8.5**
 
-**NOTA: 6.5/10**
+**Pontos Fortes:**
+- Uso consistente de componentes Shadcn/UI (Dialog, Card, Badge, Table).
+- Design limpo e responsivo.
+- Paleta de cores semântica (Verde/Amarelo/Vermelho) bem aplicada.
 
-### Pontos Fortes
-| Evidência | Caminho |
-|-----------|---------|
-| Design System documentado | `DESIGN_SYSTEM.md` |
-| shadcn/ui components | `client/src/components/ui/` |
-| Acessibilidade WCAG documentada | `ACESSIBILIDADE_WCAG.md` |
-
-### Pontos Fracos
-| Evidência | Caminho |
-|-----------|---------|
-| Alguns componentes customizados sem padrão | `RuleBuilder.tsx` |
-| Inconsistência em espaçamentos | Análise visual |
-
-### Gaps
-- Tokens de design formalizados (cores, tipografia, espaçamento)
-- Biblioteca de componentes isolada
-
-### Riscos
-- **P3**: Divergência visual em novas telas
+**Pontos Fracos:**
+- Tabela pode ficar densa com muitas regras.
 
 ---
 
 ## 6. Product Designer
+**Nota: 6.5**
 
-**NOTA: 6.5/10**
+**Pontos Fortes:**
+- A solução atende a necessidade básica de "input -> decisão".
 
-### Pontos Fortes
-| Evidência | Caminho |
-|-----------|---------|
-| Fluxo de análise de transações completo | Dashboard → Transações → Detalhes |
-| Gestão de regras com CRUD | `client/src/pages/Rules.tsx` |
-
-### Pontos Fracos
-| Evidência | Caminho |
-|-----------|---------|
-| Falta onboarding para novos usuários | Não encontrado |
-| Falta tour guiado | Não encontrado |
-
-### Gaps
-- Protótipos de alta fidelidade
-- Documentação de decisões de design
-
-### Riscos
-- **P3**: Curva de aprendizado alta para operadores
+**Pontos Fracos:**
+- Falta visão sistêmica. O produto parece duas ferramentas coladas: um gestor de regras simples e um motor oculto avançado.
+- A jornada do analista de fraude não está completa (onde vejo as transações barradas pelas regras avançadas no dashboard?).
 
 ---
 
 ## 7. Backend Engineer Java
+**Nota: 8.0**
 
-**NOTA: 8.5/10**
+**Pontos Fortes:**
+- Código limpo, legível e bem estruturado.
+- Uso de `Records` para DTOs imutáveis.
+- Tratamento de exceções e logging adequados (`Slf4j`).
+- Testes unitários presentes e cobrindo a lógica (`AdvancedRuleEngineServiceTest.java`).
 
-### Pontos Fortes
-| Evidência | Caminho |
-|-----------|---------|
-| Spring Boot 3.x com Virtual Threads | `config/VirtualThreadsConfig.java` |
-| 28 regras avançadas implementadas | `AdvancedRuleEngineService.java` |
-| Condições genéricas via JSON | `RuleEngineService.java:204-236` |
-| Idempotência robusta | `RuleEngineService.java:52-70` |
-| PAN masking para LGPD | `util/PanMaskingUtil.java` |
-| Flyway migrations | `db/migration/V1-V3` |
-
-### Pontos Fracos
-| Evidência | Caminho |
-|-----------|---------|
-| Fallback legado por nome pode causar confusão | `RuleEngineService.java:239-275` |
-| Falta validação de campos via Bean Validation | `TransactionRequest.java` |
-
-### Gaps
-- Cache de regras (atualmente recarrega do banco a cada request)
-
-### Riscos
-- **P2**: Performance pode degradar com muitas regras
+**Pontos Fracos:**
+- `AdvancedRuleEngineService` é monalítico. Métodos privados gigantes ou classe com muitas responsabilidades. Deveria usar Pattern Chain of Responsibility ou Strategy para cada regra ser uma classe isolada.
 
 ---
 
 ## 8. Frontend Engineer React
+**Nota: 8.0**
 
-**NOTA: 7.0/10**
+**Pontos Fortes:**
+- Código React moderno (Hooks, Functional Components).
+- Integração com API via `fetch` (embora React Query ou similar fosse melhor, está funcional).
+- Tipagem TypeScript adequada.
 
-### Pontos Fortes
-| Evidência | Caminho |
-|-----------|---------|
-| React 19 + TypeScript strict | `tsconfig.json` |
-| TanStack Query para cache | `client/src/lib/trpc.ts` |
-| tRPC type-safe | `server/routers.ts` |
-| Componentes reutilizáveis | `client/src/components/ui/` |
-
-### Pontos Fracos
-| Evidência | Caminho |
-|-----------|---------|
-| Alguns componentes grandes demais | `Dashboard.tsx` |
-| Falta lazy loading em rotas | `App.tsx` |
-
-### Gaps
-- Storybook para documentação de componentes
-- Tests de componentes isolados
-
-### Riscos
-- **P3**: Bundle size pode crescer
+**Pontos Fracos:**
+- Estado local (`useState`) excessivo em `Rules.tsx` para formulário e lista, poderia ser melhor gerenciado.
 
 ---
 
 ## 9. DBA / PostgreSQL
+**Nota: 8.0**
 
-**NOTA: 7.5/10**
+**Pontos Fortes:**
+- Uso de JPA/Hibernate facilita a abstração.
+- Entidades bem definidas (`Transaction`, `TransactionDecision`).
 
-### Pontos Fortes
-| Evidência | Caminho |
-|-----------|---------|
-| Schema normalizado | `V2__core_schema.sql` |
-| Índices em colunas de busca | Linhas 81-83, 121-123 |
-| FK constraints | Linha 106-110 |
-| CHECK constraints | Linhas 116-119, 161-183 |
-| Append-only para history | `rule_configuration_history` |
-
-### Pontos Fracos
-| Evidência | Caminho |
-|-----------|---------|
-| Falta particionamento para transactions | Tabela pode crescer muito |
-| TEXT para JSON (não JSONB) | `rules_applied TEXT` |
-
-### Gaps
-- Políticas de retenção de dados
-- Backup/restore documentado
-
-### Riscos
-- **P2**: Performance com alto volume sem particionamento
+**Pontos Fracos:**
+- Não vi scripts de migração (Flyway/Liquibase). Depende do `ddl-auto` do Hibernate? Isso é risco P1 para produção.
+- Queries de agregação em tempo real (`countCardCapturesSince`) no `AdvancedRuleEngineService` podem matar o banco com alto volume. Falta estratégia de cache ou tabela de agregação pré-calculada.
 
 ---
 
 ## 10. QA Engineer (Lead)
+**Nota: 4.0**
 
-**NOTA: 6.0/10**
+**Pontos Fortes:**
+- Testes unitários de backend existem.
 
-### Pontos Fortes
-| Evidência | Caminho |
-|-----------|---------|
-| Testes unitários Java | `service/*Test.java` |
-| Testes de integração com Testcontainers | `*IT.java` |
-| 162 testes Node/Vitest | `server/*.test.ts` |
-| Coleção Insomnia para HML | `Insomnia/rulex-hml.insomnia.json` |
+**Pontos Fracos:**
+- **GAP CRÍTICO**: Ausência de `crtran.json`. Não há massa de dados oficial para validar a eficácia das regras.
+- Testes focam em unidade, mas não vi testes de integração de API robustos (Insomnia é manual).
+- Não há testes de performance (stress test) para validar as queries de agregação.
 
-### Pontos Fracos
-| Evidência | Caminho |
-|-----------|---------|
-| Cobertura de código não medida | Não encontrado jacoco/lcov |
-| Testes E2E ausentes | Não encontrado Cypress/Playwright |
-
-### Gaps (CRÍTICO)
-- **GAP P1**: Testes E2E de navegação SPA
-- **GAP P1**: Testes de carga/stress
-- **GAP P2**: Testes de regressão visual
-
-### Riscos
-- **P0**: Sem E2E, bugs de integração podem passar despercebidos
+**Riscos:**
+- P0: Impossível homologar a precisão das regras sem o dataset de ouro (`crtran.json`).
 
 ---
 
-## 11. AppSec / Segurança (OWASP + LGPD)
+## 11. AppSec / Segurança
+**Nota: 8.5**
 
-**NOTA: 6.5/10**
+**Pontos Fortes:**
+- **PanMaskingUtil**: Mascaramento de PAN implementado e usado antes de salvar/logar.
+- Uso de PreparedStatement (via JPA) evita SQL Injection.
+- Validação de Input (`@Valid`, DTOs).
 
-### Pontos Fortes
-| Evidência | Caminho |
-|-----------|---------|
-| Helmet configurado | `server/_core/security.ts` |
-| Rate limiting implementado | `server/_core/security.ts` |
-| PAN masking para LGPD | `backend/.../PanMaskingUtil.java` |
-| Mock auth bloqueado em prod | `server/_core/env.ts` |
-| Validação fail-fast em prod | `server/_core/index.ts` |
-
-### Pontos Fracos
-| Evidência | Caminho |
-|-----------|---------|
-| CSP permite unsafe-inline para styles | `security.ts:21` |
-| Falta CSRF protection explícita | Não encontrado |
-
-### Gaps (CRÍTICO)
-- **GAP P1**: Pen-test documentado
-- **GAP P1**: SAST/DAST integrado
-- **GAP P2**: Política de rotação de secrets
-
-### Riscos
-- **P1**: Sem pen-test, vulnerabilidades podem existir
+**Pontos Fracos:**
+- Logs podem estar verbosos demais em DEBUG, cuidado com vazamento de PII em logs de erro.
 
 ---
 
 ## 12. DevOps / SRE
+**Nota: 7.5**
 
-**NOTA: 7.0/10**
+**Pontos Fortes:**
+- Dockerfile presente para web e backend.
+- `docker-compose.yml` para orquestração local.
 
-### Pontos Fortes
-| Evidência | Caminho |
-|-----------|---------|
-| Docker Compose funcional | `docker-compose.yml` |
-| Dockerfile multi-stage | `backend/Dockerfile` |
-| Health check endpoint | `server/_core/index.ts` |
-| Graceful shutdown | `server/_core/index.ts` |
-| Logging estruturado (Pino) | `server/_core/logger.ts` |
+**Pontos Fracos:**
+- Healthchecks básicos.
+- Falta de observabilidade (Prometheus/Grafana) explícita no código (embora tenha `MetricsController`).
 
-### Pontos Fracos
-| Evidência | Caminho |
-|-----------|---------|
-| Falta CI/CD pipeline | Não encontrado `.github/workflows` |
-| Falta Kubernetes manifests | Não encontrado |
-
-### Gaps
-- **GAP P1**: Pipeline CI/CD documentado
-- **GAP P2**: Métricas Prometheus
-- **GAP P2**: Alerting configurado
-
-### Riscos
-- **P1**: Deploy manual é propenso a erros
