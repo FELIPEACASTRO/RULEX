@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { trpc } from '@/lib/trpc';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { rulesApi, Rule as ApiRule } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -199,8 +200,11 @@ export default function RulesAdvanced() {
     classification: 'SUSPICIOUS',
   });
 
-  // Usando tRPC para buscar regras
-  const { data: rulesData, isLoading: rulesLoading, refetch } = trpc.rules.list.useQuery();
+  const queryClient = useQueryClient();
+  const { data: rulesData, isLoading: rulesLoading, refetch } = useQuery({
+    queryKey: ['rules'],
+    queryFn: rulesApi.list,
+  });
 
   useEffect(() => {
     if (rulesData) {

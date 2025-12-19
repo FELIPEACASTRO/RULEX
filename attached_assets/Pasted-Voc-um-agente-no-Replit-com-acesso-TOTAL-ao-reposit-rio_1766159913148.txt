@@ -1,0 +1,143 @@
+Você é um agente no Replit com acesso TOTAL ao repositório atual.
+Quero uma ANÁLISE IMPARCIAL, HONESTA e BASEADA EM EVIDÊNCIA do código,
+utilizando um PAINEL MULTIDISCIPLINAR COM VOTAÇÃO FORMAL.
+
+Nada de achismo.
+Nada de elogio genérico.
+Sem evidência no código = GAP.
+
+────────────────────────────────────────────────────────
+🎯 OBJETIVO
+────────────────────────────────────────────────────────
+Avaliar se a solução (motor de regras duras bancárias) está:
+❌ NÃO APTA
+⚠️ APTA COM RESSALVAS
+✅ APTA PARA HOMOLOGAÇÃO
+
+A decisão final DEVE ser tomada por VOTAÇÃO CONSOLIDADA,
+com pesos técnicos e justificativas explícitas.
+
+────────────────────────────────────────────────────────
+👥 PAINEL DE ESPECIALISTAS (COM VOTO)
+────────────────────────────────────────────────────────
+Cada especialista deve analisar o código e VOTAR (0–10):
+
+1) Especialista de Negócio (Crédito/Fraude)
+2) Product Owner Técnico
+3) Arquiteto de Software
+4) UX Designer
+5) UI Designer
+6) Product Designer
+7) Backend Engineer Java
+8) Frontend Engineer React
+9) DBA / PostgreSQL
+10) QA Engineer (Lead)
+11) AppSec / Segurança (OWASP + LGPD)
+12) DevOps / SRE
+
+────────────────────────────────────────────────────────
+⚖️ PESOS DOS VOTOS (NÃO EDITÁVEIS)
+────────────────────────────────────────────────────────
+- Negócio (Crédito/Fraude):        peso 1.3
+- QA Engineer (Lead):              peso 1.3
+- Arquiteto de Software:           peso 1.2
+- Backend Engineer Java:           peso 1.2
+- Segurança (AppSec/LGPD):         peso 1.2
+- DBA / PostgreSQL:                peso 1.1
+- Frontend Engineer React:         peso 1.0
+- UX Designer:                     peso 1.0
+- UI Designer:                     peso 0.9
+- Product Designer:               peso 0.9
+- Product Owner Técnico:           peso 1.0
+- DevOps / SRE:                    peso 1.0
+
+────────────────────────────────────────────────────────
+📜 REGRAS DE IMPARCIALIDADE
+────────────────────────────────────────────────────────
+- Cada especialista escreve sua análise SEPARADAMENTE.
+- Cada voto deve conter:
+  • Pontos fortes (com arquivo/caminho)
+  • Pontos fracos (com arquivo/caminho)
+  • Gaps (NÃO ENCONTRADO NO CÓDIGO)
+  • Riscos (P0/P1/P2)
+  • Nota de 0 a 10
+- Se não houver evidência → marcar como GAP.
+- Divergências entre especialistas DEVEM ser destacadas.
+
+────────────────────────────────────────────────────────
+🧪 METODOLOGIA (ORDEM FIXA)
+────────────────────────────────────────────────────────
+
+PASSO 0 — INVENTÁRIO DO REPOSITÓRIO
+- Liste árvore completa de diretórios.
+- Conte arquivos por tipo (java, ts/tsx, sql, json, yml, md).
+- Identifique backend, frontend, db, testes, configs, scripts.
+
+PASSO 1 — EXTRAÇÃO DE FUNCIONALIDADES
+- Identifique todos os endpoints.
+- Identifique o motor de regras duras.
+- Verifique se existe conceito de:
+  Popup de Regra → 1..N Regras.
+- Identifique fluxos críticos (P0/P1).
+
+PASSO 2 — EXTRAÇÃO REAL DAS REGRAS DURAS
+- Onde as regras estão no código?
+- Condições, campos usados (ex: crtran.json), decisão.
+- Liste regras inexistentes mas esperadas (GAP).
+
+PASSO 3 — AVALIAÇÃO INDIVIDUAL + VOTO
+Para CADA especialista:
+- Avalie APENAS sua área.
+- Vote de 0–10.
+- Justifique com evidência técnica.
+
+PASSO 4 — QA & HOMOLOGAÇÃO
+- Verifique existência de:
+  • testes unitários
+  • testes integrados (API + Postgres)
+  • testes regressivos
+  • testes E2E
+  • testes de navegação SPA
+  • segurança (OWASP, LGPD)
+- Verifique uso do crtran.json como base de testes.
+- Liste bloqueadores de homologação.
+
+PASSO 5 — INSOMNIA (HOMOLOGAÇÃO MANUAL)
+- Verifique se existe ./Insomnia.
+- Se não existir, listar endpoints e requests obrigatórias
+  para homologação (health, rules, evaluate, audit, erros).
+
+────────────────────────────────────────────────────────
+📊 CONSOLIDAÇÃO DA VOTAÇÃO
+────────────────────────────────────────────────────────
+Crie uma tabela:
+
+ESPECIALISTA | NOTA | PESO | SCORE PONDERADO | PRINCIPAL ARGUMENTO
+
+- Calcule a MÉDIA PONDERADA FINAL.
+- Destaque:
+  • Top 3 maiores riscos
+  • Top 3 maiores gaps
+  • Áreas com maior divergência
+
+────────────────────────────────────────────────────────
+🏁 VEREDITO FINAL (REGRA DURA)
+────────────────────────────────────────────────────────
+- Média ponderada ≥ 8.5 e ZERO GAP P0 → ✅ APTO
+- Média ponderada ≥ 7.0 com GAPS P1 → ⚠️ APTO COM RESSALVAS
+- Qualquer GAP P0 → ❌ NÃO APTO
+
+────────────────────────────────────────────────────────
+📁 SAÍDA OBRIGATÓRIA (GERAR NO REPO)
+────────────────────────────────────────────────────────
+1) docs/review/votacao_painel.md
+2) docs/review/notas_por_especialista.md
+3) docs/review/matriz_gaps_riscos.md
+4) docs/review/veredito_final.md
+
+IMPORTANTE:
+- Seja honesto.
+- Seja técnico.
+- Seja crítico.
+- Não proteja o código.
+- O objetivo é qualidade real, não aprovação fácil.
