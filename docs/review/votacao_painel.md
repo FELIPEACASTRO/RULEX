@@ -1,94 +1,248 @@
-# Votação Consolidada do Painel Multidisciplinar
+# Votação Consolidada do Painel Multidisciplinar (imparcial, baseada em evidência)
 
 **Data**: 2025-12-19  
-**Projeto**: RULEX - Motor de Regras Duras para Detecção de Fraude  
-**Versão Avaliada**: Commit atual do repositório
+**Projeto**: RULEX — Motor de Regras Duras Bancárias  
+**Versão avaliada**: estado atual do repositório em `/workspace`  
 
 ---
 
-## Inventário do Repositório
+## PASSO 0 — Inventário do repositório
 
-### Contagem de Arquivos por Tipo
+### Árvore de diretórios (diretórios apenas)
+
+- `/workspace/.manus/`
+- `/workspace/attached_assets/`
+- `/workspace/audit/`
+- `/workspace/backend/`
+  - `src/main/java/com/rulex/` (`controller/`, `service/`, `repository/`, `entity/`, `dto/`, `homolog/`, `config/`, `api/`, `util/`)
+  - `src/main/resources/` (`application.yml`, `db/migration/`)
+  - `src/test/java/com/rulex/` (`service/`, `controller/`, `homolog/`, `architecture/`, `testsupport/`)
+- `/workspace/client/`
+  - `src/` (`components/`, `components/ui/`, `pages/`, `lib/`, `contexts/`, `hooks/`)
+- `/workspace/docs/`
+  - `hml/`
+  - `review/`
+- `/workspace/Insomnia/`
+- `/workspace/openapi/`
+- `/workspace/patches/`
+- `/workspace/shared/`
+
+### Contagem de arquivos por tipo (walk do workspace; exclui `.git`, `node_modules`, `dist`, `build`, `target`)
+
 | Tipo | Quantidade |
-|------|------------|
-| Java (Backend) | 110 |
-| TypeScript/TSX (Frontend) | 85 |
-| TypeScript (Server Node) | 24 |
-| SQL (Migrations) | 5 |
-| YAML/YML | 16 |
-| Markdown (Docs) | 36 |
+|---|---:|
+| Java | 118 |
+| TSX | 77 |
+| TS | 14 |
+| SQL | 3 |
+| JSON | 11 |
+| YAML/YML | 5 |
+| MD | 39 |
 
-### Estrutura Identificada
-- **Backend Java**: `backend/src/main/java/com/rulex/` - Spring Boot 3.x + PostgreSQL
-- **Frontend React**: `client/src/` - React 19 + Vite + TailwindCSS
-- **Server Node**: `server/` - Express + tRPC (autenticação/APIs auxiliares)
-- **Database**: PostgreSQL (Flyway migrations) + MySQL/TiDB (Drizzle)
-- **Testes Java**: 8 arquivos (unitários + integração)
-- **Testes Node**: 4 arquivos (162 testes Vitest)
-- **Insomnia**: Coleção completa para homologação
+### Componentes identificados
 
----
-
-## Tabela de Votação Consolidada
-
-| # | ESPECIALISTA | NOTA | PESO | SCORE PONDERADO | PRINCIPAL ARGUMENTO |
-|---|--------------|------|------|-----------------|---------------------|
-| 1 | Negócio (Crédito/Fraude) | 7.5 | 1.3 | 9.75 | Motor implementa 28+ regras duras cobrindo EMV, CVV, PIN, MCC, velocidade. Falta documentação de casos de negócio edge. |
-| 2 | Product Owner Técnico | 7.0 | 1.0 | 7.00 | Endpoints bem definidos, fluxo Popup→Rules implementado. Falta especificação formal de critérios de aceite. |
-| 3 | Arquiteto de Software | 8.0 | 1.2 | 9.60 | Clean Architecture + Hexagonal no Java bem implementado. Separação de concerns adequada. Código legível. |
-| 4 | UX Designer | 6.0 | 1.0 | 6.00 | Dashboard funcional. Falta feedback visual em operações críticas. Simulador existe mas precisa de refinamento. |
-| 5 | UI Designer | 6.5 | 0.9 | 5.85 | shadcn/ui bem aplicado. Design system documentado. Falta consistência em alguns componentes customizados. |
-| 6 | Product Designer | 6.5 | 0.9 | 5.85 | Fluxos principais cobertos. Falta jornada de onboarding e documentação de personas. |
-| 7 | Backend Engineer Java | 8.5 | 1.2 | 10.20 | RuleEngineService robusto, idempotência implementada, auditoria completa, 28 regras avançadas funcionais. |
-| 8 | Frontend Engineer React | 7.0 | 1.0 | 7.00 | React Query + tRPC bem integrados. Componentes reutilizáveis. Falta tratamento de erros em alguns fluxos. |
-| 9 | DBA / PostgreSQL | 7.5 | 1.1 | 8.25 | Schema bem normalizado, índices criados, FK com constraints. Migrations Flyway funcionais. |
-| 10 | QA Engineer (Lead) | 6.0 | 1.3 | 7.80 | Testes unitários Java existem. Testes de integração com Testcontainers. **GAP: Falta cobertura E2E automatizada.** |
-| 11 | AppSec / Segurança | 6.5 | 1.2 | 7.80 | Helmet configurado, rate limiting implementado, PAN masking. **GAP: CSP pode ser mais restritivo. Falta pen-test.** |
-| 12 | DevOps / SRE | 7.0 | 1.0 | 7.00 | Docker Compose funcional, health checks implementados, graceful shutdown. Falta CI/CD pipeline documentado. |
+- **Backend (Java/Spring Boot + Postgres/Flyway)**: `backend/`
+- **Frontend (React/Vite)**: `client/` + `vite.config.ts`
+- **Banco**:
+  - **PostgreSQL**: migrations em `backend/src/main/resources/db/migration/*.sql`
+- **Testes**:
+  - Unitários Java: `backend/src/test/java/com/rulex/service/*Test.java`
+  - Integração/API (nomes `*IT.java`, com Postgres/Testcontainers): `backend/src/test/java/com/rulex/**/**IT.java`
+- **Config/scripts**:
+  - OpenAPI: `openapi/rulex.yaml`
+  - Script Node (validação de regras): `validate-rules.mjs` (**atenção: desatualizado vs payload Java**) 
 
 ---
 
-## Cálculos
+## PASSO 1 — Extração de funcionalidades
 
-### Soma dos Pesos
-1.3 + 1.0 + 1.2 + 1.0 + 0.9 + 0.9 + 1.2 + 1.0 + 1.1 + 1.3 + 1.2 + 1.0 = **13.1**
+### Endpoints (Spring Boot) — basePath real: `/api` (context-path)
 
-### Soma dos Scores Ponderados
-9.75 + 7.00 + 9.60 + 6.00 + 5.85 + 5.85 + 10.20 + 7.00 + 8.25 + 7.80 + 7.80 + 7.00 = **92.10**
+Evidência: `backend/src/main/resources/application.yml` define `server.servlet.context-path: /api`.
 
-### Média Ponderada Final
-**92.10 / 13.1 = 7.03**
+- **Transações** (`backend/src/main/java/com/rulex/controller/TransactionController.java`)
+  - `POST /api/transactions/analyze`
+  - `POST /api/transactions/analyze-advanced`
+  - `GET /api/transactions`
+  - `GET /api/transactions/{id}`
+  - `GET /api/transactions/external/{externalId}`
+- **Avaliação com popups** (`backend/src/main/java/com/rulex/controller/EvaluateController.java`)
+  - `POST /api/evaluate`
+- **Regras (CRUD + toggle + history + enabled)** (`backend/src/main/java/com/rulex/controller/RuleController.java`)
+  - `GET /api/rules`
+  - `POST /api/rules`
+  - `GET /api/rules/{id}`
+  - `PUT /api/rules/{id}`
+  - `DELETE /api/rules/{id}`
+  - `PATCH /api/rules/{id}/toggle`
+  - `GET /api/rules/enabled/{enabled}`
+  - `GET /api/rules/{id}/history`
+- **Auditoria** (`backend/src/main/java/com/rulex/controller/AuditController.java`)
+  - `GET /api/audit`
+  - `GET /api/audit/transaction/{transactionId}`
+- **Métricas** (`backend/src/main/java/com/rulex/controller/MetricsController.java`)
+  - `GET /api/metrics`
+  - `GET /api/metrics/mcc`
+  - `GET /api/metrics/merchant`
+  - `GET /api/metrics/timeline`
+- **Homolog (versionamento + ruleset + simulação)**
+  - `POST /api/homolog/rules`
+  - `GET /api/homolog/rules/{ruleId}/latest`
+  - `POST /api/homolog/rules/versions/{ruleVersionId}/publish`
+  - `POST /api/homolog/rules/{ruleId}/rollback/{version}`
+  - `POST /api/homolog/rulesets`
+  - `POST /api/homolog/rulesets/versions/{ruleSetVersionId}/publish`
+  - `POST /api/homolog/rulesets/activate`
+  - `POST /api/homolog/simulations/run`
+
+### Conceito “Popup de Regra → 1..N Regras”
+
+**Encontrado** no endpoint `/api/evaluate`:
+- DTO: `backend/src/main/java/com/rulex/dto/EvaluateResponse.java` contém `popups: List<PopupDTO>`.
+- Implementação: `backend/src/main/java/com/rulex/service/RuleEngineService.java` agrega `List<RuleHitDTO>` em `PopupDTO` (`aggregatePopups`).
+
+### Fluxos críticos (P0/P1)
+
+- **P0**: analisar transação (persistir + decisão + auditoria) — `POST /api/transactions/analyze`.
+- **P0**: CRUD/toggle de regras (impacta decisão em tempo real) — `/api/rules/*`.
+- **P0**: `/api/evaluate` (retorna decisão + hits + popups agregados).
+- **P1**: fluxo de homologação (criar/publish/activate/simular ruleset) — `/api/homolog/*`.
+- **P1**: auditoria e métricas — `/api/audit`, `/api/metrics/*`.
 
 ---
 
-## Divergências Entre Especialistas
+## PASSO 2 — Extração REAL das regras duras
 
-| Área | Divergência | Especialistas |
-|------|-------------|---------------|
-| Testes | Backend Java vs Node discordam sobre cobertura | QA (6.0) vs Backend Java (8.5) |
-| Segurança | CSP e autenticação mock em dev | AppSec (6.5) vs Arquiteto (8.0) |
-| UX/UI | Completude do design system | UX (6.0) vs UI (6.5) |
+### Onde as regras estão
+
+- **Motor core (configurável via banco)**:
+  - Avaliação: `backend/src/main/java/com/rulex/service/RuleEngineService.java` (`evaluateRules` → `evaluateRuleGeneric`).
+  - Persistência: tabela `rule_configurations` com `conditions_json` e `logic_operator` (`backend/src/main/resources/db/migration/V2__core_schema.sql`).
+  - Operadores suportados no core: `== != > < >= <= IN NOT_IN CONTAINS NOT_CONTAINS`.
+
+- **Fallback “legado por nome” (12 regras hardcoded)**: `RuleEngineService.evaluateRuleGeneric` (switch por `ruleName`).
+  - Exemplos: `LOW_AUTHENTICATION_SCORE`, `INVALID_CAVV`, `HIGH_RISK_MCC`, `OFFLINE_PIN_FAILED`, etc.
+
+- **Motor avançado (28 regras determinísticas)**:
+  - Implementação: `backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java`.
+  - Testes unitários: `backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java`.
+
+- **Motor de homolog (versionado por ruleset, com DSL e JSONB)**:
+  - Use case: `backend/src/main/java/com/rulex/homolog/usecase/HomologRuleSetUseCase.java`.
+  - DSL evaluator: `backend/src/main/java/com/rulex/homolog/adapter/RuleDslEvaluatorAdapter.java`.
+  - Operadores homolog: `EQ NEQ GT GTE LT LTE IN NOT_IN CONTAINS STARTS_WITH ENDS_WITH IS_NULL NOT_NULL`.
+  - Persistência: `backend/src/main/resources/db/migration/V1__init.sql`.
+
+### Lista objetiva das 28 regras “advanced” (nomes + evidência)
+
+Evidência: `backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java` (método `executeAllAdvancedRulesDetailed`).
+
+1. `EMV_SECURITY_CHECK`
+2. `TERMINAL_VERIFICATION_FAILED`
+3. `EXPIRED_CARD`
+4. `SUSPICIOUS_TRANSACTION_TYPE`
+5. `UNUSUAL_CARD_MEDIA`
+6. `SUSPICIOUS_TERMINAL`
+7. `ECOMMERCE_NO_AVS`
+8. `POS_SECURITY_MISSING`
+9. `CARD_CAPTURE_FRAUD`
+10. `PIN_CVV_LIMIT_EXCEEDED`
+11. `OFFLINE_PIN_FAILED`
+12. `MISSING_CVV2_HIGH_RISK`
+13. `CUSTOM_INDICATOR_FRAUD`
+14. `PROCESSING_LAG_ANOMALY`
+15. `TIMEZONE_NORMALIZED_CHECK`
+16. `DUPLICATE_TRANSACTION`
+17. `SUSPICIOUS_MERCHANT_POSTAL`
+18. `SUSPICIOUS_TOKEN`
+19. `UNEXPECTED_CURRENCY`
+20. `ANOMALOUS_CONVERSION_RATE`
+21. `INCOHERENT_AUTH_SEQUENCE`
+22. `INCOHERENT_CONTEXT`
+23. `CONTRADICTORY_AUTHORIZATION`
+24. `SUSPICIOUS_ACQUIRER`
+25. `ACQUIRER_COUNTRY_MISMATCH`
+26. `COMBINED_SCORE_CHECK`
+27. `VELOCITY_CHECK_CONSOLIDATED`
+28. `CUSTOM_INDICATORS_COMPREHENSIVE`
+
+### Regras inexistentes mas “esperadas” (GAP)
+
+- **GAP P1**: `fixtures/crtran.json` como baseline único de payload (referenciado em IT + Insomnia) não existe.
+- **GAP P1**: “lista de 60 regras” só em documentação não prova implementação (necessário mapear doc→código/regra versionada/configurada).
 
 ---
 
-## Top 3 Maiores Riscos
+## PASSO 3 — Votos individuais (0–10) e justificativa
 
-1. **P1 - Ausência de Testes E2E Automatizados**: Não há Cypress/Playwright para fluxos críticos.
-2. **P1 - Mock Auth Habilitado por Padrão em Dev**: Risco de vazamento para produção (mitigado com validação).
-3. **P2 - Falta de Pen-Test Documentado**: Não há evidência de testes de segurança OWASP.
+As notas detalhadas por especialista estão em: `docs/review/notas_por_especialista.md`.
 
 ---
 
-## Top 3 Maiores Gaps
+## PASSO 4 — QA & Homologação
 
-1. **GAP P1 - Testes E2E/Navegação SPA**: Não encontrado no código.
-2. **GAP P1 - Pipeline CI/CD Documentado**: Não encontrado (sem .github/workflows ou similar).
-3. **GAP P2 - Métricas Prometheus/Grafana**: Health check existe mas não há exportação de métricas.
+### Evidências encontradas
+
+- **Testes unitários (Java)**: `backend/src/test/java/com/rulex/service/*Test.java`.
+- **Testes de arquitetura (ArchUnit)**: `backend/src/test/java/com/rulex/architecture/CleanArchitectureRulesTest.java`.
+- **Testes de integração (API + Postgres/Testcontainers) existem**: `backend/src/test/java/com/rulex/controller/*IT.java`, `backend/src/test/java/com/rulex/homolog/HomologSimulationIT.java`.
+- **Mas**: `backend/pom.xml` não evidencia execução automática desses `*IT.java` (sem `maven-failsafe-plugin`).
+
+### Bloqueadores de homologação
+
+- **P0**: lockfile inconsistente (`pnpm install --frozen-lockfile` falha) — ver `docs/review/matriz_gaps_riscos.md`.
+- **P0**: inventários/scripts apontando para módulos ausentes (gera risco de build/inconsistência) — ver `docs/review/matriz_gaps_riscos.md`.
 
 ---
 
-## Áreas com Maior Divergência
+## PASSO 5 — Insomnia (homologação manual)
 
-1. **Testes**: QA vê gaps críticos; Backend Java considera testes unitários suficientes.
-2. **Segurança**: AppSec quer CSP mais restritivo; Arquiteto aceita configuração atual.
-3. **Design**: UX quer mais feedback visual; UI considera design system adequado.
+### Evidência
+
+- Diretório existe: `Insomnia/`
+- Coleção: `Insomnia/rulex-hml.insomnia.json`
+
+### Observação crítica
+
+A coleção contém requests para “Node tRPC” e menciona `node_base_url`, porém **não há evidência de implementação Node/server no repositório atual** (não existe diretório `server/`). Logo, a parte “Node tRPC” da coleção deve ser tratada como **GAP** até existir código.
+
+---
+
+## Consolidação da votação (pesos fixos)
+
+| ESPECIALISTA | NOTA | PESO | SCORE PONDERADO | Principal argumento (resumo) |
+|---|---:|---:|---:|---|
+| Negócio (Crédito/Fraude) | 7.2 | 1.3 | 9.36 | Regras determinísticas e popup 1..N; risco por duplicidade core vs homolog |
+| Product Owner Técnico | 6.0 | 1.0 | 6.00 | Contratos e inventários divergentes; OpenAPI incompleta |
+| Arquiteto de Software | 7.0 | 1.2 | 8.40 | Arquitetura boa, mas dois motores e DSLs diferentes |
+| UX Designer | 6.0 | 1.0 | 6.00 | UX existe, mas “simulação local” pode mascarar defeitos |
+| UI Designer | 6.5 | 0.9 | 5.85 | Componentes ok; faltam artefatos de consistência (tokens) |
+| Product Designer | 6.0 | 0.9 | 5.40 | Fluxos existem, mas parte avançada depende de integração não evidenciada |
+| Backend Engineer Java | 8.2 | 1.2 | 9.84 | Core robusto, idempotência, regras genéricas + 28 advanced com testes |
+| Frontend Engineer React | 4.5 | 1.0 | 4.50 | Contrato/cliente divergente e referência a servidor inexistente |
+| DBA / PostgreSQL | 7.2 | 1.1 | 7.92 | Migrations sólidas; JSONB no homolog; TEXT no core é tradeoff |
+| QA Engineer (Lead) | 5.0 | 1.3 | 6.50 | ITs existem mas execução não evidenciada; lockfile quebra install |
+| AppSec / Segurança (OWASP + LGPD) | 4.8 | 1.2 | 5.76 | PAN masking ok; sem auth e credenciais default em compose |
+| DevOps / SRE | 5.2 | 1.0 | 5.20 | Compose ok; sem CI e sem install reprodutível |
+
+### Cálculo
+
+- **Soma dos pesos**: 13.1
+- **Soma dos scores ponderados**: 80.73
+- **Média ponderada final**: **80.73 / 13.1 = 6.16**
+
+### Divergências relevantes
+
+- **Backend vs Frontend/QA**: backend é tecnicamente sólido, mas frontend/pipeline têm bloqueadores (lockfile e integrações incoerentes).
+
+### Top 3 maiores riscos
+
+1. **P0**: instalação/pipeline Node/Front não reprodutível (lockfile).
+2. **P1**: UI/cliente com contrato divergente pode mascarar defeitos reais.
+3. **P1**: API Java sem autenticação (ambiente bancário exige controle).
+
+### Top 3 maiores gaps
+
+1. **P0**: lockfile inconsistente (`pnpm install --frozen-lockfile` falha).
+2. **P0**: inventários/scripts inconsistentes; referências a módulos ausentes.
+3. **P1**: OpenAPI não cobre endpoints críticos (`/evaluate`, `/homolog/*`).

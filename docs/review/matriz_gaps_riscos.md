@@ -1,124 +1,81 @@
-# Matriz de Gaps e Riscos
+# Matriz de Gaps e Riscos (baseada em evidência no código)
 
 **Data**: 2025-12-19  
-**Projeto**: RULEX - Motor de Regras Duras
+**Projeto**: RULEX — Motor de Regras Duras Bancárias  
+**Escopo avaliado**: código em `/workspace` (backend Java + frontend React + docs/scripts)
 
 ---
 
-## Classificação de Severidade
+## Classificação
 
-| Nível | Descrição | Impacto em Homologação |
-|-------|-----------|------------------------|
-| P0 | Bloqueador crítico | ❌ Impede homologação |
-| P1 | Alto risco | ⚠️ Requer mitigação antes de produção |
-| P2 | Médio risco | ⚠️ Pode ir para produção com plano de ação |
-| P3 | Baixo risco | ✅ Melhorias futuras |
+- **P0**: bloqueador de homologação (quebra build, impede executar fluxos P0, ou cria risco crítico imediato)
+- **P1**: alto risco (homologável apenas com mitigação/contorno formal)
+- **P2**: médio risco
+- **P3**: baixo risco
 
 ---
 
-## Gaps Identificados
+## Gaps (não encontrado no código = GAP)
 
-### Gaps P0 (Bloqueadores)
+### Gaps P0
 
-| ID | Gap | Área | Responsável | Evidência |
-|----|-----|------|-------------|-----------|
-| - | Nenhum gap P0 identificado | - | - | - |
+| ID | GAP | Evidência (arquivo/caminho) | Impacto |
+|---|---|---|---|
+| G-001 | **Lockfile inconsistente — `pnpm install --frozen-lockfile` falha** | Evidência de execução: `pnpm -C /workspace install --frozen-lockfile` retornou `ERR_PNPM_OUTDATED_LOCKFILE` (lock não bate com `package.json`). Arquivos: `pnpm-lock.yaml`, `package.json` | CI/instalação reprodutível quebra; inviabiliza pipeline confiável para HML |
+| G-002 | **Divergência grave entre “inventários” e código real (docs/scripts citam `server/` e `drizzle/` que não existem no repo atual)** | `audit/inventory_git_ls_files.txt` lista `server/*` e `drizzle/*`, mas diretórios **não existem** no FS (`/workspace/server` e `/workspace/drizzle` não existem). Além disso, `client/src/lib/trpc.ts` importa tipo de `../../../server/routers` | Risco de build quebrar / artefatos inconsistentes; confunde homologação e rastreabilidade |
 
-### Gaps P1 (Alto Risco)
+### Gaps P1
 
-| ID | Gap | Área | Responsável | Evidência |
-|----|-----|------|-------------|-----------|
-| G-001 | Testes E2E/Navegação SPA ausentes | QA | QA Lead | Não encontrado Cypress/Playwright |
-| G-002 | Pipeline CI/CD não documentado | DevOps | SRE | Não encontrado .github/workflows |
-| G-003 | Pen-test não documentado | Segurança | AppSec | Não encontrado relatório OWASP |
-| G-004 | SAST/DAST não integrado | Segurança | AppSec | Não encontrado SonarQube/Snyk |
+| ID | GAP | Evidência (arquivo/caminho) | Impacto |
+|---|---|---|---|
+| G-003 | **OpenAPI incompleta vs endpoints reais** | Spec em `openapi/rulex.yaml` **não inclui** `/api/evaluate` e **não inclui** `/api/homolog/*`; também não descreve `/api/rules/enabled/{enabled}` e `/api/rules/{id}/history` | Cliente/contrato de HML incompleto; dificulta homologação e automação |
+| G-004 | **Integração/contrato Frontend↔Backend inconsistente em pelo menos um cliente** | `client/src/lib/javaApi.ts` define tipos e endpoints que não batem com o backend (ex.: `TransactionResponse.totalScore` vs backend usa `riskScore`; endpoints `/api/health`, `/api/metrics/realtime`, `/api/audit/export` não existem nos controllers Java) | Fluxos UI podem quebrar ou exigir mocks/“simulação local” |
+| G-005 | **`crtran.json` como base de testes/hml é referenciado mas não existe no repo** | `backend/src/test/java/com/rulex/controller/CrtranBaselineIT.java` procura `fixtures/crtran.json` e `Insomnia/README.md` referencia `fixtures/crtran.json`. `Glob **/fixtures/crtran.json` não encontrou arquivo | Baseline de payload não reprodutível; homologação manual perde “fonte de verdade” |
+| G-006 | **Testes de integração (IT/E2E) existem, mas não há evidência de execução automática no build padrão Maven** | Há testes `*IT.java` (ex.: `backend/src/test/java/com/rulex/controller/RulePopupE2EIT.java`), mas `backend/pom.xml` não contém `maven-failsafe-plugin`; `mvn test` roda surefire (por padrão) | Cobertura de integração pode ficar “morta” no CI |
 
-### Gaps P2 (Médio Risco)
+### Gaps P2
 
-| ID | Gap | Área | Responsável | Evidência |
-|----|-----|------|-------------|-----------|
-| G-005 | Métricas Prometheus/Grafana | DevOps | SRE | Health check existe, falta exportação |
-| G-006 | Cobertura de código não medida | QA | QA Lead | Não encontrado jacoco/lcov |
-| G-007 | Cache de regras ausente | Backend | Java Engineer | Regras recarregadas a cada request |
-| G-008 | Política de retenção de dados | DBA | DBA | Não encontrado |
-| G-009 | ADRs (Architecture Decision Records) | Arquitetura | Arquiteto | Não encontrado |
-| G-010 | Storybook para componentes | Frontend | React Engineer | Não encontrado |
-
-### Gaps P3 (Baixo Risco)
-
-| ID | Gap | Área | Responsável | Evidência |
-|----|-----|------|-------------|-----------|
-| G-011 | Onboarding/tour guiado | UX | UX Designer | Não encontrado |
-| G-012 | Lazy loading em rotas | Frontend | React Engineer | App.tsx sem React.lazy |
-| G-013 | Tokens de design formalizados | UI | UI Designer | Parcialmente em DESIGN_SYSTEM.md |
+| ID | GAP | Evidência (arquivo/caminho) | Impacto |
+|---|---|---|---|
+| G-007 | **Ausência de autenticação/autorização no backend Java (API aberta)** | `backend/pom.xml` não inclui `spring-boot-starter-security`; controllers não exigem auth (ex.: `backend/src/main/java/com/rulex/controller/*`) | Para domínio bancário: risco alto em ambientes não isolados (LGPD/abuso) |
+| G-008 | **Dois modelos de “motor de regras” coexistindo (core vs homolog) sem contrato único** | Core: `RuleEngineService` + `rule_configurations` (`V2__core_schema.sql`). Homolog: `HomologRuleSetUseCase` + `rule_versions/rule_sets` (`V1__init.sql`) com DSL e operadores diferentes | Complexidade, risco de divergência funcional e duplicidade de esforço |
+| G-009 | **Scripts de validação desatualizados em relação ao payload real** | `validate-rules.mjs` lista campos como `cvv2EntryLimitExceeded`, `pinEntryLimitExceeded` etc, que **não existem** em `backend/src/main/java/com/rulex/dto/TransactionRequest.java` | Ferramentas internas podem gerar falsa confiança |
 
 ---
 
-## Riscos Identificados
+## Riscos (com severidade)
 
-### Riscos P0 (Bloqueadores)
+### Riscos P0
 
-| ID | Risco | Área | Probabilidade | Impacto | Mitigação |
-|----|-------|------|---------------|---------|-----------|
-| - | Nenhum risco P0 identificado | - | - | - | - |
+| ID | Risco | Evidência | Mitigação recomendada |
+|---|---|---|---|
+| R-001 | **Homologação com pipeline não reprodutível (Node/Front)** | `pnpm-lock.yaml` não sincroniza com `package.json` (ver G-001) | Corrigir lockfile e exigir `--frozen-lockfile` no CI |
 
-### Riscos P1 (Alto Risco)
+### Riscos P1
 
-| ID | Risco | Área | Probabilidade | Impacto | Mitigação |
-|----|-------|------|---------------|---------|-----------|
-| R-001 | Bugs de integração passam sem E2E | QA | Alta | Alto | Implementar Playwright |
-| R-002 | Vulnerabilidades sem pen-test | Segurança | Média | Crítico | Contratar pen-test |
-| R-003 | Deploy manual propenso a erros | DevOps | Alta | Alto | Implementar CI/CD |
-| R-004 | Regras legadas divergem de genéricas | Backend | Média | Médio | Migrar para condições JSON |
+| ID | Risco | Evidência | Mitigação recomendada |
+|---|---|---|---|
+| R-002 | **Homologação de UI pode não refletir backend real (tipos/endpoints divergentes)** | `client/src/lib/javaApi.ts` e `client/src/pages/TransactionSimulator.tsx` têm contrato divergente do backend | Padronizar consumo via `client/src/lib/api.generated.ts` (OpenAPI) e ajustar endpoints reais |
+| R-003 | **Exposição indevida de APIs em ambiente não controlado** | Ausência de Spring Security; CORS amplo em `backend/src/main/java/com/rulex/config/CorsConfig.java` | Autenticação/RBAC mínima para HML e segregação de rede |
+| R-004 | **Integração de testes de integração pode ficar “silenciosa” no CI** | `*IT.java` sem evidência de execução automática | Adicionar Failsafe (IT) e pipeline que rode `verify` |
 
-### Riscos P2 (Médio Risco)
+### Riscos P2
 
-| ID | Risco | Área | Probabilidade | Impacto | Mitigação |
-|----|-------|------|---------------|---------|-----------|
-| R-005 | Performance degrada com muitas regras | Backend | Média | Médio | Implementar cache |
-| R-006 | Tabela transactions cresce sem controle | DBA | Alta | Médio | Implementar particionamento |
-| R-007 | Duas stacks de banco (PG + MySQL) | Arquitetura | Baixa | Médio | Consolidar em uma stack |
-
-### Riscos P3 (Baixo Risco)
-
-| ID | Risco | Área | Probabilidade | Impacto | Mitigação |
-|----|-------|------|---------------|---------|-----------|
-| R-008 | Curva de aprendizado alta | UX | Média | Baixo | Criar onboarding |
-| R-009 | Bundle size frontend cresce | Frontend | Baixa | Baixo | Lazy loading |
-| R-010 | Divergência visual | UI | Baixa | Baixo | Storybook |
+| ID | Risco | Evidência | Mitigação recomendada |
+|---|---|---|---|
+| R-005 | **Divergência entre OpenAPI e implementação ao longo do tempo** | OpenAPI não cobre `/evaluate` e `/homolog/*` | Atualizar spec e regenerar `api.generated.ts` |
+| R-006 | **Persistência de JSON em TEXT em parte do core** | `transaction_decisions.rules_applied TEXT` e `score_details TEXT` em `V2__core_schema.sql` | Considerar JSONB/estruturar consultas futuras (ou manter e documentar tradeoff) |
 
 ---
 
-## Matriz de Priorização
+## Top 3 Gaps (por impacto)
 
-```
-         IMPACTO
-           ↑
-     Alto  │  R-002   R-001
-           │  R-003   R-004
-    Médio  │  R-005   R-006   R-007
-           │
-    Baixo  │  R-008   R-009   R-010
-           └─────────────────────────→ PROBABILIDADE
-              Baixa   Média   Alta
-```
+1. **G-001 (P0)**: lockfile inconsistente (`pnpm install --frozen-lockfile` falha).
+2. **G-002 (P0)**: inventários/scripts apontam para módulos não existentes (`server/`, `drizzle/`), e há referência de import no client.
+3. **G-003 (P1)**: OpenAPI não cobre endpoints críticos (`/evaluate`, `/homolog/*`).
 
----
+## Top 3 Riscos
 
-## Plano de Ação Sugerido
-
-### Sprint 1 (Pré-Homologação)
-1. [ ] Implementar testes E2E básicos (Playwright) - G-001
-2. [ ] Documentar pipeline CI/CD - G-002
-3. [ ] Solicitar pen-test OWASP - G-003
-
-### Sprint 2 (Pós-Homologação)
-4. [ ] Integrar SAST/DAST - G-004
-5. [ ] Implementar métricas Prometheus - G-005
-6. [ ] Adicionar cobertura de código - G-006
-7. [ ] Implementar cache de regras - G-007
-
-### Backlog
-8. [ ] Particionamento de transactions - R-006
-9. [ ] ADRs formais - G-009
-10. [ ] Storybook - G-010
+1. **R-001 (P0)**: pipeline não reprodutível para frontend/Node.
+2. **R-002 (P1)**: UI e “clientes” com contrato divergente podem mascarar defeitos.
+3. **R-003 (P1)**: ausência de autenticação/autorização para um domínio bancário.
