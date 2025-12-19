@@ -1,0 +1,592 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-12-19T00:00:00.000Z",
+  "__export_source": "rulex-hml",
+  "resources": [
+    {
+      "_id": "wrk_rulex_hml",
+      "_type": "workspace",
+      "name": "RULEX - HML",
+      "description": "Coleção de evidências para homologação (Java REST + Node tRPC)."
+    },
+    {
+      "_id": "env_rulex_hml_base",
+      "_type": "environment",
+      "parentId": "wrk_rulex_hml",
+      "name": "Base",
+      "data": {
+        "java_api_url": "http://localhost:8080/api",
+        "node_base_url": "http://localhost:3000",
+        "cookie_name": "app_session_id",
+        "session_cookie": "",
+        "tx_external_id": "hml-tx-001",
+        "missing_external_id": "hml-tx-missing-001",
+        "tx_id": 1,
+        "rule_id": 1,
+        "homolog_rule_id": "00000000-0000-0000-0000-000000000000",
+        "homolog_rule_version_id": "00000000-0000-0000-0000-000000000000",
+        "ruleset_version_id": "00000000-0000-0000-0000-000000000000",
+        "actor_email": "hml@rulex.local"
+      }
+    },
+
+    { "_id": "fld_java", "_type": "request_group", "parentId": "wrk_rulex_hml", "name": "Java API" },
+    { "_id": "fld_java_transactions", "_type": "request_group", "parentId": "fld_java", "name": "Transactions" },
+
+    {
+      "_id": "req_java_analyze_1",
+      "_type": "request",
+      "parentId": "fld_java_transactions",
+      "name": "Analyze (idempotent #1)",
+      "method": "POST",
+      "url": "{{ _.java_api_url }}/transactions/analyze",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"workflow\": \"BRZLCREDIT\",\n  \"recordType\": \"CRTRAN25\",\n  \"dataSpecificationVersion\": 2.5,\n  \"transactionCurrencyCode\": 986,\n  \"clientIdFromHeader\": \"001\",\n  \"externalTransactionId\": \"{{ _.tx_external_id }}\",\n  \"posEntryMode\": \"E\",\n  \"gmtOffset\": \"-03.00\",\n  \"customerIdFromHeader\": \"e1f75f3f9efb3fb7555\",\n  \"customerAcctNumber\": 1033550704,\n  \"pan\": \"LY7x6tYaSty0817777\",\n  \"authPostFlag\": \"A\",\n  \"cardExpireDate\": 20211029,\n  \"availableCredit\": 999999999,\n  \"tokenizationIndicator\": \"C\",\n  \"consumerAuthenticationScore\": 999,\n  \"cavvResult\": 0,\n  \"transactionDate\": 20250210,\n  \"transactionTime\": 11413,\n  \"transactionAmount\": 9999999999.99,\n  \"transactionCurrencyConversionRate\": 0.19,\n  \"authDecisionCode\": \"A\",\n  \"transactionType\": \"C\",\n  \"mcc\": 3121,\n  \"merchantPostalCode\": \"074002006\",\n  \"merchantCountryCode\": \"076\",\n  \"pinVerifyCode\": \"I\",\n  \"cvvVerifyCode\": \"I\",\n  \"userIndicator01\": \"S\",\n  \"idMethod\": 0,\n  \"externalScore3\": 998,\n  \"customerPresent\": \"Y\",\n  \"atmOwner\": \"B\",\n  \"merchantName\": \"ACQUIRER NAME\",\n  \"merchantCity\": \"CITY NAME\",\n  \"merchantState\": \"BR\",\n  \"userIndicator03\": \"000\",\n  \"tokenId\": \"stringstrings\",\n  \"cardAipStatic\": \"Y\",\n  \"cardAipDynamic\": \"Y\",\n  \"cardAipVerify\": \"Y\",\n  \"cardAipRisk\": \"Y\",\n  \"cardAipIssuerAuthentication\": \"Y\",\n  \"cardAipCombined\": \"Y\",\n  \"authIndicator\": 1,\n  \"cardDelinquentAmount\": 0,\n  \"cardCashBalance\": 999999999.99,\n  \"cardMediaType\": \"C\",\n  \"cvv2Present\": 0,\n  \"cvv2Response\": \"M\",\n  \"transactionCategory\": \"A\",\n  \"acquirerId\": \"string\",\n  \"acquirerCountry\": \"076\",\n  \"terminalId\": \"string\",\n  \"terminalType\": \"L\",\n  \"terminalEntryCapability\": \"C\",\n  \"posConditionCode\": \"00\",\n  \"networkId\": \"V\",\n  \"terminalVerificationResults\": \"string\",\n  \"cardVerificationResults\": \"string\",\n  \"cryptogramValid\": \"V\",\n  \"atcCard\": 9999,\n  \"atcHost\": 9999,\n  \"tokenAssuranceLevel\": 50,\n  \"secondFactorAuthCode\": \"00\",\n  \"cavvKeyIndicator\": 0,\n  \"processorAuthReasonCode\": \"str\",\n  \"standinAdvice\": \"A\",\n  \"merchantId\": \"CARD ACCEPTOR\",\n  \"paymentInstrumentId\": \"429093** ** ** 9035\",\n  \"avsRequest\": \"Y\",\n  \"cvrofflinePinVerificationPerformed\": 1,\n  \"cvrofflinePinVerificationFailed\": 1,\n  \"cvvPinTryLimitExceeded\": 1,\n  \"posOffPremises\": 1,\n  \"posCardCapture\": 1,\n  \"posSecurity\": 0,\n  \"authResponseCode\": \"A\",\n  \"userIndicator04\": \"90151\",\n  \"userIndicator05\": \"90151\",\n  \"userIndicator08\": \"23dbc\",\n  \"userData04\": \"** * * * ** * * * **\",\n  \"userData05\": \"0X XA ** ** 5$ * * ** ** ** 43 sPs **\",\n  \"userData06\": \"5t01*******\",\n  \"checkNumber\": \"**\",\n  \"tokenRequestorId\": \"stringstring\",\n  \"recordCreationDate\": 20230410,\n  \"recordCreationTime\": 151250,\n  \"recordCreationMilliseconds\": 984,\n  \"userData01\": \"cfe8da2d-4\",\n  \"userData02\": \"4f8-43c5-a\",\n  \"userData09\": \"ae5-60ab7a\",\n  \"authId\": \"e3291f53d934\",\n  \"userData06_2\": \"e3291f53d934\",\n  \"userData03\": \"e3291f58-3d93-4\",\n  \"portfolio\": \"d43-ba70-4344e\",\n  \"onUsMerchantId\": \"03bfcb44**\",\n  \"eciIndicator\": 0,\n  \"expandedBIN\": \"5444\",\n  \"tranCode\": \"102\"\n}"
+      }
+    },
+    {
+      "_id": "req_java_analyze_2",
+      "_type": "request",
+      "parentId": "fld_java_transactions",
+      "name": "Analyze (idempotent #2)",
+      "method": "POST",
+      "url": "{{ _.java_api_url }}/transactions/analyze",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"workflow\": \"BRZLCREDIT\",\n  \"recordType\": \"CRTRAN25\",\n  \"dataSpecificationVersion\": 2.5,\n  \"transactionCurrencyCode\": 986,\n  \"clientIdFromHeader\": \"001\",\n  \"externalTransactionId\": \"{{ _.tx_external_id }}\",\n  \"posEntryMode\": \"E\",\n  \"gmtOffset\": \"-03.00\",\n  \"customerIdFromHeader\": \"e1f75f3f9efb3fb7555\",\n  \"customerAcctNumber\": 1033550704,\n  \"pan\": \"LY7x6tYaSty0817777\",\n  \"transactionCurrencyConversionRate\": 0.19,\n  \"consumerAuthenticationScore\": 999,\n  \"externalScore3\": 998,\n  \"cavvResult\": 0,\n  \"transactionDate\": 20250210,\n  \"transactionTime\": 11413,\n  \"transactionAmount\": 9999999999.99,\n  \"mcc\": 3121,\n  \"eciIndicator\": 0,\n  \"atcCard\": 9999,\n  \"atcHost\": 9999,\n  \"tokenAssuranceLevel\": 50,\n  \"availableCredit\": 999999999,\n  \"cardCashBalance\": 999999999.99,\n  \"cardDelinquentAmount\": 0\n}"
+      }
+    },
+    {
+      "_id": "req_java_analyze_validation_400",
+      "_type": "request",
+      "parentId": "fld_java_transactions",
+      "name": "Analyze (400 validação)",
+      "method": "POST",
+      "url": "{{ _.java_api_url }}/transactions/analyze",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{}"
+      }
+    },
+    {
+      "_id": "req_java_analyze_advanced",
+      "_type": "request",
+      "parentId": "fld_java_transactions",
+      "name": "Analyze Advanced",
+      "method": "POST",
+      "url": "{{ _.java_api_url }}/transactions/analyze-advanced",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"externalTransactionId\": \"hml-adv-001\",\n  \"customerIdFromHeader\": \"cust-adv\",\n  \"customerAcctNumber\": 123,\n  \"pan\": \"4111111111111111\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 1500.0,\n  \"transactionDate\": 20250210,\n  \"transactionTime\": 101010,\n  \"mcc\": 7995,\n  \"consumerAuthenticationScore\": 50,\n  \"externalScore3\": 50,\n  \"cavvResult\": 0,\n  \"eciIndicator\": 5,\n  \"atcCard\": 1,\n  \"atcHost\": 1,\n  \"tokenAssuranceLevel\": 60,\n  \"availableCredit\": 1000.0,\n  \"cardCashBalance\": 100.0,\n  \"cardDelinquentAmount\": 0.0,\n  \"avsRequest\": \"N\"\n}"
+      }
+    },
+    {
+      "_id": "req_java_tx_list",
+      "_type": "request",
+      "parentId": "fld_java_transactions",
+      "name": "List",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/transactions?page=0&size=20",
+      "headers": []
+    },
+    {
+      "_id": "req_java_tx_list_bad_date",
+      "_type": "request",
+      "parentId": "fld_java_transactions",
+      "name": "List (400 data inválida)",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/transactions?startDate=INVALID&endDate=INVALID",
+      "headers": []
+    },
+    {
+      "_id": "req_java_tx_get_by_id",
+      "_type": "request",
+      "parentId": "fld_java_transactions",
+      "name": "Get by id",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/transactions/{{ _.tx_id }}",
+      "headers": []
+    },
+    {
+      "_id": "req_java_tx_get_by_id_404",
+      "_type": "request",
+      "parentId": "fld_java_transactions",
+      "name": "Get by id (404)",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/transactions/99999999",
+      "headers": []
+    },
+    {
+      "_id": "req_java_tx_get_by_external",
+      "_type": "request",
+      "parentId": "fld_java_transactions",
+      "name": "Get by externalId",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/transactions/external/{{ _.tx_external_id }}",
+      "headers": []
+    },
+    {
+      "_id": "req_java_tx_get_by_external_404",
+      "_type": "request",
+      "parentId": "fld_java_transactions",
+      "name": "Get by externalId (404)",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/transactions/external/{{ _.missing_external_id }}",
+      "headers": []
+    },
+
+    { "_id": "fld_java_rules", "_type": "request_group", "parentId": "fld_java", "name": "Rules" },
+
+    {
+      "_id": "req_java_rules_list",
+      "_type": "request",
+      "parentId": "fld_java_rules",
+      "name": "List",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/rules?page=0&size=20",
+      "headers": []
+    },
+    {
+      "_id": "req_java_rules_get",
+      "_type": "request",
+      "parentId": "fld_java_rules",
+      "name": "Get by id",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/rules/{{ _.rule_id }}",
+      "headers": []
+    },
+    {
+      "_id": "req_java_rules_get_404",
+      "_type": "request",
+      "parentId": "fld_java_rules",
+      "name": "Get by id (404)",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/rules/99999999",
+      "headers": []
+    },
+    {
+      "_id": "req_java_rules_create",
+      "_type": "request",
+      "parentId": "fld_java_rules",
+      "name": "Create",
+      "method": "POST",
+      "url": "{{ _.java_api_url }}/rules",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"ruleName\": \"HML_SAMPLE_RULE\",\n  \"description\": \"Regra para evidência HML\",\n  \"ruleType\": \"SECURITY\",\n  \"threshold\": 10,\n  \"weight\": 50,\n  \"enabled\": true,\n  \"classification\": \"SUSPICIOUS\",\n  \"parameters\": \"{}\",\n  \"conditions\": [\n    {\"field\": \"mcc\", \"operator\": \"==\", \"value\": \"3121\"}\n  ],\n  \"logicOperator\": \"AND\"\n}"
+      }
+    },
+    {
+      "_id": "req_java_rules_create_409",
+      "_type": "request",
+      "parentId": "fld_java_rules",
+      "name": "Create (409 duplicada)",
+      "method": "POST",
+      "url": "{{ _.java_api_url }}/rules",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"ruleName\": \"HML_SAMPLE_RULE\",\n  \"description\": \"Regra duplicada\",\n  \"ruleType\": \"SECURITY\",\n  \"threshold\": 10,\n  \"weight\": 50,\n  \"enabled\": true,\n  \"classification\": \"SUSPICIOUS\",\n  \"parameters\": \"{}\",\n  \"conditions\": [\n    {\"field\": \"mcc\", \"operator\": \"==\", \"value\": \"3121\"}\n  ],\n  \"logicOperator\": \"AND\"\n}"
+      }
+    },
+    {
+      "_id": "req_java_rules_update",
+      "_type": "request",
+      "parentId": "fld_java_rules",
+      "name": "Update",
+      "method": "PUT",
+      "url": "{{ _.java_api_url }}/rules/{{ _.rule_id }}",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"id\": {{ _.rule_id }},\n  \"ruleName\": \"HML_SAMPLE_RULE\",\n  \"description\": \"Atualizada\",\n  \"ruleType\": \"SECURITY\",\n  \"threshold\": 5,\n  \"weight\": 60,\n  \"enabled\": true,\n  \"classification\": \"FRAUD\",\n  \"parameters\": \"{}\",\n  \"conditions\": [\n    {\"field\": \"mcc\", \"operator\": \"==\", \"value\": \"3121\"}\n  ],\n  \"logicOperator\": \"AND\"\n}"
+      }
+    },
+    {
+      "_id": "req_java_rules_toggle",
+      "_type": "request",
+      "parentId": "fld_java_rules",
+      "name": "Toggle",
+      "method": "PATCH",
+      "url": "{{ _.java_api_url }}/rules/{{ _.rule_id }}/toggle",
+      "headers": []
+    },
+    {
+      "_id": "req_java_rules_enabled_true",
+      "_type": "request",
+      "parentId": "fld_java_rules",
+      "name": "List enabled=true",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/rules/enabled/true",
+      "headers": []
+    },
+    {
+      "_id": "req_java_rules_history",
+      "_type": "request",
+      "parentId": "fld_java_rules",
+      "name": "History",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/rules/{{ _.rule_id }}/history",
+      "headers": []
+    },
+    {
+      "_id": "req_java_rules_delete",
+      "_type": "request",
+      "parentId": "fld_java_rules",
+      "name": "Delete",
+      "method": "DELETE",
+      "url": "{{ _.java_api_url }}/rules/{{ _.rule_id }}",
+      "headers": []
+    },
+
+    { "_id": "fld_java_audit", "_type": "request_group", "parentId": "fld_java", "name": "Audit" },
+    {
+      "_id": "req_java_audit_list",
+      "_type": "request",
+      "parentId": "fld_java_audit",
+      "name": "List",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/audit?page=0&size=50",
+      "headers": []
+    },
+    {
+      "_id": "req_java_audit_list_bad_date",
+      "_type": "request",
+      "parentId": "fld_java_audit",
+      "name": "List (400 data inválida)",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/audit?startDate=INVALID",
+      "headers": []
+    },
+    {
+      "_id": "req_java_audit_by_tx",
+      "_type": "request",
+      "parentId": "fld_java_audit",
+      "name": "By transactionId",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/audit/transaction/{{ _.tx_id }}?page=0&size=50",
+      "headers": []
+    },
+
+    { "_id": "fld_java_metrics", "_type": "request_group", "parentId": "fld_java", "name": "Metrics" },
+    { "_id": "req_java_metrics", "_type": "request", "parentId": "fld_java_metrics", "name": "Get", "method": "GET", "url": "{{ _.java_api_url }}/metrics", "headers": [] },
+    { "_id": "req_java_metrics_mcc", "_type": "request", "parentId": "fld_java_metrics", "name": "MCC", "method": "GET", "url": "{{ _.java_api_url }}/metrics/mcc", "headers": [] },
+    { "_id": "req_java_metrics_merchant", "_type": "request", "parentId": "fld_java_metrics", "name": "Merchant", "method": "GET", "url": "{{ _.java_api_url }}/metrics/merchant", "headers": [] },
+    { "_id": "req_java_metrics_timeline", "_type": "request", "parentId": "fld_java_metrics", "name": "Timeline", "method": "GET", "url": "{{ _.java_api_url }}/metrics/timeline", "headers": [] },
+
+    { "_id": "fld_java_homolog", "_type": "request_group", "parentId": "fld_java", "name": "Homolog" },
+    {
+      "_id": "req_java_hml_create_rule",
+      "_type": "request",
+      "parentId": "fld_java_homolog",
+      "name": "Create RuleVersion",
+      "method": "POST",
+      "url": "{{ _.java_api_url }}/homolog/rules",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "X-Actor-Email", "value": "{{ _.actor_email }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"key\": \"HML_RULE_001\",\n  \"title\": \"Regra HML 001\",\n  \"priority\": 1,\n  \"severity\": 80,\n  \"decision\": \"SUSPEITA_DE_FRAUDE\",\n  \"reasonTemplate\": \"HML: mcc={{mcc}}\",\n  \"fieldsUsed\": [\"mcc\"],\n  \"logic\": \"AND\",\n  \"conditions\": [\n    {\"field\": \"mcc\", \"operator\": \"==\", \"value\": \"3121\"}\n  ],\n  \"enabled\": true\n}"
+      }
+    },
+    {
+      "_id": "req_java_hml_latest",
+      "_type": "request",
+      "parentId": "fld_java_homolog",
+      "name": "Get Latest (404 estruturado se missing)",
+      "method": "GET",
+      "url": "{{ _.java_api_url }}/homolog/rules/{{ _.homolog_rule_id }}/latest",
+      "headers": []
+    },
+    {
+      "_id": "req_java_hml_publish_rule",
+      "_type": "request",
+      "parentId": "fld_java_homolog",
+      "name": "Publish RuleVersion",
+      "method": "POST",
+      "url": "{{ _.java_api_url }}/homolog/rules/versions/{{ _.homolog_rule_version_id }}/publish",
+      "headers": [
+        { "name": "X-Actor-Email", "value": "{{ _.actor_email }}" }
+      ]
+    },
+    {
+      "_id": "req_java_hml_rollback",
+      "_type": "request",
+      "parentId": "fld_java_homolog",
+      "name": "Rollback Rule",
+      "method": "POST",
+      "url": "{{ _.java_api_url }}/homolog/rules/{{ _.homolog_rule_id }}/rollback/1",
+      "headers": [
+        { "name": "X-Actor-Email", "value": "{{ _.actor_email }}" }
+      ]
+    },
+    {
+      "_id": "req_java_hml_create_ruleset",
+      "_type": "request",
+      "parentId": "fld_java_homolog",
+      "name": "Create RuleSet draft",
+      "method": "POST",
+      "url": "{{ _.java_api_url }}/homolog/rulesets",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "X-Actor-Email", "value": "{{ _.actor_email }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"key\": \"HML_RULESET_001\",\n  \"title\": \"RuleSet HML 001\",\n  \"ruleVersionIds\": [\"{{ _.homolog_rule_version_id }}\"],\n  \"notes\": \"HML\"\n}"
+      }
+    },
+    {
+      "_id": "req_java_hml_publish_ruleset",
+      "_type": "request",
+      "parentId": "fld_java_homolog",
+      "name": "Publish RuleSet",
+      "method": "POST",
+      "url": "{{ _.java_api_url }}/homolog/rulesets/versions/{{ _.ruleset_version_id }}/publish",
+      "headers": [
+        { "name": "X-Actor-Email", "value": "{{ _.actor_email }}" }
+      ]
+    },
+    {
+      "_id": "req_java_hml_activate_ruleset",
+      "_type": "request",
+      "parentId": "fld_java_homolog",
+      "name": "Activate RuleSet",
+      "method": "POST",
+      "url": "{{ _.java_api_url }}/homolog/rulesets/activate",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "X-Actor-Email", "value": "{{ _.actor_email }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{ \"ruleSetVersionId\": \"{{ _.ruleset_version_id }}\" }"
+      }
+    },
+    {
+      "_id": "req_java_hml_simulate",
+      "_type": "request",
+      "parentId": "fld_java_homolog",
+      "name": "Simulation Run",
+      "method": "POST",
+      "url": "{{ _.java_api_url }}/homolog/simulations/run",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "X-Actor-Email", "value": "{{ _.actor_email }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"HML sim 001\",\n  \"ruleSetVersionId\": \"{{ _.ruleset_version_id }}\",\n  \"payload\": {\n    \"externalTransactionId\": \"hml-sim-001\",\n    \"customerIdFromHeader\": \"cust-sim\",\n    \"customerAcctNumber\": 123,\n    \"pan\": \"4111111111111111\",\n    \"transactionCurrencyCode\": 986,\n    \"transactionAmount\": 1500.0,\n    \"transactionDate\": 20250210,\n    \"transactionTime\": 101010,\n    \"mcc\": 3121,\n    \"consumerAuthenticationScore\": 50,\n    \"externalScore3\": 50,\n    \"cavvResult\": 0,\n    \"eciIndicator\": 0,\n    \"atcCard\": 1,\n    \"atcHost\": 1,\n    \"tokenAssuranceLevel\": 60,\n    \"availableCredit\": 1000.0,\n    \"cardCashBalance\": 100.0,\n    \"cardDelinquentAmount\": 0.0\n  }\n}"
+      }
+    },
+
+    { "_id": "fld_trpc", "_type": "request_group", "parentId": "wrk_rulex_hml", "name": "Node tRPC" },
+
+    {
+      "_id": "req_trpc_system_health",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "system.health (batch)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/system.health?batch=1",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"0\": {\n    \"json\": {\n      \"timestamp\": 0\n    }\n  }\n}"
+      }
+    },
+    {
+      "_id": "req_trpc_auth_me",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "auth.me (batch)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/auth.me?batch=1",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Cookie", "value": "{{ _.cookie_name }}={{ _.session_cookie }}" }
+      ],
+      "body": { "mimeType": "application/json", "text": "{\n  \"0\": {\n    \"json\": null\n  }\n}" }
+    },
+    {
+      "_id": "req_trpc_auth_logout",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "auth.logout (batch)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/auth.logout?batch=1",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Cookie", "value": "{{ _.cookie_name }}={{ _.session_cookie }}" }
+      ],
+      "body": { "mimeType": "application/json", "text": "{\n  \"0\": {\n    \"json\": null\n  }\n}" }
+    },
+
+    {
+      "_id": "req_trpc_rules_list",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "rules.list (batch)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/rules.list?batch=1",
+      "headers": [ { "name": "Content-Type", "value": "application/json" } ],
+      "body": { "mimeType": "application/json", "text": "{\n  \"0\": {\n    \"json\": null\n  }\n}" }
+    },
+    {
+      "_id": "req_trpc_rules_get",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "rules.getById (batch)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/rules.getById?batch=1",
+      "headers": [ { "name": "Content-Type", "value": "application/json" } ],
+      "body": { "mimeType": "application/json", "text": "{\n  \"0\": {\n    \"json\": {\n      \"id\": 1\n    }\n  }\n}" }
+    },
+    {
+      "_id": "req_trpc_rules_list_active",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "rules.listActive (batch)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/rules.listActive?batch=1",
+      "headers": [ { "name": "Content-Type", "value": "application/json" } ],
+      "body": { "mimeType": "application/json", "text": "{\n  \"0\": {\n    \"json\": null\n  }\n}" }
+    },
+    {
+      "_id": "req_trpc_rules_history",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "rules.history (batch)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/rules.history?batch=1",
+      "headers": [ { "name": "Content-Type", "value": "application/json" } ],
+      "body": { "mimeType": "application/json", "text": "{\n  \"0\": {\n    \"json\": {\n      \"ruleId\": 1\n    }\n  }\n}" }
+    },
+    {
+      "_id": "req_trpc_rules_update",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "rules.update (protected)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/rules.update?batch=1",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Cookie", "value": "{{ _.cookie_name }}={{ _.session_cookie }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"0\": {\n    \"json\": {\n      \"id\": 1,\n      \"data\": {\n        \"description\": \"Atualizada via tRPC\",\n        \"isActive\": true\n      }\n    }\n  }\n}"
+      }
+    },
+    {
+      "_id": "req_trpc_rules_toggle",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "rules.toggle (protected)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/rules.toggle?batch=1",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Cookie", "value": "{{ _.cookie_name }}={{ _.session_cookie }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"0\": {\n    \"json\": {\n      \"id\": 1,\n      \"isActive\": false\n    }\n  }\n}"
+      }
+    },
+    {
+      "_id": "req_trpc_rules_delete",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "rules.delete (protected)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/rules.delete?batch=1",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Cookie", "value": "{{ _.cookie_name }}={{ _.session_cookie }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"0\": {\n    \"json\": {\n      \"id\": 1\n    }\n  }\n}"
+      }
+    },
+    {
+      "_id": "req_trpc_audit_list",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "audit.list (batch)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/audit.list?batch=1",
+      "headers": [ { "name": "Content-Type", "value": "application/json" } ],
+      "body": { "mimeType": "application/json", "text": "{\n  \"0\": {\n    \"json\": {\n      \"limit\": 50\n    }\n  }\n}" }
+    },
+    {
+      "_id": "req_trpc_metrics_get",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "metrics.get (batch)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/metrics.get?batch=1",
+      "headers": [ { "name": "Content-Type", "value": "application/json" } ],
+      "body": { "mimeType": "application/json", "text": "{\n  \"0\": {\n    \"json\": null\n  }\n}" }
+    },
+
+    {
+      "_id": "req_trpc_rules_create",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "rules.create (protected)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/rules.create?batch=1",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Cookie", "value": "{{ _.cookie_name }}={{ _.session_cookie }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"0\": {\n    \"json\": {\n      \"name\": \"tRPC HML Rule\",\n      \"description\": \"Regra via tRPC\",\n      \"category\": \"VALUE\",\n      \"classification\": \"SUSPICIOUS\",\n      \"weight\": 50,\n      \"conditions\": [\n        { \"field\": \"mcc\", \"operator\": \"==\", \"value\": 3121 }\n      ],\n      \"logicOperator\": \"AND\",\n      \"isActive\": true\n    }\n  }\n}"
+      }
+    },
+    {
+      "_id": "req_trpc_system_notify_owner",
+      "_type": "request",
+      "parentId": "fld_trpc",
+      "name": "system.notifyOwner (admin)",
+      "method": "POST",
+      "url": "{{ _.node_base_url }}/api/trpc/system.notifyOwner?batch=1",
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Cookie", "value": "{{ _.cookie_name }}={{ _.session_cookie }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"0\": {\n    \"json\": {\n      \"title\": \"HML notify\",\n      \"content\": \"Evidência de adminProcedure\"\n    }\n  }\n}"
+      }
+    }
+  ]
+}

@@ -23,6 +23,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AnalyzeTransactionResponse'
+  /api/transactions/analyze-advanced:
+    post:
+      summary: Analyze a transaction using advanced hard rules
+      operationId: analyzeTransactionAdvanced
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeTransactionRequest'
+      responses:
+        '200':
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeTransactionResponse'
   /api/transactions:
     get:
       summary: List transactions
@@ -71,6 +88,22 @@ paths:
           name: id
           required: true
           schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: Transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeTransactionResponse'
+  /api/transactions/external/{externalId}:
+    get:
+      summary: Get transaction by external id
+      operationId: getTransactionByExternalId
+      parameters:
+        - in: path
+          name: externalId
+          required: true
+          schema: { type: string }
       responses:
         '200':
           description: Transaction
@@ -221,6 +254,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Metrics'
+  /api/metrics/mcc:
+    get:
+      summary: Get metrics grouped by MCC
+      operationId: getMetricsByMcc
+      parameters:
+        - in: query
+          name: period
+          schema: { type: string, example: 24h }
+      responses:
+        '200':
+          description: Metrics by MCC
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/metrics/merchant:
+    get:
+      summary: Get metrics grouped by merchant
+      operationId: getMetricsByMerchant
+      parameters:
+        - in: query
+          name: period
+          schema: { type: string, example: 24h }
+      responses:
+        '200':
+          description: Metrics by merchant
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/metrics/timeline:
+    get:
+      summary: Get metrics timeline
+      operationId: getMetricsTimeline
+      parameters:
+        - in: query
+          name: granularity
+          schema: { type: string, example: hour }
+      responses:
+        '200':
+          description: Metrics timeline
+          content:
+            application/json:
+              schema:
+                type: object
 components:
   schemas:
     AnalyzeTransactionRequest:

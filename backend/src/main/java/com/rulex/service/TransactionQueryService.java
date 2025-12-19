@@ -1,6 +1,7 @@
 package com.rulex.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rulex.api.NotFoundException;
 import com.rulex.dto.TransactionResponse;
 import com.rulex.dto.TriggeredRuleDTO;
 import com.rulex.entity.Transaction;
@@ -51,7 +52,7 @@ public class TransactionQueryService {
     Transaction transaction =
         transactionRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
+            .orElseThrow(() -> new NotFoundException("Transação não encontrada"));
 
     return convertToResponse(transaction);
   }
@@ -61,7 +62,7 @@ public class TransactionQueryService {
     Transaction transaction =
         transactionRepository
             .findByExternalTransactionId(externalId)
-            .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
+            .orElseThrow(() -> new NotFoundException("Transação não encontrada"));
 
     return convertToResponse(transaction);
   }

@@ -1,9 +1,11 @@
 package com.rulex.service;
 
 import com.rulex.dto.TransactionRequest;
+import com.rulex.dto.TriggeredRuleDTO;
 import com.rulex.repository.TransactionRepository;
 import com.rulex.util.PanMaskingUtil;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class AdvancedRuleEngineService {
 
   private final TransactionRepository transactionRepository;
   private final AuditService auditService;
+  private final Clock clock;
 
   public enum RuleCategory {
     EMV_SECURITY,
@@ -42,6 +45,8 @@ public class AdvancedRuleEngineService {
     SUSPICIOUS,
     FRAUD
   }
+
+  public record AdvancedExecution(RuleResult result, List<TriggeredRuleDTO> triggeredRules) {}
 
   // ==================== GRUPO 1: EMV SECURITY (2 Regras) ====================
 
@@ -149,7 +154,7 @@ public class AdvancedRuleEngineService {
     log.debug("Executando regra: SUSPICIOUS_TERMINAL");
 
     if ("A".equals(transaction.getTerminalType())
-        && transaction.getPosOffPremises() == 1
+        && Integer.valueOf(1).equals(transaction.getPosOffPremises())
         && transaction.getTransactionAmount().compareTo(new BigDecimal("5000")) > 0) {
       auditService.logRule("SUSPICIOUS_TERMINAL", transaction, "SUSPICIOUS");
       return RuleResult.SUSPICIOUS;
@@ -162,7 +167,7 @@ public class AdvancedRuleEngineService {
   public RuleResult checkEcommerceNoAVS(TransactionRequest transaction) {
     log.debug("Executando regra: ECOMMERCE_NO_AVS");
 
-    if (transaction.getEciIndicator() == 5
+    if (Integer.valueOf(5).equals(transaction.getEciIndicator())
         && "N".equals(transaction.getAvsRequest())
         && transaction.getTransactionAmount().compareTo(new BigDecimal("1000")) > 0) {
       auditService.logRule("ECOMMERCE_NO_AVS", transaction, "SUSPICIOUS");
@@ -176,7 +181,7 @@ public class AdvancedRuleEngineService {
   public RuleResult checkPOSSecurityMissing(TransactionRequest transaction) {
     log.debug("Executando regra: POS_SECURITY_MISSING");
 
-    if (transaction.getPosSecurity() == 0
+    if (Integer.valueOf(0).equals(transaction.getPosSecurity())
         && "C".equals(transaction.getPosEntryMode())
         && transaction.getTransactionAmount().compareTo(new BigDecimal("2000")) > 0) {
       auditService.logRule("POS_SECURITY_MISSING", transaction, "SUSPICIOUS");
@@ -190,11 +195,11 @@ public class AdvancedRuleEngineService {
   public RuleResult checkCardCaptureFraud(TransactionRequest transaction) {
     log.debug("Executando regra: CARD_CAPTURE_FRAUD");
 
-    if (transaction.getPosCardCapture() == 1) {
+    if (Integer.valueOf(1).equals(transaction.getPosCardCapture())) {
       String maskedPan = PanMaskingUtil.mask(transaction.getPan());
       long captureCount =
           transactionRepository.countCardCapturesSince(
-              maskedPan, LocalDateTime.now().minusDays(30));
+              maskedPan, LocalDateTime.now(clock).minusDays(30));
       if (captureCount > 2) {
         auditService.logRule("CARD_CAPTURE_FRAUD", transaction, "FRAUD");
         return RuleResult.FRAUD;
@@ -210,7 +215,7 @@ public class AdvancedRuleEngineService {
   public RuleResult checkPinCvvLimitExceeded(TransactionRequest transaction) {
     log.debug("Executando regra: PIN_CVV_LIMIT_EXCEEDED");
 
-    if (transaction.getCvvPinTryLimitExceeded() == 1) {
+    if (Integer.valueOf(1).equals(transaction.getCvvPinTryLimitExceeded())) {
       auditService.logRule("PIN_CVV_LIMIT_EXCEEDED", transaction, "FRAUD");
       return RuleResult.FRAUD;
     }
@@ -222,8 +227,8 @@ public class AdvancedRuleEngineService {
   public RuleResult checkOfflinePinFailed(TransactionRequest transaction) {
     log.debug("Executando regra: OFFLINE_PIN_FAILED");
 
-    if (transaction.getCvrofflinePinVerificationPerformed() == 1
-        && transaction.getCvrofflinePinVerificationFailed() == 1) {
+    if (Integer.valueOf(1).equals(transaction.getCvrofflinePinVerificationPerformed())
+        && Integer.valueOf(1).equals(transaction.getCvrofflinePinVerificationFailed())) {
       auditService.logRule("OFFLINE_PIN_FAILED", transaction, "FRAUD");
       return RuleResult.FRAUD;
     }
@@ -351,7 +356,8 @@ public class AdvancedRuleEngineService {
   public RuleResult checkUnexpectedCurrency(TransactionRequest transaction) {
     log.debug("Executando regra: UNEXPECTED_CURRENCY");
 
-    if (transaction.getTransactionCurrencyCode() != 986
+    if (transaction.getTransactionCurrencyCode() != null
+        && transaction.getTransactionCurrencyCode() != 986
         && // 986 = BRL
         "076".equals(transaction.getMerchantCountryCode())
         && transaction.getTransactionAmount().compareTo(new BigDecimal("1000")) > 0) {
@@ -366,7 +372,8 @@ public class AdvancedRuleEngineService {
   public RuleResult checkAnomalousConversionRate(TransactionRequest transaction) {
     log.debug("Executando regra: ANOMALOUS_CONVERSION_RATE");
 
-    if (transaction.getTransactionCurrencyCode() != 986
+    if (transaction.getTransactionCurrencyCode() != null
+        && transaction.getTransactionCurrencyCode() != 986
         && transaction.getTransactionCurrencyConversionRate() != null) {
       BigDecimal avgRate =
           getAverageCurrencyConversionRate(transaction.getTransactionCurrencyCode(), 30);
@@ -392,10 +399,12 @@ public class AdvancedRuleEngineService {
     boolean cryptogramValidButCvvInvalid =
         "V".equals(transaction.getCryptogramValid()) && "N".equals(transaction.getCvv2Response());
     boolean cavvValidButPinInvalid =
-        transaction.getCavvResult() == 0 && "N".equals(transaction.getPinVerifyCode());
+      Integer.valueOf(0).equals(transaction.getCavvResult()) && "N".equals(transaction.getPinVerifyCode());
     boolean tokenSecureButScoreLow =
-        transaction.getTokenAssuranceLevel() > 50
-            && transaction.getConsumerAuthenticationScore() < 100;
+      transaction.getTokenAssuranceLevel() != null
+        && transaction.getTokenAssuranceLevel() > 50
+        && transaction.getConsumerAuthenticationScore() != null
+        && transaction.getConsumerAuthenticationScore() < 100;
 
     if (cryptogramValidButCvvInvalid || cavvValidButPinInvalid || tokenSecureButScoreLow) {
       auditService.logRule("INCOHERENT_AUTH_SEQUENCE", transaction, "SUSPICIOUS");
@@ -455,7 +464,8 @@ public class AdvancedRuleEngineService {
   public RuleResult checkSuspiciousAcquirer(TransactionRequest transaction) {
     log.debug("Executando regra: SUSPICIOUS_ACQUIRER");
 
-    if (!"076".equals(transaction.getAcquirerCountry())
+    if (transaction.getAcquirerCountry() != null
+        && !"076".equals(transaction.getAcquirerCountry())
         && !"840".equals(transaction.getAcquirerCountry())
         && !"392".equals(transaction.getAcquirerCountry())
         && transaction.getTransactionAmount().compareTo(new BigDecimal("10000")) > 0) {
@@ -470,7 +480,12 @@ public class AdvancedRuleEngineService {
   public RuleResult checkAcquirerCountryMismatch(TransactionRequest transaction) {
     log.debug("Executando regra: ACQUIRER_COUNTRY_MISMATCH");
 
-    if (!transaction.getAcquirerCountry().equals(transaction.getMerchantCountryCode())
+    String acquirerCountry = transaction.getAcquirerCountry();
+    String merchantCountryCode = transaction.getMerchantCountryCode();
+
+    if (acquirerCountry != null
+        && merchantCountryCode != null
+        && !acquirerCountry.equals(merchantCountryCode)
         && transaction.getTransactionAmount().compareTo(new BigDecimal("5000")) > 0) {
       auditService.logRule("ACQUIRER_COUNTRY_MISMATCH", transaction, "SUSPICIOUS");
       return RuleResult.SUSPICIOUS;
@@ -485,8 +500,13 @@ public class AdvancedRuleEngineService {
   public RuleResult checkCombinedScore(TransactionRequest transaction) {
     log.debug("Executando regra: COMBINED_SCORE_CHECK");
 
-    int combinedScore =
-        (transaction.getConsumerAuthenticationScore() + transaction.getExternalScore3()) / 2;
+    Integer consumerAuthenticationScore = transaction.getConsumerAuthenticationScore();
+    Integer externalScore3 = transaction.getExternalScore3();
+    if (consumerAuthenticationScore == null || externalScore3 == null) {
+      return RuleResult.APPROVED;
+    }
+
+    int combinedScore = (consumerAuthenticationScore + externalScore3) / 2;
 
     if (combinedScore < 100) {
       auditService.logRule("COMBINED_SCORE_CHECK", transaction, "FRAUD");
@@ -506,7 +526,7 @@ public class AdvancedRuleEngineService {
     long count5min =
         Optional.ofNullable(
                 transactionRepository.countTransactionsByCustomerSince(
-                    transaction.getCustomerIdFromHeader(), LocalDateTime.now().minusMinutes(5)))
+            transaction.getCustomerIdFromHeader(), LocalDateTime.now(clock).minusMinutes(5)))
             .orElse(0L);
 
     if (count5min >= 3) {
@@ -517,7 +537,7 @@ public class AdvancedRuleEngineService {
     long count1hour =
         Optional.ofNullable(
                 transactionRepository.countTransactionsByCustomerSince(
-                    transaction.getCustomerIdFromHeader(), LocalDateTime.now().minusMinutes(60)))
+            transaction.getCustomerIdFromHeader(), LocalDateTime.now(clock).minusMinutes(60)))
             .orElse(0L);
 
     if (count1hour >= 10) {
@@ -583,48 +603,62 @@ public class AdvancedRuleEngineService {
 
   /** Executa todas as 28 regras e retorna o resultado mais severo */
   public RuleResult executeAllAdvancedRules(TransactionRequest transaction) {
+    return executeAllAdvancedRulesDetailed(transaction).result();
+  }
+
+  /** Executa todas as 28 regras e também retorna quais regras dispararam (para auditabilidade). */
+  public AdvancedExecution executeAllAdvancedRulesDetailed(TransactionRequest transaction) {
     log.info(
         "Executando todas as 28 regras avançadas para transação: {}",
         transaction.getExternalTransactionId());
 
+    List<TriggeredRuleDTO> triggered = new ArrayList<>();
+
     RuleResult[] results = {
-      checkEMVSecurity(transaction),
-      checkTerminalVerificationFailed(transaction),
-      checkExpiredCard(transaction),
-      checkSuspiciousTransactionType(transaction),
-      checkUnusualCardMedia(transaction),
-      checkSuspiciousTerminal(transaction),
-      checkEcommerceNoAVS(transaction),
-      checkPOSSecurityMissing(transaction),
-      checkCardCaptureFraud(transaction),
-      checkPinCvvLimitExceeded(transaction),
-      checkOfflinePinFailed(transaction),
-      checkMissingCvv2HighRisk(transaction),
-      checkCustomIndicatorFraud(transaction),
-      checkProcessingLagAnomaly(transaction),
-      checkTimezoneNormalizedCheck(transaction),
-      checkDuplicateTransaction(transaction),
-      checkSuspiciousMerchantPostal(transaction),
-      checkSuspiciousToken(transaction),
-      checkUnexpectedCurrency(transaction),
-      checkAnomalousConversionRate(transaction),
-      checkIncoherentAuthSequence(transaction),
-      checkIncoherentContext(transaction),
-      checkContradictoryAuthorization(transaction),
-      checkSuspiciousAcquirer(transaction),
-      checkAcquirerCountryMismatch(transaction),
-      checkCombinedScore(transaction),
-      checkVelocityConsolidated(transaction),
-      checkCustomIndicatorsComprehensive(transaction)
+      track(triggered, "EMV_SECURITY_CHECK", checkEMVSecurity(transaction)),
+      track(triggered, "TERMINAL_VERIFICATION_FAILED", checkTerminalVerificationFailed(transaction)),
+      track(triggered, "EXPIRED_CARD", checkExpiredCard(transaction)),
+      track(triggered, "SUSPICIOUS_TRANSACTION_TYPE", checkSuspiciousTransactionType(transaction)),
+      track(triggered, "UNUSUAL_CARD_MEDIA", checkUnusualCardMedia(transaction)),
+      track(triggered, "SUSPICIOUS_TERMINAL", checkSuspiciousTerminal(transaction)),
+      track(triggered, "ECOMMERCE_NO_AVS", checkEcommerceNoAVS(transaction)),
+      track(triggered, "POS_SECURITY_MISSING", checkPOSSecurityMissing(transaction)),
+      track(triggered, "CARD_CAPTURE_FRAUD", checkCardCaptureFraud(transaction)),
+      track(triggered, "PIN_CVV_LIMIT_EXCEEDED", checkPinCvvLimitExceeded(transaction)),
+      track(triggered, "OFFLINE_PIN_FAILED", checkOfflinePinFailed(transaction)),
+      track(triggered, "MISSING_CVV2_HIGH_RISK", checkMissingCvv2HighRisk(transaction)),
+      track(triggered, "CUSTOM_INDICATOR_FRAUD", checkCustomIndicatorFraud(transaction)),
+      track(triggered, "PROCESSING_LAG_ANOMALY", checkProcessingLagAnomaly(transaction)),
+      track(triggered, "TIMEZONE_NORMALIZED_CHECK", checkTimezoneNormalizedCheck(transaction)),
+      track(triggered, "DUPLICATE_TRANSACTION", checkDuplicateTransaction(transaction)),
+      track(triggered, "SUSPICIOUS_MERCHANT_POSTAL", checkSuspiciousMerchantPostal(transaction)),
+      track(triggered, "SUSPICIOUS_TOKEN", checkSuspiciousToken(transaction)),
+      track(triggered, "UNEXPECTED_CURRENCY", checkUnexpectedCurrency(transaction)),
+      track(triggered, "ANOMALOUS_CONVERSION_RATE", checkAnomalousConversionRate(transaction)),
+      track(triggered, "INCOHERENT_AUTH_SEQUENCE", checkIncoherentAuthSequence(transaction)),
+      track(triggered, "INCOHERENT_CONTEXT", checkIncoherentContext(transaction)),
+      track(triggered, "CONTRADICTORY_AUTHORIZATION", checkContradictoryAuthorization(transaction)),
+      track(triggered, "SUSPICIOUS_ACQUIRER", checkSuspiciousAcquirer(transaction)),
+      track(triggered, "ACQUIRER_COUNTRY_MISMATCH", checkAcquirerCountryMismatch(transaction)),
+      track(triggered, "COMBINED_SCORE_CHECK", checkCombinedScore(transaction)),
+      track(triggered, "VELOCITY_CHECK_CONSOLIDATED", checkVelocityConsolidated(transaction)),
+      track(triggered, "CUSTOM_INDICATORS_COMPREHENSIVE", checkCustomIndicatorsComprehensive(transaction))
     };
 
-    // Retorna o resultado mais severo
+    RuleResult mostSevere = RuleResult.APPROVED;
     if (Arrays.stream(results).anyMatch(r -> r == RuleResult.FRAUD)) {
-      return RuleResult.FRAUD;
+      mostSevere = RuleResult.FRAUD;
     } else if (Arrays.stream(results).anyMatch(r -> r == RuleResult.SUSPICIOUS)) {
-      return RuleResult.SUSPICIOUS;
+      mostSevere = RuleResult.SUSPICIOUS;
     }
 
-    return RuleResult.APPROVED;
+    return new AdvancedExecution(mostSevere, triggered);
+  }
+
+  private RuleResult track(List<TriggeredRuleDTO> triggered, String ruleKey, RuleResult result) {
+    if (result != null && result != RuleResult.APPROVED) {
+      triggered.add(TriggeredRuleDTO.builder().name(ruleKey).detail("advanced").build());
+    }
+    return result;
   }
 }

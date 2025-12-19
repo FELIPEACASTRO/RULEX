@@ -126,10 +126,10 @@ public class Transaction {
   @Column(length = 1)
   private String cryptogramValid; // V = Válido
 
-  @Column(length = 1)
+  @Column(name = "cvv2_response", length = 1)
   private String cvv2Response; // M = Match, N = No Match
 
-  @Column(length = 1)
+  @Column(name = "cvv2_present", length = 1)
   private String cvv2Present;
 
   @Column(length = 1)
@@ -182,12 +182,18 @@ public class Transaction {
 
   @PrePersist
   protected void onCreate() {
-    createdAt = LocalDateTime.now();
-    updatedAt = LocalDateTime.now();
+    if (createdAt == null) {
+      createdAt = LocalDateTime.now();
+    }
+    if (updatedAt == null) {
+      updatedAt = createdAt;
+    }
   }
 
   @PreUpdate
   protected void onUpdate() {
-    updatedAt = LocalDateTime.now();
+    if (updatedAt == null) {
+      updatedAt = LocalDateTime.now();
+    }
   }
 }

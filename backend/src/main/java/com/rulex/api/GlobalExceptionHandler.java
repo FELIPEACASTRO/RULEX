@@ -1,6 +1,7 @@
 package com.rulex.api;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.format.DateTimeParseException;
 import java.time.OffsetDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,20 @@ public class GlobalExceptionHandler {
       IllegalArgumentException ex, HttpServletRequest req) {
     log.warn("⚠️ Requisição inválida path={} msg={}", req.getRequestURI(), ex.getMessage());
     return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req);
+  }
+
+  @ExceptionHandler(DateTimeParseException.class)
+  public ResponseEntity<ApiErrorResponse> handleDateParse(
+      DateTimeParseException ex, HttpServletRequest req) {
+    log.warn("⚠️ Data/hora inválida path={} msg={}", req.getRequestURI(), ex.getMessage());
+    return build(HttpStatus.BAD_REQUEST, "Formato de data/hora inválido", req);
+  }
+
+  @ExceptionHandler(NotFoundException.class)
+  public ResponseEntity<ApiErrorResponse> handleNotFound(
+      NotFoundException ex, HttpServletRequest req) {
+    log.warn("⚠️ Recurso não encontrado path={} msg={}", req.getRequestURI(), ex.getMessage());
+    return build(HttpStatus.NOT_FOUND, ex.getMessage(), req);
   }
 
   @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})

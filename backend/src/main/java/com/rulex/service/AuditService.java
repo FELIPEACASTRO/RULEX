@@ -7,6 +7,8 @@ import com.rulex.entity.Transaction;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.AuditLogRepository;
 import com.rulex.service.RuleEngineService.RuleEvaluationResult;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class AuditService {
 
   private final AuditLogRepository auditLogRepository;
   private final ObjectMapper objectMapper;
+  private final Clock clock;
 
   /** Registra o processamento de uma transação. */
   public void logTransactionProcessed(
@@ -48,6 +51,7 @@ public class AuditService {
                       decision.getClassification().getLabel()))
               .details(objectMapper.writeValueAsString(details))
               .result(AuditLog.AuditResult.SUCCESS)
+              .createdAt(LocalDateTime.now(clock))
               .build();
 
       auditLogRepository.save(auditLog);
@@ -82,6 +86,7 @@ public class AuditService {
               .description(String.format("Erro ao processar transação %s", transactionId))
               .result(AuditLog.AuditResult.FAILURE)
               .errorMessage(exception.getMessage())
+            .createdAt(LocalDateTime.now(clock))
               .build();
 
       auditLogRepository.save(auditLog);
@@ -99,6 +104,7 @@ public class AuditService {
               .description(String.format("Regra '%s' criada", ruleName))
               .performedBy(performedBy)
               .result(AuditLog.AuditResult.SUCCESS)
+            .createdAt(LocalDateTime.now(clock))
               .build();
 
       auditLogRepository.save(auditLog);
@@ -117,6 +123,7 @@ public class AuditService {
               .details(objectMapper.writeValueAsString(changes))
               .performedBy(performedBy)
               .result(AuditLog.AuditResult.SUCCESS)
+            .createdAt(LocalDateTime.now(clock))
               .build();
 
       auditLogRepository.save(auditLog);
@@ -134,6 +141,7 @@ public class AuditService {
               .description(String.format("Regra '%s' deletada", ruleName))
               .performedBy(performedBy)
               .result(AuditLog.AuditResult.SUCCESS)
+            .createdAt(LocalDateTime.now(clock))
               .build();
 
       auditLogRepository.save(auditLog);
@@ -158,6 +166,7 @@ public class AuditService {
               .details(objectMapper.writeValueAsString(details))
               .performedBy("SYSTEM")
               .result(AuditLog.AuditResult.SUCCESS)
+            .createdAt(LocalDateTime.now(clock))
               .build();
 
       auditLogRepository.save(auditLog);

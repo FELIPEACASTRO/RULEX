@@ -84,8 +84,12 @@ public class RuleConfiguration {
 
   @PrePersist
   protected void onCreate() {
-    createdAt = LocalDateTime.now();
-    updatedAt = LocalDateTime.now();
+    if (createdAt == null) {
+      createdAt = LocalDateTime.now();
+    }
+    if (updatedAt == null) {
+      updatedAt = createdAt;
+    }
     version = 1;
     if (logicOperator == null) {
       logicOperator = LogicOperator.AND;
@@ -94,7 +98,9 @@ public class RuleConfiguration {
 
   @PreUpdate
   protected void onUpdate() {
-    updatedAt = LocalDateTime.now();
+    if (updatedAt == null) {
+      updatedAt = LocalDateTime.now();
+    }
   }
 
   public enum RuleType {

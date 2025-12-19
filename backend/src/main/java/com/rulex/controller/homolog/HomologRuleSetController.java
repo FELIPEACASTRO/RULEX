@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/homolog/rulesets")
+@RequestMapping("/homolog/rulesets")
 public class HomologRuleSetController {
 
   private final HomologRuleSetApplicationService ruleSetApplicationService;

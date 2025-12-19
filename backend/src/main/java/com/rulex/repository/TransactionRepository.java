@@ -75,12 +75,22 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
       @Param("customerId") String customerId, @Param("transactionDate") int transactionDate);
 
   @Query(
-      "SELECT AVG(t.transactionAmount) FROM Transaction t WHERE t.customerIdFromHeader = :customerId AND t.createdAt >= CURRENT_DATE - :days")
+      value =
+          "SELECT AVG(t.transaction_amount) "
+              + "FROM transactions t "
+              + "WHERE t.customer_id_from_header = :customerId "
+              + "AND t.created_at >= (now() - (:days * INTERVAL '1 day'))",
+      nativeQuery = true)
   Optional<BigDecimal> getCustomerAverageAmount(
       @Param("customerId") String customerId, @Param("days") int days);
 
   @Query(
-      "SELECT AVG(t.transactionCurrencyConversionRate) FROM Transaction t WHERE t.transactionCurrencyCode = :currencyCode AND t.createdAt >= CURRENT_DATE - :days")
+      value =
+          "SELECT AVG(t.transaction_currency_conversion_rate) "
+              + "FROM transactions t "
+              + "WHERE t.transaction_currency_code = :currencyCode "
+              + "AND t.created_at >= (now() - (:days * INTERVAL '1 day'))",
+      nativeQuery = true)
   Optional<BigDecimal> getAverageCurrencyConversionRate(
       @Param("currencyCode") int currencyCode, @Param("days") int days);
 }

@@ -41,27 +41,22 @@ public class AuditController {
         page,
         size);
 
-    try {
-      Pageable pageable = PageRequest.of(page, size);
+    Pageable pageable = PageRequest.of(page, size);
 
-      LocalDateTime startDateTime = null;
-      LocalDateTime endDateTime = null;
+    LocalDateTime startDateTime = null;
+    LocalDateTime endDateTime = null;
 
-      if (startDate != null && !startDate.isEmpty()) {
-        startDateTime = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_DATE_TIME);
-      }
-      if (endDate != null && !endDate.isEmpty()) {
-        endDateTime = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_DATE_TIME);
-      }
-
-      Page<AuditLogDTO> logs =
-          auditQueryService.findAuditLogs(actionType, result, startDateTime, endDateTime, pageable);
-
-      return ResponseEntity.ok(logs);
-    } catch (Exception e) {
-      log.error("Erro ao listar logs de auditoria", e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    if (startDate != null && !startDate.isEmpty()) {
+      startDateTime = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_DATE_TIME);
     }
+    if (endDate != null && !endDate.isEmpty()) {
+      endDateTime = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_DATE_TIME);
+    }
+
+    Page<AuditLogDTO> logs =
+        auditQueryService.findAuditLogs(actionType, result, startDateTime, endDateTime, pageable);
+
+    return ResponseEntity.ok(logs);
   }
 
   /**
@@ -76,14 +71,8 @@ public class AuditController {
 
     log.info("Obtendo logs de auditoria para transação: {}", transactionId);
 
-    try {
-      Pageable pageable = PageRequest.of(page, size);
-      Page<AuditLogDTO> logs =
-          auditQueryService.findAuditLogsByTransactionId(transactionId, pageable);
-      return ResponseEntity.ok(logs);
-    } catch (Exception e) {
-      log.error("Erro ao obter logs de auditoria", e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
+    Pageable pageable = PageRequest.of(page, size);
+    Page<AuditLogDTO> logs = auditQueryService.findAuditLogsByTransactionId(transactionId, pageable);
+    return ResponseEntity.ok(logs);
   }
 }

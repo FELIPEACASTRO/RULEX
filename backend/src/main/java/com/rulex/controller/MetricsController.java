@@ -23,13 +23,8 @@ public class MetricsController {
 
     log.info("Obtendo métricas: period={}", period);
 
-    try {
-      MetricsDTO metrics = metricsService.getMetrics(period);
-      return ResponseEntity.ok(metrics);
-    } catch (Exception e) {
-      log.error("Erro ao obter métricas", e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
+    MetricsDTO metrics = metricsService.getMetrics(period);
+    return ResponseEntity.ok(metrics);
   }
 
   /** Obtém métricas por MCC. GET /api/metrics/mcc */
@@ -38,13 +33,8 @@ public class MetricsController {
 
     log.info("Obtendo métricas por MCC: period={}", period);
 
-    try {
-      var metrics = metricsService.getMetricsByMcc(period);
-      return ResponseEntity.ok(metrics);
-    } catch (Exception e) {
-      log.error("Erro ao obter métricas por MCC", e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
+    var metrics = metricsService.getMetricsByMcc(period);
+    return ResponseEntity.ok(metrics);
   }
 
   /** Obtém métricas por merchant. GET /api/metrics/merchant */
@@ -53,13 +43,8 @@ public class MetricsController {
 
     log.info("Obtendo métricas por merchant: period={}", period);
 
-    try {
-      var metrics = metricsService.getMetricsByMerchant(period);
-      return ResponseEntity.ok(metrics);
-    } catch (Exception e) {
-      log.error("Erro ao obter métricas por merchant", e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
+    var metrics = metricsService.getMetricsByMerchant(period);
+    return ResponseEntity.ok(metrics);
   }
 
   /** Obtém métricas por período. GET /api/metrics/timeline */
@@ -68,12 +53,7 @@ public class MetricsController {
 
     log.info("Obtendo timeline de métricas: granularity={}", granularity);
 
-    try {
-      var metrics = metricsService.getMetricsTimeline(granularity);
-      return ResponseEntity.ok(metrics);
-    } catch (Exception e) {
-      log.error("Erro ao obter timeline de métricas", e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
+    var metrics = metricsService.getMetricsTimeline(granularity);
+    return ResponseEntity.ok(metrics);
   }
 }

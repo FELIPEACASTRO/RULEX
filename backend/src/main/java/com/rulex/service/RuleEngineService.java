@@ -14,10 +14,12 @@ import com.rulex.repository.TransactionRepository;
 import com.rulex.util.PanMaskingUtil;
 import java.beans.PropertyDescriptor;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,15 +38,32 @@ public class RuleEngineService {
   private final RuleConfigurationRepository ruleConfigRepository;
   private final AuditService auditService;
   private final ObjectMapper objectMapper;
+  private final Clock clock;
 
   /** Processa uma transação e retorna a classificação de fraude. */
   public TransactionResponse analyzeTransaction(TransactionRequest request) {
     long startTime = System.currentTimeMillis();
 
     try {
+      // Idempotência por externalTransactionId (canônico)
+      Optional<Transaction> existingTxOpt =
+          transactionRepository.findByExternalTransactionId(request.getExternalTransactionId());
+      if (existingTxOpt.isPresent()) {
+        return buildResponseFromExisting(existingTxOpt.get(), startTime);
+      }
+
       // 1. Salvar a transação
       Transaction transaction = convertRequestToEntity(request);
-      transaction = transactionRepository.save(transaction);
+      try {
+        transaction = transactionRepository.save(transaction);
+      } catch (DataIntegrityViolationException e) {
+        // Condição de corrida: outra thread/processo inseriu o mesmo externalTransactionId.
+        Transaction racedTx =
+            transactionRepository
+                .findByExternalTransactionId(request.getExternalTransactionId())
+                .orElseThrow(() -> e);
+        return buildResponseFromExisting(racedTx, startTime);
+      }
 
       // 2. Avaliar regras
       RuleEvaluationResult result = evaluateRules(transaction);
@@ -185,9 +204,13 @@ public class RuleEngineService {
 
           case "PIN_VERIFICATION_FAILED" -> "I".equals(transaction.getPinVerifyCode());
 
-          case "CVV_PIN_LIMIT_EXCEEDED" -> "1".equals(transaction.getCvvVerifyCode());
+            // Mapear para os campos corretos (sem depender de códigos textuais inconsistentes)
+            case "CVV_PIN_LIMIT_EXCEEDED" ->
+              Integer.valueOf(1).equals(transaction.getCvvPinTryLimitExceeded());
 
-          case "OFFLINE_PIN_FAILED" -> "1".equals(transaction.getCvvVerifyCode());
+            case "OFFLINE_PIN_FAILED" ->
+              Integer.valueOf(1).equals(transaction.getCvrofflinePinVerificationPerformed())
+                && Integer.valueOf(1).equals(transaction.getCvrofflinePinVerificationFailed());
 
           default -> false;
         };
@@ -253,6 +276,7 @@ public class RuleEngineService {
         .scoreDetails(writeJson(result.getScoreDetails()))
         .reason(result.getReason())
         .rulesVersion("1")
+      .createdAt(LocalDateTime.now(clock))
         .build();
   }
 
@@ -279,9 +303,50 @@ public class RuleEngineService {
         .reason(decision.getReason())
         .rulesetVersion(decision.getRulesVersion())
         .processingTimeMs(processingTime)
-        .timestamp(LocalDateTime.now())
+          .timestamp(LocalDateTime.now(clock))
         .success(true)
         .build();
+  }
+
+  private TransactionResponse buildResponseFromExisting(Transaction transaction, long startTime) {
+    TransactionDecision decision =
+        decisionRepository
+            .findByTransactionId(transaction.getId())
+            .orElseThrow(() -> new IllegalStateException("Transação existe sem decisão registrada"));
+
+    long processingTime = System.currentTimeMillis() - startTime;
+    List<TriggeredRuleDTO> triggeredRules = readTriggeredRules(decision.getRulesApplied());
+
+    return TransactionResponse.builder()
+        .transactionId(transaction.getExternalTransactionId())
+        .classification(decision.getClassification().name())
+        .riskScore(decision.getRiskScore())
+        .triggeredRules(triggeredRules)
+        .reason(decision.getReason())
+        .rulesetVersion(decision.getRulesVersion())
+        .processingTimeMs(processingTime)
+        .timestamp(decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
+        .success(true)
+        .build();
+  }
+
+  private List<TriggeredRuleDTO> readTriggeredRules(String rulesApplied) {
+    if (rulesApplied == null || rulesApplied.isBlank()) {
+      return List.of();
+    }
+    try {
+      return objectMapper.readValue(
+          rulesApplied,
+          objectMapper
+              .getTypeFactory()
+              .constructCollectionType(List.class, TriggeredRuleDTO.class));
+    } catch (Exception e) {
+      return List.of(rulesApplied.split(",")).stream()
+          .map(String::trim)
+          .filter(s -> !s.isBlank())
+          .map(name -> TriggeredRuleDTO.builder().name(name).weight(0).contribution(0).build())
+          .toList();
+    }
   }
 
   /** Converte TransactionRequest para Transaction entity. */
@@ -332,6 +397,8 @@ public class RuleEngineService {
         .workflow(request.getWorkflow())
         .recordType(request.getRecordType())
         .clientIdFromHeader(request.getClientIdFromHeader())
+          .createdAt(LocalDateTime.now(clock))
+          .updatedAt(LocalDateTime.now(clock))
         .build();
   }
 

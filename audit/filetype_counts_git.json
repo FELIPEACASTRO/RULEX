@@ -1,0 +1,78 @@
+﻿[
+    {
+        "ext":  ".java",
+        "count":  109
+    },
+    {
+        "ext":  ".tsx",
+        "count":  76
+    },
+    {
+        "ext":  ".ts",
+        "count":  40
+    },
+    {
+        "ext":  ".md",
+        "count":  26
+    },
+    {
+        "ext":  ".json",
+        "count":  11
+    },
+    {
+        "ext":  ".sql",
+        "count":  4
+    },
+    {
+        "ext":  ".yaml",
+        "count":  3
+    },
+    {
+        "ext":  ".gitkeep",
+        "count":  3
+    },
+    {
+        "ext":  ".yml",
+        "count":  2
+    },
+    {
+        "ext":  ".gitignore",
+        "count":  2
+    },
+    {
+        "ext":  ".web",
+        "count":  1
+    },
+    {
+        "ext":  ".css",
+        "count":  1
+    },
+    {
+        "ext":  ".patch",
+        "count":  1
+    },
+    {
+        "ext":  ".mjs",
+        "count":  1
+    },
+    {
+        "ext":  "",
+        "count":  1
+    },
+    {
+        "ext":  ".xml",
+        "count":  1
+    },
+    {
+        "ext":  ".html",
+        "count":  1
+    },
+    {
+        "ext":  ".prettierignore",
+        "count":  1
+    },
+    {
+        "ext":  ".prettierrc",
+        "count":  1
+    }
+]

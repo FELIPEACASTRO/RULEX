@@ -2,11 +2,13 @@ package com.rulex.controller;
 
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
+import com.rulex.dto.TriggeredRuleDTO;
 import com.rulex.service.AdvancedRuleEngineService;
 import com.rulex.service.RuleEngineService;
 import com.rulex.service.TransactionQueryService;
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class TransactionController {
   private final RuleEngineService ruleEngineService;
   private final TransactionQueryService transactionQueryService;
   private final AdvancedRuleEngineService advancedRuleEngineService;
+  private final Clock clock;
 
   /** Analisa uma transação e retorna a classificação de fraude. POST /api/transactions/analyze */
   @PostMapping("/analyze")
@@ -36,13 +39,8 @@ public class TransactionController {
 
     log.info("Analisando transação: {}", request.getExternalTransactionId());
 
-    try {
-      TransactionResponse response = ruleEngineService.analyzeTransaction(request);
-      return ResponseEntity.ok(response);
-    } catch (Exception e) {
-      log.error("Erro ao analisar transação: {}", request.getExternalTransactionId(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
+    TransactionResponse response = ruleEngineService.analyzeTransaction(request);
+    return ResponseEntity.ok(response);
   }
 
   /**
@@ -68,35 +66,23 @@ public class TransactionController {
         page,
         size);
 
-    try {
-      Pageable pageable = PageRequest.of(page, size);
+    Pageable pageable = PageRequest.of(page, size);
 
-      LocalDateTime startDateTime = null;
-      LocalDateTime endDateTime = null;
+    LocalDateTime startDateTime = null;
+    LocalDateTime endDateTime = null;
 
-      if (startDate != null && !startDate.isEmpty()) {
-        startDateTime = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_DATE_TIME);
-      }
-      if (endDate != null && !endDate.isEmpty()) {
-        endDateTime = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_DATE_TIME);
-      }
-
-      Page<TransactionResponse> transactions =
-          transactionQueryService.findTransactions(
-              customerId,
-              merchantId,
-              mcc,
-              minAmount,
-              maxAmount,
-              startDateTime,
-              endDateTime,
-              pageable);
-
-      return ResponseEntity.ok(transactions);
-    } catch (Exception e) {
-      log.error("Erro ao listar transações", e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    if (startDate != null && !startDate.isEmpty()) {
+      startDateTime = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_DATE_TIME);
     }
+    if (endDate != null && !endDate.isEmpty()) {
+      endDateTime = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_DATE_TIME);
+    }
+
+    Page<TransactionResponse> transactions =
+        transactionQueryService.findTransactions(
+            customerId, merchantId, mcc, minAmount, maxAmount, startDateTime, endDateTime, pageable);
+
+    return ResponseEntity.ok(transactions);
   }
 
   /** Obtém detalhes de uma transação específica. GET /api/transactions/{id} */
@@ -104,13 +90,8 @@ public class TransactionController {
   public ResponseEntity<TransactionResponse> getTransaction(@PathVariable Long id) {
     log.info("Obtendo detalhes da transação: {}", id);
 
-    try {
-      TransactionResponse transaction = transactionQueryService.getTransactionById(id);
-      return ResponseEntity.ok(transaction);
-    } catch (Exception e) {
-      log.error("Erro ao obter transação: {}", id, e);
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
+    TransactionResponse transaction = transactionQueryService.getTransactionById(id);
+    return ResponseEntity.ok(transaction);
   }
 
   /**
@@ -121,14 +102,8 @@ public class TransactionController {
       @PathVariable String externalId) {
     log.info("Obtendo transação pelo ID externo: {}", externalId);
 
-    try {
-      TransactionResponse transaction =
-          transactionQueryService.getTransactionByExternalId(externalId);
-      return ResponseEntity.ok(transaction);
-    } catch (Exception e) {
-      log.error("Erro ao obter transação: {}", externalId, e);
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
+    TransactionResponse transaction = transactionQueryService.getTransactionByExternalId(externalId);
+    return ResponseEntity.ok(transaction);
   }
 
   /**
@@ -140,30 +115,35 @@ public class TransactionController {
 
     log.info("Analisando transação com regras avançadas: {}", request.getExternalTransactionId());
 
-    try {
-      AdvancedRuleEngineService.RuleResult result =
-          advancedRuleEngineService.executeAllAdvancedRules(request);
-      return ResponseEntity.ok(
-          TransactionResponse.builder()
-              .transactionId(request.getExternalTransactionId())
-              .classification(result.name())
-              .riskScore(
-                  result == AdvancedRuleEngineService.RuleResult.FRAUD
-                      ? 90
-                      : (result == AdvancedRuleEngineService.RuleResult.SUSPICIOUS ? 60 : 10))
-              .triggeredRules(java.util.List.of())
-              .reason("Resultado de regras avançadas")
-              .rulesetVersion("advanced")
-              .processingTimeMs(0L)
-              .timestamp(LocalDateTime.now())
-              .success(true)
-              .build());
-    } catch (Exception e) {
-      log.error(
-          "Erro ao analisar transação com regras avançadas: {}",
-          request.getExternalTransactionId(),
-          e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
+    long startTime = System.currentTimeMillis();
+
+    AdvancedRuleEngineService.AdvancedExecution execution =
+        advancedRuleEngineService.executeAllAdvancedRulesDetailed(request);
+    AdvancedRuleEngineService.RuleResult result = execution.result();
+
+    long processingTime = System.currentTimeMillis() - startTime;
+    java.util.List<TriggeredRuleDTO> triggeredRules =
+        execution.triggeredRules() != null ? execution.triggeredRules() : java.util.List.of();
+
+    return ResponseEntity.ok(
+        TransactionResponse.builder()
+            .transactionId(request.getExternalTransactionId())
+            .classification(result.name())
+            .riskScore(
+                result == AdvancedRuleEngineService.RuleResult.FRAUD
+                    ? 90
+                    : (result == AdvancedRuleEngineService.RuleResult.SUSPICIOUS ? 60 : 10))
+            .triggeredRules(triggeredRules)
+            .reason(
+                triggeredRules.isEmpty()
+                    ? "Resultado de regras avançadas"
+                    : ("Resultado de regras avançadas. Regras acionadas: "
+                        + String.join(", ",
+                            triggeredRules.stream().map(TriggeredRuleDTO::getName).toList())))
+            .rulesetVersion("advanced")
+            .processingTimeMs(processingTime)
+            .timestamp(LocalDateTime.now(clock))
+            .success(true)
+            .build());
   }
 }

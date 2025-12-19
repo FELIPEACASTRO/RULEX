@@ -1,5 +1,6 @@
 package com.rulex.controller.homolog;
 
+import com.rulex.api.NotFoundException;
 import com.rulex.dto.homolog.CreateRuleRequest;
 import com.rulex.dto.homolog.RuleVersionResponse;
 import com.rulex.homolog.application.HomologRuleApplicationService;
@@ -9,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/homolog/rules")
+@RequestMapping("/homolog/rules")
 public class HomologRuleController {
 
   private final HomologRuleApplicationService homologRuleApplicationService;
@@ -27,10 +28,11 @@ public class HomologRuleController {
 
   @GetMapping("/{ruleId}/latest")
   public ResponseEntity<RuleVersionResponse> getLatest(@PathVariable UUID ruleId) {
-    return homologRuleApplicationService
-        .getLatest(ruleId)
-        .map(ResponseEntity::ok)
-        .orElseGet(() -> ResponseEntity.notFound().build());
+    RuleVersionResponse latest =
+        homologRuleApplicationService
+            .getLatest(ruleId)
+            .orElseThrow(() -> new NotFoundException("RuleId não encontrado"));
+    return ResponseEntity.ok(latest);
   }
 
   @PostMapping("/versions/{ruleVersionId}/publish")

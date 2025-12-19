@@ -8,6 +8,7 @@ import com.rulex.entity.RuleConfigurationHistory;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.RuleConfigurationHistoryRepository;
 import com.rulex.repository.RuleConfigurationRepository;
+import com.rulex.api.NotFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +41,7 @@ public class RuleConfigurationService {
     RuleConfiguration rule =
         ruleConfigRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Regra não encontrada"));
+            .orElseThrow(() -> new NotFoundException("Regra não encontrada"));
     return convertToDTO(rule);
   }
 
@@ -48,7 +49,7 @@ public class RuleConfigurationService {
   public RuleConfigurationDTO createRule(RuleConfigurationDTO dto) {
     // Verificar se já existe uma regra com este nome
     if (ruleConfigRepository.findByRuleName(dto.getRuleName()).isPresent()) {
-      throw new RuntimeException("Já existe uma regra com este nome");
+      throw new IllegalStateException("Já existe uma regra com este nome");
     }
 
     RuleConfiguration rule =
@@ -89,7 +90,7 @@ public class RuleConfigurationService {
     RuleConfiguration rule =
         ruleConfigRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Regra não encontrada"));
+            .orElseThrow(() -> new NotFoundException("Regra não encontrada"));
 
     String previous = serializeRule(rule);
 
@@ -134,7 +135,7 @@ public class RuleConfigurationService {
     RuleConfiguration rule =
         ruleConfigRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Regra não encontrada"));
+            .orElseThrow(() -> new NotFoundException("Regra não encontrada"));
 
     String previous = serializeRule(rule);
 
@@ -159,7 +160,7 @@ public class RuleConfigurationService {
     RuleConfiguration rule =
         ruleConfigRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Regra não encontrada"));
+            .orElseThrow(() -> new NotFoundException("Regra não encontrada"));
 
     String previous = serializeRule(rule);
 
