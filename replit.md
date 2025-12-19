@@ -7,10 +7,9 @@ RULEX is a credit card transaction fraud detection platform implementing a confi
 **Core Purpose**: Banking-grade anti-fraud system with audit trails, rule versioning, and compliance-ready architecture.
 
 **Tech Stack**:
-- Backend: Java 21 + Spring Boot 3.2.1 + PostgreSQL (primary API)
+- Backend: Java 21 + Spring Boot 3.2.1 + PostgreSQL
 - Frontend: React 19 + TypeScript + Tailwind CSS + shadcn/ui
-- Node Server: Express + tRPC (authentication/supplementary APIs)
-- Database: PostgreSQL (Java) + MySQL/TiDB (Node/Drizzle)
+- Database: PostgreSQL
 
 ## User Preferences
 
@@ -18,13 +17,12 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Multi-Service Design
-The application runs as multiple services orchestrated via Docker Compose:
-- **web**: Vite/React frontend
-- **backend**: Java Spring Boot (core fraud detection engine)
-- **postgres**: PostgreSQL database for Java backend
+### Design
+- **Frontend**: Static React SPA served by Vite (development) or static hosting (production)
+- **Backend**: Java Spring Boot REST API (core fraud detection engine)
+- **Database**: PostgreSQL for transactions, rules, and audit logs
 
-The Node/tRPC server exists in the codebase but is not deployed in the Docker Compose configuration. The frontend proxies `/api` requests to the Java backend.
+The frontend proxies `/api` requests to the Java backend at `http://localhost:8080` during development.
 
 ### Backend Architecture (Java)
 
@@ -65,20 +63,13 @@ The Node/tRPC server exists in the codebase but is not deployed in the Docker Co
 
 **Routing**: Wouter for client-side routing.
 
-### Database Design
+### Database Design (PostgreSQL)
 
-**PostgreSQL (Java Backend)**:
 - `transactions` - Transaction records with analysis results
 - `decisions` - Rule engine decisions
 - `rule_configurations` - Active rules with conditions
 - `audit_logs` - Compliance audit trail
 - Flyway migrations in `backend/src/main/resources/db/migration/`
-
-**MySQL/TiDB (Node Server via Drizzle)**:
-- `users` - OAuth user accounts
-- `rules` - Rule configurations (separate from Java)
-- `transactionAudits` - Audit records
-- `ruleHistory` - Rule change history
 
 ### Build and Quality Enforcement
 
@@ -88,32 +79,19 @@ The Node/tRPC server exists in the codebase but is not deployed in the Docker Co
 - Spotless code formatting (google-java-format)
 - ArchUnit tests for architecture compliance
 
-**Node/Frontend**:
+**Frontend**:
 - TypeScript strict mode
 - Vitest for testing
 - OpenAPI spec generation for type-safe clients
 
-## External Dependencies
+## Scripts
 
-### Databases
-- **PostgreSQL**: Primary database for Java backend (transactions, rules, audit)
-- **MySQL/TiDB**: Used by Node server for user auth and supplementary data
+- `npm run dev` - Start Vite dev server on port 5000
+- `npm run build` - Build frontend for production
+- `npm run test` - Run Vitest tests
 
-### Authentication
-- Manus OAuth integration via Node server
-- Session cookies for authenticated requests
-- Role-based access (user/admin)
+## Deployment
 
-### APIs and Services
-- AWS S3 (optional): File storage via `@aws-sdk/client-s3`
-- Forge API: Storage proxy for file uploads
-
-### Key Libraries
-- **Java**: Spring Boot, Spring Data JPA, Flyway, Jackson
-- **Node**: tRPC, Drizzle ORM, Zod validation
-- **Frontend**: React Query, Axios, Recharts, Lucide icons
-
-### Configuration
-- Environment variables for database URLs, API keys, OAuth settings
-- `VITE_API_PROXY_TARGET` controls API proxy target in development
-- `DATABASE_URL` for Drizzle/Node database connection
+- **Frontend**: Static deployment (dist/public)
+- **Backend**: Java Spring Boot (separate deployment)
+- API proxy configured via `VITE_API_PROXY_TARGET` environment variable
