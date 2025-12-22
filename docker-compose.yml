@@ -3,8 +3,8 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: rulex_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     healthcheck:
@@ -20,9 +20,15 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rulex_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      RULEX_SECURITY_ENABLED: ${RULEX_SECURITY_ENABLED:-true}
+      RULEX_ADMIN_USERNAME: ${RULEX_ADMIN_USERNAME}
+      RULEX_ADMIN_PASSWORD: ${RULEX_ADMIN_PASSWORD}
+      RULEX_ANALYST_USERNAME: ${RULEX_ANALYST_USERNAME}
+      RULEX_ANALYST_PASSWORD: ${RULEX_ANALYST_PASSWORD}
       # Flyway is on by default; keep startup resilient.
     ports:
       - "8080:8080"
@@ -36,6 +42,7 @@ services:
       dockerfile: Dockerfile.web
     environment:
       VITE_API_PROXY_TARGET: http://backend:8080
+      VITE_API_BASIC_AUTH: ${VITE_API_BASIC_AUTH}
     ports:
       - "5173:5173"
     depends_on:

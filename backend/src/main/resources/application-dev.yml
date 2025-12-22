@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/rulex_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+logging:
+  level:
+    com.rulex: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+
+rulex:
+  security:
+    enabled: ${RULEX_SECURITY_ENABLED:true}
+    admin:
+      username: ${RULEX_ADMIN_USERNAME:admin}
+      password: ${RULEX_ADMIN_PASSWORD:rulex}
+    analyst:
+      username: ${RULEX_ANALYST_USERNAME:analyst}
+      password: ${RULEX_ANALYST_PASSWORD:rulex}

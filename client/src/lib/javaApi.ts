@@ -17,6 +17,10 @@ import { getAccessToken } from "@/_core/auth/tokens";
 // URL base da API Java - configurável via variável de ambiente
 const JAVA_API_BASE_URL = import.meta.env.VITE_JAVA_API_URL || 'http://localhost:8080';
 
+// Opcional: Basic Auth para ambientes que usam Spring Security HTTP Basic.
+// Formato esperado: "usuario:senha" (ex.: "admin:rulex").
+const BASIC_AUTH_RAW = import.meta.env.VITE_API_BASIC_AUTH as string | undefined;
+
 // ========================================
 // TIPOS E INTERFACES
 // ========================================
@@ -234,10 +238,17 @@ async function apiRequest<T>(
   const url = `${JAVA_API_BASE_URL}${endpoint}`;
   
   const token = getAccessToken();
+
+  const basicAuthHeader =
+    !token && BASIC_AUTH_RAW
+      ? `Basic ${btoa(BASIC_AUTH_RAW)}`
+      : undefined;
+
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(!token && basicAuthHeader ? { Authorization: basicAuthHeader } : {}),
   };
 
   const response = await fetch(url, {

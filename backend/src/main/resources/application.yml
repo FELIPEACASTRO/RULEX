@@ -7,9 +7,9 @@ spring:
       enabled: true
   
   datasource:
-    url: jdbc:postgresql://localhost:5432/rulex_db
-    username: postgres
-    password: postgres
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -42,9 +42,9 @@ server:
 logging:
   level:
     root: INFO
-    com.rulex: DEBUG
-    org.springframework.web: DEBUG
-    org.hibernate.SQL: DEBUG
+    com.rulex: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: INFO
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 
@@ -56,3 +56,11 @@ rulex:
   audit:
     enabled: true
     log-all-decisions: true
+  security:
+    enabled: ${RULEX_SECURITY_ENABLED:true}
+    admin:
+      username: ${RULEX_ADMIN_USERNAME:}
+      password: ${RULEX_ADMIN_PASSWORD:}
+    analyst:
+      username: ${RULEX_ANALYST_USERNAME:}
+      password: ${RULEX_ANALYST_PASSWORD:}

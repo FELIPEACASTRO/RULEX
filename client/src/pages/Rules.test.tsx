@@ -3,10 +3,23 @@ import '@testing-library/jest-dom/vitest';
 import React from 'react';
 
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import Rules from './Rules';
+
+function renderWithQueryClient(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 function mockFetchSequence(handlers: Array<(input: RequestInfo, init?: RequestInit) => any>) {
   const fn = vi.fn(async (input: RequestInfo, init?: RequestInit) => {
@@ -18,6 +31,58 @@ function mockFetchSequence(handlers: Array<(input: RequestInfo, init?: RequestIn
   return fn;
 }
 
+type FetchCall = { url: string; method: string; bodyText: string };
+
+function mockRulesApi(initialContent: any[] = []) {
+  let rules = [...initialContent];
+  const calls: FetchCall[] = [];
+
+  const fn = vi.fn(async (input: RequestInfo, init?: RequestInit) => {
+    const url = reqUrl(input);
+    const method = (reqMethod(input, init) ?? 'GET').toUpperCase();
+    const bodyText = await reqBody(input, init);
+    calls.push({ url, method, bodyText });
+
+    // GET list
+    if (url.includes('/api/rules') && method === 'GET') {
+      return okJson({ content: rules });
+    }
+
+    // Create
+    if (url.includes('/api/rules') && method === 'POST') {
+      const body = JSON.parse(bodyText || '{}');
+      const id = body.id ?? 1;
+      const created = { id, ...body, version: body.version ?? 1 };
+      rules = [...rules, created];
+      return okJson(created);
+    }
+
+    // Update
+    if (url.includes('/api/rules/') && method === 'PUT') {
+      const body = JSON.parse(bodyText || '{}');
+      const idStr = url.split('/api/rules/')[1]?.split(/[?#/]/)[0];
+      const id = Number(idStr);
+      rules = rules.map((r: any) => (r.id === id ? { ...r, ...body, version: (r.version ?? 1) + 1 } : r));
+      const updated = rules.find((r: any) => r.id === id);
+      return okJson(updated ?? { id, ...body, version: 2 });
+    }
+
+    // Toggle
+    if (url.includes('/toggle') && method === 'PATCH') {
+      const idStr = url.split('/api/rules/')[1]?.split('/toggle')[0];
+      const id = Number(idStr);
+      rules = rules.map((r: any) => (r.id === id ? { ...r, enabled: !r.enabled, version: (r.version ?? 1) + 1 } : r));
+      const toggled = rules.find((r: any) => r.id === id);
+      return okJson(toggled ?? { id, enabled: false, version: 2 });
+    }
+
+    throw new Error('Unexpected fetch: ' + JSON.stringify({ url, method }));
+  });
+
+  vi.stubGlobal('fetch', fn);
+  return { fetchMock: fn, calls, getRules: () => rules };
+}
+
 function okJson(body: unknown) {
   return {
     ok: true,
@@ -26,6 +91,22 @@ function okJson(body: unknown) {
       return body;
     },
   } as any;
+}
+
+function reqUrl(input: RequestInfo) {
+  if (typeof input === 'string') return input;
+  if (input instanceof Request) return input.url;
+  return String(input);
+}
+
+function reqMethod(input: RequestInfo, init?: RequestInit) {
+  return init?.method ?? (input instanceof Request ? input.method : undefined);
+}
+
+async function reqBody(input: RequestInfo, init?: RequestInit) {
+  if (init?.body != null) return String(init.body);
+  if (input instanceof Request) return await input.text();
+  return '';
 }
 
 describe('Rules popup (Rules.tsx)', () => {
@@ -40,36 +121,9 @@ describe('Rules popup (Rules.tsx)', () => {
 
   it('creates a rule via popup and posts all required fields', async () => {
     const user = userEvent.setup();
-    const fetchMock = mockFetchSequence([
-      // initial list
-      (input) => {
-        expect(String(input)).toContain('/api/rules?page=0&size=100');
-        return okJson({ content: [] });
-      },
-      // create
-      async (input, init) => {
-        expect(String(input)).toBe('/api/rules');
-        expect(init?.method).toBe('POST');
-        const body = JSON.parse(String(init?.body ?? '{}'));
-        expect(body).toMatchObject({
-          ruleName: 'LOW_AUTHENTICATION_SCORE',
-          description: 'Score baixo de autenticação',
-          ruleType: 'SECURITY',
-          threshold: 50,
-          weight: 25,
-          enabled: true,
-          classification: 'SUSPICIOUS',
-        });
-        return okJson({ id: 1, ...body, version: 1 });
-      },
-      // refresh list after save
-      (input) => {
-        expect(String(input)).toContain('/api/rules?page=0&size=100');
-        return okJson({ content: [] });
-      },
-    ]);
+    const api = mockRulesApi([]);
 
-    render(<Rules />);
+    renderWithQueryClient(<Rules />);
 
     await screen.findByText('Regras Configuradas');
 
@@ -94,8 +148,19 @@ describe('Rules popup (Rules.tsx)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Criar' }));
 
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalled();
+    await waitFor(() => expect(api.fetchMock).toHaveBeenCalled());
+
+    const post = api.calls.find((c) => c.method === 'POST' && c.url.includes('/api/rules'));
+    expect(post).toBeTruthy();
+    const postedBody = JSON.parse(post?.bodyText || '{}');
+    expect(postedBody).toMatchObject({
+      ruleName: 'LOW_AUTHENTICATION_SCORE',
+      description: 'Score baixo de autenticação',
+      ruleType: 'SECURITY',
+      threshold: 50,
+      weight: 25,
+      enabled: true,
+      classification: 'SUSPICIOUS',
     });
 
     // dialog should close on success
@@ -118,23 +183,9 @@ describe('Rules popup (Rules.tsx)', () => {
       version: 1,
     };
 
-    const fetchMock = mockFetchSequence([
-      // initial list
-      () => okJson({ content: [seededRule] }),
-      // update
-      async (input, init) => {
-        expect(String(input)).toBe('/api/rules/10');
-        expect(init?.method).toBe('PUT');
-        const body = JSON.parse(String(init?.body ?? '{}'));
-        expect(body.ruleName).toBe('LOW_EXTERNAL_SCORE');
-        expect(body.description).toBe('Score externo muito baixo');
-        return okJson({ ...seededRule, ...body, version: 2 });
-      },
-      // refresh list after save
-      () => okJson({ content: [seededRule] }),
-    ]);
+    const api = mockRulesApi([seededRule]);
 
-    render(<Rules />);
+    renderWithQueryClient(<Rules />);
 
     await screen.findByText('LOW_EXTERNAL_SCORE');
 
@@ -151,9 +202,12 @@ describe('Rules popup (Rules.tsx)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Atualizar' }));
 
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalled();
-    });
+    await waitFor(() => expect(api.fetchMock).toHaveBeenCalled());
+    const put = api.calls.find((c) => c.method === 'PUT' && c.url.includes('/api/rules/10'));
+    expect(put).toBeTruthy();
+    const putBody = JSON.parse(put?.bodyText || '{}');
+    expect(putBody.ruleName).toBe('LOW_EXTERNAL_SCORE');
+    expect(putBody.description).toBe('Score externo muito baixo');
   });
 
   it('toggles a rule enabled/disabled via PATCH', async () => {
@@ -170,37 +224,24 @@ describe('Rules popup (Rules.tsx)', () => {
       version: 1,
     };
 
-    const fetchMock = mockFetchSequence([
-      // initial list
-      () => okJson({ content: [seededRule] }),
-      // toggle
-      (input, init) => {
-        expect(String(input)).toBe('/api/rules/1/toggle');
-        expect(init?.method).toBe('PATCH');
-        return okJson({ ...seededRule, enabled: false, version: 2 });
-      },
-      // refresh list
-      () => okJson({ content: [{ ...seededRule, enabled: false, version: 2 }] }),
-    ]);
+    const api = mockRulesApi([seededRule]);
 
-    render(<Rules />);
+    renderWithQueryClient(<Rules />);
 
     await screen.findByText('INVALID_CAVV');
 
     await user.click(screen.getByTitle('Desativar'));
 
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalled();
-    });
+    await waitFor(() => expect(api.fetchMock).toHaveBeenCalled());
+    const patch = api.calls.find((c) => c.method === 'PATCH' && c.url.includes('/api/rules/1/toggle'));
+    expect(patch).toBeTruthy();
   });
 
   it('snapshot: popup visual regression (modal content)', async () => {
     const user = userEvent.setup();
-    mockFetchSequence([
-      () => okJson({ content: [] }),
-    ]);
+    mockRulesApi([]);
 
-    render(<Rules />);
+    renderWithQueryClient(<Rules />);
     await screen.findByRole('heading', { name: 'Configuração de Regras' });
 
     await user.click(screen.getByRole('button', { name: 'Nova Regra' }));
