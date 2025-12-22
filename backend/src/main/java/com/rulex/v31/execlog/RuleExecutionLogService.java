@@ -29,6 +29,7 @@ public class RuleExecutionLogService {
       TransactionDecision.TransactionClassification classification,
       int riskScore,
       List<?> rulesFired,
+      List<?> featuresUsed,
       JsonNode errorJson) {
 
     DecisionOutcome decision = toDecisionOutcome(classification);
@@ -37,6 +38,13 @@ public class RuleExecutionLogService {
     if (rulesFired != null) {
       for (Object o : rulesFired) {
         rulesFiredJson.add(objectMapper.valueToTree(o));
+      }
+    }
+
+    ArrayNode featuresUsedJson = objectMapper.createArrayNode();
+    if (featuresUsed != null) {
+      for (Object o : featuresUsed) {
+        featuresUsedJson.add(objectMapper.valueToTree(o));
       }
     }
 
@@ -59,6 +67,7 @@ public class RuleExecutionLogService {
             .rulesFiredJson(rulesFiredJson)
             .decisionPathJson(decisionPathJson)
             .whyNotFiredJson(null)
+        .featuresUsedJson(featuresUsedJson)
             .contextFlagsJson(null)
             .errorJson(errorJson)
             .build();
@@ -95,8 +104,71 @@ public class RuleExecutionLogService {
             .rulesFiredJson(objectMapper.createArrayNode())
             .decisionPathJson(decisionPathJson)
             .whyNotFiredJson(null)
+        .featuresUsedJson(objectMapper.createArrayNode())
             .contextFlagsJson(null)
             .errorJson(errorJson)
+            .build();
+
+    try {
+      repository.save(row);
+    } catch (DataIntegrityViolationException ignored) {
+      // Dedupe index: ignore identical repeats.
+    }
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void logSimulate(
+      String externalTransactionId,
+      String payloadRawHash,
+      DecisionOutcome decision,
+      int riskScore,
+      List<?> rulesFired,
+      List<?> whyNotFired,
+      List<?> featuresUsed) {
+
+    ArrayNode rulesFiredJson = objectMapper.createArrayNode();
+    if (rulesFired != null) {
+      for (Object o : rulesFired) {
+        rulesFiredJson.add(objectMapper.valueToTree(o));
+      }
+    }
+
+    ArrayNode whyNotFiredJson = objectMapper.createArrayNode();
+    if (whyNotFired != null) {
+      for (Object o : whyNotFired) {
+        whyNotFiredJson.add(objectMapper.valueToTree(o));
+      }
+    }
+
+    ArrayNode featuresUsedJson = objectMapper.createArrayNode();
+    if (featuresUsed != null) {
+      for (Object o : featuresUsed) {
+        featuresUsedJson.add(objectMapper.valueToTree(o));
+      }
+    }
+
+    ObjectNode decisionPathJson = objectMapper.createObjectNode();
+    decisionPathJson.put("strategy", "severity-only");
+    decisionPathJson.put("riskScore", riskScore);
+
+    String correlationId = MDC.get("correlationId");
+
+    RuleExecutionLogEntity row =
+        RuleExecutionLogEntity.builder()
+            .eventType(ExecutionEventType.SIMULATE)
+            .correlationId(correlationId)
+            .externalTransactionId(externalTransactionId)
+            .payloadRawHash(payloadRawHash)
+            .attemptedPayloadHash(null)
+            .tamper(false)
+            .decision(decision)
+            .riskScore(riskScore)
+            .rulesFiredJson(rulesFiredJson)
+            .decisionPathJson(decisionPathJson)
+            .whyNotFiredJson(whyNotFiredJson)
+            .featuresUsedJson(featuresUsedJson)
+            .contextFlagsJson(null)
+            .errorJson(null)
             .build();
 
     try {

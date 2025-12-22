@@ -77,6 +77,10 @@ public class RuleExecutionLogEntity {
   private JsonNode whyNotFiredJson;
 
   @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "features_used_json", nullable = false, columnDefinition = "jsonb")
+  private JsonNode featuresUsedJson;
+
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "context_flags_json", columnDefinition = "jsonb")
   private JsonNode contextFlagsJson;
 

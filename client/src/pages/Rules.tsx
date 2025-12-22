@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,8 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createRule, deleteRule, listRules, toggleRuleStatus, updateRule } from '@/lib/javaApi';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import V31RuleBuilder from '@/components/V31RuleBuilder';
 
 interface Rule {
   id: number;
@@ -33,13 +35,13 @@ interface Rule {
  */
 export default function Rules() {
   const queryClient = useQueryClient();
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error } = useQuery<Rule[]>({
     queryKey: ['rules'],
-    queryFn: () => listRules(),
+    queryFn: () => listRules() as unknown as Rule[],
     retry: 1,
   });
 
-  const rules = useMemo(() => data ?? [], [data]);
+  const rules = useMemo<Rule[]>(() => data ?? [], [data]);
   const [editingRule, setEditingRule] = useState<Rule | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState({
@@ -67,7 +69,7 @@ export default function Rules() {
       };
 
       if (editingRule) {
-        return updateRule(editingRule.id, payload);
+        return updateRule(editingRule.id, payload as any);
       }
       return createRule(payload as any);
     },
@@ -315,99 +317,112 @@ export default function Rules() {
         </Dialog>
       </div>
 
-      {/* Tabela de Regras */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Regras Configuradas</CardTitle>
-          <CardDescription>Total: {rules.length} regras</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isError && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-red-800" role="alert">
-              Erro ao carregar regras: {error instanceof Error ? error.message : 'erro inesperado'}
-            </div>
-          )}
-          {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                <p className="text-muted-foreground">Carregando regras...</p>
-              </div>
-            </div>
-          ) : rules.length === 0 ? (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">Nenhuma regra configurada</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b border-border">
-                  <tr>
-                    <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Nome da Regra</th>
-                    <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Tipo</th>
-                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Threshold</th>
-                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Peso</th>
-                    <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Classificação</th>
-                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Status</th>
-                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rules.map((rule) => (
-                    <tr key={rule.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                      <td className="py-3 px-4 text-sm font-medium text-foreground">{rule.ruleName}</td>
-                      <td className="py-3 px-4 text-sm">
-                        <Badge className={getRuleTypeColor(rule.ruleType)}>
-                          {rule.ruleType}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4 text-sm text-center text-foreground">{rule.threshold}</td>
-                      <td className="py-3 px-4 text-sm text-center text-foreground">{rule.weight}%</td>
-                      <td className="py-3 px-4 text-sm">
-                        <Badge className={getClassificationColor(rule.classification)}>
-                          {rule.classification}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4 text-sm text-center">
-                        <Badge variant={rule.enabled ? 'default' : 'secondary'}>
-                          {rule.enabled ? 'Ativa' : 'Inativa'}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4 text-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleToggle(rule.id)}
-                          title={rule.enabled ? 'Desativar' : 'Ativar'}
-                        >
-                          <ToggleRight className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(rule)}
-                          title="Editar"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(rule.id)}
-                          title="Deletar"
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="legacy" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="legacy">Config (legado)</TabsTrigger>
+          <TabsTrigger value="v31">Rule Builder (v3.1)</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="legacy">
+          {/* Tabela de Regras */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Regras Configuradas</CardTitle>
+              <CardDescription>Total: {rules.length} regras</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isError && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-red-800" role="alert">
+                  Erro ao carregar regras: {error instanceof Error ? error.message : 'erro inesperado'}
+                </div>
+              )}
+              {isLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                    <p className="text-muted-foreground">Carregando regras...</p>
+                  </div>
+                </div>
+              ) : rules.length === 0 ? (
+                <div className="flex items-center justify-center h-64">
+                  <p className="text-muted-foreground">Nenhuma regra configurada</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="border-b border-border">
+                      <tr>
+                        <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Nome da Regra</th>
+                        <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Tipo</th>
+                        <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Threshold</th>
+                        <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Peso</th>
+                        <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Classificação</th>
+                        <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Status</th>
+                        <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rules.map((rule) => (
+                        <tr key={rule.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                          <td className="py-3 px-4 text-sm font-medium text-foreground">{rule.ruleName}</td>
+                          <td className="py-3 px-4 text-sm">
+                            <Badge className={getRuleTypeColor(rule.ruleType)}>
+                              {rule.ruleType}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-center text-foreground">{rule.threshold}</td>
+                          <td className="py-3 px-4 text-sm text-center text-foreground">{rule.weight}%</td>
+                          <td className="py-3 px-4 text-sm">
+                            <Badge className={getClassificationColor(rule.classification)}>
+                              {rule.classification}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-center">
+                            <Badge variant={rule.enabled ? 'default' : 'secondary'}>
+                              {rule.enabled ? 'Ativa' : 'Inativa'}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleToggle(rule.id)}
+                              title={rule.enabled ? 'Desativar' : 'Ativar'}
+                            >
+                              <ToggleRight className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(rule)}
+                              title="Editar"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(rule.id)}
+                              title="Deletar"
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="v31">
+          <V31RuleBuilder />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

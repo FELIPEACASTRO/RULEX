@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle
 } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import {
   ChevronLeft, ChevronRight, Calendar, DollarSign
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { listTransactions } from '@/lib/javaApi';
+import { listTransactions, PaginatedResponse, ProcessedTransaction } from '@/lib/javaApi';
 import { toast } from 'sonner';
 
 /**
@@ -22,7 +22,10 @@ export default function TransactionsProfessional() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const { data, isLoading, isError, error, isFetching } = useQuery({
+
+  const { data, isLoading, isError, error, isFetching } = useQuery<
+    PaginatedResponse<ProcessedTransaction>
+  >({
     queryKey: ['transactions', { searchTerm, filterStatus, currentPage }],
     queryFn: () =>
       listTransactions({
@@ -32,10 +35,15 @@ export default function TransactionsProfessional() {
         page: currentPage - 1,
         size: itemsPerPage,
       }),
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
     retry: 1,
-    onError: () => toast.error('Falha ao carregar transações'),
   });
+
+  useEffect(() => {
+    if (isError) {
+      toast.error('Falha ao carregar transações');
+    }
+  }, [isError]);
 
   const paginatedTransactions = data?.content ?? [];
   const totalPages = useMemo(() => data?.totalPages ?? 1, [data]);
@@ -189,7 +197,7 @@ export default function TransactionsProfessional() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedTransactions.map((tx) => (
+                {paginatedTransactions.map((tx: ProcessedTransaction) => (
                   <tr
                     key={tx.id}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
@@ -233,7 +241,7 @@ export default function TransactionsProfessional() {
 
           {/* Mobile Cards */}
           <div className="md:hidden space-y-4">
-            {paginatedTransactions.map((tx) => (
+            {paginatedTransactions.map((tx: ProcessedTransaction) => (
               <div
                 key={tx.id}
                 className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"

@@ -8,6 +8,7 @@
  * @version 1.0
  */
 
+import { getBasicAuthRaw } from "@/_core/auth/basicAuth";
 import { getAccessToken } from "@/_core/auth/tokens";
 
 // ========================================
@@ -225,6 +226,79 @@ export interface AuditLog {
 }
 
 // ========================================
+// V3.1 - FIELD DICTIONARY / AST / EXEC LOG
+// ========================================
+
+export type V31DataType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "object"
+  | "array"
+  | "date"
+  | "time";
+
+export interface FieldDictionaryEntry {
+  workflow: string | null;
+  recordType: string | null;
+  portfolio: string | null;
+  jsonPath: string;
+  type: V31DataType | string;
+  domain: any | null;
+  sentinelValues: any | null;
+  allowedOperators: string[];
+  allowedFunctions: string[];
+  requirednessByContext: any | null;
+  securityConstraints: any | null;
+  normalizationAllowed: boolean;
+}
+
+export interface AstValidationError {
+  path: string;
+  message: string;
+}
+
+export interface AstValidationResult {
+  valid: boolean;
+  errors: AstValidationError[];
+}
+
+export type V31AstNode = Record<string, any>;
+
+export interface V31SimulateRule {
+  ruleName: string;
+  decision: string;
+  ast: V31AstNode;
+}
+
+export interface V31SimulateResponse {
+  status: string;
+  rulesFired: Array<{ ruleName: string; decision: string }>;
+  decisionPath: any;
+  whyNotFired: any;
+}
+
+export interface RuleExecutionLog {
+  id: string;
+  eventType: string;
+  correlationId: string | null;
+  externalTransactionId: string | null;
+  payloadRawHash: string | null;
+  attemptedPayloadHash: string | null;
+  tamper: boolean;
+  rulesetVersionId: string | null;
+  refdataVersionId: string | null;
+  decision: string;
+  riskScore: number;
+  rulesFiredJson: any;
+  decisionPathJson: any;
+  whyNotFiredJson: any;
+  contextFlagsJson: any;
+  errorJson: any;
+  createdAt: string;
+}
+
+// ========================================
 // FUNÇÕES DE API
 // ========================================
 
@@ -239,9 +313,12 @@ async function apiRequest<T>(
   
   const token = getAccessToken();
 
+  const storedBasicAuthRaw = getBasicAuthRaw();
+  const basicAuthRaw = storedBasicAuthRaw ?? BASIC_AUTH_RAW;
+
   const basicAuthHeader =
-    !token && BASIC_AUTH_RAW
-      ? `Basic ${btoa(BASIC_AUTH_RAW)}`
+    !token && basicAuthRaw
+      ? `Basic ${btoa(basicAuthRaw)}`
       : undefined;
 
   const defaultHeaders: HeadersInit = {
@@ -270,7 +347,6 @@ async function apiRequest<T>(
   if (contentType && contentType.includes('application/json')) {
     return response.json();
   }
-  // @ts-expect-error permitir retorno de blob/texte conforme T
   return response as unknown as T;
 }
 
@@ -493,6 +569,132 @@ export async function exportAuditLogs(
   }
 
   return response.blob();
+}
+
+// ========================================
+// V3.1 - APIs
+// ========================================
+
+export async function listFieldDictionaryV31(filters: {
+  workflow?: string;
+  recordType?: string;
+  portfolio?: string;
+} = {}): Promise<FieldDictionaryEntry[]> {
+  const params = new URLSearchParams();
+  if (filters.workflow) params.append("workflow", filters.workflow);
+  if (filters.recordType) params.append("recordType", filters.recordType);
+  if (filters.portfolio) params.append("portfolio", filters.portfolio);
+  const qs = params.toString();
+  const endpoint = qs ? `/api/field-dictionary?${qs}` : "/api/field-dictionary";
+  return apiRequest<FieldDictionaryEntry[]>(endpoint);
+}
+
+export async function validateAstV31(ast: V31AstNode): Promise<AstValidationResult> {
+  return apiRequest<AstValidationResult>("/api/rules/validate", {
+    method: "POST",
+    body: JSON.stringify({ ast }),
+  });
+}
+
+export async function simulateRulesV31(payload: any, rules: V31SimulateRule[]): Promise<V31SimulateResponse> {
+  return apiRequest<V31SimulateResponse>("/api/rules/simulate", {
+    method: "POST",
+    body: JSON.stringify({ payload, rules }),
+  });
+}
+
+export async function listAuditExecutionsV31(filters: {
+  externalTransactionId?: string;
+  page?: number;
+  size?: number;
+} = {}): Promise<PaginatedResponse<RuleExecutionLog>> {
+  const params = new URLSearchParams();
+  if (filters.externalTransactionId) params.append("externalTransactionId", filters.externalTransactionId);
+  if (filters.page !== undefined) params.append("page", String(filters.page));
+  if (filters.size !== undefined) params.append("size", String(filters.size));
+  const qs = params.toString();
+  const endpoint = qs ? `/api/audit/executions?${qs}` : "/api/audit/executions";
+  return apiRequest<PaginatedResponse<RuleExecutionLog>>(endpoint);
+}
+
+// ========================================
+// FEATURE CATALOG (v3.1)
+// ========================================
+
+export type FeatureType =
+  | "PAYLOAD_FIELD"
+  | "TEMPORAL"
+  | "VELOCITY"
+  | "GRAPH"
+  | "GEO"
+  | "TEXT"
+  | "SCHEMA"
+  | "DERIVED"
+  | "CONTEXTUAL";
+
+export type FeatureSource =
+  | "payload"
+  | "velocity_store"
+  | "feature_store"
+  | "runtime";
+
+export interface FeatureDefinition {
+  featureName: string;
+  featureType: FeatureType | string;
+  entityType: string | null;
+  windowName: string | null;
+  formula: string | null;
+  description: string | null;
+  source: FeatureSource | string;
+  dataType: string;
+  allowedOperators: string[];
+  refreshStrategy: string | null;
+  version: number;
+}
+
+/**
+ * List feature definitions with optional filters.
+ */
+export async function listFeatureCatalog(filters: {
+  featureType?: string;
+  entityType?: string;
+  source?: string;
+} = {}): Promise<FeatureDefinition[]> {
+  const params = new URLSearchParams();
+  if (filters.featureType) params.append("featureType", filters.featureType);
+  if (filters.entityType) params.append("entityType", filters.entityType);
+  if (filters.source) params.append("source", filters.source);
+  const qs = params.toString();
+  const endpoint = qs ? `/api/feature-catalog?${qs}` : "/api/feature-catalog";
+  return apiRequest<FeatureDefinition[]>(endpoint);
+}
+
+/**
+ * Get a specific feature by name.
+ */
+export async function getFeatureByName(featureName: string): Promise<FeatureDefinition> {
+  return apiRequest<FeatureDefinition>(`/api/feature-catalog/${encodeURIComponent(featureName)}`);
+}
+
+/**
+ * Get list of feature types.
+ */
+export async function getFeatureTypes(): Promise<string[]> {
+  return apiRequest<string[]>("/api/feature-catalog/types");
+}
+
+/**
+ * Get list of entity types.
+ */
+export async function getEntityTypes(): Promise<string[]> {
+  return apiRequest<string[]>("/api/feature-catalog/entity-types");
+}
+
+/**
+ * Get list of feature sources.
+ */
+export async function getFeatureSources(): Promise<string[]> {
+  return apiRequest<string[]>("/api/feature-catalog/sources");
 }
 
 // ========================================

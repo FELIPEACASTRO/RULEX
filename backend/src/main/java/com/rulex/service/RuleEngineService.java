@@ -727,6 +727,7 @@ public class RuleEngineService {
           decision != null ? decision.getClassification() : null,
           decision != null ? decision.getRiskScore() : 0,
           rulesFired,
+          List.of(),
           errorJson);
     } catch (DataAccessException e) {
       log.debug("Falha ao registrar rule_execution_log (ignorado)", e);
@@ -764,6 +765,7 @@ public class RuleEngineService {
           payloadHash,
           classification,
           0,
+          List.of(),
           List.of(),
           errorJson);
     } catch (DataAccessException e) {

@@ -10,6 +10,7 @@ import TransactionsProfessional from "./pages/TransactionsProfessional";
 import Rules from "./pages/Rules";
 import Audit from "./pages/Audit";
 import TransactionSimulator from "./pages/TransactionSimulator";
+import FeatureCatalog from "./pages/FeatureCatalog";
 
 function Router() {
   return (
@@ -21,6 +22,7 @@ function Router() {
         <Route path="/rules" component={Rules} />
         <Route path={"/audit"} component={Audit} />
         <Route path={"/simulator"} component={TransactionSimulator} />
+        <Route path={"/features"} component={FeatureCatalog} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

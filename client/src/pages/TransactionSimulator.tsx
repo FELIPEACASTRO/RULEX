@@ -397,7 +397,7 @@ export default function TransactionSimulator() {
           id={field.name}
           type={field.type === "number" ? "number" : "text"}
           placeholder={field.placeholder}
-          value={value ?? ""}
+          value={typeof value === "boolean" ? String(value) : (value ?? "")}
           onChange={(e) => {
             const newValue = field.type === "number"
               ? parseNumericInput(e.target.value)

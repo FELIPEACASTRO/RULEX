@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { clearBasicAuth, getBasicAuthRaw, setBasicAuthRaw } from "@/_core/auth/basicAuth";
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "@/_core/auth/tokens";
 import { getLoginUrl } from "@/const";
 
@@ -15,11 +16,11 @@ type UseAuthOptions = {
 
 const JAVA_API_BASE_URL = import.meta.env.VITE_JAVA_API_URL || "http://localhost:8080";
 
-async function fetchMe(token: string, signal?: AbortSignal): Promise<User> {
+async function fetchMeWithAuthHeader(authHeader: string, signal?: AbortSignal): Promise<User> {
   const response = await fetch(`${JAVA_API_BASE_URL}/api/auth/me`, {
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
+      Authorization: authHeader,
     },
     signal,
   });
@@ -30,6 +31,14 @@ async function fetchMe(token: string, signal?: AbortSignal): Promise<User> {
 
   const data = await response.json();
   return data ?? null;
+}
+
+async function fetchMeWithBearer(token: string, signal?: AbortSignal): Promise<User> {
+  return fetchMeWithAuthHeader(`Bearer ${token}`, signal);
+}
+
+async function fetchMeWithBasic(raw: string, signal?: AbortSignal): Promise<User> {
+  return fetchMeWithAuthHeader(`Basic ${btoa(raw)}`, signal);
 }
 
 async function refreshTokens(): Promise<{ accessToken: string; refreshToken?: string }> {
@@ -73,15 +82,38 @@ export function useAuth(options?: UseAuthOptions) {
     const loadUser = async () => {
       const token = getAccessToken();
       if (!token) {
-        setLoading(false);
-        if (redirectOnUnauthenticated) {
-          window.location.href = getLoginUrl();
+        const basicRaw = getBasicAuthRaw();
+        if (!basicRaw) {
+          setLoading(false);
+          if (redirectOnUnauthenticated) {
+            window.location.href = getLoginUrl();
+          }
+          return;
+        }
+
+        try {
+          const currentUser = await fetchMeWithBasic(basicRaw, controller.signal);
+          if (!active) return;
+          setUser(currentUser);
+          setError(null);
+        } catch (err) {
+          if (!active) return;
+          clearBasicAuth();
+          setUser(null);
+          setError(err as Error);
+          if (redirectOnUnauthenticated) {
+            window.location.href = getLoginUrl();
+          }
+        } finally {
+          if (active) {
+            setLoading(false);
+          }
         }
         return;
       }
 
       try {
-        const currentUser = await fetchMe(token, controller.signal);
+        const currentUser = await fetchMeWithBearer(token, controller.signal);
         if (!active) return;
         setUser(currentUser);
         setError(null);
@@ -89,13 +121,14 @@ export function useAuth(options?: UseAuthOptions) {
         if (!active) return;
         try {
           const refreshed = await refreshTokens();
-          const currentUser = await fetchMe(refreshed.accessToken, controller.signal);
+          const currentUser = await fetchMeWithBearer(refreshed.accessToken, controller.signal);
           if (!active) return;
           setUser(currentUser);
           setError(null);
         } catch (refreshErr) {
           if (!active) return;
           clearTokens();
+          clearBasicAuth();
           setUser(null);
           setError(refreshErr as Error);
           if (redirectOnUnauthenticated) {
@@ -127,6 +160,7 @@ export function useAuth(options?: UseAuthOptions) {
       console.warn("Logout falhou", err);
     } finally {
       clearTokens();
+      clearBasicAuth();
       setUser(null);
       setError(null);
       setLoading(false);
@@ -136,15 +170,31 @@ export function useAuth(options?: UseAuthOptions) {
 
   const loginWithToken = useCallback(async (accessToken: string, refreshToken?: string) => {
     setTokens(accessToken, refreshToken);
-    const me = await fetchMe(accessToken);
+    clearBasicAuth();
+    const me = await fetchMeWithBearer(accessToken);
     setUser(me);
     setError(null);
     return me;
   }, []);
 
+  const loginWithBasicAuth = useCallback(async (username: string, password: string) => {
+    const raw = `${username}:${password}`;
+    clearTokens();
+    setBasicAuthRaw(raw);
+    try {
+      const me = await fetchMeWithBasic(raw);
+      setUser(me);
+      setError(null);
+      return me;
+    } catch (err) {
+      clearBasicAuth();
+      throw err;
+    }
+  }, []);
+
   const refresh = useCallback(async () => {
     const refreshed = await refreshTokens();
-    const me = await fetchMe(refreshed.accessToken);
+    const me = await fetchMeWithBearer(refreshed.accessToken);
     setUser(me);
     setError(null);
     return me;
@@ -162,6 +212,7 @@ export function useAuth(options?: UseAuthOptions) {
   return {
     ...state,
     refresh,
+    loginWithBasicAuth,
     loginWithToken,
     logout,
   };

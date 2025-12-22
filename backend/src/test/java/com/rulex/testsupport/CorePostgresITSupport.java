@@ -19,6 +19,9 @@ public abstract class CorePostgresITSupport {
 
   @DynamicPropertySource
   static void coreProps(DynamicPropertyRegistry r) {
+    if (!postgres.isRunning()) {
+      postgres.start();
+    }
     r.add("spring.datasource.url", postgres::getJdbcUrl);
     r.add("spring.datasource.username", postgres::getUsername);
     r.add("spring.datasource.password", postgres::getPassword);

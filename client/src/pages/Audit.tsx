@@ -1,101 +1,62 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { listAuditLogs } from '@/lib/javaApi';
+import { listAuditExecutionsV31, PaginatedResponse, RuleExecutionLog } from '@/lib/javaApi';
 import { toast } from 'sonner';
-
-interface AuditLog {
-  id: number;
-  transactionId: number | null;
-  actionType: string;
-  description: string;
-  performedBy: string;
-  result: string;
-  errorMessage: string | null;
-  createdAt: string;
-}
 
 /**
  * Página de auditoria com histórico de todas as ações.
  */
 export default function Audit() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(20);
-  const [totalElements, setTotalElements] = useState(0);
   const [filters, setFilters] = useState({
-    actionType: '',
-    result: '',
+    externalTransactionId: '',
   });
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error } = useQuery<PaginatedResponse<RuleExecutionLog>>({
     queryKey: ['auditLogs', { page, size, filters }],
     queryFn: () =>
-      listAuditLogs({
+      listAuditExecutionsV31({
         page,
         size,
-        action: filters.actionType || undefined,
-        result: filters.result || undefined,
+        externalTransactionId: filters.externalTransactionId || undefined,
       }),
-    onSuccess: (resp) => {
-      setLogs(resp.content || []);
-      setTotalElements(resp.totalElements || 0);
-    },
-    onError: () => toast.error('Falha ao buscar logs de auditoria'),
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
+    retry: 1,
   });
+
+  useEffect(() => {
+    if (isError) {
+      toast.error('Falha ao buscar execuções (v3.1)');
+    }
+  }, [isError]);
+
+  const logs = useMemo(() => data?.content ?? [], [data]);
+  const totalElements = data?.totalElements ?? 0;
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setPage(0);
   };
 
-  const getActionTypeColor = (actionType: string) => {
-    switch (actionType) {
-      case 'TRANSACTION_PROCESSED':
-        return 'bg-blue-100 text-blue-800';
-      case 'RULE_CREATED':
-        return 'bg-green-100 text-green-800';
-      case 'RULE_UPDATED':
+  const getDecisionColor = (decision: string) => {
+    switch ((decision || '').toUpperCase()) {
+      case 'FRAUDE':
+      case 'FRAUD':
+        return 'bg-red-100 text-red-800';
+      case 'SUSPEITA_DE_FRAUDE':
+      case 'SUSPICIOUS':
         return 'bg-amber-100 text-amber-800';
-      case 'RULE_DELETED':
-        return 'bg-red-100 text-red-800';
-      case 'CONFIG_CHANGED':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getResultColor = (result: string) => {
-    switch (result) {
-      case 'SUCCESS':
+      case 'APROVADA':
+      case 'APPROVED':
         return 'bg-green-100 text-green-800';
-      case 'FAILURE':
-        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getActionTypeLabel = (actionType: string) => {
-    switch (actionType) {
-      case 'TRANSACTION_PROCESSED':
-        return 'Transação Processada';
-      case 'RULE_CREATED':
-        return 'Regra Criada';
-      case 'RULE_UPDATED':
-        return 'Regra Atualizada';
-      case 'RULE_DELETED':
-        return 'Regra Deletada';
-      case 'CONFIG_CHANGED':
-        return 'Configuração Alterada';
-      default:
-        return actionType;
     }
   };
 
@@ -106,7 +67,7 @@ export default function Audit() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">Auditoria</h1>
-        <p className="text-muted-foreground mt-1">Histórico de todas as ações do sistema</p>
+        <p className="text-muted-foreground mt-1">Execuções do motor v3.1 (append-only)</p>
       </div>
 
       {/* Filtros */}
@@ -117,31 +78,12 @@ export default function Audit() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Tipo de Ação</label>
-              <select
-                value={filters.actionType}
-                onChange={(e) => handleFilterChange('actionType', e.target.value)}
-                className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
-              >
-                <option value="">Todos os tipos</option>
-                <option value="TRANSACTION_PROCESSED">Transação Processada</option>
-                <option value="RULE_CREATED">Regra Criada</option>
-                <option value="RULE_UPDATED">Regra Atualizada</option>
-                <option value="RULE_DELETED">Regra Deletada</option>
-                <option value="CONFIG_CHANGED">Configuração Alterada</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Resultado</label>
-              <select
-                value={filters.result}
-                onChange={(e) => handleFilterChange('result', e.target.value)}
-                className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
-              >
-                <option value="">Todos os resultados</option>
-                <option value="SUCCESS">Sucesso</option>
-                <option value="FAILURE">Falha</option>
-              </select>
+              <label className="block text-sm font-medium text-foreground mb-2">External Transaction ID</label>
+              <Input
+                value={filters.externalTransactionId}
+                onChange={(e) => handleFilterChange('externalTransactionId', e.target.value)}
+                placeholder="Ex: TXN-2024-001"
+              />
             </div>
           </div>
         </CardContent>
@@ -175,10 +117,10 @@ export default function Audit() {
               <table className="w-full">
                 <thead className="border-b border-border">
                   <tr>
-                    <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Tipo de Ação</th>
-                    <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Descrição</th>
-                    <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Realizado Por</th>
-                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Resultado</th>
+                    <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Decisão</th>
+                    <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Evento</th>
+                    <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">External Tx</th>
+                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Risk Score</th>
                     <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Data/Hora</th>
                   </tr>
                 </thead>
@@ -186,17 +128,11 @@ export default function Audit() {
                   {logs.map((log) => (
                     <tr key={log.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                       <td className="py-3 px-4 text-sm">
-                        <Badge className={getActionTypeColor(log.actionType)}>
-                          {getActionTypeLabel(log.actionType)}
-                        </Badge>
+                        <Badge className={getDecisionColor(log.decision)}>{log.decision}</Badge>
                       </td>
-                      <td className="py-3 px-4 text-sm text-foreground">{log.description}</td>
-                      <td className="py-3 px-4 text-sm text-muted-foreground">{log.performedBy || '-'}</td>
-                      <td className="py-3 px-4 text-sm text-center">
-                        <Badge className={getResultColor(log.result)}>
-                          {log.result === 'SUCCESS' ? 'Sucesso' : 'Falha'}
-                        </Badge>
-                      </td>
+                      <td className="py-3 px-4 text-sm text-muted-foreground">{log.eventType}</td>
+                      <td className="py-3 px-4 text-sm text-foreground">{log.externalTransactionId || '-'}</td>
+                      <td className="py-3 px-4 text-sm text-center text-foreground">{log.riskScore}</td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">
                         {new Date(log.createdAt).toLocaleString('pt-BR')}
                       </td>

@@ -51,7 +51,41 @@ public class AstValidator {
           "COALESCE",
           "TO_DATE_YYYYMMDD",
           "TO_TIME_PAD6_HHMMSS",
-          "PARSE_GMTOFFSET");
+        "PARSE_GMTOFFSET",
+
+        // Temporal / sequential
+        "IS_WEEKEND",
+        "IN_TIME_RANGE",
+        "SAME_DAY",
+        "SAME_HOUR",
+        "SAME_WEEK",
+        "BUCKET",
+        "TIME_SINCE_LAST",
+        "IS_HOLIDAY",
+        "IS_BUSINESS_DAY",
+
+        // Schema / robustness
+        "HAS_FIELD",
+        "MISSING_FIELD",
+        "UNKNOWN_FIELDS_PRESENT",
+        "FIELD_TYPE_MISMATCH",
+        "JSON_PATH_EXISTS",
+        "JSON_PATH_VALUE",
+
+        // Text
+        "NORMALIZE_TEXT",
+        "REMOVE_DIACRITICS",
+        "STRIP_PUNCTUATION",
+        "SIMILARITY_LEVENSHTEIN",
+        "SIMILARITY_JARO",
+        "ENTROPY",
+        "TOKEN_COUNT",
+        "KEYWORD_BLACKLIST",
+
+        // Prob / fuzzy
+        "CONFIDENCE_GATE",
+        "FUZZY_MATCH",
+        "FUZZY_SET_MEMBERSHIP");
 
   private final int maxDepth;
   private final int maxNodes;

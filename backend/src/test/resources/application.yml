@@ -1,3 +1,15 @@
 rulex:
   security:
     enabled: false
+
+# Ensure Spring Boot auto-configuration processes all components
+spring:
+  main:
+    allow-bean-definition-overriding: false
+    lazy-initialization: false
+  jpa:
+    open-in-view: false
+  data:
+    jpa:
+      repositories:
+        enabled: true

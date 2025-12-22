@@ -135,7 +135,7 @@ export default function DashboardProfessional() {
 
         {/* Time Range Selector */}
         <div className="flex gap-2">
-          {['1h', '24h', '7d', '30d'].map((range) => (
+          {(['1h', '24h', '7d', '30d'] as const).map((range) => (
             <button
               key={range}
               onClick={() => setTimeRange(range)}

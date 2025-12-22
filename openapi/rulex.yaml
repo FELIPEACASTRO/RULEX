@@ -209,6 +209,70 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Rule'
+
+  /api/rules/validate:
+    post:
+      summary: Validate a rule AST (v3.1)
+      operationId: validateRuleAst
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateAstRequest'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AstValidationResult'
+
+  /api/field-dictionary:
+    get:
+      summary: List payload field dictionary (catalog-driven UI)
+      operationId: listFieldDictionary
+      parameters:
+        - in: query
+          name: workflow
+          schema: { type: string }
+        - in: query
+          name: recordType
+          schema: { type: string }
+        - in: query
+          name: portfolio
+          schema: { type: string }
+      responses:
+        '200':
+          description: Field dictionary entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FieldDictionaryEntry'
+
+  /api/audit/executions:
+    get:
+      summary: List rule executions (audit console)
+      operationId: listAuditExecutions
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 0 }
+        - in: query
+          name: size
+          schema: { type: integer, default: 20 }
+        - in: query
+          name: externalTransactionId
+          schema: { type: string }
+      responses:
+        '200':
+          description: Paged executions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageRuleExecutionLog'
   /api/audit:
     get:
       summary: List audit events
@@ -301,6 +365,89 @@ paths:
                 type: object
 components:
   schemas:
+    ValidateAstRequest:
+      type: object
+      required: [ast]
+      properties:
+        ast:
+          description: Rule AST root node
+          $ref: '#/components/schemas/AstNode'
+
+    AstValidationResult:
+      type: object
+      required: [valid, errors]
+      properties:
+        valid: { type: boolean }
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/AstValidationError'
+
+    AstValidationError:
+      type: object
+      required: [path, message]
+      properties:
+        path: { type: string }
+        message: { type: string }
+
+    AstNode:
+      type: object
+      description: Minimal AST node (GROUP | CONDITION | FIELD | CONST | FUNC)
+      properties:
+        type: { type: string }
+
+    FieldDictionaryEntry:
+      type: object
+      required: [jsonPath, type, allowedOperators, allowedFunctions]
+      properties:
+        workflow: { type: string }
+        recordType: { type: string }
+        portfolio: { type: string }
+        jsonPath: { type: string }
+        type: { type: string }
+        domain: { type: object }
+        sentinelValues: { type: object }
+        allowedOperators:
+          type: array
+          items: { type: string }
+        allowedFunctions:
+          type: array
+          items: { type: string }
+        requirednessByContext: { type: object }
+        securityConstraints: { type: object }
+        normalizationAllowed: { type: boolean }
+
+    RuleExecutionLog:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        eventType: { type: string }
+        correlationId: { type: string }
+        externalTransactionId: { type: string }
+        payloadRawHash: { type: string }
+        attemptedPayloadHash: { type: string }
+        tamper: { type: boolean }
+        decision: { type: string }
+        riskScore: { type: integer }
+        rulesFiredJson: { type: object }
+        decisionPathJson: { type: object }
+        whyNotFiredJson: { type: object }
+        contextFlagsJson: { type: object }
+        errorJson: { type: object }
+        createdAt: { type: string, format: date-time }
+
+    PageRuleExecutionLog:
+      type: object
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/RuleExecutionLog'
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
     AnalyzeTransactionRequest:
       type: object
       required:
