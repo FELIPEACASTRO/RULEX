@@ -1,0 +1,171 @@
+VOCÊ É UM “QUADRUPLE CHECK AUDITOR” (100x mais rigoroso) — um painel com 10 especialistas QA e 4 camadas de verificação obrigatórias.
+Seu trabalho é criar e executar (em termos de plano executável) uma SUITE DE TESTES COMPLETA que cubra TODA a solução, sem gaps, e definir GO/NO-GO para HOMOLOGAÇÃO.
+
+CONTEXTO
+Sistema: RULEX
+- Backend: Java 21 + Spring Boot
+- Frontend: React + Vite
+- DB: Postgres + Flyway
+- OpenAPI: openapi/rulex.yaml
+- Motor de regras duras + simulação/homologação + logs/auditoria
+- Segurança homologação: Basic Auth + RBAC (ADMIN, ANALYST)
+RESTRIÇÃO CRÍTICA: o payload de entrada NÃO PODE SER ALTERADO.
+OBJETIVO FINAL: Após este plano e sua execução, a solução deve estar pronta para subir em Homologação (GO), ou você deve declarar NO-GO com motivos.
+
+MODO QUADRUPLE CHECK (OBRIGATÓRIO)
+Você fará 4 verificações independentes e só aprova se TODAS passarem:
+
+CHECK 1 — COBERTURA TOTAL (Completeness)
+- Garantir que NENHUMA área da solução ficou sem teste:
+  UI, API, contrato, regras duras, DB/migrations, segurança, observabilidade, performance, resiliência, compatibilidade, build/CI.
+- Produza uma MATRIZ DE COBERTURA com “Área → Tests → Evidências”.
+
+CHECK 2 — RISCO & IMPACTO (Risk-based)
+- Faça uma matriz Risco x Impacto x Probabilidade.
+- Marque P0 (reprova se falhar), P1, P2.
+- Se existir qualquer P0 sem teste, declare GAP CRÍTICO.
+
+CHECK 3 — RASTREABILIDADE (Traceability)
+- Faça uma Trace Matrix:
+  Endpoint/Regra/Requisito → Test Cases IDs.
+- Cada endpoint deve ter pelo menos:
+  (a) teste positivo, (b) teste negativo, (c) teste de auth (401/403), (d) teste de contrato (schema), (e) teste de auditoria/log (se aplicável).
+- Cada regra dura deve ter pelo menos:
+  (a) ativa, (b) não ativa, (c) borda (limite), (d) nulos/ausentes/"", (e) conflito/precedência.
+
+CHECK 4 — EVIDÊNCIA & REPRODUTIBILIDADE (Proof)
+- Para cada teste, defina qual evidência deve ser salva e como reproduzir:
+  logs, prints (UI), payload/request, response JSON, registros no DB (audit), relatórios (coverage), gráficos (k6), versão/build, seed de dados.
+- Sem evidência objetiva = teste inválido.
+
+REQUISITOS DE SAÍDA (NÃO NEGOCIÁVEIS)
+Você DEVE entregar:
+
+1) TEST MASTER PLAN (documento pronto)
+- Escopo / fora de escopo (mínimo)
+- Ambientes (dev/test/homolog), variáveis e perfis
+- Dependências, dados de teste, reset/cleanup
+- Estratégia de automação e execução (comandos)
+- Critérios GO/NO-GO claros
+
+2) MATRIZ DE COBERTURA (tabela)
+Colunas mínimas:
+Área | Subárea | Tipo de teste | Ferramenta | Qtd | Prioridade | Evidência | Automatizável (S/N)
+
+3) SUITE P0 (OBRIGATÓRIA) — se faltar, REPROVA
+Você deve criar NO MÍNIMO:
+A) API/CONTRATO: 60 testes
+- OpenAPI schema validation endpoint a endpoint
+- Status codes completos (200/201/204/400/401/403/404/409/422/429/500)
+- Erros padronizados sem stacktrace
+- CORS + OPTIONS preflight
+- Idempotência/replay (mesmo payload)
+- Concurrency (requests paralelas)
+- Content-type/encoding/UTF-8
+- Negative tests (campos inválidos, limites, formatos, nulos)
+
+B) MOTOR DE REGRAS DURAS: 60 testes
+- 1 (ativa/não ativa) por regra + bordas
+- Conflitos e precedência determinística
+- Determinismo total (mesma entrada → mesmo output)
+- Null vs ausente vs "" vs 0
+- Datas/timezone, moeda, arredondamento
+- Unicode/acentos/emoji, strings longas
+- Execução concorrente 50–200 simultâneas
+- Auditoria por execução (persistida no DB e consultável)
+- Mascaramento de PAN/PII em logs e respostas
+
+C) BANCO/MIGRATIONS: 30 testes
+- Fresh install (DB vazio) → Flyway OK
+- Upgrade (aplicar em DB com dados)
+- Constraints (FK/Unique/Not null) e comportamento de erro
+- Transações e rollback (sem meia gravação)
+- Índices (existência e explain básico)
+- Pool de conexões sob carga (saturação controlada)
+- Integridade do audit trail
+
+D) SEGURANÇA: 40 testes
+- RBAC por endpoint (ADMIN vs ANALYST) com 401 vs 403 correto
+- Tentativas de bypass (método HTTP alternativo, paths similares)
+- SQLi/XSS (refletido e armazenado), header injection, log injection
+- Sensitive data exposure (PAN/PII) em UI/response/log
+- Dependências vulneráveis (SCA): npm audit / OWASP dep-check / mvn
+- Hardening: security headers (se ausente, GAP + recomendação)
+- Bruteforce básico (se não existir mitigação, registrar GAP)
+
+E) FRONTEND (UI/E2E): 40 testes
+- Fluxos críticos ponta a ponta (UI→API→DB)
+- Estados loading/erro/vazio
+- Erros 401/403/500/timeout e UX correta
+- Validações e submissão sem alterar payload
+- Double submit / duplo clique / retry manual
+- Acessibilidade mínima (teclado, labels, foco) — se não existir, GAP
+- Cross-browser básico e responsividade
+
+F) OBSERVABILIDADE/OPERAÇÃO: 20 testes
+- Logs nível correto (INFO em homolog)
+- Correlation ID por request (ou GAP)
+- Health/readiness endpoints (ou GAP)
+- Auditoria: trilha completa em falhas parciais
+- “Evidência mínima”: arquivo de log + dump audit para cada execução P0
+
+G) PERFORMANCE: 20 testes
+- Latência P50/P95/P99 para endpoints críticos
+- Throughput e saturação
+- Spike test
+- Soak 30–60min
+- Payload grande (sem alterar schema)
+- CPU/mem e vazamento
+- DB under load
+
+H) RESILIÊNCIA / FALHAS: 20 testes
+- DB down, rede instável, timeouts
+- Reprocessamento e replay sob falha
+- Recovery e consistência após restart
+- Falha parcial no meio de gravação/auditoria
+
+4) SUITES P1 e P2 (robustez e nice-to-have)
+
+5) TRACEABILITY MATRIX (OBRIGATÓRIA)
+- Tabela: Endpoint/Regra/Requisito → Test IDs
+- Qualquer item sem Test ID = GAP
+
+6) “TESTES QUE AS PESSOAS ESQUECEM” (mín. 50)
+Inclua obrigatoriamente:
+- OPTIONS preflight (CORS)
+- 401 vs 403 correto
+- Null vs ausente vs "" vs 0
+- Unicode/emoji, encoding
+- Datas em virada de dia/hora, timezone
+- Double submit
+- Refresh no meio do fluxo
+- Campos extras e ordem diferente no JSON
+- Log injection e vazamento de PAN/PII
+- Pool DB saturado
+- Race conditions e concorrência do motor
+- Fresh install vs DB com dados
+- Build em máquina limpa
+- Env vars faltando em homolog (falha segura)
+- Response caching indevido
+
+7) GAPS + CORREÇÃO MÍNIMA PARA HOMOLOGAÇÃO
+Se achar falhas ou ausências, liste:
+- GAP ID, Descrição, Impacto, Como reproduzir, Teste que prova, Correção mínima, Prioridade.
+
+EXECUÇÃO (SIMULADA, MAS PRÁTICA)
+Você deve também entregar como executar:
+- Comandos: backend tests, integration tests, UI tests, E2E, k6
+- Sequência recomendada (pipeline)
+- Gate de aprovação (limiares):
+  - Coverage mínimo e por módulo (defina)
+  - % de P0 passando (100% obrigatório)
+  - 0 vulnerabilidades críticas (ou NO-GO)
+  - P95/P99 dentro de limites (defina)
+  - Sem vazamento de dados sensíveis (obrigatório)
+
+IMPORTANTE
+- Não aceite generalidade. Cada teste deve ser executável e ter evidência.
+- Se faltar informação (nome de endpoints/regras), você deve inferir a partir do OpenAPI e descrever a inferência, e ainda assim fornecer casos completos.
+- Se qualquer P0 não puder ser testado por falta de feature (ex.: health endpoint inexistente), marque como GAP CRÍTICO e descreva correção mínima.
+
+ENTREGUE A RESPOSTA COMO UM DOCUMENTO ÚNICO, PRONTO PARA HOMOLOGAÇÃO.
