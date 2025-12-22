@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
@@ -13,6 +13,9 @@ import {
   RefreshCw, Download, Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { getDashboardMetrics } from '@/lib/javaApi';
+import { toast } from 'sonner';
 
 /**
  * Dashboard Profissional RULEX
@@ -20,56 +23,76 @@ import { Button } from '@/components/ui/button';
  * Acessibilidade: WCAG 2.1 AA
  */
 export default function DashboardProfessional() {
-  const [timeRange, setTimeRange] = useState('24h');
-  const [isLoading, setIsLoading] = useState(false);
+  const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
 
-  // Dados simulados - serão substituídos por chamadas à API
-  const metricsData = {
-    totalTransactions: 15847,
-    approvedRate: 92.3,
-    suspiciousRate: 5.2,
-    fraudRate: 2.5,
-    avgProcessingTime: 145, // ms
-    systemUptime: 99.98
-  };
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['dashboardMetrics', timeRange],
+    queryFn: () => getDashboardMetrics(timeRange),
+    retry: 1,
+  });
 
-  const transactionTrendData = [
-    { time: '00:00', approved: 120, suspicious: 8, fraud: 2 },
-    { time: '04:00', approved: 95, suspicious: 5, fraud: 1 },
-    { time: '08:00', approved: 340, suspicious: 18, fraud: 5 },
-    { time: '12:00', approved: 520, suspicious: 28, fraud: 8 },
-    { time: '16:00', approved: 480, suspicious: 25, fraud: 7 },
-    { time: '20:00', approved: 410, suspicious: 22, fraud: 6 },
-    { time: '23:59', approved: 200, suspicious: 10, fraud: 3 }
-  ];
+  const metricsData = useMemo(() => {
+    if (data) {
+      return {
+        totalTransactions: data.totalTransactions ?? 0,
+        approvedRate: data.approvalRate ?? 0,
+        suspiciousRate: data.suspiciousRate ?? 0,
+        fraudRate: data.fraudRate ?? 0,
+        avgProcessingTime: data.averageScore ?? 0,
+        systemUptime: data.periodComparison?.transactionsChange ?? 0,
+      };
+    }
+    return {
+      totalTransactions: 0,
+      approvedRate: 0,
+      suspiciousRate: 0,
+      fraudRate: 0,
+      avgProcessingTime: 0,
+      systemUptime: 0,
+    };
+  }, [data]);
 
-  const mccDistributionData = [
-    { name: 'Varejo', value: 35, color: '#0052CC' },
-    { name: 'Alimentação', value: 25, color: '#10B981' },
-    { name: 'Viagem', value: 20, color: '#F59E0B' },
-    { name: 'Serviços', value: 15, color: '#8B5CF6' },
-    { name: 'Outros', value: 5, color: '#6B7280' }
-  ];
+  const transactionTrendData = useMemo(() => {
+    if (data?.hourlyDistribution?.length) {
+      return data.hourlyDistribution.map((row) => ({
+        time: `${row.hour.toString().padStart(2, '0')}:00`,
+        approved: row.count ?? 0,
+        suspicious: row.fraudCount ?? 0,
+        fraud: row.fraudCount ?? 0,
+      }));
+    }
+    return [];
+  }, [data]);
 
-  const topMerchantsData = [
-    { name: 'Merchant A', transactions: 1240, fraudRate: 0.8 },
-    { name: 'Merchant B', transactions: 980, fraudRate: 1.2 },
-    { name: 'Merchant C', transactions: 850, fraudRate: 0.5 },
-    { name: 'Merchant D', transactions: 720, fraudRate: 2.1 },
-    { name: 'Merchant E', transactions: 650, fraudRate: 0.3 }
-  ];
+  const palette = ['#0052CC', '#10B981', '#F59E0B', '#8B5CF6', '#6B7280'];
+  const mccDistributionData = useMemo(() => {
+    if (data?.mccDistribution?.length) {
+      return data.mccDistribution.map((mcc, index) => ({
+        name: mcc.description || mcc.mcc,
+        value: mcc.percentage ?? 0,
+        color: palette[index % palette.length],
+      }));
+    }
+    return [];
+  }, [data]);
 
-  const rulesTriggeredData = [
-    { rule: 'VELOCITY_CHECK', count: 145, severity: 'high' },
-    { rule: 'EXPIRED_CARD', count: 89, severity: 'critical' },
-    { rule: 'UNUSUAL_LOCATION', count: 67, severity: 'medium' },
-    { rule: 'LOW_SCORE', count: 54, severity: 'high' },
-    { rule: 'DUPLICATE_TRANSACTION', count: 32, severity: 'critical' }
-  ];
+  const topMerchantsData = useMemo(() => {
+    if (data?.topMerchants?.length) {
+      return data.topMerchants.map((m, index) => ({
+        name: m.merchantName || m.merchantId,
+        transactions: m.transactionCount,
+        fraudRate: m.fraudRate,
+        idx: index,
+      }));
+    }
+    return [];
+  }, [data]);
 
-  const handleRefresh = () => {
-    setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 1000);
+  const handleRefresh = async () => {
+    const res = await refetch();
+    if (res.error) {
+      toast.error('Falha ao atualizar métricas');
+    }
   };
 
   return (
@@ -127,6 +150,20 @@ export default function DashboardProfessional() {
             </button>
           ))}
         </div>
+
+        {isError && (
+          <div
+            className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-red-800"
+            role="alert"
+          >
+            Falha ao carregar métricas: {error instanceof Error ? error.message : 'erro inesperado'}
+          </div>
+        )}
+        {isLoading && (
+          <p className="mt-4 text-sm text-muted-foreground" role="status" aria-live="polite">
+            Carregando métricas em tempo real...
+          </p>
+        )}
       </div>
 
       {/* KPI Cards */}
@@ -371,32 +408,28 @@ export default function DashboardProfessional() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-blue-600" />
-            Regras Mais Acionadas
+            Top Merchants por Volume
           </CardTitle>
-          <CardDescription>Top 5 regras que detectaram fraudes</CardDescription>
+          <CardDescription>Volume processado e taxa de fraude</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {rulesTriggeredData.map((rule, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">{rule.rule}</p>
-                  <p className="text-sm text-gray-600">{rule.count} acionamentos</p>
+          {topMerchantsData.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Sem dados de merchants para este período.</p>
+          ) : (
+            <div className="space-y-3">
+              {topMerchantsData.map((merchant) => (
+                <div key={merchant.name} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{merchant.name}</p>
+                    <p className="text-sm text-gray-600">{merchant.transactions.toLocaleString()} transações</p>
+                  </div>
+                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                    Fraude: {merchant.fraudRate}%
+                  </Badge>
                 </div>
-                <Badge
-                  variant={
-                    rule.severity === 'critical'
-                      ? 'destructive'
-                      : rule.severity === 'high'
-                      ? 'default'
-                      : 'secondary'
-                  }
-                >
-                  {rule.severity === 'critical' ? 'Crítico' : rule.severity === 'high' ? 'Alto' : 'Médio'}
-                </Badge>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

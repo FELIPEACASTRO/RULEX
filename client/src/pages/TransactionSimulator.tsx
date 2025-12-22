@@ -201,8 +201,14 @@ export default function TransactionSimulator() {
   const [useAdvancedRules, setUseAdvancedRules] = useState(true);
   const [activeTab, setActiveTab] = useState("identification");
 
+  const parseNumericInput = (rawValue: string): number | undefined => {
+    if (!rawValue.trim()) return undefined;
+    const parsed = Number(rawValue.replace(",", "."));
+    return Number.isFinite(parsed) ? parsed : undefined;
+  };
+
   // Atualizar campo do formulário
-  const updateField = (field: string, value: string | number | boolean) => {
+  const updateField = (field: string, value: string | number | boolean | undefined) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -259,7 +265,11 @@ export default function TransactionSimulator() {
       
       // Simular resultado para demonstração quando API não está disponível
       const simulatedResult = simulateAnalysis(formData);
-      setResult(simulatedResult);
+      setResult({
+        ...simulatedResult,
+        reason: `${simulatedResult.reason} (resultado simulado; API indisponível)`
+      });
+      toast.info("Exibindo resultado simulado enquanto a API está offline.");
     } finally {
       setIsLoading(false);
     }
@@ -387,11 +397,13 @@ export default function TransactionSimulator() {
           id={field.name}
           type={field.type === "number" ? "number" : "text"}
           placeholder={field.placeholder}
-          value={value as string || ""}
-          onChange={(e) => updateField(
-            field.name, 
-            field.type === "number" ? Number(e.target.value) : e.target.value
-          )}
+          value={value ?? ""}
+          onChange={(e) => {
+            const newValue = field.type === "number"
+              ? parseNumericInput(e.target.value)
+              : e.target.value;
+            updateField(field.name, newValue);
+          }}
         />
       </div>
     );

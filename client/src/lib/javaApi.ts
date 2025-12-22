@@ -8,6 +8,8 @@
  * @version 1.0
  */
 
+import { getAccessToken } from "@/_core/auth/tokens";
+
 // ========================================
 // CONFIGURAÇÃO
 // ========================================
@@ -231,9 +233,11 @@ async function apiRequest<T>(
 ): Promise<T> {
   const url = `${JAVA_API_BASE_URL}${endpoint}`;
   
+  const token = getAccessToken();
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
   const response = await fetch(url, {
@@ -245,11 +249,18 @@ async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`);
+    const text = await response.text().catch(() => "");
+    const errorMessage = text || `API Error: ${response.status} ${response.statusText}`;
+    throw new Error(errorMessage);
   }
 
-  return response.json();
+  // Algumas rotas de export retornam blob; para JSON convertemos normalmente
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+  // @ts-expect-error permitir retorno de blob/texte conforme T
+  return response as unknown as T;
 }
 
 // ========================================

@@ -31,6 +31,7 @@ public class RuleExecutionLogEntity {
   private UUID id;
 
   @Enumerated(EnumType.STRING)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "event_type", nullable = false, columnDefinition = "execution_event_type")
   private ExecutionEventType eventType;
 
@@ -56,6 +57,7 @@ public class RuleExecutionLogEntity {
   private UUID refdataVersionId;
 
   @Enumerated(EnumType.STRING)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   @Column(name = "decision", nullable = false, columnDefinition = "decision_outcome")
   private DecisionOutcome decision;
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createRule, deleteRule, listRules, toggleRuleStatus, updateRule } from '@/lib/javaApi';
+import { toast } from 'sonner';
 
 interface Rule {
   id: number;
@@ -29,8 +32,14 @@ interface Rule {
  * Página de configuração dinâmica de regras.
  */
 export default function Rules() {
-  const [rules, setRules] = useState<Rule[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['rules'],
+    queryFn: () => listRules(),
+    retry: 1,
+  });
+
+  const rules = useMemo(() => data ?? [], [data]);
   const [editingRule, setEditingRule] = useState<Rule | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState({
@@ -43,22 +52,57 @@ export default function Rules() {
     classification: 'SUSPICIOUS',
   });
 
-  useEffect(() => {
-    fetchRules();
-  }, []);
+  const invalidateRules = () => queryClient.invalidateQueries({ queryKey: ['rules'] });
 
-  const fetchRules = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/rules?page=0&size=100');
-      const data = await response.json();
-      setRules(data.content || []);
-    } catch (error) {
-      console.error('Erro ao buscar regras:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const saveRule = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        ruleName: formData.ruleName,
+        description: formData.description,
+        ruleType: formData.ruleType,
+        threshold: formData.threshold,
+        weight: formData.weight,
+        enabled: formData.enabled,
+        classification: formData.classification,
+      };
+
+      if (editingRule) {
+        return updateRule(editingRule.id, payload);
+      }
+      return createRule(payload as any);
+    },
+    onSuccess: () => {
+      toast.success('Regra salva com sucesso');
+      setShowDialog(false);
+      setEditingRule(null);
+      setFormData({
+        ruleName: '',
+        description: '',
+        ruleType: 'SECURITY',
+        threshold: 0,
+        weight: 0,
+        enabled: true,
+        classification: 'SUSPICIOUS',
+      });
+      invalidateRules();
+    },
+    onError: () => toast.error('Falha ao salvar regra'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteRule(id),
+    onSuccess: () => {
+      toast.success('Regra deletada');
+      invalidateRules();
+    },
+    onError: () => toast.error('Não foi possível deletar a regra'),
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: (id: number) => toggleRuleStatus(id, !rules.find(r => r.id === id)?.enabled),
+    onSuccess: () => invalidateRules(),
+    onError: () => toast.error('Falha ao alternar regra'),
+  });
 
   const handleEdit = (rule: Rule) => {
     setEditingRule(rule);
@@ -75,57 +119,17 @@ export default function Rules() {
   };
 
   const handleSave = async () => {
-    try {
-      const url = editingRule ? `/api/rules/${editingRule.id}` : '/api/rules';
-      const method = editingRule ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        fetchRules();
-        setShowDialog(false);
-        setEditingRule(null);
-        setFormData({
-          ruleName: '',
-          description: '',
-          ruleType: 'SECURITY',
-          threshold: 0,
-          weight: 0,
-          enabled: true,
-          classification: 'SUSPICIOUS',
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao salvar regra:', error);
-    }
+    saveRule.mutate();
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm('Tem certeza que deseja deletar esta regra?')) return;
 
-    try {
-      const response = await fetch(`/api/rules/${id}`, { method: 'DELETE' });
-      if (response.ok) {
-        fetchRules();
-      }
-    } catch (error) {
-      console.error('Erro ao deletar regra:', error);
-    }
+    deleteMutation.mutate(id);
   };
 
   const handleToggle = async (id: number) => {
-    try {
-      const response = await fetch(`/api/rules/${id}/toggle`, { method: 'PATCH' });
-      if (response.ok) {
-        fetchRules();
-      }
-    } catch (error) {
-      console.error('Erro ao alternar regra:', error);
-    }
+    toggleMutation.mutate(id);
   };
 
   const getRuleTypeColor = (type: string) => {
@@ -318,7 +322,12 @@ export default function Rules() {
           <CardDescription>Total: {rules.length} regras</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {isError && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-red-800" role="alert">
+              Erro ao carregar regras: {error instanceof Error ? error.message : 'erro inesperado'}
+            </div>
+          )}
+          {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>

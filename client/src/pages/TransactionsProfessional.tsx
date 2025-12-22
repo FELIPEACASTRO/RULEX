@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle
 } from '@/components/ui/card';
@@ -8,6 +8,9 @@ import {
   Search, Filter, Download, Eye, CheckCircle, AlertCircle, XCircle,
   ChevronLeft, ChevronRight, Calendar, DollarSign
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { listTransactions } from '@/lib/javaApi';
+import { toast } from 'sonner';
 
 /**
  * Página de Transações Profissional
@@ -19,120 +22,25 @@ export default function TransactionsProfessional() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-  // Dados simulados
-  const transactions = [
-    {
-      id: 1,
-      externalId: 'TRX-2025-001',
-      customerId: 'CUST-12345',
-      merchantId: 'MER-98765',
-      amount: 1250.00,
-      currency: 'BRL',
-      status: 'APPROVED',
-      timestamp: '2025-12-16 14:32:15',
-      mcc: 5411,
-      rules: ['SCORE_CHECK', 'VELOCITY_OK']
-    },
-    {
-      id: 2,
-      externalId: 'TRX-2025-002',
-      customerId: 'CUST-54321',
-      merchantId: 'MER-11111',
-      amount: 5800.00,
-      currency: 'BRL',
-      status: 'SUSPICIOUS',
-      timestamp: '2025-12-16 14:28:42',
-      mcc: 6211,
-      rules: ['UNUSUAL_LOCATION', 'HIGH_AMOUNT']
-    },
-    {
-      id: 3,
-      externalId: 'TRX-2025-003',
-      customerId: 'CUST-99999',
-      merchantId: 'MER-22222',
-      amount: 3200.00,
-      currency: 'BRL',
-      status: 'FRAUD',
-      timestamp: '2025-12-16 14:15:08',
-      mcc: 7995,
-      rules: ['DUPLICATE_TRANSACTION', 'VELOCITY_SPIKE']
-    },
-    {
-      id: 4,
-      externalId: 'TRX-2025-004',
-      customerId: 'CUST-77777',
-      merchantId: 'MER-33333',
-      amount: 450.50,
-      currency: 'BRL',
-      status: 'APPROVED',
-      timestamp: '2025-12-16 14:05:33',
-      mcc: 5812,
-      rules: ['SCORE_CHECK', 'VELOCITY_OK']
-    },
-    {
-      id: 5,
-      externalId: 'TRX-2025-005',
-      customerId: 'CUST-55555',
-      merchantId: 'MER-44444',
-      amount: 12000.00,
-      currency: 'BRL',
-      status: 'SUSPICIOUS',
-      timestamp: '2025-12-16 13:52:19',
-      mcc: 4829,
-      rules: ['VERY_HIGH_AMOUNT', 'NEW_MERCHANT']
-    },
-    {
-      id: 6,
-      externalId: 'TRX-2025-006',
-      customerId: 'CUST-33333',
-      merchantId: 'MER-55555',
-      amount: 890.00,
-      currency: 'BRL',
-      status: 'APPROVED',
-      timestamp: '2025-12-16 13:40:05',
-      mcc: 5411,
-      rules: ['SCORE_CHECK', 'VELOCITY_OK']
-    },
-    {
-      id: 7,
-      externalId: 'TRX-2025-007',
-      customerId: 'CUST-88888',
-      merchantId: 'MER-66666',
-      amount: 2100.00,
-      currency: 'BRL',
-      status: 'FRAUD',
-      timestamp: '2025-12-16 13:28:42',
-      mcc: 6051,
-      rules: ['EXPIRED_CARD', 'INVALID_CVV']
-    },
-    {
-      id: 8,
-      externalId: 'TRX-2025-008',
-      customerId: 'CUST-11111',
-      merchantId: 'MER-77777',
-      amount: 650.00,
-      currency: 'BRL',
-      status: 'APPROVED',
-      timestamp: '2025-12-16 13:15:27',
-      mcc: 5814,
-      rules: ['SCORE_CHECK', 'VELOCITY_OK']
-    }
-  ];
-
-  // Filtrar transações
-  const filteredTransactions = transactions.filter(tx => {
-    const matchesSearch = tx.externalId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tx.customerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tx.merchantId.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || tx.status === filterStatus;
-    return matchesSearch && matchesStatus;
+  const { data, isLoading, isError, error, isFetching } = useQuery({
+    queryKey: ['transactions', { searchTerm, filterStatus, currentPage }],
+    queryFn: () =>
+      listTransactions({
+        customerId: searchTerm || undefined,
+        merchantId: searchTerm || undefined,
+        classification: filterStatus === 'all' ? undefined : (filterStatus as any),
+        page: currentPage - 1,
+        size: itemsPerPage,
+      }),
+    keepPreviousData: true,
+    retry: 1,
+    onError: () => toast.error('Falha ao carregar transações'),
   });
 
-  // Paginação
-  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const paginatedTransactions = data?.content ?? [];
+  const totalPages = useMemo(() => data?.totalPages ?? 1, [data]);
+  const totalElements = data?.totalElements ?? paginatedTransactions.length;
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedTransactions = filteredTransactions.slice(startIndex, startIndex + itemsPerPage);
 
   // Função para obter cor do status
   const getStatusColor = (status: string) => {
@@ -244,15 +152,28 @@ export default function TransactionsProfessional() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg">
-                Transações ({filteredTransactions.length})
+                Transações ({totalElements})
               </CardTitle>
               <CardDescription>
-                Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filteredTransactions.length)} de {filteredTransactions.length}
+                Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, totalElements)} de {totalElements}
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
+          {isError && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-red-800" role="alert">
+              Erro ao carregar transações: {error instanceof Error ? error.message : 'erro inesperado'}
+            </div>
+          )}
+          {(isLoading || isFetching) && (
+            <p className="mb-4 text-sm text-muted-foreground" role="status" aria-live="polite">
+              Carregando transações...
+            </p>
+          )}
+          {!isLoading && !isError && paginatedTransactions.length === 0 && (
+            <p className="mb-4 text-sm text-muted-foreground">Nenhuma transação encontrada para os filtros atuais.</p>
+          )}
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
@@ -274,32 +195,32 @@ export default function TransactionsProfessional() {
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                     role="row"
                   >
-                    <td className="px-6 py-4 font-mono text-blue-600">{tx.externalId}</td>
+                    <td className="px-6 py-4 font-mono text-blue-600">{tx.externalTransactionId}</td>
                     <td className="px-6 py-4 text-gray-700">{tx.customerId}</td>
                     <td className="px-6 py-4 text-gray-700">{tx.merchantId}</td>
                     <td className="px-6 py-4 text-right font-semibold text-gray-900">
-                      R$ {tx.amount.toFixed(2)}
+                      R$ {(tx.transactionAmount ?? 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        {getStatusIcon(tx.status)}
+                        {getStatusIcon(tx.classification)}
                         <Badge
                           variant="outline"
-                          className={`${getStatusColor(tx.status)}`}
+                          className={`${getStatusColor(tx.classification)}`}
                         >
-                          {tx.status === 'APPROVED'
+                          {tx.classification === 'APPROVED'
                             ? 'Aprovada'
-                            : tx.status === 'SUSPICIOUS'
+                            : tx.classification === 'SUSPICIOUS'
                             ? 'Suspeita'
                             : 'Fraude'}
                         </Badge>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-600 text-xs">{tx.timestamp}</td>
+                    <td className="px-6 py-4 text-gray-600 text-xs">{tx.processedAt}</td>
                     <td className="px-6 py-4 text-center">
                       <button
                         className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
-                        aria-label={`Visualizar detalhes da transação ${tx.externalId}`}
+                        aria-label={`Visualizar detalhes da transação ${tx.externalTransactionId}`}
                       >
                         <Eye className="w-4 h-4 text-blue-600" />
                       </button>
@@ -319,18 +240,18 @@ export default function TransactionsProfessional() {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="font-mono text-blue-600 font-semibold">{tx.externalId}</p>
-                    <p className="text-xs text-gray-600 mt-1">{tx.timestamp}</p>
+                    <p className="font-mono text-blue-600 font-semibold">{tx.externalTransactionId}</p>
+                    <p className="text-xs text-gray-600 mt-1">{tx.processedAt}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {getStatusIcon(tx.status)}
+                    {getStatusIcon(tx.classification)}
                     <Badge
                       variant="outline"
-                      className={`${getStatusColor(tx.status)}`}
+                      className={`${getStatusColor(tx.classification)}`}
                     >
-                      {tx.status === 'APPROVED'
+                      {tx.classification === 'APPROVED'
                         ? 'Aprovada'
-                        : tx.status === 'SUSPICIOUS'
+                        : tx.classification === 'SUSPICIOUS'
                         ? 'Suspeita'
                         : 'Fraude'}
                     </Badge>
@@ -349,11 +270,11 @@ export default function TransactionsProfessional() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-gray-600" />
-                    <span className="font-semibold text-gray-900">R$ {tx.amount.toFixed(2)}</span>
+                    <span className="font-semibold text-gray-900">R$ {(tx.transactionAmount ?? 0).toFixed(2)}</span>
                   </div>
                   <button
                     className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
-                    aria-label={`Visualizar detalhes da transação ${tx.externalId}`}
+                    aria-label={`Visualizar detalhes da transação ${tx.externalTransactionId}`}
                   >
                     <Eye className="w-4 h-4 text-blue-600" />
                   </button>

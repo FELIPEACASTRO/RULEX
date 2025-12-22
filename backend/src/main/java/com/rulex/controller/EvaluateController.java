@@ -23,7 +23,7 @@ public class EvaluateController {
 
   @PostMapping
   public ResponseEntity<EvaluateResponse> evaluate(
-      @RequestBody String rawBody, HttpServletRequest httpRequest) {
+      @RequestBody(required = false) String rawBody, HttpServletRequest httpRequest) {
     byte[] rawBytes = (byte[]) httpRequest.getAttribute(RawPayloadCaptureFilter.RAW_BYTES_ATTR);
     String contentType = httpRequest.getContentType();
     return ResponseEntity.ok(ruleEngineService.evaluateRaw(rawBody, rawBytes, contentType));

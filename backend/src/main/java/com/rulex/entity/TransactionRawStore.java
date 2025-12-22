@@ -4,7 +4,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -32,7 +31,6 @@ public class TransactionRawStore {
   @Column(name = "payload_raw_hash", nullable = false, length = 64)
   private String payloadRawHash;
 
-  @Lob
   @Column(name = "payload_raw_bytes", nullable = false, columnDefinition = "BYTEA")
   private byte[] payloadRawBytes;
 

@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { listAuditLogs } from '@/lib/javaApi';
+import { toast } from 'sonner';
 
 interface AuditLog {
   id: number;
@@ -21,7 +24,6 @@ interface AuditLog {
  */
 export default function Audit() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(20);
   const [totalElements, setTotalElements] = useState(0);
@@ -30,31 +32,22 @@ export default function Audit() {
     result: '',
   });
 
-  useEffect(() => {
-    fetchAuditLogs();
-  }, [page, size, filters]);
-
-  const fetchAuditLogs = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        size: size.toString(),
-      });
-
-      if (filters.actionType) params.append('actionType', filters.actionType);
-      if (filters.result) params.append('result', filters.result);
-
-      const response = await fetch(`/api/audit?${params}`);
-      const data = await response.json();
-      setLogs(data.content || []);
-      setTotalElements(data.totalElements || 0);
-    } catch (error) {
-      console.error('Erro ao buscar logs de auditoria:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['auditLogs', { page, size, filters }],
+    queryFn: () =>
+      listAuditLogs({
+        page,
+        size,
+        action: filters.actionType || undefined,
+        result: filters.result || undefined,
+      }),
+    onSuccess: (resp) => {
+      setLogs(resp.content || []);
+      setTotalElements(resp.totalElements || 0);
+    },
+    onError: () => toast.error('Falha ao buscar logs de auditoria'),
+    keepPreviousData: true,
+  });
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -161,7 +154,12 @@ export default function Audit() {
           <CardDescription>Total: {totalElements.toLocaleString()} registros</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {isError && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-red-800" role="alert">
+              Erro ao carregar logs: {error instanceof Error ? error.message : 'erro inesperado'}
+            </div>
+          )}
+          {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>

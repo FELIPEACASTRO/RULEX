@@ -59,6 +59,22 @@ export default function DashboardLayout({
     return <DashboardLayoutSkeleton />
   }
 
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="p-6 rounded-lg border bg-card shadow-sm space-y-4 text-center">
+          <p className="text-lg font-semibold text-foreground">Sessão não encontrada</p>
+          <p className="text-sm text-muted-foreground">
+            Faça login para acessar o console RULEX.
+          </p>
+          <Button onClick={() => (window.location.href = getLoginUrl())}>
+            Ir para login
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Página pública - sem necessidade de autenticação
   // if (!user) { ... }
 
