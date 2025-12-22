@@ -76,11 +76,19 @@ public class RuleController {
 
   /** Ativa/desativa uma regra. PATCH /api/rules/{id}/toggle */
   @PatchMapping("/{id}/toggle")
-  public ResponseEntity<RuleConfigurationDTO> toggleRule(@PathVariable Long id) {
+  public ResponseEntity<RuleConfigurationDTO> toggleRule(
+      @PathVariable Long id, @RequestBody(required = false) ToggleRuleRequest request) {
     log.info("Alternando status da regra: {}", id);
 
-    RuleConfigurationDTO rule = ruleConfigurationService.toggleRule(id);
+    RuleConfigurationDTO rule =
+        (request != null && request.enabled != null)
+            ? ruleConfigurationService.setRuleEnabled(id, request.enabled)
+            : ruleConfigurationService.toggleRule(id);
     return ResponseEntity.ok(rule);
+  }
+
+  static class ToggleRuleRequest {
+    public Boolean enabled;
   }
 
   /** Lista regras habilitadas. GET /api/rules/enabled/true */

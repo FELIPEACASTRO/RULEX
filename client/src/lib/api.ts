@@ -41,7 +41,14 @@ export interface UpdateRuleDto extends Partial<CreateRuleDto> {
 export const rulesApi = {
   list: async (): Promise<Rule[]> => {
     const response = await api.get('/rules');
-    return response.data;
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return data;
+    }
+    if (data && Array.isArray(data.content)) {
+      return data.content;
+    }
+    return [];
   },
 
   getById: async (id: number): Promise<Rule> => {

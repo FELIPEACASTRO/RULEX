@@ -195,6 +195,41 @@ public class RuleConfigurationService {
     return convertToDTO(rule);
   }
 
+  /** Define explicitamente o status enabled de uma regra (idempotente). */
+  public RuleConfigurationDTO setRuleEnabled(Long id, boolean enabled) {
+    RuleConfiguration rule =
+        ruleConfigRepository
+            .findById(id)
+            .orElseThrow(() -> new NotFoundException("Regra não encontrada"));
+
+    if (Boolean.TRUE.equals(rule.getEnabled()) == enabled) {
+      return convertToDTO(rule);
+    }
+
+    String previous = serializeRule(rule);
+
+    rule.setEnabled(enabled);
+    rule.setVersion(rule.getVersion() + 1);
+    rule = ruleConfigRepository.save(rule);
+
+    historyRepository.save(
+        RuleConfigurationHistory.builder()
+            .ruleId(rule.getId())
+            .ruleName(rule.getRuleName())
+            .version(rule.getVersion())
+            .previousJson(previous)
+            .currentJson(serializeRule(rule))
+            .performedBy("SYSTEM")
+            .build());
+
+    auditService.logRuleUpdated(
+        rule.getRuleName(), java.util.Map.of("enabled", rule.getEnabled()), "SYSTEM");
+
+    log.info("Regra setEnabled: {} - Habilitada: {}", rule.getRuleName(), rule.getEnabled());
+
+    return convertToDTO(rule);
+  }
+
   /** Lista regras por status de habilitação. */
   public List<RuleConfigurationDTO> listRulesByEnabled(Boolean enabled) {
     return ruleConfigRepository.findByEnabled(enabled).stream()

@@ -78,35 +78,44 @@ public class SecurityConfig {
             auth ->
                 auth
                     // Public endpoints (kept open for demos / tests)
-                    .requestMatchers(HttpMethod.POST, "/api/transactions/analyze").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/transactions/analyze-advanced")
+                    .requestMatchers(HttpMethod.POST, "/transactions/analyze")
                     .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/evaluate").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/transactions/analyze-advanced")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/evaluate")
+                    .permitAll()
+
+                    // Health probes (K8s / Container Apps / HML ops)
+                    .requestMatchers("/actuator/health/**")
+                    .permitAll()
 
                     // Read-only access for analysts
-                    .requestMatchers(HttpMethod.GET, "/api/transactions/**")
+                    .requestMatchers(HttpMethod.GET, "/transactions/**")
                     .hasAnyRole("ANALYST", "ADMIN")
-                    .requestMatchers(HttpMethod.GET, "/api/rules/**")
+                    .requestMatchers(HttpMethod.GET, "/rules/**")
                     .hasAnyRole("ANALYST", "ADMIN")
-                    .requestMatchers(HttpMethod.GET, "/api/audit/**")
+                    .requestMatchers(HttpMethod.GET, "/audit/**")
                     .hasAnyRole("ANALYST", "ADMIN")
-                    .requestMatchers(HttpMethod.GET, "/api/metrics/**")
+                    .requestMatchers(HttpMethod.GET, "/metrics/**")
                     .hasAnyRole("ANALYST", "ADMIN")
-                    .requestMatchers(HttpMethod.GET, "/api/field-dictionary/**")
+                    .requestMatchers(HttpMethod.GET, "/field-dictionary/**")
                     .hasAnyRole("ANALYST", "ADMIN")
 
                     // V31 rules tools: validate/lint for analysts; simulate admin-only
-                    .requestMatchers(HttpMethod.POST, "/api/rules/validate")
+                    .requestMatchers(HttpMethod.POST, "/rules/validate")
                     .hasAnyRole("ANALYST", "ADMIN")
-                    .requestMatchers(HttpMethod.POST, "/api/rules/lint")
+                    .requestMatchers(HttpMethod.POST, "/rules/lint")
                     .hasAnyRole("ANALYST", "ADMIN")
-                    .requestMatchers(HttpMethod.POST, "/api/rules/simulate").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/rules/simulate")
+                    .hasRole("ADMIN")
 
                     // Mutations are admin-only
-                    .requestMatchers("/api/homolog/**").hasRole("ADMIN")
-                    .requestMatchers("/api/rules/**").hasRole("ADMIN")
-
-                    .anyRequest().authenticated())
+                    .requestMatchers("/homolog/**")
+                    .hasRole("ADMIN")
+                    .requestMatchers("/rules/**")
+                    .hasRole("ADMIN")
+                    .anyRequest()
+                    .authenticated())
         .httpBasic(withDefaults());
 
     return http.build();

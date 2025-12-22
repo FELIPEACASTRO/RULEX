@@ -367,7 +367,14 @@ export async function getRealTimeMetrics(): Promise<{
  * Listar todas as regras configuradas
  */
 export async function listRules(): Promise<RuleConfiguration[]> {
-  return apiRequest<RuleConfiguration[]>('/api/rules');
+  const response = await apiRequest<any>('/api/rules');
+  if (Array.isArray(response)) {
+    return response;
+  }
+  if (response && Array.isArray(response.content)) {
+    return response.content;
+  }
+  return [];
 }
 
 /**

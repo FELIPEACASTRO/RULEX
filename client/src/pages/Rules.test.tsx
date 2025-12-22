@@ -45,13 +45,14 @@ function mockRulesApi(initialContent: any[] = []) {
 
     // GET list
     if (url.includes('/api/rules') && method === 'GET') {
-      return okJson({ content: rules });
+      return okJson(rules);
     }
 
     // Create
     if (url.includes('/api/rules') && method === 'POST') {
       const body = JSON.parse(bodyText || '{}');
-      const id = body.id ?? 1;
+      const maxId = rules.reduce((acc: number, r: any) => Math.max(acc, Number(r?.id ?? 0)), 0);
+      const id = body.id ?? (maxId + 1);
       const created = { id, ...body, version: body.version ?? 1 };
       rules = [...rules, created];
       return okJson(created);
@@ -71,7 +72,13 @@ function mockRulesApi(initialContent: any[] = []) {
     if (url.includes('/toggle') && method === 'PATCH') {
       const idStr = url.split('/api/rules/')[1]?.split('/toggle')[0];
       const id = Number(idStr);
-      rules = rules.map((r: any) => (r.id === id ? { ...r, enabled: !r.enabled, version: (r.version ?? 1) + 1 } : r));
+      const body = JSON.parse(bodyText || '{}');
+      const enabled = typeof body.enabled === 'boolean' ? body.enabled : undefined;
+      rules = rules.map((r: any) =>
+        r.id === id
+          ? { ...r, enabled: enabled ?? !r.enabled, version: (r.version ?? 1) + 1 }
+          : r,
+      );
       const toggled = rules.find((r: any) => r.id === id);
       return okJson(toggled ?? { id, enabled: false, version: 2 });
     }
@@ -87,8 +94,12 @@ function okJson(body: unknown) {
   return {
     ok: true,
     status: 200,
+    headers: new Headers({ 'content-type': 'application/json' }),
     async json() {
       return body;
+    },
+    async text() {
+      return JSON.stringify(body);
     },
   } as any;
 }
