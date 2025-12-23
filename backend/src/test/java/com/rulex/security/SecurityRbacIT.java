@@ -20,30 +20,25 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import rulex.testconfig.SecurityRbacTestApplication;
 
 /**
  * Security RBAC tests using WebMvcTest slice with security enabled. Tests HTTP Basic
  * authentication with ADMIN and ANALYST roles.
  */
-@WebMvcTest(
-    controllers = {RuleController.class, EvaluateController.class},
-    includeFilters =
-        @ComponentScan.Filter(
-            type = FilterType.ASSIGNABLE_TYPE,
-            classes = {
-              com.rulex.config.SecurityConfig.class,
-              com.rulex.config.RulexSecurityProperties.class
-            }))
+@SpringBootTest(
+    classes = SecurityRbacTestApplication.class,
+    webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
 @TestPropertySource(
     properties = {
       "rulex.security.enabled=true",
