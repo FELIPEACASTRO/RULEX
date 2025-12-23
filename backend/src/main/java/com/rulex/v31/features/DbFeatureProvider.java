@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
 /**
  * Database-backed feature provider for deterministic features.
  *
- * <p>Queries feature_store, velocity_store, holidays, and graph_edges tables.
- * All operations are safe-by-default (return empty/false on errors).
+ * <p>Queries feature_store, velocity_store, holidays, and graph_edges tables. All operations are
+ * safe-by-default (return empty/false on errors).
  */
 @Service
 public class DbFeatureProvider implements FeatureProvider {
@@ -108,9 +108,12 @@ public class DbFeatureProvider implements FeatureProvider {
   @Override
   public Optional<BigDecimal> getVelocityMetric(
       String entityKey, String metricName, String windowName) {
-    if (entityKey == null || entityKey.isBlank()
-        || metricName == null || metricName.isBlank()
-        || windowName == null || windowName.isBlank()) {
+    if (entityKey == null
+        || entityKey.isBlank()
+        || metricName == null
+        || metricName.isBlank()
+        || windowName == null
+        || windowName.isBlank()) {
       return Optional.empty();
     }
     try {
@@ -135,9 +138,7 @@ public class DbFeatureProvider implements FeatureProvider {
 
   @Override
   public long getCount(String entityKey, String windowName) {
-    return getVelocityMetric(entityKey, "count", windowName)
-        .map(BigDecimal::longValue)
-        .orElse(0L);
+    return getVelocityMetric(entityKey, "count", windowName).map(BigDecimal::longValue).orElse(0L);
   }
 
   @Override
@@ -213,4 +214,3 @@ public class DbFeatureProvider implements FeatureProvider {
     return OffsetDateTime.now(ZoneOffset.UTC);
   }
 }
-

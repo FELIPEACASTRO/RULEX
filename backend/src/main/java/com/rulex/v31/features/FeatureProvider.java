@@ -9,8 +9,8 @@ import java.util.Optional;
 /**
  * Provider for derived features (velocity/graph/geo/text/prob) without altering inbound payload.
  *
- * <p>Implementations must be safe-by-default: missing data should be treated as "unknown" and
- * never throw for normal rule evaluation.
+ * <p>Implementations must be safe-by-default: missing data should be treated as "unknown" and never
+ * throw for normal rule evaluation.
  *
  * <p>All features are DETERMINISTIC: same input → same output.
  */
@@ -51,9 +51,7 @@ public interface FeatureProvider {
    * @return the count or 0 if not found
    */
   default long getCount(String entityKey, String windowName) {
-    return getVelocityMetric(entityKey, "count", windowName)
-        .map(BigDecimal::longValue)
-        .orElse(0L);
+    return getVelocityMetric(entityKey, "count", windowName).map(BigDecimal::longValue).orElse(0L);
   }
 
   /**

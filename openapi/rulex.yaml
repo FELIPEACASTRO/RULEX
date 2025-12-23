@@ -210,6 +210,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/Rule'
 
+  /api/rules/enabled/{enabled}:
+    get:
+      summary: List rules by enabled status
+      operationId: listRulesByEnabled
+      parameters:
+        - in: path
+          name: enabled
+          required: true
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: List of rules filtered by enabled status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Rule'
+
+  /api/rules/{id}/history:
+    get:
+      summary: Get rule change history (append-only)
+      operationId: getRuleHistory
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: Rule change history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RuleHistoryEntry'
+
   /api/rules/validate:
     post:
       summary: Validate a rule AST (v3.1)
@@ -227,6 +265,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AstValidationResult'
+
+  /api/rules/lint:
+    post:
+      summary: Lint a rule AST (v3.1)
+      operationId: lintRuleAst
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateAstRequest'
+      responses:
+        '200':
+          description: Lint result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AstLintResult'
+
+  /api/rules/simulate:
+    post:
+      summary: Simulate rule decisions and return features used (v3.1)
+      operationId: simulateRulesV31
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/V31SimulateRequest'
+      responses:
+        '200':
+          description: Simulation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V31SimulateResponse'
 
   /api/field-dictionary:
     get:
@@ -252,6 +326,88 @@ paths:
                 items:
                   $ref: '#/components/schemas/FieldDictionaryEntry'
 
+  /api/feature-catalog:
+    get:
+      summary: List feature catalog entries (v3.1)
+      operationId: listFeatureCatalog
+      parameters:
+        - in: query
+          name: featureType
+          schema: { type: string }
+        - in: query
+          name: entityType
+          schema: { type: string }
+        - in: query
+          name: source
+          schema: { type: string }
+      responses:
+        '200':
+          description: Feature definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeatureDefinition'
+
+  /api/feature-catalog/{featureName}:
+    get:
+      summary: Get a feature definition by name
+      operationId: getFeatureCatalogByName
+      parameters:
+        - in: path
+          name: featureName
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Feature definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeatureDefinition'
+        '404':
+          description: Not found
+
+  /api/feature-catalog/types:
+    get:
+      summary: List feature types
+      operationId: listFeatureTypes
+      responses:
+        '200':
+          description: Feature types
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+
+  /api/feature-catalog/entity-types:
+    get:
+      summary: List feature entity types
+      operationId: listFeatureEntityTypes
+      responses:
+        '200':
+          description: Entity types
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+
+  /api/feature-catalog/sources:
+    get:
+      summary: List feature sources
+      operationId: listFeatureSources
+      responses:
+        '200':
+          description: Sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+
   /api/audit/executions:
     get:
       summary: List rule executions (audit console)
@@ -273,6 +429,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PageRuleExecutionLog'
+
+  /api/audit/transaction/{transactionId}:
+    get:
+      summary: Get audit logs for a specific transaction
+      operationId: getTransactionAuditLogs
+      parameters:
+        - in: path
+          name: transactionId
+          required: true
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: page
+          schema: { type: integer, default: 0 }
+        - in: query
+          name: size
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Paged audit logs for transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageAuditLog'
+
   /api/audit:
     get:
       summary: List audit events
@@ -363,6 +543,153 @@ paths:
             application/json:
               schema:
                 type: object
+
+  # =============================================================================
+  # HOMOLOG ENDPOINTS (Bank-Grade Rule Management)
+  # =============================================================================
+
+  /api/homolog/rules:
+    post:
+      summary: Create a new homolog rule version (ADMIN only)
+      operationId: createHomologRule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHomologRuleRequest'
+      responses:
+        '200':
+          description: Created rule version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomologRuleVersionResponse'
+
+  /api/homolog/rules/{ruleId}/latest:
+    get:
+      summary: Get latest version of a homolog rule
+      operationId: getLatestHomologRule
+      parameters:
+        - in: path
+          name: ruleId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Latest rule version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomologRuleVersionResponse'
+        '404':
+          description: Rule not found
+
+  /api/homolog/rules/versions/{ruleVersionId}/publish:
+    post:
+      summary: Publish a homolog rule version (ADMIN only)
+      operationId: publishHomologRuleVersion
+      parameters:
+        - in: path
+          name: ruleVersionId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Published rule version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomologRuleVersionResponse'
+
+  /api/homolog/rules/{ruleId}/rollback/{version}:
+    post:
+      summary: Rollback a homolog rule to a specific version (ADMIN only)
+      operationId: rollbackHomologRule
+      parameters:
+        - in: path
+          name: ruleId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: path
+          name: version
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Rolled back rule version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomologRuleVersionResponse'
+
+  /api/homolog/rulesets:
+    post:
+      summary: Create a draft homolog rule set (ADMIN only)
+      operationId: createHomologRuleSetDraft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHomologRuleSetRequest'
+      responses:
+        '200':
+          description: Created rule set draft
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomologRuleSetVersionResponse'
+
+  /api/homolog/rulesets/versions/{ruleSetVersionId}/publish:
+    post:
+      summary: Publish a homolog rule set version (ADMIN only)
+      operationId: publishHomologRuleSetVersion
+      parameters:
+        - in: path
+          name: ruleSetVersionId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Published rule set version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomologRuleSetVersionResponse'
+
+  /api/homolog/rulesets/activate:
+    post:
+      summary: Activate a homolog rule set version (ADMIN only)
+      operationId: activateHomologRuleSet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateHomologRuleSetRequest'
+      responses:
+        '200':
+          description: Activated successfully
+
+  /api/homolog/simulations/run:
+    post:
+      summary: Run a homolog simulation (ADMIN only)
+      operationId: runHomologSimulation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HomologSimulationRequest'
+      responses:
+        '200':
+          description: Simulation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomologSimulationResponse'
+
 components:
   schemas:
     ValidateAstRequest:
@@ -382,6 +709,37 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AstValidationError'
+
+    FeatureDefinition:
+      type: object
+      required: [featureName, featureType, source, dataType, allowedOperators, version]
+      properties:
+        featureName: { type: string }
+        featureType: { type: string }
+        entityType: { type: string, nullable: true }
+        windowName: { type: string, nullable: true }
+        formula: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        source: { type: string }
+        dataType: { type: string }
+        allowedOperators:
+          type: array
+          items: { type: string }
+        refreshStrategy: { type: string, nullable: true }
+        version: { type: integer }
+
+    AstLintResult:
+      type: object
+      required: [valid, errors, warnings]
+      properties:
+        valid: { type: boolean }
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/AstValidationError'
+        warnings:
+          type: array
+          items: { type: object }
 
     AstValidationError:
       type: object
@@ -432,9 +790,85 @@ components:
         rulesFiredJson: { type: object }
         decisionPathJson: { type: object }
         whyNotFiredJson: { type: object }
+        featuresUsedJson:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureUsed'
         contextFlagsJson: { type: object }
         errorJson: { type: object }
         createdAt: { type: string, format: date-time }
+
+    FeatureUsed:
+      type: object
+      description: Minimal, deterministic audit-friendly record of an input/feature/function used during evaluation.
+      properties:
+        source: { type: string }
+        name: { type: string }
+        entityKey: { type: string }
+        featureVersion: { type: string }
+        windowName: { type: string }
+        valueHash: { type: string }
+        valueMasked: { type: string }
+
+    V31SimulateRequest:
+      type: object
+      required: [payload, rules]
+      properties:
+        payload:
+          type: object
+          additionalProperties: true
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/V31SimulateRule'
+
+    V31SimulateRule:
+      type: object
+      required: [ruleName, decision, ast]
+      properties:
+        ruleName: { type: string }
+        decision: { type: string }
+        ast:
+          type: object
+          description: Rule AST root node (v3.1)
+          additionalProperties: true
+
+    V31SimulateResponse:
+      type: object
+      required: [status, rulesFired, decisionPath, whyNotFired, featuresUsed]
+      properties:
+        status: { type: string }
+        rulesFired:
+          type: array
+          items:
+            $ref: '#/components/schemas/V31SimulateFiredRule'
+        decisionPath:
+          type: object
+          additionalProperties: true
+        whyNotFired:
+          type: array
+          items:
+            $ref: '#/components/schemas/V31SimulateWhyNot'
+        featuresUsed:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureUsed'
+
+    V31SimulateFiredRule:
+      type: object
+      properties:
+        ruleName: { type: string }
+        decision: { type: string }
+
+    V31SimulateWhyNot:
+      type: object
+      properties:
+        ruleName: { type: string }
+        reason: { type: string }
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/AstValidationError'
 
     PageRuleExecutionLog:
       type: object
@@ -685,3 +1119,102 @@ components:
         totalPages: { type: integer }
         size: { type: integer }
         number: { type: integer }
+
+    RuleHistoryEntry:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        ruleId: { type: integer, format: int64 }
+        ruleName: { type: string }
+        action: { type: string }
+        previousValue: { type: string }
+        newValue: { type: string }
+        changedBy: { type: string }
+        changedAt: { type: string, format: date-time }
+
+    # =============================================================================
+    # HOMOLOG SCHEMAS
+    # =============================================================================
+
+    CreateHomologRuleRequest:
+      type: object
+      required: [name, decision, ast]
+      properties:
+        name: { type: string }
+        decision: { type: string }
+        ast:
+          type: object
+          additionalProperties: true
+
+    HomologRuleVersionResponse:
+      type: object
+      properties:
+        ruleId: { type: string, format: uuid }
+        ruleVersionId: { type: string, format: uuid }
+        name: { type: string }
+        version: { type: integer }
+        status: { type: string, enum: [DRAFT, PUBLISHED, DEPRECATED] }
+        decision: { type: string }
+        ast:
+          type: object
+          additionalProperties: true
+        createdAt: { type: string, format: date-time }
+        publishedAt: { type: string, format: date-time }
+
+    CreateHomologRuleSetRequest:
+      type: object
+      required: [name, ruleVersionIds]
+      properties:
+        name: { type: string }
+        ruleVersionIds:
+          type: array
+          items: { type: string, format: uuid }
+
+    HomologRuleSetVersionResponse:
+      type: object
+      properties:
+        ruleSetId: { type: string, format: uuid }
+        ruleSetVersionId: { type: string, format: uuid }
+        name: { type: string }
+        version: { type: integer }
+        status: { type: string, enum: [DRAFT, PUBLISHED, DEPRECATED] }
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/HomologRuleVersionResponse'
+        createdAt: { type: string, format: date-time }
+        publishedAt: { type: string, format: date-time }
+
+    ActivateHomologRuleSetRequest:
+      type: object
+      required: [ruleSetVersionId]
+      properties:
+        ruleSetVersionId: { type: string, format: uuid }
+
+    HomologSimulationRequest:
+      type: object
+      required: [ruleSetVersionId, payload]
+      properties:
+        ruleSetVersionId: { type: string, format: uuid }
+        payload:
+          type: object
+          additionalProperties: true
+
+    HomologSimulationResponse:
+      type: object
+      properties:
+        status: { type: string }
+        rulesFired:
+          type: array
+          items:
+            type: object
+            properties:
+              ruleName: { type: string }
+              decision: { type: string }
+        decisionPath:
+          type: object
+          additionalProperties: true
+        featuresUsed:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureUsed'

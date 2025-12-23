@@ -1,6 +1,8 @@
 package com.rulex.v31.field;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rulex.dto.TransactionRequest;
 import java.lang.reflect.Field;
 import java.time.OffsetDateTime;
@@ -27,9 +29,11 @@ public class FieldDictionarySeeder implements ApplicationRunner {
   private static final String DEFAULT_PORTFOLIO = "*";
 
   private final FieldDictionaryRepository repository;
+  private final ObjectMapper objectMapper;
 
-  public FieldDictionarySeeder(FieldDictionaryRepository repository) {
+  public FieldDictionarySeeder(FieldDictionaryRepository repository, ObjectMapper objectMapper) {
     this.repository = repository;
+    this.objectMapper = objectMapper;
   }
 
   @Override
@@ -140,13 +144,17 @@ public class FieldDictionarySeeder implements ApplicationRunner {
     };
   }
 
-  private String defaultSecurityConstraints(String jsonFieldName) {
+  private JsonNode defaultSecurityConstraints(String jsonFieldName) {
     if (jsonFieldName == null) {
       return null;
     }
     String f = jsonFieldName.trim().toLowerCase(Locale.ROOT);
     if (f.equals("pan") || f.contains("paymentinstrument")) {
-      return "{\"pci\":true,\"mask\":\"PAN\",\"neverLog\":true}";
+      var node = objectMapper.createObjectNode();
+      node.put("pci", true);
+      node.put("mask", "PAN");
+      node.put("neverLog", true);
+      return node;
     }
     return null;
   }

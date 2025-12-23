@@ -2,6 +2,7 @@ package com.rulex.v31.ast;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.rulex.dto.TransactionRequest;
+import com.rulex.util.PanMaskingUtil;
 import com.rulex.v31.features.FeatureProvider;
 import com.rulex.v31.features.NoOpFeatureProvider;
 import com.rulex.v31.trace.FeatureUsageCollector;
@@ -363,9 +364,31 @@ public class AstEvaluator {
 
   private Object resolveField(JsonNode fieldNode, JsonNode payload) {
     String jsonPath = text(fieldNode.get("jsonPath"));
-    if (jsonPath == null || !jsonPath.startsWith("$.") || payload == null) {
+    if (jsonPath == null || payload == null) {
       return null;
     }
+
+    if (jsonPath.startsWith("$feature.")) {
+      String featureName = jsonPath.substring("$feature.".length()).trim();
+      if (!isValidFeatureName(featureName)) {
+        return null;
+      }
+
+      String pan = text(payload.get("pan"));
+      String entityKey = PanMaskingUtil.mask(pan);
+      if (entityKey == null || entityKey.isBlank()) {
+        return null;
+      }
+
+      // Tracing is handled by TracingFeatureProvider wrapper.
+      JsonNode n = featureProvider.getFeature(entityKey, featureName).orElse(null);
+      return constValue(n);
+    }
+
+    if (!jsonPath.startsWith("$.")) {
+      return null;
+    }
+
     String[] parts = jsonPath.substring(2).split("\\.");
     JsonNode cur = payload;
     for (String p : parts) {
@@ -382,6 +405,21 @@ public class AstEvaluator {
     }
 
     return value;
+  }
+
+  private static boolean isValidFeatureName(String featureName) {
+    if (featureName == null || featureName.isBlank() || featureName.length() > 100) {
+      return false;
+    }
+    for (int i = 0; i < featureName.length(); i++) {
+      char c = featureName.charAt(i);
+      boolean ok =
+          (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
+      if (!ok) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private Object evalFunc(JsonNode func, JsonNode payload) {
@@ -413,9 +451,9 @@ public class AstEvaluator {
       case "TO_TIME_PAD6_HHMMSS" -> values.isEmpty() ? null : toTimePad6(values.get(0));
       case "PARSE_GMTOFFSET" -> values.isEmpty() ? null : parseGmtOffset(values.get(0));
 
-      // =============================
-      // Temporal / sequential
-      // =============================
+        // =============================
+        // Temporal / sequential
+        // =============================
       case "IS_WEEKEND" -> isWeekend(values.isEmpty() ? null : values.get(0));
       case "IN_TIME_RANGE" -> inTimeRange(values);
       case "SAME_DAY" -> sameDay(values);
@@ -426,9 +464,9 @@ public class AstEvaluator {
       case "IS_HOLIDAY" -> isHoliday(values);
       case "IS_BUSINESS_DAY" -> isBusinessDay(values);
 
-      // =============================
-      // Schema / robustness
-      // =============================
+        // =============================
+        // Schema / robustness
+        // =============================
       case "HAS_FIELD" -> hasField(payload, values);
       case "MISSING_FIELD" -> !hasField(payload, values);
       case "UNKNOWN_FIELDS_PRESENT" -> unknownFieldsPresent(payload);
@@ -436,9 +474,9 @@ public class AstEvaluator {
       case "JSON_PATH_EXISTS" -> hasField(payload, values);
       case "JSON_PATH_VALUE" -> jsonPathValue(payload, values);
 
-      // =============================
-      // Text
-      // =============================
+        // =============================
+        // Text
+        // =============================
       case "REMOVE_DIACRITICS" -> removeDiacritics(values.isEmpty() ? null : values.get(0));
       case "STRIP_PUNCTUATION" -> stripPunctuation(values.isEmpty() ? null : values.get(0));
       case "NORMALIZE_TEXT" -> normalizeText(values.isEmpty() ? null : values.get(0));
@@ -448,9 +486,9 @@ public class AstEvaluator {
       case "TOKEN_COUNT" -> tokenCount(values.isEmpty() ? null : values.get(0));
       case "KEYWORD_BLACKLIST" -> keywordBlacklist(values);
 
-      // =============================
-      // Prob / fuzzy
-      // =============================
+        // =============================
+        // Prob / fuzzy
+        // =============================
       case "CONFIDENCE_GATE" -> confidenceGate(values);
       case "FUZZY_MATCH" -> fuzzyMatch(values);
       case "FUZZY_SET_MEMBERSHIP" -> fuzzySetMembership(values);
@@ -696,7 +734,7 @@ public class AstEvaluator {
   }
 
   private JsonNode resolveJsonPathNode(JsonNode payload, String jsonPath) {
-    if (payload == null || jsonPath == null || !jsonPath.startsWith("$.") ) {
+    if (payload == null || jsonPath == null || !jsonPath.startsWith("$.")) {
       return null;
     }
     String[] parts = jsonPath.substring(2).split("\\.");
@@ -958,9 +996,7 @@ public class AstEvaluator {
       k++;
     }
     t /= 2.0;
-    return ((matches / (double) len1)
-            + (matches / (double) len2)
-            + ((matches - t) / matches))
+    return ((matches / (double) len1) + (matches / (double) len2) + ((matches - t) / matches))
         / 3.0;
   }
 

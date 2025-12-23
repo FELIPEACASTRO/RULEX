@@ -1,5 +1,6 @@
 package com.rulex.v31.field;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -8,6 +9,8 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "field_dictionary")
@@ -33,10 +36,12 @@ public class FieldDictionaryEntity {
   private String dataType;
 
   @Column(name = "domain_json", columnDefinition = "jsonb")
-  private String domainJson;
+  @JdbcTypeCode(SqlTypes.JSON)
+  private JsonNode domainJson;
 
   @Column(name = "sentinel_values_json", columnDefinition = "jsonb")
-  private String sentinelValuesJson;
+  @JdbcTypeCode(SqlTypes.JSON)
+  private JsonNode sentinelValuesJson;
 
   @Column(name = "allowed_operators", columnDefinition = "text[]", nullable = false)
   private String[] allowedOperators;
@@ -45,10 +50,12 @@ public class FieldDictionaryEntity {
   private String[] allowedFunctions;
 
   @Column(name = "requiredness_by_context", columnDefinition = "jsonb")
-  private String requirednessByContext;
+  @JdbcTypeCode(SqlTypes.JSON)
+  private JsonNode requirednessByContext;
 
   @Column(name = "security_constraints", columnDefinition = "jsonb")
-  private String securityConstraints;
+  @JdbcTypeCode(SqlTypes.JSON)
+  private JsonNode securityConstraints;
 
   @Column(name = "normalization_allowed", nullable = false)
   private boolean normalizationAllowed;

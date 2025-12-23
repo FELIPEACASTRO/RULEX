@@ -1,5 +1,6 @@
 package com.rulex.v31.field;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -57,14 +58,23 @@ public class FieldDictionaryController {
     return ResponseEntity.ok(response);
   }
 
-  private Object readJsonOrNull(String json) {
-    if (json == null || json.isBlank()) {
+  private Object readJsonOrNull(Object json) {
+    if (json == null) {
       return null;
     }
-    try {
-      return objectMapper.readTree(json);
-    } catch (Exception e) {
-      return json;
+    if (json instanceof JsonNode node) {
+      return node;
     }
+    if (json instanceof String s) {
+      if (s.isBlank()) {
+        return null;
+      }
+      try {
+        return objectMapper.readTree(s);
+      } catch (Exception e) {
+        return s;
+      }
+    }
+    return json;
   }
 }

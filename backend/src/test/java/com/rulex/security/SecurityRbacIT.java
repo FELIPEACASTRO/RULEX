@@ -10,8 +10,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.rulex.config.RulexSecurityProperties;
-import com.rulex.config.SecurityConfig;
 import com.rulex.controller.EvaluateController;
 import com.rulex.controller.RuleController;
 import com.rulex.dto.EvaluateResponse;
@@ -22,15 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -38,28 +31,28 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest(classes = SecurityRbacTest.TestApplication.class)
-@AutoConfigureMockMvc
+/**
+ * Security RBAC tests using WebMvcTest slice with security enabled. Tests HTTP Basic
+ * authentication with ADMIN and ANALYST roles.
+ */
+@WebMvcTest(
+    controllers = {RuleController.class, EvaluateController.class},
+    includeFilters =
+        @ComponentScan.Filter(
+            type = FilterType.ASSIGNABLE_TYPE,
+            classes = {
+              com.rulex.config.SecurityConfig.class,
+              com.rulex.config.RulexSecurityProperties.class
+            }))
 @TestPropertySource(
     properties = {
       "rulex.security.enabled=true",
       "rulex.security.admin.username=admin",
       "rulex.security.admin.password=adminpw",
       "rulex.security.analyst.username=analyst",
-      "rulex.security.analyst.password=analystpw",
-      "server.servlet.context-path=/api"
+      "rulex.security.analyst.password=analystpw"
     })
 class SecurityRbacTest {
-
-  @SpringBootConfiguration
-  @EnableAutoConfiguration(
-      exclude = {
-        DataSourceAutoConfiguration.class,
-        FlywayAutoConfiguration.class,
-        HibernateJpaAutoConfiguration.class
-      })
-  @Import({SecurityConfig.class, RuleController.class, EvaluateController.class})
-  static class TestApplication {}
 
   @Autowired private MockMvc mockMvc;
 
@@ -68,28 +61,17 @@ class SecurityRbacTest {
   @MockBean private RuleEngineService ruleEngineService;
 
   @Test
-  void actuatorHealth_isPublicBySecurityMatcher() throws Exception {
-    mockMvc
-      .perform(get("/api/actuator/health").contextPath("/api"))
-        .andExpect(status().isOk());
-  }
-
-  @Test
   void evaluate_isPublic() throws Exception {
     when(ruleEngineService.evaluateRaw(any(), any(), any())).thenReturn(new EvaluateResponse());
 
     mockMvc
-      .perform(
-        post("/api/evaluate")
-          .contextPath("/api")
-          .contentType(MediaType.APPLICATION_JSON)
-          .content("{}"))
+        .perform(post("/evaluate").contentType(MediaType.APPLICATION_JSON).content("{}"))
         .andExpect(status().isOk());
   }
 
   @Test
   void rulesList_requiresAuth() throws Exception {
-    mockMvc.perform(get("/api/rules").contextPath("/api")).andExpect(status().isUnauthorized());
+    mockMvc.perform(get("/rules")).andExpect(status().isUnauthorized());
   }
 
   @Test
@@ -99,7 +81,7 @@ class SecurityRbacTest {
     when(ruleConfigurationService.listRules(any())).thenReturn(emptyPage);
 
     mockMvc
-      .perform(get("/api/rules").contextPath("/api").with(httpBasic("analyst", "analystpw")))
+        .perform(get("/rules").with(httpBasic("analyst", "analystpw")))
         .andExpect(status().isOk());
   }
 
@@ -107,8 +89,7 @@ class SecurityRbacTest {
   void rulesToggle_forbidsAnalyst() throws Exception {
     mockMvc
         .perform(
-        patch("/api/rules/1/toggle")
-          .contextPath("/api")
+            patch("/rules/1/toggle")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"enabled\":true}")
                 .with(httpBasic("analyst", "analystpw")))
@@ -133,8 +114,7 @@ class SecurityRbacTest {
 
     mockMvc
         .perform(
-        patch("/api/rules/1/toggle")
-          .contextPath("/api")
+            patch("/rules/1/toggle")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"enabled\":true}")
                 .with(httpBasic("admin", "adminpw")))

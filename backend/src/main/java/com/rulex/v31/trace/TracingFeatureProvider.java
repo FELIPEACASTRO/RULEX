@@ -26,12 +26,7 @@ public class TracingFeatureProvider implements FeatureProvider {
     FeatureUsageCollector c = collectorSupplier.get();
     if (c != null) {
       c.record(
-          "feature",
-          featureName,
-          entityKey,
-          null,
-          null,
-          v.map(JsonNode::toString).orElse(null));
+          "feature", featureName, entityKey, null, null, v.map(JsonNode::toString).orElse(null));
     }
 
     return v;

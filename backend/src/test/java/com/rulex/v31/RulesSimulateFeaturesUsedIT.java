@@ -35,7 +35,7 @@ class RulesSimulateFeaturesUsedIT extends CorePostgresITSupport {
     String body =
         "{"
             + "\"payload\":{\"merchantName\":\"Acme\"},"
-            + "\"rules\":[{\"ruleName\":\"r1\",\"decision\":\"FRAUDE\",\"ast\":{\"type\":\"CONDITION\",\"left\":{\"type\":\"FIELD\",\"jsonPath\":\"$.merchantName\"},\"operator\":\"EQ\",\"right\":\"Acme\"}}]"
+            + "\"rules\":[{\"ruleName\":\"r1\",\"decision\":\"FRAUDE\",\"ast\":{\"type\":\"CONDITION\",\"left\":{\"type\":\"FIELD\",\"jsonPath\":\"$.merchantName\",\"dataType\":\"string\"},\"operator\":\"EQ\",\"right\":\"Acme\"}}]"
             + "}";
 
     HttpHeaders headers = new HttpHeaders();

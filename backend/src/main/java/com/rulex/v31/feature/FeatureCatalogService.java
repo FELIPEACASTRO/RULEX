@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 /**
  * Service for feature catalog operations.
  *
- * <p>Provides access to feature definitions (metadata) for the Rule Builder UI
- * and rule validation. All features are deterministic.
+ * <p>Provides access to feature definitions (metadata) for the Rule Builder UI and rule validation.
+ * All features are deterministic.
  */
 @Service
 public class FeatureCatalogService {

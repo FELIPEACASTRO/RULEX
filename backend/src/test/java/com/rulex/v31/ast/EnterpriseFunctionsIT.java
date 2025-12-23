@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rulex.v31.features.DbFeatureProvider;
 import com.zaxxer.hikari.HikariDataSource;
-import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -39,11 +38,7 @@ class EnterpriseFunctionsIT {
     dataSource.setUsername(postgres.getUsername());
     dataSource.setPassword(postgres.getPassword());
 
-    Flyway.configure()
-        .dataSource(dataSource)
-        .locations("classpath:db/migration")
-        .load()
-        .migrate();
+    Flyway.configure().dataSource(dataSource).locations("classpath:db/migration").load().migrate();
 
     jdbc = new JdbcTemplate(dataSource);
     featureProvider = new DbFeatureProvider(jdbc, om);

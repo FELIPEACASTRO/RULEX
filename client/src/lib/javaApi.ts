@@ -271,11 +271,25 @@ export interface V31SimulateRule {
   ast: V31AstNode;
 }
 
+/**
+ * Minimal, deterministic audit-friendly record of an input/feature/function used during evaluation.
+ */
+export interface FeatureUsed {
+  source: string;
+  name: string;
+  entityKey: string | null;
+  featureVersion: string | null;
+  windowName: string | null;
+  valueHash: string;
+  valueMasked: string | null;
+}
+
 export interface V31SimulateResponse {
   status: string;
   rulesFired: Array<{ ruleName: string; decision: string }>;
   decisionPath: any;
   whyNotFired: any;
+  featuresUsed: FeatureUsed[];
 }
 
 export interface RuleExecutionLog {
@@ -293,6 +307,7 @@ export interface RuleExecutionLog {
   rulesFiredJson: any;
   decisionPathJson: any;
   whyNotFiredJson: any;
+  featuresUsedJson: FeatureUsed[];
   contextFlagsJson: any;
   errorJson: any;
   createdAt: string;

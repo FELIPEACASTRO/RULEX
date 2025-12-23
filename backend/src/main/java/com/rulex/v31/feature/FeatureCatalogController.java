@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * REST controller for the Feature Catalog API.
  *
- * <p>Provides endpoints to query feature definitions (metadata) for the Rule Builder UI.
- * All features are deterministic (no ML, no auto-tuning).
+ * <p>Provides endpoints to query feature definitions (metadata) for the Rule Builder UI. All
+ * features are deterministic (no ML, no auto-tuning).
  */
 @RestController
 @RequestMapping("/feature-catalog")
@@ -30,7 +30,8 @@ public class FeatureCatalogController {
   /**
    * List all active feature definitions with optional filters.
    *
-   * @param featureType filter by type (PAYLOAD_FIELD, VELOCITY, TEMPORAL, GRAPH, GEO, TEXT, SCHEMA, DERIVED, CONTEXTUAL)
+   * @param featureType filter by type (PAYLOAD_FIELD, VELOCITY, TEMPORAL, GRAPH, GEO, TEXT, SCHEMA,
+   *     DERIVED, CONTEXTUAL)
    * @param entityType filter by entity (card, customer, merchant, device, ip, acquirer)
    * @param source filter by source (payload, velocity_store, feature_store, runtime)
    * @return list of feature definitions
@@ -87,8 +88,7 @@ public class FeatureCatalogController {
    */
   @GetMapping("/entity-types")
   public ResponseEntity<List<String>> getEntityTypes() {
-    return ResponseEntity.ok(
-        List.of("card", "customer", "merchant", "device", "ip", "acquirer"));
+    return ResponseEntity.ok(List.of("card", "customer", "merchant", "device", "ip", "acquirer"));
   }
 
   /**
@@ -98,8 +98,7 @@ public class FeatureCatalogController {
    */
   @GetMapping("/sources")
   public ResponseEntity<List<String>> getSources() {
-    return ResponseEntity.ok(
-        List.of("payload", "velocity_store", "feature_store", "runtime"));
+    return ResponseEntity.ok(List.of("payload", "velocity_store", "feature_store", "runtime"));
   }
 
   private List<Map<String, Object>> toResponse(List<FeatureDefinitionEntity> features) {
@@ -120,7 +119,9 @@ public class FeatureCatalogController {
     map.put("description", f.getDescription());
     map.put("source", f.getSource());
     map.put("dataType", f.getDataType());
-    map.put("allowedOperators", f.getAllowedOperators() != null ? List.of(f.getAllowedOperators()) : List.of());
+    map.put(
+        "allowedOperators",
+        f.getAllowedOperators() != null ? List.of(f.getAllowedOperators()) : List.of());
     map.put("refreshStrategy", f.getRefreshStrategy());
     map.put("version", f.getVersion());
     return map;

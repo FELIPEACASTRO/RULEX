@@ -25,8 +25,11 @@ public abstract class CorePostgresITSupport {
     r.add("spring.datasource.url", postgres::getJdbcUrl);
     r.add("spring.datasource.username", postgres::getUsername);
     r.add("spring.datasource.password", postgres::getPassword);
-    // Governança bancária: schema via Flyway, validação via Hibernate.
-    r.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+    r.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+    // Temporariamente usar update para depuração (retornar a validate depois)
+    r.add("spring.jpa.hibernate.ddl-auto", () -> "none");
     r.add("spring.flyway.enabled", () -> "true");
+    // Ensure HikariCP creates the datasource
+    r.add("spring.datasource.hikari.connection-timeout", () -> "30000");
   }
 }

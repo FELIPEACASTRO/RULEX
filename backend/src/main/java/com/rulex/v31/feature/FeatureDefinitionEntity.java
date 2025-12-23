@@ -12,8 +12,8 @@ import lombok.Setter;
 /**
  * Feature definition entity - metadata for deterministic features available to hard rules.
  *
- * <p>Features can come from: payload fields, velocity store (counters), feature store (pre-computed),
- * or runtime calculations. All must be deterministic (same input → same output).
+ * <p>Features can come from: payload fields, velocity store (counters), feature store
+ * (pre-computed), or runtime calculations. All must be deterministic (same input → same output).
  */
 @Entity
 @Table(name = "feature_definitions")
@@ -21,8 +21,7 @@ import lombok.Setter;
 @Setter
 public class FeatureDefinitionEntity {
 
-  @Id
-  private UUID id;
+  @Id private UUID id;
 
   @Column(name = "feature_name", nullable = false, unique = true)
   private String featureName;

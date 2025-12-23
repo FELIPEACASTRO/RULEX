@@ -67,7 +67,7 @@ public class RuleExecutionLogService {
             .rulesFiredJson(rulesFiredJson)
             .decisionPathJson(decisionPathJson)
             .whyNotFiredJson(null)
-        .featuresUsedJson(featuresUsedJson)
+            .featuresUsedJson(featuresUsedJson)
             .contextFlagsJson(null)
             .errorJson(errorJson)
             .build();
@@ -104,7 +104,7 @@ public class RuleExecutionLogService {
             .rulesFiredJson(objectMapper.createArrayNode())
             .decisionPathJson(decisionPathJson)
             .whyNotFiredJson(null)
-        .featuresUsedJson(objectMapper.createArrayNode())
+            .featuresUsedJson(objectMapper.createArrayNode())
             .contextFlagsJson(null)
             .errorJson(errorJson)
             .build();

@@ -35,8 +35,7 @@ public class RuleExecutionLogController {
     int safeSize = Math.min(Math.max(size, 1), 200);
     int safePage = Math.max(page, 0);
 
-    PageRequest pr =
-        PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+    PageRequest pr = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
 
     Page<RuleExecutionLogEntity> result;
     if (externalTransactionId != null && !externalTransactionId.isBlank()) {

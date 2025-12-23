@@ -51,41 +51,37 @@ public class AstValidator {
           "COALESCE",
           "TO_DATE_YYYYMMDD",
           "TO_TIME_PAD6_HHMMSS",
-        "PARSE_GMTOFFSET",
-
-        // Temporal / sequential
-        "IS_WEEKEND",
-        "IN_TIME_RANGE",
-        "SAME_DAY",
-        "SAME_HOUR",
-        "SAME_WEEK",
-        "BUCKET",
-        "TIME_SINCE_LAST",
-        "IS_HOLIDAY",
-        "IS_BUSINESS_DAY",
-
-        // Schema / robustness
-        "HAS_FIELD",
-        "MISSING_FIELD",
-        "UNKNOWN_FIELDS_PRESENT",
-        "FIELD_TYPE_MISMATCH",
-        "JSON_PATH_EXISTS",
-        "JSON_PATH_VALUE",
-
-        // Text
-        "NORMALIZE_TEXT",
-        "REMOVE_DIACRITICS",
-        "STRIP_PUNCTUATION",
-        "SIMILARITY_LEVENSHTEIN",
-        "SIMILARITY_JARO",
-        "ENTROPY",
-        "TOKEN_COUNT",
-        "KEYWORD_BLACKLIST",
-
-        // Prob / fuzzy
-        "CONFIDENCE_GATE",
-        "FUZZY_MATCH",
-        "FUZZY_SET_MEMBERSHIP");
+          "PARSE_GMTOFFSET",
+          // Temporal / sequential
+          "IS_WEEKEND",
+          "IN_TIME_RANGE",
+          "SAME_DAY",
+          "SAME_HOUR",
+          "SAME_WEEK",
+          "BUCKET",
+          "TIME_SINCE_LAST",
+          "IS_HOLIDAY",
+          "IS_BUSINESS_DAY",
+          // Schema / robustness
+          "HAS_FIELD",
+          "MISSING_FIELD",
+          "UNKNOWN_FIELDS_PRESENT",
+          "FIELD_TYPE_MISMATCH",
+          "JSON_PATH_EXISTS",
+          "JSON_PATH_VALUE",
+          // Text
+          "NORMALIZE_TEXT",
+          "REMOVE_DIACRITICS",
+          "STRIP_PUNCTUATION",
+          "SIMILARITY_LEVENSHTEIN",
+          "SIMILARITY_JARO",
+          "ENTROPY",
+          "TOKEN_COUNT",
+          "KEYWORD_BLACKLIST",
+          // Prob / fuzzy
+          "CONFIDENCE_GATE",
+          "FUZZY_MATCH",
+          "FUZZY_SET_MEMBERSHIP");
 
   private final int maxDepth;
   private final int maxNodes;
@@ -239,13 +235,36 @@ public class AstValidator {
 
   private void validateField(JsonNode node, String path, List<AstValidationError> errors) {
     String jsonPath = text(node.get("jsonPath"));
-    if (jsonPath == null || !jsonPath.startsWith("$.") || jsonPath.length() > 200) {
+    if (jsonPath == null || jsonPath.length() > 200) {
+      errors.add(new AstValidationError(path + ".jsonPath", "jsonPath inválido"));
+    } else if (jsonPath.startsWith("$feature.")) {
+      String featureName = jsonPath.substring("$feature.".length()).trim();
+      if (!isValidFeatureName(featureName)) {
+        errors.add(new AstValidationError(path + ".jsonPath", "feature name inválido"));
+      }
+    } else if (!jsonPath.startsWith("$.")) {
       errors.add(new AstValidationError(path + ".jsonPath", "jsonPath inválido"));
     }
+
     String dataType = text(node.get("dataType"));
     if (dataType == null || dataType.isBlank()) {
       errors.add(new AstValidationError(path + ".dataType", "dataType obrigatório"));
     }
+  }
+
+  private static boolean isValidFeatureName(String featureName) {
+    if (featureName == null || featureName.isBlank() || featureName.length() > 100) {
+      return false;
+    }
+    for (int i = 0; i < featureName.length(); i++) {
+      char c = featureName.charAt(i);
+      boolean ok =
+          (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
+      if (!ok) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private void validateFunc(
