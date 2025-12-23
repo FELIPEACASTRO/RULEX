@@ -105,3 +105,5 @@ temp/
 *.db
 *.sqlite
 *.sqlite3
+backend/debug_output2.txt
+backend/debug_output.txt

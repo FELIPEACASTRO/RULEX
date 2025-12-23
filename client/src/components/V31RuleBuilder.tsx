@@ -307,36 +307,6 @@ export default function V31RuleBuilder() {
     onError: (e: any) => toast.error(e?.message || "Falha ao simular"),
   });
 
-  const canAddCondition = !!selectedEntry && !!selectedOperator;
-
-  const handleAdd = () => {
-    if (!selectedEntry) {
-      toast.error("Selecione um campo do dicionário");
-      return;
-    }
-    if (!selectedOperator) {
-      toast.error("Selecione um operador");
-      return;
-    }
-
-    setConditions((prev) =>
-      prev.concat({
-        id: uuid(),
-        jsonPath: selectedEntry.jsonPath,
-        dataType: selectedEntry.type,
-        operator: selectedOperator,
-        funcName: selectedFunc || undefined,
-        valueRaw: valueRaw || undefined,
-        rangeMinRaw: rangeMinRaw || undefined,
-        rangeMaxRaw: rangeMaxRaw || undefined,
-      })
-    );
-
-    setValueRaw("");
-    setRangeMinRaw("");
-    setRangeMaxRaw("");
-  };
-
   const handleRemove = (id: string) => setConditions((prev) => prev.filter((c) => c.id !== id));
 
   const copyAst = async () => {

@@ -1,0 +1,438 @@
+# Regras Duras (AdvancedRuleEngineService) — extraídas do código
+# Fonte primária: backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java
+# Cada documento YAML abaixo contém exatamente 1 regra (1 bloco).
+
+---
+rule_id: ADV-001
+description: "EMV security flags inválidas + valor > 1000"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "(cardAipStatic != 'Y' OR cardAipDynamic != 'Y' OR cardAipVerify != 'Y') AND transactionAmount > 1000"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [cardAipStatic, cardAipDynamic, cardAipVerify, transactionAmount]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkEMVSecurity)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule01_emvSecurityCheck_suspiciousWhenAipInvalidAndHighAmount)"
+
+---
+rule_id: ADV-002
+description: "Falha em verificação de terminal/cartão (TerminalVerificationResults/CardVerificationResults contém 'FAIL')"
+channel: CREDIT_DEBIT
+severity: HIGH
+when: "(terminalVerificationResults CONTAINS 'FAIL') OR (cardVerificationResults CONTAINS 'FAIL')"
+then: "classification = 'FRAUD'"
+fields_used: [terminalVerificationResults, cardVerificationResults]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkTerminalVerificationFailed)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule02_terminalVerificationFailed_fraudWhenFailPresent)"
+
+---
+rule_id: ADV-003
+description: "Cartão expirado (cardExpireDate < transactionDate)"
+channel: CREDIT_DEBIT
+severity: HIGH
+when: "cardExpireDate IS NOT NULL AND cardExpireDate < transactionDate"
+then: "classification = 'FRAUD'"
+fields_used: [cardExpireDate, transactionDate]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkExpiredCard)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule03_expiredCard_fraudWhenExpireBeforeTransactionDate)"
+
+---
+rule_id: ADV-004
+description: "Reversal/Void acima de 2x a média do cliente (janela 30d)"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "transactionType IN ['R','V'] AND transactionAmount > 2 * customerAverageAmount(30d)  # requer histórico"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [transactionType, transactionAmount, customerIdFromHeader]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkSuspiciousTransactionType, getCustomerAverageAmount)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule04_suspiciousTransactionType_suspiciousWhenReversalAndAmountAbove2xAvg)"
+
+---
+rule_id: ADV-005
+description: "Mídia de cartão inválida (não 'C' nem 'M') em POS e-commerce/recorrência"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "cardMediaType NOT IN ['C','M'] AND posEntryMode IN ['E','R']"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [cardMediaType, posEntryMode]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkUnusualCardMedia)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule05_unusualCardMedia_suspiciousWhenNonChipOrMagneticInEcommerce)"
+
+---
+rule_id: ADV-006
+description: "Terminal ATM + off-premises + valor > 5000"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "terminalType == 'A' AND posOffPremises == 1 AND transactionAmount > 5000"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [terminalType, posOffPremises, transactionAmount]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkSuspiciousTerminal)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule06_suspiciousTerminal_suspiciousWhenAtmOffPremisesHighAmount)"
+
+---
+rule_id: ADV-007
+description: "ECI=5 + AVS request 'N' + valor > 1000"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "eciIndicator == 5 AND avsRequest == 'N' AND transactionAmount > 1000"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [eciIndicator, avsRequest, transactionAmount]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkEcommerceNoAVS)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule07_ecommerceNoAvs_suspiciousWhenEci5NoAvsHighAmount)"
+
+---
+rule_id: ADV-008
+description: "POS security = 0 + posEntryMode 'C' + valor > 2000"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "posSecurity == 0 AND posEntryMode == 'C' AND transactionAmount > 2000"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [posSecurity, posEntryMode, transactionAmount]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkPOSSecurityMissing)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule08_posSecurityMissing_suspiciousWhenPosSecurityZeroChipHighAmount)"
+
+---
+rule_id: ADV-009
+description: "PosCardCapture=1 e mais de 2 capturas do mesmo PAN nos últimos 30 dias"
+channel: CREDIT_DEBIT
+severity: HIGH
+when: "posCardCapture == 1 AND cardCapturesCount(maskedPan, 30d) > 2  # requer histórico"
+then: "classification = 'FRAUD'"
+fields_used: [posCardCapture, pan]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkCardCaptureFraud)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule09_cardCaptureFraud_fraudWhenCaptureCountExceedsThreshold)"
+
+---
+rule_id: ADV-010
+description: "Limite de tentativas PIN/CVV excedido (cvvPinTryLimitExceeded=1)"
+channel: CREDIT_DEBIT
+severity: HIGH
+when: "cvvPinTryLimitExceeded == 1"
+then: "classification = 'FRAUD'"
+fields_used: [cvvPinTryLimitExceeded]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkPinCvvLimitExceeded)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule10_pinCvvLimitExceeded_fraudWhenFlagSet)"
+
+---
+rule_id: ADV-011
+description: "PIN offline falhou (performed=1 e failed=1)"
+channel: CREDIT_DEBIT
+severity: HIGH
+when: "cvrofflinePinVerificationPerformed == 1 AND cvrofflinePinVerificationFailed == 1"
+then: "classification = 'FRAUD'"
+fields_used: [cvrofflinePinVerificationPerformed, cvrofflinePinVerificationFailed]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkOfflinePinFailed)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule11_offlinePinFailed_fraudWhenPerformedAndFailed)"
+
+---
+rule_id: ADV-012
+description: "CVV2 ausente (cvv2Present='0') em MCC alto risco + valor > 1000"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "cvv2Present == '0' AND mcc IN [7995, 6211, 6051, 7273, 7994, 7298] AND transactionAmount > 1000"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [cvv2Present, mcc, transactionAmount]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkMissingCvv2HighRisk, isHighRiskMCC)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule12_missingCvv2HighRisk_suspiciousWhenMissingCvv2HighRiskMccHighAmount)"
+
+---
+rule_id: ADV-013
+description: "Indicadores customizados de fraude (flags/strings)"
+channel: CREDIT_DEBIT
+severity: HIGH
+when: "userIndicator01 == 'F' OR (userIndicator03 CONTAINS 'BLOCKED') OR (userData04 CONTAINS 'FRAUD')"
+then: "classification = 'FRAUD'"
+fields_used: [userIndicator01, userIndicator03, userData04]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkCustomIndicatorFraud)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule13_customIndicatorFraud_fraudWhenUserIndicatorFlagsFraud)"
+
+---
+rule_id: ADV-014
+description: "Lag de processamento > 60 (cálculo interno) e valor > 5000"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "recordCreationTime IS NOT NULL AND transactionTime IS NOT NULL AND timeLag(transactionTime, recordCreationTime) > 60 AND transactionAmount > 5000"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [recordCreationTime, transactionTime, transactionAmount]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkProcessingLagAnomaly, calculateTimeLag)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule14_processingLagAnomaly_suspiciousWhenLagOver60MinutesHighAmount)"
+
+---
+rule_id: ADV-015
+description: "Madrugada (0-5h) com GMT offset fora de -03.00/-02.00 e valor > 2000"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "hour(transactionTime) >= 0 AND hour(transactionTime) < 6 AND gmtOffset NOT IN ['-03.00','-02.00'] AND transactionAmount > 2000"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [transactionTime, gmtOffset, transactionAmount]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkTimezoneNormalizedCheck)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule15_timezoneNormalizedCheck_suspiciousWhenNightHourAndTimezoneMismatchHighAmount)"
+
+---
+rule_id: ADV-016
+description: "Transação duplicada (mesmo externalTransactionId+transactionDate)"
+channel: CREDIT_DEBIT
+severity: HIGH
+when: "duplicateTransactionsCount(externalTransactionId, transactionDate) > 0  # requer histórico"
+then: "classification = 'FRAUD'"
+fields_used: [externalTransactionId, transactionDate]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkDuplicateTransaction)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule16_duplicateTransaction_fraudWhenDuplicateCountPositive)"
+
+---
+rule_id: ADV-017
+description: "CEP do merchant inválido (null, vazio, ou começa com '000000')"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "merchantPostalCode IS NULL OR merchantPostalCode == '' OR merchantPostalCode STARTS_WITH '000000'"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [merchantPostalCode]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkSuspiciousMerchantPostal)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule17_suspiciousMerchantPostal_suspiciousWhenPostalCodeInvalid)"
+
+---
+rule_id: ADV-018
+description: "Token suspeito (contém TEST/DEMO) com valor > 1000"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "tokenId IS NOT NULL AND (tokenId CONTAINS 'TEST' OR tokenId CONTAINS 'DEMO') AND transactionAmount > 1000"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [tokenId, transactionAmount]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkSuspiciousToken)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule18_suspiciousToken_suspiciousWhenTokenContainsTestAndHighAmount)"
+
+---
+rule_id: ADV-019
+description: "Merchant country BR (076) mas moeda != BRL (986) e valor > 1000"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "transactionCurrencyCode IS NOT NULL AND transactionCurrencyCode != 986 AND merchantCountryCode == '076' AND transactionAmount > 1000"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [transactionCurrencyCode, merchantCountryCode, transactionAmount]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkUnexpectedCurrency)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule19_unexpectedCurrency_suspiciousWhenBrazilCountryNonBrlHighAmount)"
+
+---
+rule_id: ADV-020
+description: "Taxa de conversão anômala: |rate-avgRate| > 10% do avgRate (janela 30d)"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "transactionCurrencyCode IS NOT NULL AND transactionCurrencyCode != 986 AND transactionCurrencyConversionRate IS NOT NULL AND ABS(transactionCurrencyConversionRate - avgRate(transactionCurrencyCode, 30d)) > 0.1 * avgRate(transactionCurrencyCode, 30d)  # requer histórico"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [transactionCurrencyCode, transactionCurrencyConversionRate]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkAnomalousConversionRate, getAverageCurrencyConversionRate)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule20_anomalousConversionRate_suspiciousWhenDeviationOver10Percent)"
+
+---
+rule_id: ADV-021
+description: "Sequência de autenticação incoerente (criptograma ok + CVV inválido)"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "cryptogramValid == 'V' AND cvv2Response == 'N'"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [cryptogramValid, cvv2Response]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkIncoherentAuthSequence)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule21_incoherentAuthSequence_suspiciousWhenCryptogramValidButCvvInvalid)"
+
+---
+rule_id: ADV-022
+description: "Sequência de autenticação incoerente (CAVV ok + PIN inválido)"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "cavvResult == 0 AND pinVerifyCode == 'N'"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [cavvResult, pinVerifyCode]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkIncoherentAuthSequence)"
+
+---
+rule_id: ADV-023
+description: "Sequência de autenticação incoerente (TAL alto >50 mas score <100)"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "tokenAssuranceLevel IS NOT NULL AND tokenAssuranceLevel > 50 AND consumerAuthenticationScore IS NOT NULL AND consumerAuthenticationScore < 100"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [tokenAssuranceLevel, consumerAuthenticationScore]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkIncoherentAuthSequence)"
+
+---
+rule_id: ADV-024
+description: "Contexto incoerente (e-commerce mas customerPresent='Y')"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "posEntryMode == 'E' AND customerPresent == 'Y'"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [posEntryMode, customerPresent]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkIncoherentContext)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule22_incoherentContext_suspiciousWhenEcommerceButCustomerPresent)"
+
+---
+rule_id: ADV-025
+description: "Contexto incoerente (ATM mas posEntryMode='E')"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "terminalType == 'A' AND posEntryMode == 'E'"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [terminalType, posEntryMode]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkIncoherentContext)"
+
+---
+rule_id: ADV-026
+description: "Contexto incoerente (cardMediaType='C' mas cryptogramValid='N')"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "cardMediaType == 'C' AND cryptogramValid == 'N'"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [cardMediaType, cryptogramValid]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkIncoherentContext)"
+
+---
+rule_id: ADV-027
+description: "Autorização contraditória (decision='A' mas response != 'A')"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "authDecisionCode == 'A' AND authResponseCode != 'A'"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [authDecisionCode, authResponseCode]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkContradictoryAuthorization)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule23_contradictoryAuthorization_suspiciousWhenDecisionApprovedButResponseDifferent)"
+
+---
+rule_id: ADV-028
+description: "Autorização contraditória (postFlag='A' e amount==0)"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "authPostFlag == 'A' AND transactionAmount == 0"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [authPostFlag, transactionAmount]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkContradictoryAuthorization)"
+
+---
+rule_id: ADV-029
+description: "Autorização contraditória (decision='A' e authId ausente)"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "authDecisionCode == 'A' AND authId IS NULL"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [authDecisionCode, authId]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkContradictoryAuthorization)"
+
+---
+rule_id: ADV-030
+description: "Adquirente suspeito: acquirerCountry fora de 076/840/392 e valor > 10000"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "acquirerCountry IS NOT NULL AND acquirerCountry NOT IN ['076','840','392'] AND transactionAmount > 10000"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [acquirerCountry, transactionAmount]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkSuspiciousAcquirer)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule24_suspiciousAcquirer_suspiciousWhenAcquirerCountryUnexpectedHighAmount)"
+
+---
+rule_id: ADV-031
+description: "Mismatch país adquirente vs merchant com valor > 5000"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "acquirerCountry IS NOT NULL AND merchantCountryCode IS NOT NULL AND acquirerCountry != merchantCountryCode AND transactionAmount > 5000"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [acquirerCountry, merchantCountryCode, transactionAmount]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkAcquirerCountryMismatch)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule25_acquirerCountryMismatch_suspiciousWhenMismatchHighAmount)"
+
+---
+rule_id: ADV-032
+description: "Score combinado (média de consumerAuthenticationScore e externalScore3) < 100"
+channel: CREDIT_DEBIT
+severity: HIGH
+when: "consumerAuthenticationScore IS NOT NULL AND externalScore3 IS NOT NULL AND ((consumerAuthenticationScore + externalScore3) / 2) < 100"
+then: "classification = 'FRAUD'"
+fields_used: [consumerAuthenticationScore, externalScore3]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkCombinedScore)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule26_combinedScore_fraudWhenCombinedBelow100)"
+
+---
+rule_id: ADV-033
+description: "Score combinado (média) entre 100 e 199"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "consumerAuthenticationScore IS NOT NULL AND externalScore3 IS NOT NULL AND ((consumerAuthenticationScore + externalScore3) / 2) >= 100 AND ((consumerAuthenticationScore + externalScore3) / 2) < 200"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [consumerAuthenticationScore, externalScore3]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkCombinedScore)"
+
+---
+rule_id: ADV-034
+description: "Velocity: >= 3 transações em 5 minutos"
+channel: CREDIT_DEBIT
+severity: HIGH
+when: "transactionsCount(customerIdFromHeader, last 5 minutes) >= 3  # requer histórico"
+then: "classification = 'FRAUD'"
+fields_used: [customerIdFromHeader]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkVelocityConsolidated)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule27_velocityConsolidated_fraudWhenCount5MinAtLeast3)"
+
+---
+rule_id: ADV-035
+description: "Velocity: >= 10 transações em 60 minutos"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "transactionsCount(customerIdFromHeader, last 60 minutes) >= 10  # requer histórico"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [customerIdFromHeader]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkVelocityConsolidated)"
+
+---
+rule_id: ADV-036
+description: "Velocity: >= 50 transações no dia"
+channel: CREDIT_DEBIT
+severity: MEDIUM
+when: "dailyTransactionsCount(customerIdFromHeader, transactionDate) >= 50  # requer histórico"
+then: "classification = 'SUSPICIOUS'"
+fields_used: [customerIdFromHeader, transactionDate]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkVelocityConsolidated)"
+
+---
+rule_id: ADV-037
+description: "Indicadores customizados abrangentes (BLOCK/FRAUD/ALERT/RISK)"
+channel: CREDIT_DEBIT
+severity: HIGH
+when: "userIndicator01 == 'F' OR (userIndicator03 CONTAINS 'BLOCK') OR (userIndicator04 CONTAINS 'FRAUD') OR (userIndicator05 CONTAINS 'ALERT') OR (userIndicator08 CONTAINS 'RISK')"
+then: "classification = 'FRAUD'"
+fields_used: [userIndicator01, userIndicator03, userIndicator04, userIndicator05, userIndicator08]
+evidence_sources:
+  - "repo:backend/src/main/java/com/rulex/service/AdvancedRuleEngineService.java (checkCustomIndicatorsComprehensive)"
+  - "repo:backend/src/test/java/com/rulex/service/AdvancedRuleEngineServiceTest.java (rule28_customIndicatorsComprehensive_fraudWhenAlertPresent)"

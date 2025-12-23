@@ -258,6 +258,15 @@ describe('Rules popup (Rules.tsx)', () => {
     await user.click(screen.getByRole('button', { name: 'Nova Regra' }));
 
     const dialog = await screen.findByRole('dialog');
-    expect(dialog).toMatchSnapshot();
+    const stable = dialog.cloneNode(true) as HTMLElement;
+    const stripDynamic = (el: Element) => {
+      el.removeAttribute('id');
+      el.removeAttribute('aria-labelledby');
+      el.removeAttribute('aria-describedby');
+    };
+    stripDynamic(stable);
+    stable.querySelectorAll('[id^="radix-"]').forEach(stripDynamic);
+    stable.querySelectorAll('[aria-labelledby],[aria-describedby]').forEach(stripDynamic);
+    expect(stable).toMatchSnapshot();
   });
 });
