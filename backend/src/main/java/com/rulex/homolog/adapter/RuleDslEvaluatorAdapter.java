@@ -93,7 +93,14 @@ public class RuleDslEvaluatorAdapter implements RuleDslEvaluatorPort {
       return null;
     }
 
-    if (actual instanceof Integer || actual instanceof Long) {
+    if (actual instanceof Integer) {
+      try {
+        return Integer.parseInt(expectedRaw);
+      } catch (Exception e) {
+        return expectedRaw;
+      }
+    }
+    if (actual instanceof Long) {
       try {
         return Long.parseLong(expectedRaw);
       } catch (Exception e) {

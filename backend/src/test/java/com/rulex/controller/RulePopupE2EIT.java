@@ -28,8 +28,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.test.annotation.DirtiesContext;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class RulePopupE2EIT extends CorePostgresITSupport {
 
   @LocalServerPort int port;
@@ -87,8 +89,8 @@ class RulePopupE2EIT extends CorePostgresITSupport {
         http.postForEntity(url("/api/transactions/analyze"), json(req), TransactionResponse.class);
     assertThat(analyze1.getStatusCode()).isEqualTo(HttpStatus.OK);
     TransactionResponse b1 = Objects.requireNonNull(analyze1.getBody());
-    // classificação é derivada do riskScore (>= 70 => FRAUD)
-    assertThat(b1.getClassification()).isEqualTo("FRAUD");
+    // V3.1: classificação é derivada da severidade das regras (riskScore é telemetria)
+    assertThat(b1.getClassification()).isEqualTo("SUSPICIOUS");
     assertThat(b1.getRiskScore()).isEqualTo(70);
     assertThat(b1.getTriggeredRules()).hasSize(1);
     assertThat(b1.getTriggeredRules().getFirst().getName()).isEqualTo("LOW_AUTHENTICATION_SCORE");

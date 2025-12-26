@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.MvcResult;
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class FeatureCatalogControllerIT extends CorePostgresITSupport {
 
   @Autowired private MockMvc mockMvc;
@@ -39,8 +41,7 @@ class FeatureCatalogControllerIT extends CorePostgresITSupport {
             .andReturn();
 
     List<Map<String, Object>> features =
-        objectMapper.readValue(
-            result.getResponse().getContentAsString(), new TypeReference<>() {});
+        objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
 
     assertThat(features).isNotEmpty();
 
@@ -59,8 +60,7 @@ class FeatureCatalogControllerIT extends CorePostgresITSupport {
             .andReturn();
 
     List<Map<String, Object>> features =
-        objectMapper.readValue(
-            result.getResponse().getContentAsString(), new TypeReference<>() {});
+        objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
 
     assertThat(features).isNotEmpty().allMatch(f -> "VELOCITY".equals(f.get("featureType")));
   }
@@ -74,8 +74,7 @@ class FeatureCatalogControllerIT extends CorePostgresITSupport {
             .andReturn();
 
     List<Map<String, Object>> features =
-        objectMapper.readValue(
-            result.getResponse().getContentAsString(), new TypeReference<>() {});
+        objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
 
     assertThat(features).isNotEmpty().allMatch(f -> "card".equals(f.get("entityType")));
   }

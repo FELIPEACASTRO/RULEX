@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -16,6 +17,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 /** Completely fresh test class in separate package to verify JPA initialization. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class FreshJpaIT {
 
   @Container
@@ -28,6 +30,9 @@ class FreshJpaIT {
 
   @DynamicPropertySource
   static void props(DynamicPropertyRegistry r) {
+    if (!postgres.isRunning()) {
+      postgres.start();
+    }
     r.add("spring.datasource.url", postgres::getJdbcUrl);
     r.add("spring.datasource.username", postgres::getUsername);
     r.add("spring.datasource.password", postgres::getPassword);
