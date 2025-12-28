@@ -13,20 +13,15 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createRule, deleteRule, listRules, toggleRuleStatus, updateRule } from '@/lib/javaApi';
+import {
+  RuleConfiguration,
+  createRule,
+  deleteRule,
+  listRules,
+  toggleRuleStatus,
+  updateRule,
+} from '@/lib/javaApi';
 import { toast } from 'sonner';
-
-interface Rule {
-  id: number;
-  ruleName: string;
-  description: string;
-  ruleType: string;
-  threshold: number;
-  weight: number;
-  enabled: boolean;
-  classification: string;
-  version: number;
-}
 
 /**
  * Página de configuração dinâmica de regras.
@@ -40,23 +35,23 @@ export default function Rules() {
   });
 
   const rules = useMemo(() => data ?? [], [data]);
-  const [editingRule, setEditingRule] = useState<Rule | null>(null);
+  const [editingRule, setEditingRule] = useState<RuleConfiguration | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState({
     ruleName: '',
     description: '',
-    ruleType: 'SECURITY',
+    ruleType: 'SECURITY' as RuleConfiguration['ruleType'],
     threshold: 0,
     weight: 0,
     enabled: true,
-    classification: 'SUSPICIOUS',
+    classification: 'SUSPICIOUS' as RuleConfiguration['classification'],
   });
 
   const invalidateRules = () => queryClient.invalidateQueries({ queryKey: ['rules'] });
 
   const saveRule = useMutation({
     mutationFn: async () => {
-      const payload = {
+      const payload: Omit<RuleConfiguration, 'id' | 'version'> = {
         ruleName: formData.ruleName,
         description: formData.description,
         ruleType: formData.ruleType,
@@ -64,12 +59,15 @@ export default function Rules() {
         weight: formData.weight,
         enabled: formData.enabled,
         classification: formData.classification,
+        // Backend exige: conditions + logicOperator (podem ser vazios/AND para regras legadas por nome)
+        conditions: [],
+        logicOperator: 'AND',
       };
 
       if (editingRule) {
         return updateRule(editingRule.id, payload);
       }
-      return createRule(payload as any);
+      return createRule(payload);
     },
     onSuccess: () => {
       toast.success('Regra salva com sucesso');
@@ -99,16 +97,19 @@ export default function Rules() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: (id: number) => toggleRuleStatus(id, !rules.find(r => r.id === id)?.enabled),
+    mutationFn: (id: number) => {
+      const current = rules.find((r: RuleConfiguration) => r.id === id);
+      return toggleRuleStatus(id, !(current?.enabled ?? false));
+    },
     onSuccess: () => invalidateRules(),
     onError: () => toast.error('Falha ao alternar regra'),
   });
 
-  const handleEdit = (rule: Rule) => {
+  const handleEdit = (rule: RuleConfiguration) => {
     setEditingRule(rule);
     setFormData({
       ruleName: rule.ruleName,
-      description: rule.description,
+      description: rule.description ?? '',
       ruleType: rule.ruleType,
       threshold: rule.threshold,
       weight: rule.weight,
@@ -227,7 +228,12 @@ export default function Rules() {
                   <select
                     id="ruleType"
                     value={formData.ruleType}
-                    onChange={(e) => setFormData({ ...formData, ruleType: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        ruleType: e.target.value as RuleConfiguration['ruleType'],
+                      })
+                    }
                     className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
                   >
                     <option value="SECURITY">Segurança</option>
@@ -243,7 +249,12 @@ export default function Rules() {
                   <select
                     id="classification"
                     value={formData.classification}
-                    onChange={(e) => setFormData({ ...formData, classification: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        classification: e.target.value as RuleConfiguration['classification'],
+                      })
+                    }
                     className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
                   >
                     <option value="APPROVED">Aprovada</option>

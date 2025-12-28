@@ -48,8 +48,8 @@ const FIELD_CATEGORIES = {
     icon: "💰",
     fields: [
       { name: "transactionAmount", label: "Valor (centavos)", type: "number", placeholder: "15000" },
-      { name: "transactionDate", label: "Data", type: "text", placeholder: "20241216" },
-      { name: "transactionTime", label: "Hora", type: "text", placeholder: "143000" },
+      { name: "transactionDate", label: "Data", type: "number", placeholder: "20241216" },
+      { name: "transactionTime", label: "Hora", type: "number", placeholder: "143000" },
       { name: "transactionCurrencyCode", label: "Moeda", type: "text", placeholder: "986" },
       { name: "conversionRate", label: "Taxa de Conversão", type: "number", placeholder: "1.0" },
     ]
@@ -104,7 +104,7 @@ const FIELD_CATEGORIES = {
     label: "Categoria",
     icon: "🏷️",
     fields: [
-      { name: "mcc", label: "MCC", type: "text", placeholder: "5411" },
+      { name: "mcc", label: "MCC", type: "number", placeholder: "5411" },
     ]
   }
 };
@@ -117,9 +117,9 @@ const TRANSACTION_TEMPLATES = {
     data: {
       externalTransactionId: "TXN-LEG-001",
       transactionAmount: 15000,
-      transactionDate: "20241216",
-      transactionTime: "143000",
-      mcc: "5411",
+      transactionDate: 20241216,
+      transactionTime: 143000,
+      mcc: 5411,
       merchantCountryCode: "BR",
       merchantId: "MERCH-SUPER-001",
       merchantName: "Supermercado ABC",
@@ -128,7 +128,7 @@ const TRANSACTION_TEMPLATES = {
       consumerAuthenticationScore: 500,
       externalScore3: 85,
       cvv2Response: "M",
-      cryptogramValid: true,
+      cryptogramValid: "V",
       eciIndicator: 5,
     }
   },
@@ -138,9 +138,9 @@ const TRANSACTION_TEMPLATES = {
     data: {
       externalTransactionId: "TXN-TEST-001",
       transactionAmount: 100,
-      transactionDate: "20241216",
-      transactionTime: "030000",
-      mcc: "6051",
+      transactionDate: 20241216,
+      transactionTime: 30000,
+      mcc: 6051,
       merchantCountryCode: "NG",
       merchantId: "MERCH-CRYPTO-001",
       customerIdFromHeader: "CUST-UNKNOWN",
@@ -148,7 +148,7 @@ const TRANSACTION_TEMPLATES = {
       consumerAuthenticationScore: 50,
       externalScore3: 20,
       cvv2Response: "N",
-      cryptogramValid: false,
+      cryptogramValid: "N",
     }
   },
   highRisk: {
@@ -157,9 +157,9 @@ const TRANSACTION_TEMPLATES = {
     data: {
       externalTransactionId: "TXN-RISK-001",
       transactionAmount: 800000,
-      transactionDate: "20241216",
-      transactionTime: "020000",
-      mcc: "7995",
+      transactionDate: 20241216,
+      transactionTime: 20000,
+      mcc: 7995,
       merchantCountryCode: "RU",
       merchantId: "MERCH-GAMBLING-001",
       customerIdFromHeader: "CUST-67890",
@@ -168,7 +168,7 @@ const TRANSACTION_TEMPLATES = {
       externalScore3: 30,
       cvv2Response: "N",
       eciIndicator: 7,
-      cryptogramValid: false,
+      cryptogramValid: "N",
     }
   },
   ato: {
@@ -177,9 +177,9 @@ const TRANSACTION_TEMPLATES = {
     data: {
       externalTransactionId: "TXN-ATO-001",
       transactionAmount: 500000,
-      transactionDate: "20241216",
-      transactionTime: "040000",
-      mcc: "4829",
+      transactionDate: 20241216,
+      transactionTime: 40000,
+      mcc: 4829,
       merchantCountryCode: "BR",
       merchantId: "MERCH-TRANSFER-001",
       customerIdFromHeader: "CUST-11111",
@@ -187,9 +187,8 @@ const TRANSACTION_TEMPLATES = {
       consumerAuthenticationScore: 80,
       externalScore3: 40,
       cvv2Response: "N",
-      cvv2EntryLimitExceeded: true,
-      pinEntryLimitExceeded: true,
-      cryptogramValid: false,
+      cvvPinTryLimitExceeded: 1,
+      cryptogramValid: "N",
     }
   }
 };
@@ -277,65 +276,86 @@ export default function TransactionSimulator() {
 
   // Simulação local quando API não está disponível
   const simulateAnalysis = (request: TransactionRequest): TransactionResponse => {
-    const triggeredRules: string[] = [];
-    const ruleDetails: { ruleName: string; ruleDescription: string; score: number; threshold: number; triggered: boolean }[] = [];
-    let totalScore = 0;
+    const triggeredRules: { name: string; weight: number; contribution: number; detail?: string }[] = [];
+    let riskScore = 0;
 
     // Regras simuladas
     if (request.transactionAmount && request.transactionAmount < 500) {
-      if (request.mcc && ["7995", "6051", "5967"].includes(request.mcc)) {
-        triggeredRules.push("CARD_TESTING_PATTERN");
-        ruleDetails.push({ ruleName: "CARD_TESTING_PATTERN", ruleDescription: "Transação < R$5 em MCC de alto risco", score: 90, threshold: 500, triggered: true });
-        totalScore += 90;
+      if (request.mcc != null && [7995, 6051, 5967].includes(request.mcc)) {
+        triggeredRules.push({
+          name: "CARD_TESTING_PATTERN",
+          weight: 90,
+          contribution: 90,
+          detail: "Transação < R$500 em MCC de alto risco",
+        });
+        riskScore += 90;
       }
     }
 
     if (request.transactionAmount && request.transactionAmount > 500000) {
-      triggeredRules.push("HIGH_AMOUNT_THRESHOLD");
-      ruleDetails.push({ ruleName: "HIGH_AMOUNT_THRESHOLD", ruleDescription: "Transação > R$5.000", score: 50, threshold: 500000, triggered: true });
-      totalScore += 50;
+      triggeredRules.push({
+        name: "HIGH_AMOUNT_THRESHOLD",
+        weight: 50,
+        contribution: 50,
+        detail: "Transação > R$500.000",
+      });
+      riskScore += 50;
     }
 
     if (request.merchantCountryCode && ["RU", "NG", "CN"].includes(request.merchantCountryCode)) {
-      triggeredRules.push("HIGH_RISK_COUNTRY");
-      ruleDetails.push({ ruleName: "HIGH_RISK_COUNTRY", ruleDescription: "País de alto risco", score: 65, threshold: 0, triggered: true });
-      totalScore += 65;
+      triggeredRules.push({
+        name: "HIGH_RISK_COUNTRY",
+        weight: 65,
+        contribution: 65,
+        detail: "País de alto risco",
+      });
+      riskScore += 65;
     }
 
     if (request.consumerAuthenticationScore && request.consumerAuthenticationScore < 100) {
-      triggeredRules.push("LOW_AUTHENTICATION_SCORE");
-      ruleDetails.push({ ruleName: "LOW_AUTHENTICATION_SCORE", ruleDescription: "Score de autenticação baixo", score: 70, threshold: 100, triggered: true });
-      totalScore += 70;
+      triggeredRules.push({
+        name: "LOW_AUTHENTICATION_SCORE",
+        weight: 70,
+        contribution: 70,
+        detail: "Score de autenticação baixo",
+      });
+      riskScore += 70;
     }
 
     if (request.cvv2Response && request.cvv2Response !== "M") {
-      triggeredRules.push("CVV_MISMATCH");
-      ruleDetails.push({ ruleName: "CVV_MISMATCH", ruleDescription: "CVV não corresponde", score: 65, threshold: 0, triggered: true });
-      totalScore += 65;
+      triggeredRules.push({
+        name: "CVV_MISMATCH",
+        weight: 65,
+        contribution: 65,
+        detail: "CVV não corresponde",
+      });
+      riskScore += 65;
     }
 
-    if (request.cryptogramValid === false) {
-      triggeredRules.push("CRYPTOGRAM_INVALID");
-      ruleDetails.push({ ruleName: "CRYPTOGRAM_INVALID", ruleDescription: "Criptograma inválido", score: 85, threshold: 0, triggered: true });
-      totalScore += 85;
+    if (request.cryptogramValid && request.cryptogramValid !== "V") {
+      triggeredRules.push({
+        name: "CRYPTOGRAM_INVALID",
+        weight: 85,
+        contribution: 85,
+        detail: "Criptograma inválido",
+      });
+      riskScore += 85;
     }
 
-    if (request.cvv2EntryLimitExceeded) {
-      triggeredRules.push("CVV_ENTRY_LIMIT_EXCEEDED");
-      ruleDetails.push({ ruleName: "CVV_ENTRY_LIMIT_EXCEEDED", ruleDescription: "Limite de tentativas CVV excedido", score: 90, threshold: 0, triggered: true });
-      totalScore += 90;
-    }
-
-    if (request.pinEntryLimitExceeded) {
-      triggeredRules.push("PIN_ENTRY_LIMIT_EXCEEDED");
-      ruleDetails.push({ ruleName: "PIN_ENTRY_LIMIT_EXCEEDED", ruleDescription: "Limite de tentativas PIN excedido", score: 90, threshold: 0, triggered: true });
-      totalScore += 90;
+    if (request.cvvPinTryLimitExceeded === 1) {
+      triggeredRules.push({
+        name: "CVV_PIN_LIMIT_EXCEEDED",
+        weight: 90,
+        contribution: 90,
+        detail: "Limite de tentativas PIN/CVV excedido",
+      });
+      riskScore += 90;
     }
 
     let classification: "APPROVED" | "SUSPICIOUS" | "FRAUD";
-    if (totalScore >= 150) {
+    if (riskScore >= 150) {
       classification = "FRAUD";
-    } else if (totalScore >= 80) {
+    } else if (riskScore >= 80) {
       classification = "SUSPICIOUS";
     } else {
       classification = "APPROVED";
@@ -344,11 +364,13 @@ export default function TransactionSimulator() {
     return {
       transactionId: request.externalTransactionId || "SIM-" + Date.now(),
       classification,
-      totalScore,
+      riskScore: Math.min(riskScore, 100),
       triggeredRules,
-      ruleDetails,
-      reason: `Score total: ${totalScore} | ${triggeredRules.length} regra(s) acionada(s)`,
-      processedAt: new Date().toISOString(),
+      reason: `Score: ${Math.min(riskScore, 100)} | ${triggeredRules.length} regra(s) acionada(s)`,
+      rulesetVersion: "simulated",
+      processingTimeMs: 0,
+      timestamp: new Date().toISOString(),
+      success: true,
     };
   };
 
@@ -362,7 +384,7 @@ export default function TransactionSimulator() {
           <Label htmlFor={field.name} className="text-sm">{field.label}</Label>
           <Switch
             id={field.name}
-            checked={value as boolean || false}
+            checked={typeof value === "boolean" ? value : false}
             onCheckedChange={(checked) => updateField(field.name, checked)}
           />
         </div>
@@ -397,7 +419,7 @@ export default function TransactionSimulator() {
           id={field.name}
           type={field.type === "number" ? "number" : "text"}
           placeholder={field.placeholder}
-          value={value ?? ""}
+          value={typeof value === "boolean" ? (value ? "true" : "false") : (value ?? "")}
           onChange={(e) => {
             const newValue = field.type === "number"
               ? parseNumericInput(e.target.value)
@@ -566,13 +588,13 @@ export default function TransactionSimulator() {
 
                   {/* Score */}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Score Total:</span>
+                    <span className="text-sm font-medium">Risk Score:</span>
                     <span className={`text-2xl font-bold ${
-                      result.totalScore >= 150 ? "text-red-600" :
-                      result.totalScore >= 80 ? "text-yellow-600" :
+                      result.riskScore >= 80 ? "text-red-600" :
+                      result.riskScore >= 50 ? "text-yellow-600" :
                       "text-green-600"
                     }`}>
-                      {result.totalScore}
+                      {result.riskScore}
                     </span>
                   </div>
 
@@ -602,29 +624,29 @@ export default function TransactionSimulator() {
           </Card>
 
           {/* Regras Acionadas */}
-          {result && result.ruleDetails.length > 0 && (
+          {result && result.triggeredRules.length > 0 && (
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                  Regras Acionadas ({result.ruleDetails.length})
+                  Regras Acionadas ({result.triggeredRules.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-[300px]">
                   <div className="space-y-3">
-                    {result.ruleDetails.map((rule, index) => (
+                    {result.triggeredRules.map((rule, index) => (
                       <div 
                         key={index}
                         className="p-3 bg-gray-50 rounded-lg border"
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-sm">{rule.ruleName}</span>
+                          <span className="font-medium text-sm">{rule.name}</span>
                           <Badge variant="outline" className="text-xs">
-                            +{rule.score} pts
+                            +{rule.contribution} pts
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-600">{rule.ruleDescription}</p>
+                        <p className="text-xs text-gray-600">{rule.detail || "-"}</p>
                       </div>
                     ))}
                   </div>

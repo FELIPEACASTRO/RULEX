@@ -38,8 +38,9 @@ export default function DashboardProfessional() {
         approvedRate: data.approvalRate ?? 0,
         suspiciousRate: data.suspiciousRate ?? 0,
         fraudRate: data.fraudRate ?? 0,
-        avgProcessingTime: data.averageScore ?? 0,
-        systemUptime: data.periodComparison?.transactionsChange ?? 0,
+        // O backend expõe valores monetários/estatísticos; não há "tempo médio" hoje.
+        avgProcessingTime: data.averageTransactionAmount ?? 0,
+        systemUptime: 0,
       };
     }
     return {
@@ -53,37 +54,39 @@ export default function DashboardProfessional() {
   }, [data]);
 
   const transactionTrendData = useMemo(() => {
-    if (data?.hourlyDistribution?.length) {
-      return data.hourlyDistribution.map((row) => ({
-        time: `${row.hour.toString().padStart(2, '0')}:00`,
-        approved: row.count ?? 0,
-        suspicious: row.fraudCount ?? 0,
-        fraud: row.fraudCount ?? 0,
-      }));
-    }
+    // O backend atual não expõe distribuição por hora.
     return [];
   }, [data]);
 
   const palette = ['#0052CC', '#10B981', '#F59E0B', '#8B5CF6', '#6B7280'];
   const mccDistributionData = useMemo(() => {
-    if (data?.mccDistribution?.length) {
-      return data.mccDistribution.map((mcc, index) => ({
-        name: mcc.description || mcc.mcc,
-        value: mcc.percentage ?? 0,
-        color: palette[index % palette.length],
-      }));
+    const dist = data?.mccDistribution;
+    if (dist && Object.keys(dist).length > 0) {
+      const total = metricsData.totalTransactions || 1;
+      return Object.entries(dist)
+        .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
+        .slice(0, 8)
+        .map(([mcc, count], index) => ({
+          name: `MCC ${mcc}`,
+          value: ((count ?? 0) / total) * 100,
+          color: palette[index % palette.length],
+        }));
     }
     return [];
-  }, [data]);
+  }, [data, metricsData.totalTransactions]);
 
   const topMerchantsData = useMemo(() => {
-    if (data?.topMerchants?.length) {
-      return data.topMerchants.map((m, index) => ({
-        name: m.merchantName || m.merchantId,
-        transactions: m.transactionCount,
-        fraudRate: m.fraudRate,
-        idx: index,
-      }));
+    const dist = data?.merchantDistribution;
+    if (dist && Object.keys(dist).length > 0) {
+      return Object.entries(dist)
+        .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
+        .slice(0, 8)
+        .map(([merchantId, count], index) => ({
+          name: merchantId,
+          transactions: count ?? 0,
+          fraudRate: 0,
+          idx: index,
+        }));
     }
     return [];
   }, [data]);
@@ -135,7 +138,7 @@ export default function DashboardProfessional() {
 
         {/* Time Range Selector */}
         <div className="flex gap-2">
-          {['1h', '24h', '7d', '30d'].map((range) => (
+          {(['1h', '24h', '7d', '30d'] as const).map((range) => (
             <button
               key={range}
               onClick={() => setTimeRange(range)}

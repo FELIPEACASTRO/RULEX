@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle
 } from '@/components/ui/card';
@@ -8,7 +8,7 @@ import {
   Search, Filter, Download, Eye, CheckCircle, AlertCircle, XCircle,
   ChevronLeft, ChevronRight, Calendar, DollarSign
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { listTransactions } from '@/lib/javaApi';
 import { toast } from 'sonner';
 
@@ -28,14 +28,18 @@ export default function TransactionsProfessional() {
       listTransactions({
         customerId: searchTerm || undefined,
         merchantId: searchTerm || undefined,
-        classification: filterStatus === 'all' ? undefined : (filterStatus as any),
         page: currentPage - 1,
         size: itemsPerPage,
       }),
-    keepPreviousData: true,
     retry: 1,
-    onError: () => toast.error('Falha ao carregar transações'),
+    placeholderData: keepPreviousData,
   });
+
+  useEffect(() => {
+    if (isError) {
+      toast.error('Falha ao carregar transações');
+    }
+  }, [isError]);
 
   const paginatedTransactions = data?.content ?? [];
   const totalPages = useMemo(() => data?.totalPages ?? 1, [data]);
@@ -180,9 +184,7 @@ export default function TransactionsProfessional() {
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="px-6 py-3 text-left font-semibold text-gray-700">ID Transação</th>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700">Cliente</th>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700">Merchant</th>
-                  <th className="px-6 py-3 text-right font-semibold text-gray-700">Valor</th>
+                  <th className="px-6 py-3 text-right font-semibold text-gray-700">Score</th>
                   <th className="px-6 py-3 text-left font-semibold text-gray-700">Status</th>
                   <th className="px-6 py-3 text-left font-semibold text-gray-700">Data/Hora</th>
                   <th className="px-6 py-3 text-center font-semibold text-gray-700">Ação</th>
@@ -191,15 +193,13 @@ export default function TransactionsProfessional() {
               <tbody>
                 {paginatedTransactions.map((tx) => (
                   <tr
-                    key={tx.id}
+                    key={tx.transactionId}
                     className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                     role="row"
                   >
-                    <td className="px-6 py-4 font-mono text-blue-600">{tx.externalTransactionId}</td>
-                    <td className="px-6 py-4 text-gray-700">{tx.customerId}</td>
-                    <td className="px-6 py-4 text-gray-700">{tx.merchantId}</td>
+                    <td className="px-6 py-4 font-mono text-blue-600">{tx.transactionId}</td>
                     <td className="px-6 py-4 text-right font-semibold text-gray-900">
-                      R$ {(tx.transactionAmount ?? 0).toFixed(2)}
+                      {tx.riskScore}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
@@ -216,11 +216,11 @@ export default function TransactionsProfessional() {
                         </Badge>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-600 text-xs">{tx.processedAt}</td>
+                    <td className="px-6 py-4 text-gray-600 text-xs">{tx.timestamp}</td>
                     <td className="px-6 py-4 text-center">
                       <button
                         className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
-                        aria-label={`Visualizar detalhes da transação ${tx.externalTransactionId}`}
+                        aria-label={`Visualizar detalhes da transação ${tx.transactionId}`}
                       >
                         <Eye className="w-4 h-4 text-blue-600" />
                       </button>
@@ -235,13 +235,13 @@ export default function TransactionsProfessional() {
           <div className="md:hidden space-y-4">
             {paginatedTransactions.map((tx) => (
               <div
-                key={tx.id}
+                key={tx.transactionId}
                 className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="font-mono text-blue-600 font-semibold">{tx.externalTransactionId}</p>
-                    <p className="text-xs text-gray-600 mt-1">{tx.processedAt}</p>
+                    <p className="font-mono text-blue-600 font-semibold">{tx.transactionId}</p>
+                    <p className="text-xs text-gray-600 mt-1">{tx.timestamp}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {getStatusIcon(tx.classification)}
@@ -257,24 +257,14 @@ export default function TransactionsProfessional() {
                     </Badge>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                  <div>
-                    <p className="text-gray-600">Cliente</p>
-                    <p className="font-medium text-gray-900">{tx.customerId}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Merchant</p>
-                    <p className="font-medium text-gray-900">{tx.merchantId}</p>
-                  </div>
-                </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-gray-600" />
-                    <span className="font-semibold text-gray-900">R$ {(tx.transactionAmount ?? 0).toFixed(2)}</span>
+                    <span className="font-semibold text-gray-900">Score: {tx.riskScore}</span>
                   </div>
                   <button
                     className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
-                    aria-label={`Visualizar detalhes da transação ${tx.externalTransactionId}`}
+                    aria-label={`Visualizar detalhes da transação ${tx.transactionId}`}
                   >
                     <Eye className="w-4 h-4 text-blue-600" />
                   </button>

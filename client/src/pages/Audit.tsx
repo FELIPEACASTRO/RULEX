@@ -1,32 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { listAuditLogs } from '@/lib/javaApi';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { AuditLog, listAuditLogs } from '@/lib/javaApi';
 import { toast } from 'sonner';
-
-interface AuditLog {
-  id: number;
-  transactionId: number | null;
-  actionType: string;
-  description: string;
-  performedBy: string;
-  result: string;
-  errorMessage: string | null;
-  createdAt: string;
-}
 
 /**
  * Página de auditoria com histórico de todas as ações.
  */
 export default function Audit() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(20);
-  const [totalElements, setTotalElements] = useState(0);
   const [filters, setFilters] = useState({
     actionType: '',
     result: '',
@@ -38,16 +25,17 @@ export default function Audit() {
       listAuditLogs({
         page,
         size,
-        action: filters.actionType || undefined,
+        actionType: filters.actionType || undefined,
         result: filters.result || undefined,
       }),
-    onSuccess: (resp) => {
-      setLogs(resp.content || []);
-      setTotalElements(resp.totalElements || 0);
-    },
-    onError: () => toast.error('Falha ao buscar logs de auditoria'),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
+
+  useEffect(() => {
+    if (isError) {
+      toast.error('Falha ao buscar logs de auditoria');
+    }
+  }, [isError]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -99,6 +87,8 @@ export default function Audit() {
     }
   };
 
+  const logs: AuditLog[] = useMemo(() => data?.content ?? [], [data]);
+  const totalElements = data?.totalElements ?? logs.length;
   const totalPages = Math.ceil(totalElements / size);
 
   return (
