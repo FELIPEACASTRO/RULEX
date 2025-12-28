@@ -1,0 +1,203 @@
+﻿{
+    "duplicateIds":  [
+
+                     ],
+    "operators":  [
+                      {
+                          "op":  "NOT_EXISTS",
+                          "count":  27
+                      },
+                      {
+                          "op":  "MATCHES_REGEX",
+                          "count":  19
+                      },
+                      {
+                          "op":  "EXISTS",
+                          "count":  16
+                      },
+                      {
+                          "op":  "GE",
+                          "count":  12
+                      },
+                      {
+                          "op":  "IN_SET",
+                          "count":  9
+                      },
+                      {
+                          "op":  "NOT_IN_SET",
+                          "count":  5
+                      },
+                      {
+                          "op":  "LE",
+                          "count":  4
+                      },
+                      {
+                          "op":  "GT",
+                          "count":  2
+                      },
+                      {
+                          "op":  "LT",
+                          "count":  2
+                      }
+                  ],
+    "uniqueFieldCount":  37,
+    "fields":  [
+                   {
+                       "field":  "transactionAmount",
+                       "count":  9
+                   },
+                   {
+                       "field":  "consumerAuthenticationScore",
+                       "count":  5
+                   },
+                   {
+                       "field":  "merchantCountryCode",
+                       "count":  5
+                   },
+                   {
+                       "field":  "mcc",
+                       "count":  4
+                   },
+                   {
+                       "field":  "posEntryMode",
+                       "count":  4
+                   },
+                   {
+                       "field":  "externalScore3",
+                       "count":  4
+                   },
+                   {
+                       "field":  "eciIndicator",
+                       "count":  4
+                   },
+                   {
+                       "field":  "cavvResult",
+                       "count":  4
+                   },
+                   {
+                       "field":  "tokenAssuranceLevel",
+                       "count":  3
+                   },
+                   {
+                       "field":  "merchantId",
+                       "count":  3
+                   },
+                   {
+                       "field":  "customerPresent",
+                       "count":  3
+                   },
+                   {
+                       "field":  "tokenId",
+                       "count":  3
+                   },
+                   {
+                       "field":  "transactionCurrencyCode",
+                       "count":  3
+                   },
+                   {
+                       "field":  "externalTransactionId",
+                       "count":  3
+                   },
+                   {
+                       "field":  "customerIdFromHeader",
+                       "count":  3
+                   },
+                   {
+                       "field":  "atcHost",
+                       "count":  2
+                   },
+                   {
+                       "field":  "merchantState",
+                       "count":  2
+                   },
+                   {
+                       "field":  "merchantCity",
+                       "count":  2
+                   },
+                   {
+                       "field":  "terminalId",
+                       "count":  2
+                   },
+                   {
+                       "field":  "transactionCategory",
+                       "count":  2
+                   },
+                   {
+                       "field":  "tokenRequestorId",
+                       "count":  2
+                   },
+                   {
+                       "field":  "tokenizationIndicator",
+                       "count":  2
+                   },
+                   {
+                       "field":  "transactionType",
+                       "count":  2
+                   },
+                   {
+                       "field":  "pan",
+                       "count":  2
+                   },
+                   {
+                       "field":  "customerAcctNumber",
+                       "count":  2
+                   },
+                   {
+                       "field":  "transactionTime",
+                       "count":  2
+                   },
+                   {
+                       "field":  "transactionDate",
+                       "count":  2
+                   },
+                   {
+                       "field":  "gmtOffset",
+                       "count":  2
+                   },
+                   {
+                       "field":  "atcCard",
+                       "count":  2
+                   },
+                   {
+                       "field":  "__history.txCount5m",
+                       "count":  1
+                   },
+                   {
+                       "field":  "__history.txCount1h",
+                       "count":  1
+                   },
+                   {
+                       "field":  "__history.amountSum1h",
+                       "count":  1
+                   },
+                   {
+                       "field":  "__history.mccCount24h",
+                       "count":  1
+                   },
+                   {
+                       "field":  "cvv2Present",
+                       "count":  1
+                   },
+                   {
+                       "field":  "__contract.jsonParseError",
+                       "count":  1
+                   },
+                   {
+                       "field":  "__rawstore.hashMismatch",
+                       "count":  1
+                   },
+                   {
+                       "field":  "__contract.unknownFields",
+                       "count":  1
+                   }
+               ],
+    "internalFields":  [
+                           "__contract.jsonParseError",
+                           "__contract.unknownFields",
+                           "__history.amountSum1h",
+                           "__history.mccCount24h",
+                           "__history.txCount1h",
+                           "__history.txCount5m",
+                           "__rawstore.hashMismatch"
+                       ]
+}

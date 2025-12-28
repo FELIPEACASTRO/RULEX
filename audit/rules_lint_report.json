@@ -1,0 +1,221 @@
+﻿{
+    "totalRules":  68,
+    "errorRules":  [
+
+                   ],
+    "warningRules":  [
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  1,
+                             "id":  "DQ_UNKNOWN_FIELD_FATAL",
+                             "warnings":  [
+                                              "contains_placeholder_token"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  28,
+                             "id":  "DQ_DATE_FORMAT_FATAL",
+                             "warnings":  [
+                                              "contains_placeholder_token"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  31,
+                             "id":  "DQ_PAN_FORMAT_WARN",
+                             "warnings":  [
+                                              "contains_placeholder_token"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  34,
+                             "id":  "DQ_MERCHANTCOUNTRYCODE_FORMAT_FATAL",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  35,
+                             "id":  "DQ_TRANSACTIONCURRENCYCODE_FORMAT_FATAL",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  36,
+                             "id":  "DQ_POSENTRYMODE_FORMAT_FATAL",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  37,
+                             "id":  "DQ_ECIINDICATOR_FORMAT_FATAL",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  38,
+                             "id":  "DQ_CAVVRESULT_FORMAT_FATAL",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  39,
+                             "id":  "DQ_MERCHANTID_FORMAT_FATAL",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  40,
+                             "id":  "DQ_EXTERNALTRANSACTIONID_FORMAT_FATAL",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  41,
+                             "id":  "DQ_CUSTOMERIDFROMHEADER_FORMAT_FATAL",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  42,
+                             "id":  "DQ_MERCHANTCITY_EMPTY_WARN",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  43,
+                             "id":  "DQ_MERCHANTSTATE_EMPTY_WARN",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  44,
+                             "id":  "DQ_TERMINALID_EMPTY_WARN",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  45,
+                             "id":  "DQ_TRANSACTIONTYPE_EMPTY_WARN",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  46,
+                             "id":  "DQ_TRANSACTIONCATEGORY_EMPTY_WARN",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  47,
+                             "id":  "DQ_TOKENID_EMPTY_WARN",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  48,
+                             "id":  "DQ_TOKENREQUESTORID_EMPTY_WARN",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\dq_rules.yaml",
+                             "index":  49,
+                             "id":  "DQ_TOKENIZATIONINDICATOR_EMPTY_WARN",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         },
+                         {
+                             "file":  ".\\rules\\fraud_rules.yaml",
+                             "index":  18,
+                             "id":  "FR_TOKEN_PRESENT_BUT_LOW_ASSURANCE_REVIEW",
+                             "warnings":  [
+                                              "EXISTS/NOT_EXISTS_with_value_lines_possible"
+                                          ]
+                         }
+                     ],
+    "distinctFields":  [
+                           "__contract.jsonParseError",
+                           "__contract.unknownFields",
+                           "__history.amountSum1h",
+                           "__history.mccCount24h",
+                           "__history.txCount1h",
+                           "__history.txCount5m",
+                           "__rawstore.hashMismatch",
+                           "atcCard",
+                           "atcHost",
+                           "cavvResult",
+                           "consumerAuthenticationScore",
+                           "customerAcctNumber",
+                           "customerIdFromHeader",
+                           "customerPresent",
+                           "cvv2Present",
+                           "eciIndicator",
+                           "externalScore3",
+                           "externalTransactionId",
+                           "gmtOffset",
+                           "mcc",
+                           "merchantCity",
+                           "merchantCountryCode",
+                           "merchantId",
+                           "merchantState",
+                           "pan",
+                           "posEntryMode",
+                           "terminalId",
+                           "tokenAssuranceLevel",
+                           "tokenId",
+                           "tokenizationIndicator",
+                           "tokenRequestorId",
+                           "transactionAmount",
+                           "transactionCategory",
+                           "transactionCurrencyCode",
+                           "transactionDate",
+                           "transactionTime",
+                           "transactionType"
+                       ],
+    "distinctOps":  [
+                        "EXISTS",
+                        "GE",
+                        "GT",
+                        "IN_SET",
+                        "LE",
+                        "LT",
+                        "MATCHES_REGEX",
+                        "NOT_EXISTS",
+                        "NOT_IN_SET"
+                    ],
+    "duplicatePriorities":  [
+
+                            ]
+}

@@ -1,0 +1,12 @@
+﻿[
+    {
+        "file":  ".\\\\rules\\\\dq_rules.yaml",
+        "docCount":  49,
+        "idCount":  49
+    },
+    {
+        "file":  ".\\\\rules\\\\fraud_rules.yaml",
+        "docCount":  19,
+        "idCount":  19
+    }
+]

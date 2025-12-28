@@ -1,5 +1,7 @@
 # RULEX — Payload Field Dictionary (v0)
 
+Guia didático (CRTRAN25): [docs/payload_crtran25_use_a_cabeca.md](payload_crtran25_use_a_cabeca.md)
+
 Fonte primária: `openapi/rulex.yaml` (schema `AnalyzeTransactionRequest`).
 Fonte secundária de validações/tipos: `backend/src/main/java/com/rulex/dto/TransactionRequest.java`.
 
