@@ -189,7 +189,7 @@ export default function Rules() {
               Nova Regra
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>{editingRule ? 'Editar Regra' : 'Nova Regra'}</DialogTitle>
               <DialogDescription>
