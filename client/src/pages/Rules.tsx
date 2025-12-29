@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit2, Trash2, ToggleRight } from 'lucide-react';
 import {
@@ -54,6 +55,7 @@ export default function Rules() {
     weight: 0,
     enabled: true,
     classification: 'SUSPICIOUS' as RuleConfiguration['classification'],
+    parameters: '' as string,
     logicOperator: 'AND' as RuleConfiguration['logicOperator'],
     conditions: [] as RuleConfiguration['conditions'],
   });
@@ -70,6 +72,7 @@ export default function Rules() {
         weight: formData.weight,
         enabled: formData.enabled,
         classification: formData.classification,
+        parameters: formData.parameters?.trim() ? formData.parameters : null,
         // Backend exige: conditions + logicOperator.
         // - Para regras "genéricas": preencha conditions + logicOperator.
         // - Para regras "legadas por nome": conditions pode ficar vazio e o engine cai no switch(ruleName).
@@ -94,6 +97,7 @@ export default function Rules() {
         weight: 0,
         enabled: true,
         classification: 'SUSPICIOUS',
+        parameters: '',
         logicOperator: 'AND',
         conditions: [],
       });
@@ -130,6 +134,7 @@ export default function Rules() {
       weight: rule.weight,
       enabled: rule.enabled,
       classification: rule.classification,
+      parameters: rule.parameters ?? '',
       logicOperator: rule.logicOperator ?? 'AND',
       conditions: rule.conditions ?? [],
     });
@@ -199,6 +204,7 @@ export default function Rules() {
                   weight: 0,
                   enabled: true,
                   classification: 'SUSPICIOUS',
+                  parameters: '',
                   logicOperator: 'AND',
                   conditions: [],
                 });
@@ -238,6 +244,30 @@ export default function Rules() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Descrição da regra"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="parameters" className="block text-sm font-medium text-foreground mb-2">
+                  Parâmetros (JSON) — opcional
+                </label>
+                <Textarea
+                  id="parameters"
+                  value={formData.parameters}
+                  onChange={(e) => setFormData({ ...formData, parameters: e.target.value })}
+                  placeholder={
+                    formData.ruleType === 'VELOCITY'
+                      ? `Ex (velocity/state):\n{\n  "velocity": {\n    "metric": "COUNT",\n    "dimension": "CUSTOMER",\n    "windowSeconds": 3600,\n    "operator": "GT",\n    "threshold": 3\n  }\n}`
+                      : 'JSON livre (ex.: configs avançadas futuras)'
+                  }
+                  rows={formData.ruleType === 'VELOCITY' ? 8 : 4}
+                />
+                {formData.ruleType === 'VELOCITY' ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Para regras de velocidade, use <code>metric</code> = <code>COUNT</code> ou{' '}
+                    <code>SUM_AMOUNT</code>, <code>dimension</code> = <code>CUSTOMER</code> /{' '}
+                    <code>MERCHANT</code> / <code>GLOBAL</code>.
+                  </p>
+                ) : null}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

@@ -174,6 +174,7 @@ describe('Rules popup (Rules.tsx)', () => {
       weight: 25,
       enabled: true,
       classification: 'SUSPICIOUS',
+      parameters: null,
       logicOperator: 'AND',
       conditions: [],
     });

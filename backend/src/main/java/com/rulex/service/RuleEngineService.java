@@ -509,6 +509,14 @@ public class RuleEngineService {
   /** Avalia uma regra específica contra a transação. */
   private RuleMatch evaluateRuleGeneric(
       Transaction transaction, TransactionRequest request, RuleConfiguration rule) {
+    // 0) VELOCITY/state: regras com janela temporal (exigem persistência/consulta).
+    if (rule.getRuleType() == RuleConfiguration.RuleType.VELOCITY) {
+      RuleMatch velocity = evaluateRuleVelocity(request, rule);
+      if (velocity != null) {
+        return velocity;
+      }
+    }
+
     // 1) Preferir condições genéricas (configuráveis)
     if (rule.getConditionsJson() != null && !rule.getConditionsJson().isBlank()) {
       List<RuleConditionDTO> conditions = readConditions(rule.getConditionsJson());
@@ -1402,6 +1410,13 @@ public class RuleEngineService {
       return applyUnary(fn, base);
     }
 
+    // ABS(<expr>) onde <expr> pode ser "a-b" (compatível com FRAUDE_REGRAS_DURAS_EXPORT.yaml)
+    java.util.regex.Matcher absExpr = java.util.regex.Pattern.compile("^ABS\\((.+)\\)$").matcher(raw);
+    if (absExpr.matches()) {
+      Object v = evalNumericExpression(request, absExpr.group(1));
+      return applyUnary("ABS", v);
+    }
+
     // ABS_DIFF(a,b)
     java.util.regex.Matcher absDiff =
         java.util.regex.Pattern.compile("^ABS_DIFF\\(([A-Za-z0-9_]+)\\s*,\\s*([A-Za-z0-9_]+)\\)$")
@@ -1459,6 +1474,256 @@ public class RuleEngineService {
       return na.subtract(nb).abs();
     } catch (Exception e) {
       return null;
+    }
+  }
+
+  /**
+   * Avaliador mínimo de expressão numérica para o LHS (campo).
+   *
+   * <p>Objetivo: suportar padrão real do YAML: {@code ABS(atcCard - atcHost)}.
+   *
+   * <p>Suporta apenas:
+   * - literal numérico (ex.: "5", "10.2")
+   * - campo (property do TransactionRequest)
+   * - subtração binária: "a-b" com espaços opcionais
+   *
+   * <p>Se não conseguir avaliar, retorna null.
+   */
+  private Object evalNumericExpression(TransactionRequest request, String expr) {
+    if (expr == null) return null;
+    String e = expr.trim();
+    if (e.isEmpty()) return null;
+
+    int minus = indexOfTopLevelMinus(e);
+    if (minus > 0) {
+      String left = e.substring(0, minus).trim();
+      String right = e.substring(minus + 1).trim();
+      BigDecimal a = resolveToBigDecimal(request, left);
+      BigDecimal b = resolveToBigDecimal(request, right);
+      if (a == null || b == null) return null;
+      return a.subtract(b);
+    }
+
+    return resolveToBigDecimal(request, e);
+  }
+
+  private int indexOfTopLevelMinus(String e) {
+    // Evita confundir número negativo "-5" no primeiro char.
+    for (int i = 1; i < e.length(); i++) {
+      if (e.charAt(i) == '-') return i;
+    }
+    return -1;
+  }
+
+  private BigDecimal resolveToBigDecimal(TransactionRequest request, String token) {
+    if (token == null) return null;
+    String t = token.trim();
+    if (t.isEmpty()) return null;
+    try {
+      return new BigDecimal(t);
+    } catch (Exception ignored) {
+      // not a literal
+    }
+    Object v = readFieldValue(request, TransactionRequest.class, t);
+    if (v == null) return null;
+    try {
+      return (v instanceof BigDecimal) ? (BigDecimal) v : new BigDecimal(String.valueOf(v));
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * VELOCITY/state (janela temporal) baseado em persistência.
+   *
+   * <p>Config em {@code RuleConfiguration.parameters} (JSON):
+   *
+   * <pre>
+   * {
+   *   "velocity": {
+   *     "metric": "COUNT" | "SUM_AMOUNT",
+   *     "dimension": "CUSTOMER" | "MERCHANT" | "GLOBAL",
+   *     "windowSeconds": 3600,
+   *     "operator": "GT" | "GTE" | "LT" | "LTE" | "EQ" | "NE",
+   *     "threshold": 3
+   *   }
+   * }
+   * </pre>
+   */
+  private RuleMatch evaluateRuleVelocity(TransactionRequest request, RuleConfiguration rule) {
+    if (rule == null) return null;
+    String parameters = rule.getParameters();
+    if (parameters == null || parameters.isBlank()) return null;
+
+    VelocitySpec spec;
+    try {
+      var root = objectMapper.readTree(parameters);
+      var v = root.get("velocity");
+      if (v == null || v.isNull()) return null;
+      spec = VelocitySpec.fromJson(v);
+    } catch (Exception e) {
+      // parameters inválido: não dispara regra e não derruba o pipeline.
+      return new RuleMatch(false, "velocity.parameters inválido (JSON parse falhou)");
+    }
+
+    LocalDateTime now = LocalDateTime.now(clock);
+    LocalDateTime since = now.minusSeconds(Math.max(0L, spec.windowSeconds));
+
+    String detailPrefix =
+        "velocity "
+            + spec.metric
+            + " "
+            + spec.dimension
+            + " windowSeconds="
+            + spec.windowSeconds;
+
+    return switch (spec.metric) {
+      case COUNT -> {
+        long count =
+            switch (spec.dimension) {
+              case CUSTOMER -> {
+                String key = request.getCustomerIdFromHeader();
+                if (key == null || key.isBlank()) yield 0L;
+                Long c = transactionRepository.countTransactionsByCustomerSince(key, since);
+                yield c == null ? 0L : c;
+              }
+              case MERCHANT -> {
+                String key = request.getMerchantId();
+                if (key == null || key.isBlank()) yield 0L;
+                Long c = transactionRepository.countTransactionsByMerchantSince(key, since);
+                yield c == null ? 0L : c;
+              }
+              case GLOBAL -> {
+                Long c = transactionRepository.countSince(since);
+                yield c == null ? 0L : c;
+              }
+            };
+        boolean ok = compareLong(count, spec.operator, spec.thresholdLong);
+        yield new RuleMatch(
+            ok,
+            detailPrefix
+                + " operator="
+                + spec.operator
+                + " threshold="
+                + spec.thresholdLong
+                + " (actual="
+                + count
+                + ") => "
+                + ok);
+      }
+      case SUM_AMOUNT -> {
+        BigDecimal sum =
+            switch (spec.dimension) {
+              case CUSTOMER -> {
+                String key = request.getCustomerIdFromHeader();
+                if (key == null || key.isBlank()) yield BigDecimal.ZERO;
+                BigDecimal s = transactionRepository.sumAmountByCustomerSince(key, since);
+                yield s == null ? BigDecimal.ZERO : s;
+              }
+              case MERCHANT -> {
+                String key = request.getMerchantId();
+                if (key == null || key.isBlank()) yield BigDecimal.ZERO;
+                BigDecimal s = transactionRepository.sumAmountByMerchantSince(key, since);
+                yield s == null ? BigDecimal.ZERO : s;
+              }
+              case GLOBAL -> {
+                BigDecimal s = transactionRepository.sumAmountSince(since);
+                yield s == null ? BigDecimal.ZERO : s;
+              }
+            };
+        boolean ok = compareBigDecimal(sum, spec.operator, spec.thresholdAmount);
+        yield new RuleMatch(
+            ok,
+            detailPrefix
+                + " operator="
+                + spec.operator
+                + " threshold="
+                + spec.thresholdAmount
+                + " (actual="
+                + sum
+                + ") => "
+                + ok);
+      }
+    };
+  }
+
+  private boolean compareLong(long actual, String operator, long threshold) {
+    String op = normalizeOperator(operator == null ? "" : operator);
+    return switch (op) {
+      case "EQ" -> actual == threshold;
+      case "NE" -> actual != threshold;
+      case "GT" -> actual > threshold;
+      case "LT" -> actual < threshold;
+      case "GTE" -> actual >= threshold;
+      case "LTE" -> actual <= threshold;
+      default -> false;
+    };
+  }
+
+  private boolean compareBigDecimal(BigDecimal actual, String operator, BigDecimal threshold) {
+    if (actual == null || threshold == null) return false;
+    String op = normalizeOperator(operator == null ? "" : operator);
+    int cmp = actual.compareTo(threshold);
+    return switch (op) {
+      case "EQ" -> cmp == 0;
+      case "NE" -> cmp != 0;
+      case "GT" -> cmp > 0;
+      case "LT" -> cmp < 0;
+      case "GTE" -> cmp >= 0;
+      case "LTE" -> cmp <= 0;
+      default -> false;
+    };
+  }
+
+  private static final class VelocitySpec {
+    enum Metric {
+      COUNT,
+      SUM_AMOUNT
+    }
+
+    enum Dimension {
+      CUSTOMER,
+      MERCHANT,
+      GLOBAL
+    }
+
+    final Metric metric;
+    final Dimension dimension;
+    final long windowSeconds;
+    final String operator;
+    final long thresholdLong;
+    final BigDecimal thresholdAmount;
+
+    private VelocitySpec(
+        Metric metric,
+        Dimension dimension,
+        long windowSeconds,
+        String operator,
+        long thresholdLong,
+        BigDecimal thresholdAmount) {
+      this.metric = metric;
+      this.dimension = dimension;
+      this.windowSeconds = windowSeconds;
+      this.operator = operator;
+      this.thresholdLong = thresholdLong;
+      this.thresholdAmount = thresholdAmount;
+    }
+
+    static VelocitySpec fromJson(com.fasterxml.jackson.databind.JsonNode v) {
+      String metricRaw = v.path("metric").asText("COUNT");
+      String dimRaw = v.path("dimension").asText("CUSTOMER");
+      long windowSeconds = v.path("windowSeconds").asLong(3600);
+      String operator = v.path("operator").asText("GT");
+
+      Metric metric = Metric.valueOf(metricRaw.trim().toUpperCase(java.util.Locale.ROOT));
+      Dimension dimension = Dimension.valueOf(dimRaw.trim().toUpperCase(java.util.Locale.ROOT));
+
+      if (metric == Metric.SUM_AMOUNT) {
+        BigDecimal threshold = new BigDecimal(v.path("threshold").asText("0"));
+        return new VelocitySpec(metric, dimension, windowSeconds, operator, 0L, threshold);
+      }
+      long threshold = v.path("threshold").asLong(0L);
+      return new VelocitySpec(metric, dimension, windowSeconds, operator, threshold, null);
     }
   }
 

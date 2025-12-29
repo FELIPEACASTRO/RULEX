@@ -300,6 +300,35 @@ public class RuleConfigurationService {
                   if (unary.matches()) {
                     return java.util.stream.Stream.of(unary.group(2));
                   }
+                  // ABS(<expr>) (ex.: ABS(atcCard-atcHost)) -> extrair identificadores de campos
+                  java.util.regex.Matcher absExpr =
+                      java.util.regex.Pattern.compile("^ABS\\((.+)\\)$").matcher(raw);
+                  if (absExpr.matches()) {
+                    String inner = absExpr.group(1);
+                    if (inner == null) {
+                      return java.util.stream.Stream.of();
+                    }
+                    java.util.regex.Matcher ids =
+                        java.util.regex.Pattern.compile("[A-Za-z_][A-Za-z0-9_]*").matcher(inner);
+                    java.util.List<String> names = new java.util.ArrayList<>();
+                    while (ids.find()) {
+                      String name = ids.group();
+                      // ignorar nomes de funções conhecidas
+                      if (name == null) continue;
+                      String upper = name.toUpperCase(java.util.Locale.ROOT);
+                      if (upper.equals("ABS")
+                          || upper.equals("LEN")
+                          || upper.equals("LOWER")
+                          || upper.equals("UPPER")
+                          || upper.equals("TRIM")
+                          || upper.equals("COALESCE")
+                          || upper.equals("ABS_DIFF")) {
+                        continue;
+                      }
+                      names.add(name);
+                    }
+                    return names.stream();
+                  }
                   // ABS_DIFF(a,b)
                   java.util.regex.Matcher absDiff =
                       java.util.regex.Pattern.compile(

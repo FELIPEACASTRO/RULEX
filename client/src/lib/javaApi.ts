@@ -180,6 +180,7 @@ export interface RuleConfiguration {
   weight: number;
   enabled: boolean;
   classification: "APPROVED" | "SUSPICIOUS" | "FRAUD";
+  parameters?: string | null;
   conditions: RuleCondition[];
   logicOperator: "AND" | "OR";
   version: number;

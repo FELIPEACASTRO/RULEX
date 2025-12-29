@@ -2,6 +2,7 @@ package com.rulex.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -221,9 +222,9 @@ class RuleEngineServiceTest {
                     "['RU','CN']"),
                 // Unary operator (value may be empty)
                 java.util.Map.of("field", "cardExpireDate", "operator", "IS_NULL", "value", ""),
-                // Function in LHS: ABS_DIFF(a,b) >= 5
+                // Function+expr in LHS: ABS(atcCard-atcHost) >= 5 (YAML real)
                 java.util.Map.of(
-                    "field", "ABS_DIFF(atcCard,atcHost)", "operator", "GTE", "value", "5")));
+                    "field", "ABS(atcCard-atcHost)", "operator", "GTE", "value", "5")));
 
     RuleConfiguration rule =
         RuleConfiguration.builder()
@@ -262,6 +263,59 @@ class RuleEngineServiceTest {
     assertThat(response.getTriggeredRules().getFirst().getName()).isEqualTo("GENERIC_CATALOG_OPS");
     assertThat(response.getClassification()).isEqualTo("SUSPICIOUS");
     assertThat(response.getRiskScore()).isEqualTo(55);
+  }
+
+  @Test
+  void triggersVelocityRule_countByCustomerInWindow() throws Exception {
+    String paramsJson =
+        """
+        {
+          "velocity": {
+            "metric": "COUNT",
+            "dimension": "CUSTOMER",
+            "windowSeconds": 3600,
+            "operator": "GT",
+            "threshold": 3
+          }
+        }
+        """;
+
+    RuleConfiguration rule =
+        RuleConfiguration.builder()
+            .ruleName("VELOCITY_CUSTOMER_COUNT")
+            .ruleType(RuleConfiguration.RuleType.VELOCITY)
+            .threshold(0)
+            .weight(25)
+            .enabled(true)
+            .classification(TransactionDecision.TransactionClassification.SUSPICIOUS)
+            .parameters(paramsJson)
+            .build();
+
+    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(rule));
+    when(transactionRepository.save(any(Transaction.class)))
+        .thenAnswer(
+            invocation -> {
+              Transaction t = invocation.getArgument(0, Transaction.class);
+              t.setId(77L);
+              return t;
+            });
+    when(decisionRepository.save(any(TransactionDecision.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
+    doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
+
+    when(transactionRepository.countTransactionsByCustomerSince(anyString(), any()))
+        .thenReturn(5L);
+
+    TransactionRequest req = minimalRequest();
+    req.setCustomerIdFromHeader("CUST-1");
+
+    TransactionResponse response = service.analyzeTransaction(req);
+
+    assertThat(response.getClassification()).isEqualTo("SUSPICIOUS");
+    assertThat(response.getRiskScore()).isEqualTo(25);
+    assertThat(response.getTriggeredRules()).hasSize(1);
+    assertThat(response.getTriggeredRules().getFirst().getName()).isEqualTo("VELOCITY_CUSTOMER_COUNT");
+    assertThat(response.getTriggeredRules().getFirst().getDetail()).contains("velocity COUNT CUSTOMER");
   }
 
   @Test

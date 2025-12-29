@@ -83,6 +83,23 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
   @Query("SELECT COUNT(t) FROM Transaction t WHERE t.createdAt >= :since")
   Long countSince(@Param("since") LocalDateTime since);
 
+  @Query(
+      "SELECT COALESCE(SUM(t.transactionAmount), 0) FROM Transaction t WHERE "
+          + "t.customerIdFromHeader = :customerId AND "
+          + "t.createdAt >= :since")
+  BigDecimal sumAmountByCustomerSince(
+      @Param("customerId") String customerId, @Param("since") LocalDateTime since);
+
+  @Query(
+      "SELECT COALESCE(SUM(t.transactionAmount), 0) FROM Transaction t WHERE "
+          + "t.merchantId = :merchantId AND "
+          + "t.createdAt >= :since")
+  BigDecimal sumAmountByMerchantSince(
+      @Param("merchantId") String merchantId, @Param("since") LocalDateTime since);
+
+  @Query("SELECT COALESCE(SUM(t.transactionAmount), 0) FROM Transaction t WHERE t.createdAt >= :since")
+  BigDecimal sumAmountSince(@Param("since") LocalDateTime since);
+
   // ==================== MÉTODOS PARA AS 28 NOVAS REGRAS ====================
 
   @Query(
