@@ -2,6 +2,7 @@ package com.rulex.repository;
 
 import com.rulex.entity.TransactionDecision;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Repository;
 public interface TransactionDecisionRepository extends JpaRepository<TransactionDecision, Long> {
 
   Optional<TransactionDecision> findByTransactionId(Long transactionId);
+
+  List<TransactionDecision> findByTransactionIdIn(Collection<Long> transactionIds);
 
   Optional<TransactionDecision> findByExternalTransactionIdAndPayloadRawHash(
       String externalTransactionId, String payloadRawHash);

@@ -9,7 +9,7 @@ import {
   ChevronLeft, ChevronRight, Calendar, DollarSign
 } from 'lucide-react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { listTransactions } from '@/lib/javaApi';
+import { exportTransactions, listTransactions } from '@/lib/javaApi';
 import { toast } from 'sonner';
 
 /**
@@ -38,6 +38,35 @@ export default function TransactionsProfessional() {
     retry: 1,
     placeholderData: keepPreviousData,
   });
+
+  const handleExport = async () => {
+    try {
+      const blob = (await exportTransactions(
+        "csv",
+        {
+          customerId: searchTerm || undefined,
+          merchantId: searchTerm || undefined,
+          classification:
+            filterStatus === "all"
+              ? undefined
+              : (filterStatus as "APPROVED" | "SUSPICIOUS" | "FRAUD"),
+        },
+        10000
+      )) as Blob;
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "rulex-transactions.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Export gerado");
+    } catch (e) {
+      toast.error(`Falha ao exportar: ${e instanceof Error ? e.message : "erro inesperado"}`);
+    }
+  };
 
   useEffect(() => {
     if (isError) {
@@ -145,6 +174,7 @@ export default function TransactionsProfessional() {
                 variant="outline"
                 className="flex-1 flex items-center justify-center gap-2"
                 aria-label="Exportar transações"
+                onClick={handleExport}
               >
                 <Download className="w-4 h-4" />
                 Exportar

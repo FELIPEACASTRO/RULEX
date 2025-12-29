@@ -9,17 +9,25 @@ import com.rulex.service.RuleEngineService;
 import com.rulex.service.TransactionQueryService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.web.bind.annotation.*;
 
 /** Controller REST para processamento e consulta de transações. */
@@ -99,6 +107,93 @@ public class TransactionController {
     return ResponseEntity.ok(transactions);
   }
 
+  /**
+   * Exporta transações com os mesmos filtros da listagem.
+   *
+   * <p>GET /api/transactions/export?format=csv|json&...filtros...
+   */
+  @GetMapping("/export")
+  public ResponseEntity<?> exportTransactions(
+      @RequestParam(defaultValue = "csv") String format,
+      @RequestParam(required = false) String customerId,
+      @RequestParam(required = false) String merchantId,
+      @RequestParam(required = false) String classification,
+      @RequestParam(required = false) Integer mcc,
+      @RequestParam(required = false) BigDecimal minAmount,
+      @RequestParam(required = false) BigDecimal maxAmount,
+      @RequestParam(required = false) String startDate,
+      @RequestParam(required = false) String endDate,
+      @RequestParam(defaultValue = "10000") int limit) {
+
+    if (limit <= 0 || limit > 50000) {
+      throw new IllegalArgumentException("limit deve estar entre 1 e 50000");
+    }
+
+    LocalDateTime startDateTime = null;
+    LocalDateTime endDateTime = null;
+    if (startDate != null && !startDate.isEmpty()) {
+      startDateTime = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_DATE_TIME);
+    }
+    if (endDate != null && !endDate.isEmpty()) {
+      endDateTime = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_DATE_TIME);
+    }
+
+    // Ordenar por mais recentes
+    Pageable firstPage =
+        PageRequest.of(0, Math.min(1000, limit), Sort.by(Sort.Direction.DESC, "createdAt"));
+
+    if ("json".equalsIgnoreCase(format)) {
+      List<TransactionResponse> out =
+          transactionQueryService.exportAsList(
+              customerId,
+              merchantId,
+              classification,
+              mcc,
+              minAmount,
+              maxAmount,
+              startDateTime,
+              endDateTime,
+              firstPage,
+              limit);
+      return ResponseEntity.ok(out);
+    }
+
+    if (!"csv".equalsIgnoreCase(format)) {
+      throw new IllegalArgumentException("format inválido (use csv ou json)");
+    }
+
+    final LocalDateTime startDateFinal = startDateTime;
+    final LocalDateTime endDateFinal = endDateTime;
+
+    StreamingResponseBody body =
+        outputStream -> {
+          try (Writer w = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
+            // Header
+            w.write(
+                "id,transactionId,customerIdFromHeader,merchantId,merchantName,transactionAmount,transactionDate,transactionTime,classification,riskScore,timestamp,reason\n");
+            transactionQueryService.exportAsCsv(
+                w,
+                customerId,
+                merchantId,
+                classification,
+                mcc,
+                minAmount,
+                maxAmount,
+                startDateFinal,
+                endDateFinal,
+                firstPage,
+                limit);
+            w.flush();
+          }
+        };
+
+    String filename = "rulex-transactions.csv";
+    return ResponseEntity.ok()
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+        .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+        .body(body);
+  }
+
   /** Obtém detalhes de uma transação específica. GET /api/transactions/{id} */
   @GetMapping("/{id}")
   public ResponseEntity<TransactionResponse> getTransaction(@PathVariable Long id) {
@@ -167,4 +262,5 @@ public class TransactionController {
             .success(true)
             .build());
   }
+
 }

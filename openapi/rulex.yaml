@@ -82,6 +82,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PageAnalyzeTransactionResponse'
+  /api/transactions/export:
+    get:
+      summary: Export transactions (CSV/JSON)
+      operationId: exportTransactions
+      parameters:
+        - in: query
+          name: format
+          schema: { type: string, enum: [csv, json], default: csv }
+        - in: query
+          name: customerId
+          schema: { type: string }
+        - in: query
+          name: merchantId
+          schema: { type: string }
+        - in: query
+          name: classification
+          schema: { type: string, enum: [APPROVED, SUSPICIOUS, FRAUD] }
+        - in: query
+          name: mcc
+          schema: { type: integer }
+        - in: query
+          name: minAmount
+          schema: { type: number }
+        - in: query
+          name: maxAmount
+          schema: { type: number }
+        - in: query
+          name: startDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: endDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 10000, minimum: 1, maximum: 50000 }
+      responses:
+        '200':
+          description: Export file or JSON array
+          content:
+            text/csv:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AnalyzeTransactionResponse' }
   /api/transactions/{id}:
     get:
       summary: Get transaction by internal id

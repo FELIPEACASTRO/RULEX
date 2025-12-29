@@ -256,6 +256,45 @@ export async function listTransactions(
   );
 }
 
+export async function exportTransactions(
+  format: "csv" | "json" = "csv",
+  filters: TransactionFilters = {},
+  limit = 10000
+): Promise<Blob | TransactionResponse[]> {
+  const params = new URLSearchParams();
+  params.append("format", format);
+  params.append("limit", String(limit));
+  if (filters.customerId) params.append("customerId", filters.customerId);
+  if (filters.merchantId) params.append("merchantId", filters.merchantId);
+  if (filters.classification) params.append("classification", filters.classification);
+  if (filters.mcc !== undefined) params.append("mcc", String(filters.mcc));
+  if (filters.minAmount !== undefined) params.append("minAmount", String(filters.minAmount));
+  if (filters.maxAmount !== undefined) params.append("maxAmount", String(filters.maxAmount));
+  if (filters.startDate) params.append("startDate", filters.startDate);
+  if (filters.endDate) params.append("endDate", filters.endDate);
+
+  const url = `${JAVA_API_BASE_URL}/api/transactions/export?${params.toString()}`;
+  const token = getAccessToken();
+  const basicAuthHeader =
+    !token && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: format === "json" ? "application/json" : "text/csv",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(!token && basicAuthHeader ? { Authorization: basicAuthHeader } : {}),
+    },
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(text || `Export failed: ${response.status}`);
+  }
+  if (format === "json") {
+    return response.json();
+  }
+  return response.blob();
+}
+
 export async function getTransactionDetails(transactionId: string): Promise<TransactionResponse> {
   return apiRequest<TransactionResponse>(`/api/transactions/${transactionId}`);
 }
@@ -387,6 +426,7 @@ export const javaApi = {
   analyzeTransaction,
   analyzeTransactionAdvanced,
   listTransactions,
+  exportTransactions,
   getTransactionDetails,
   getDashboardMetrics,
   listRules,
