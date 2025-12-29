@@ -5,13 +5,13 @@ spring:
   threads:
     virtual:
       enabled: true
-  
+
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
-  
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -21,7 +21,7 @@ spring:
         format_sql: true
         use_sql_comments: true
     show-sql: false
-  
+
   jackson:
     deserialization:
       fail-on-unknown-properties: true
@@ -52,11 +52,23 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,prometheus,metrics,info
   endpoint:
     health:
       probes:
         enabled: true
+      show-details: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
 
 # RULEX Configuration
 rulex:

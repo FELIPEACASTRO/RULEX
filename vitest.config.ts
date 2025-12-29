@@ -22,5 +22,24 @@ export default defineConfig({
       "client/**/*.test.tsx",
       "client/**/*.spec.tsx",
     ],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "lcov"],
+      reportsDirectory: "./coverage",
+      include: ["client/src/**/*.{ts,tsx}"],
+      exclude: [
+        "client/src/**/*.test.{ts,tsx}",
+        "client/src/**/*.spec.{ts,tsx}",
+        "client/src/lib/api.generated.ts",
+        "client/src/components/ui/**",
+      ],
+      thresholds: {
+        lines: 50,
+        branches: 40,
+        functions: 50,
+        statements: 50,
+      },
+    },
+    setupFiles: ["./client/src/test/setup.ts"],
   },
 });
