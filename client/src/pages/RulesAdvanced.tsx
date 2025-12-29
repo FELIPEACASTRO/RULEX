@@ -373,7 +373,7 @@ export default function RulesAdvanced() {
                 Templates
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="sm:max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Templates de Regras Pré-configuradas</DialogTitle>
                 <DialogDescription>
