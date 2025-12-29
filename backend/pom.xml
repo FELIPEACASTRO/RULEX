@@ -24,6 +24,8 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <lombok.version>1.18.36</lombok.version>
+        <!-- Override: Flyway must support postgres:16-alpine (currently 16.11 in CI) -->
+        <flyway.version>11.20.0</flyway.version>
     </properties>
 
     <dependencies>
