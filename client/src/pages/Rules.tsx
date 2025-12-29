@@ -38,7 +38,8 @@ export default function Rules() {
 
   const fieldDictionaryQuery = useQuery({
     queryKey: ['fieldDictionary'],
-    queryFn: () => listFieldDictionary(),
+    // Defaults used by the backend seeder for a catalog-driven FE.
+    queryFn: () => listFieldDictionary({ workflow: 'BRZLCREDIT', recordType: 'CRTRAN25', portfolio: '*' }),
     retry: 1,
   });
 
@@ -360,9 +361,10 @@ export default function Rules() {
                     const fieldOptions = available
                       .map((f) => (f.jsonPath?.startsWith('$.') ? f.jsonPath.slice(2) : f.jsonPath))
                       .filter(Boolean);
-                    const typeForField =
-                      available.find((f) => (f.jsonPath?.startsWith('$.') ? f.jsonPath.slice(2) : f.jsonPath) === c.field)
-                        ?.type ?? 'unknown';
+                    const currentField = available.find(
+                      (f) => (f.jsonPath?.startsWith('$.') ? f.jsonPath.slice(2) : f.jsonPath) === c.field,
+                    );
+                    const typeForField = currentField?.type ?? 'unknown';
 
                     const baseOps: RuleConfiguration['conditions'][number]['operator'][] = [
                       '==',
@@ -376,12 +378,17 @@ export default function Rules() {
                       'CONTAINS',
                       'NOT_CONTAINS',
                     ];
-                    const ops =
+                    const opsFromCatalog =
+                      currentField?.allowedOperators && currentField.allowedOperators.length > 0
+                        ? (currentField.allowedOperators as RuleConfiguration['conditions'][number]['operator'][])
+                        : null;
+                    const opsFallback =
                       typeForField === 'number'
                         ? baseOps.filter((o) => !['CONTAINS', 'NOT_CONTAINS'].includes(o))
                         : typeForField === 'boolean'
-                        ? baseOps.filter((o) => ['==', '!='].includes(o))
-                        : baseOps;
+                          ? baseOps.filter((o) => ['==', '!='].includes(o))
+                          : baseOps;
+                    const ops = opsFromCatalog ?? opsFallback;
 
                     return (
                       <div key={`${idx}-${c.field}`} className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-end">
@@ -401,7 +408,7 @@ export default function Rules() {
                             list="rule-condition-fields"
                           />
                           <datalist id="rule-condition-fields">
-                            {fieldOptions.slice(0, 500).map((f) => (
+                            {fieldOptions.map((f) => (
                               <option key={f} value={f} />
                             ))}
                           </datalist>
