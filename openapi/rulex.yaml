@@ -52,6 +52,9 @@ paths:
           name: merchantId
           schema: { type: string }
         - in: query
+          name: classification
+          schema: { type: string, enum: [APPROVED, SUSPICIOUS, FRAUD] }
+        - in: query
           name: mcc
           schema: { type: integer }
         - in: query
@@ -79,6 +82,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PageAnalyzeTransactionResponse'
+  /api/transactions/export:
+    get:
+      summary: Export transactions (CSV/JSON)
+      operationId: exportTransactions
+      parameters:
+        - in: query
+          name: format
+          schema: { type: string, enum: [csv, json], default: csv }
+        - in: query
+          name: customerId
+          schema: { type: string }
+        - in: query
+          name: merchantId
+          schema: { type: string }
+        - in: query
+          name: classification
+          schema: { type: string, enum: [APPROVED, SUSPICIOUS, FRAUD] }
+        - in: query
+          name: mcc
+          schema: { type: integer }
+        - in: query
+          name: minAmount
+          schema: { type: number }
+        - in: query
+          name: maxAmount
+          schema: { type: number }
+        - in: query
+          name: startDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: endDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 10000, minimum: 1, maximum: 50000 }
+      responses:
+        '200':
+          description: Export file or JSON array
+          content:
+            text/csv:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AnalyzeTransactionResponse' }
   /api/transactions/{id}:
     get:
       summary: Get transaction by internal id
@@ -239,6 +288,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PageAuditLog'
+  /api/audit/export:
+    get:
+      summary: Export audit logs (CSV/JSON)
+      operationId: exportAuditLogs
+      parameters:
+        - in: query
+          name: format
+          schema: { type: string, enum: [csv, json], default: csv }
+        - in: query
+          name: actionType
+          schema: { type: string }
+        - in: query
+          name: result
+          schema: { type: string }
+        - in: query
+          name: startDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: endDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 10000, minimum: 1, maximum: 50000 }
+      responses:
+        '200':
+          description: Export file or JSON array
+          content:
+            text/csv:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AuditLog' }
   /api/metrics:
     get:
       summary: Get system metrics
@@ -447,7 +530,14 @@ components:
         - timestamp
         - success
       properties:
+        id: { type: integer, format: int64, description: "ID interno (DB). Opcional." }
         transactionId: { type: string }
+        customerIdFromHeader: { type: string }
+        merchantId: { type: string }
+        merchantName: { type: string }
+        transactionAmount: { type: number }
+        transactionDate: { type: integer, description: 'YYYYMMDD' }
+        transactionTime: { type: integer, description: 'HHMMSS' }
         classification: { type: string, enum: [APPROVED, SUSPICIOUS, FRAUD] }
         riskScore: { type: integer, minimum: 0, maximum: 100 }
         triggeredRules:

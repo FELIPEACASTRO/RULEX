@@ -559,8 +559,8 @@ export default function RulesDidactic() {
       classification: rule.classification,
       weight: rule.weight,
       conditions: conditions || [],
-      logicOperator: rule.logicOperator,
-      isActive: rule.isActive,
+      logicOperator: rule.logicOperator ?? 'AND',
+      isActive: rule.isActive ?? true,
       source: rule.source || '',
     });
     setModalAberto(true);

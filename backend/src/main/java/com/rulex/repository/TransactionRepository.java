@@ -1,6 +1,7 @@
 package com.rulex.repository;
 
 import com.rulex.entity.Transaction;
+import com.rulex.entity.TransactionDecision;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -38,6 +39,29 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
       @Param("maxAmount") BigDecimal maxAmount,
       @Param("startDate") LocalDateTime startDate,
       @Param("endDate") LocalDateTime endDate,
+      Pageable pageable);
+
+  @Query(
+      "SELECT t FROM Transaction t "
+          + "LEFT JOIN TransactionDecision d ON d.transaction = t "
+          + "WHERE "
+          + "(:customerIdFromHeader IS NULL OR t.customerIdFromHeader = :customerIdFromHeader) AND "
+          + "(:merchantId IS NULL OR t.merchantId = :merchantId) AND "
+          + "(:mcc IS NULL OR t.mcc = :mcc) AND "
+          + "(:minAmount IS NULL OR t.transactionAmount >= :minAmount) AND "
+          + "(:maxAmount IS NULL OR t.transactionAmount <= :maxAmount) AND "
+          + "(:startDate IS NULL OR t.createdAt >= :startDate) AND "
+          + "(:endDate IS NULL OR t.createdAt <= :endDate) AND "
+          + "(:classification IS NULL OR d.classification = :classification)")
+  Page<Transaction> findByFiltersWithClassification(
+      @Param("customerIdFromHeader") String customerIdFromHeader,
+      @Param("merchantId") String merchantId,
+      @Param("mcc") Integer mcc,
+      @Param("minAmount") BigDecimal minAmount,
+      @Param("maxAmount") BigDecimal maxAmount,
+      @Param("startDate") LocalDateTime startDate,
+      @Param("endDate") LocalDateTime endDate,
+      @Param("classification") TransactionDecision.TransactionClassification classification,
       Pageable pageable);
 
   @Query(

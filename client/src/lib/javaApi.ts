@@ -1,573 +1,474 @@
 /**
- * RULEX - Serviço de API para comunicação com Backend Java
- * 
- * Este módulo fornece funções para comunicação com a API REST Java
- * que processa transações de crédito e gerencia regras de fraude.
- * 
- * @author Manus AI
- * @version 1.0
+ * RULEX - API client (frontend) para Backend Java (Spring Boot).
+ *
+ * Objetivo: manter este módulo alinhado com o contrato real exposto em `/api/*`.
+ * (server.servlet.context-path = /api)
  */
 
-import { getAccessToken } from "@/_core/auth/tokens";
+import { getAccessToken, getBasicAuthRaw } from "@/_core/auth/tokens";
 
 // ========================================
-// CONFIGURAÇÃO
+// CONFIG
 // ========================================
 
-// URL base da API Java - configurável via variável de ambiente
-const JAVA_API_BASE_URL = import.meta.env.VITE_JAVA_API_URL || 'http://localhost:8080';
+// Preferir same-origin (Vite proxy em dev). Pode ser sobrescrito por env.
+const JAVA_API_BASE_URL: string = import.meta.env.VITE_JAVA_API_URL || "";
 
-// Opcional: Basic Auth para ambientes que usam Spring Security HTTP Basic.
-// Formato esperado: "usuario:senha" (ex.: "admin:rulex").
+// Opcional: Basic Auth (Spring Security HTTP Basic).
+// Formato: "usuario:senha" (ex.: "admin:rulex").
 const BASIC_AUTH_RAW = import.meta.env.VITE_API_BASIC_AUTH as string | undefined;
 
 // ========================================
-// TIPOS E INTERFACES
+// TYPES
 // ========================================
 
-// Requisição de Transação (103 parâmetros do payload)
 export interface TransactionRequest {
   externalTransactionId?: string;
-  transactionAmount?: number;
-  transactionDate?: string;
-  transactionTime?: string;
-  mcc?: string;
-  merchantCountryCode?: string;
-  merchantId?: string;
-  merchantName?: string;
-  merchantPostalCode?: string;
   customerIdFromHeader?: string;
-  customerPresent?: string;
+  customerAcctNumber?: number;
+  pan?: string;
+  transactionAmount?: number;
+  transactionDate?: number; // YYYYMMDD
+  transactionTime?: number; // HHMMSS
+  transactionCurrencyCode?: number;
+  mcc?: number;
   consumerAuthenticationScore?: number;
   externalScore3?: number;
-  cvv2Response?: string;
-  cvv2EntryLimitExceeded?: boolean;
-  pinEntryLimitExceeded?: boolean;
-  cryptogramValid?: boolean;
-  cavvResult?: string;
+  cavvResult?: number;
   eciIndicator?: number;
-  posSecurity?: number;
-  posOffPremises?: number;
+  atcCard?: number;
+  atcHost?: number;
+  tokenAssuranceLevel?: number;
+  availableCredit?: number;
+  cardCashBalance?: number;
+  cardDelinquentAmount?: number;
+
+  // extras usados por regras/filtros
+  merchantId?: string;
+  merchantName?: string;
+  merchantCountryCode?: string;
+  merchantCity?: string;
+  merchantState?: string;
+  merchantPostalCode?: string;
   posEntryMode?: string;
-  cardAipStatic?: number;
-  cardAipDynamic?: number;
-  terminalVerificationResults?: string;
-  cardExpireDate?: string;
-  cardCaptured?: boolean;
-  recurringTransaction?: boolean;
-  pan?: string;
-  panSequenceNumber?: string;
-  acquirerId?: string;
-  acquirerCountryCode?: string;
+  customerPresent?: string;
   gmtOffset?: string;
-  transactionCurrencyCode?: string;
-  billingCurrencyCode?: string;
-  conversionRate?: number;
-  authorizationIdResponse?: string;
-  responseCode?: string;
-  additionalResponseData?: string;
-  // Campos customizados (custom1-20)
-  custom1?: string;
-  custom2?: string;
-  custom3?: string;
-  custom4?: string;
-  custom5?: string;
-  custom6?: string;
-  custom7?: string;
-  custom8?: string;
-  custom9?: string;
-  custom10?: string;
-  custom11?: string;
-  custom12?: string;
-  custom13?: string;
-  custom14?: string;
-  custom15?: string;
-  custom16?: string;
-  custom17?: string;
-  custom18?: string;
-  custom19?: string;
-  custom20?: string;
+
+  // campos opcionais de segurança/terminal (subset)
+  cryptogramValid?: string;
+  cvv2Response?: string;
+  cvv2Present?: string;
+  pinVerifyCode?: string;
+  cvvVerifyCode?: string;
+  posOffPremises?: number;
+  posCardCapture?: number;
+  posSecurity?: number;
+  cvvPinTryLimitExceeded?: number;
+  cvrofflinePinVerificationPerformed?: number;
+  cvrofflinePinVerificationFailed?: number;
+  cardExpireDate?: number;
+  cardMediaType?: string;
+  transactionCurrencyConversionRate?: number;
 }
 
-// Resposta de Análise de Transação
+export interface TriggeredRule {
+  name: string;
+  weight: number;
+  contribution: number;
+  detail?: string | null;
+}
+
 export interface TransactionResponse {
   transactionId: string;
-  classification: 'APPROVED' | 'SUSPICIOUS' | 'FRAUD';
-  totalScore: number;
-  triggeredRules: string[];
-  ruleDetails: RuleDetail[];
+  id?: number | null;
+  customerIdFromHeader?: string | null;
+  merchantId?: string | null;
+  merchantName?: string | null;
+  transactionAmount?: number | null;
+  transactionDate?: number | null;
+  transactionTime?: number | null;
+  classification: "APPROVED" | "SUSPICIOUS" | "FRAUD" | "UNKNOWN";
+  riskScore: number;
+  triggeredRules: TriggeredRule[];
   reason: string;
-  processedAt: string;
+  rulesetVersion: string;
+  processingTimeMs: number;
+  timestamp: string;
+  success: boolean;
 }
 
-export interface RuleDetail {
-  ruleName: string;
-  ruleDescription: string;
-  score: number;
-  threshold: number;
-  triggered: boolean;
-}
+export type ProcessedTransaction = TransactionResponse;
 
-// Transação Processada (para listagem)
-export interface ProcessedTransaction {
-  id: number;
-  externalTransactionId: string;
-  transactionAmount: number;
-  transactionDate: string;
-  merchantId: string;
-  merchantName: string;
-  customerId: string;
-  classification: 'APPROVED' | 'SUSPICIOUS' | 'FRAUD';
-  totalScore: number;
-  triggeredRulesCount: number;
-  processedAt: string;
-}
-
-// Filtros de Transação
 export interface TransactionFilters {
-  startDate?: string;
-  endDate?: string;
-  classification?: 'APPROVED' | 'SUSPICIOUS' | 'FRAUD';
-  merchantId?: string;
   customerId?: string;
+  merchantId?: string;
+  classification?: "APPROVED" | "SUSPICIOUS" | "FRAUD";
+  mcc?: number;
   minAmount?: number;
   maxAmount?: number;
+  startDate?: string; // ISO_DATE_TIME
+  endDate?: string; // ISO_DATE_TIME
   page?: number;
   size?: number;
 }
 
-// Resposta Paginada
 export interface PaginatedResponse<T> {
   content: T[];
   totalElements: number;
   totalPages: number;
-  page: number;
+  number: number;
   size: number;
 }
 
-// Métricas do Dashboard
 export interface DashboardMetrics {
   totalTransactions: number;
-  approvedCount: number;
-  suspiciousCount: number;
-  fraudCount: number;
+  approvedTransactions: number;
+  suspiciousTransactions: number;
+  fraudTransactions: number;
   approvalRate: number;
   suspiciousRate: number;
   fraudRate: number;
-  averageScore: number;
-  totalAmount: number;
-  periodComparison: {
-    transactionsChange: number;
-    fraudRateChange: number;
-  };
-  topMerchants: MerchantMetric[];
-  mccDistribution: MCCMetric[];
-  hourlyDistribution: HourlyMetric[];
-}
-
-export interface MerchantMetric {
-  merchantId: string;
-  merchantName: string;
-  transactionCount: number;
-  fraudCount: number;
-  fraudRate: number;
-}
-
-export interface MCCMetric {
-  mcc: string;
-  description: string;
-  count: number;
-  percentage: number;
-}
-
-export interface HourlyMetric {
-  hour: number;
-  count: number;
-  fraudCount: number;
-}
-
-// Configuração de Regra
-export interface RuleConfiguration {
-  id?: number;
-  name: string;
-  description: string;
-  category: string;
-  field: string;
-  operator: string;
-  threshold: string;
-  weight: number;
-  classification: 'APPROVED' | 'SUSPICIOUS' | 'FRAUD';
-  enabled: boolean;
-  version: number;
-  conditions?: RuleCondition[];
-  createdAt?: string;
-  updatedAt?: string;
+  totalVolume?: number;
+  averageTransactionAmount?: number;
+  highestTransactionAmount?: number;
+  lowestTransactionAmount?: number;
+  period?: string;
+  timestamp?: string;
+  mccDistribution?: Record<string, number>;
+  merchantDistribution?: Record<string, number>;
 }
 
 export interface RuleCondition {
   field: string;
-  operator: string;
+  operator:
+    | "=="
+    | "!="
+    | ">"
+    | "<"
+    | ">="
+    | "<="
+    | "IN"
+    | "NOT_IN"
+    | "CONTAINS"
+    | "NOT_CONTAINS";
   value: string;
-  logicOperator?: 'AND' | 'OR';
 }
 
-// Log de Auditoria
+export interface RuleConfiguration {
+  id: number;
+  ruleName: string;
+  description?: string | null;
+  ruleType: "SECURITY" | "CONTEXT" | "VELOCITY" | "ANOMALY";
+  threshold: number;
+  weight: number;
+  enabled: boolean;
+  classification: "APPROVED" | "SUSPICIOUS" | "FRAUD";
+  conditions: RuleCondition[];
+  logicOperator: "AND" | "OR";
+  version: number;
+}
+
 export interface AuditLog {
   id: number;
-  transactionId: string;
-  action: string;
-  classification: string;
-  totalScore: number;
-  rulesApplied: string[];
-  userId: string;
-  timestamp: string;
-  details: string;
+  transactionId: number | null;
+  actionType: string;
+  description: string;
+  details?: string | null;
+  performedBy?: string | null;
+  result: string;
+  errorMessage?: string | null;
+  sourceIp?: string | null;
+  createdAt: string;
 }
 
 // ========================================
-// FUNÇÕES DE API
+// HTTP helper
 // ========================================
 
-/**
- * Função auxiliar para fazer requisições HTTP
- */
-async function apiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
+async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${JAVA_API_BASE_URL}${endpoint}`;
-  
+
   const token = getAccessToken();
-
+  const basicAuthRaw = BASIC_AUTH_RAW || getBasicAuthRaw() || undefined;
   const basicAuthHeader =
-    !token && BASIC_AUTH_RAW
-      ? `Basic ${btoa(BASIC_AUTH_RAW)}`
-      : undefined;
+    !token && basicAuthRaw ? `Basic ${btoa(basicAuthRaw)}` : undefined;
 
-  const defaultHeaders: HeadersInit = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
+  const headers: HeadersInit = {
+    Accept: "application/json",
+    ...(options.body ? { "Content-Type": "application/json" } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(!token && basicAuthHeader ? { Authorization: basicAuthHeader } : {}),
+    ...options.headers,
   };
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-  });
+  const response = await fetch(url, { ...options, headers });
 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
-    const errorMessage = text || `API Error: ${response.status} ${response.statusText}`;
-    throw new Error(errorMessage);
+    throw new Error(text || `API Error: ${response.status} ${response.statusText}`);
   }
 
-  // Algumas rotas de export retornam blob; para JSON convertemos normalmente
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
+  const contentType = response.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
     return response.json();
   }
-  // @ts-expect-error permitir retorno de blob/texte conforme T
-  return response as unknown as T;
+
+  return (await response.blob()) as unknown as T;
 }
 
 // ========================================
-// TRANSAÇÕES
+// TRANSACTIONS
 // ========================================
 
-/**
- * Analisar uma transação em tempo real
- */
-export async function analyzeTransaction(
-  request: TransactionRequest
-): Promise<TransactionResponse> {
-  return apiRequest<TransactionResponse>('/api/transactions/analyze', {
-    method: 'POST',
+export async function analyzeTransaction(request: TransactionRequest): Promise<TransactionResponse> {
+  return apiRequest<TransactionResponse>("/api/transactions/analyze", {
+    method: "POST",
     body: JSON.stringify(request),
   });
 }
 
-/**
- * Analisar transação com regras avançadas (50+ regras)
- */
 export async function analyzeTransactionAdvanced(
   request: TransactionRequest
 ): Promise<TransactionResponse> {
-  return apiRequest<TransactionResponse>('/api/transactions/analyze-advanced', {
-    method: 'POST',
+  return apiRequest<TransactionResponse>("/api/transactions/analyze-advanced", {
+    method: "POST",
     body: JSON.stringify(request),
   });
 }
 
-/**
- * Listar transações processadas com filtros
- */
 export async function listTransactions(
   filters: TransactionFilters = {}
 ): Promise<PaginatedResponse<ProcessedTransaction>> {
   const params = new URLSearchParams();
-  
-  if (filters.startDate) params.append('startDate', filters.startDate);
-  if (filters.endDate) params.append('endDate', filters.endDate);
-  if (filters.classification) params.append('classification', filters.classification);
-  if (filters.merchantId) params.append('merchantId', filters.merchantId);
-  if (filters.customerId) params.append('customerId', filters.customerId);
-  if (filters.minAmount) params.append('minAmount', filters.minAmount.toString());
-  if (filters.maxAmount) params.append('maxAmount', filters.maxAmount.toString());
-  if (filters.page !== undefined) params.append('page', filters.page.toString());
-  if (filters.size !== undefined) params.append('size', filters.size.toString());
+  if (filters.customerId) params.append("customerId", filters.customerId);
+  if (filters.merchantId) params.append("merchantId", filters.merchantId);
+  if (filters.classification) params.append("classification", filters.classification);
+  if (filters.mcc !== undefined) params.append("mcc", String(filters.mcc));
+  if (filters.minAmount !== undefined) params.append("minAmount", String(filters.minAmount));
+  if (filters.maxAmount !== undefined) params.append("maxAmount", String(filters.maxAmount));
+  if (filters.startDate) params.append("startDate", filters.startDate);
+  if (filters.endDate) params.append("endDate", filters.endDate);
+  if (filters.page !== undefined) params.append("page", String(filters.page));
+  if (filters.size !== undefined) params.append("size", String(filters.size));
 
-  const queryString = params.toString();
-  const endpoint = queryString ? `/api/transactions?${queryString}` : '/api/transactions';
-  
-  return apiRequest<PaginatedResponse<ProcessedTransaction>>(endpoint);
+  const qs = params.toString();
+  return apiRequest<PaginatedResponse<ProcessedTransaction>>(
+    qs ? `/api/transactions?${qs}` : "/api/transactions"
+  );
 }
 
-/**
- * Obter detalhes de uma transação específica
- */
-export async function getTransactionDetails(
-  transactionId: string
-): Promise<ProcessedTransaction & { ruleDetails: RuleDetail[] }> {
-  return apiRequest(`/api/transactions/${transactionId}`);
+export async function exportTransactions(
+  format: "csv" | "json" = "csv",
+  filters: TransactionFilters = {},
+  limit = 10000
+): Promise<Blob | TransactionResponse[]> {
+  const params = new URLSearchParams();
+  params.append("format", format);
+  params.append("limit", String(limit));
+  if (filters.customerId) params.append("customerId", filters.customerId);
+  if (filters.merchantId) params.append("merchantId", filters.merchantId);
+  if (filters.classification) params.append("classification", filters.classification);
+  if (filters.mcc !== undefined) params.append("mcc", String(filters.mcc));
+  if (filters.minAmount !== undefined) params.append("minAmount", String(filters.minAmount));
+  if (filters.maxAmount !== undefined) params.append("maxAmount", String(filters.maxAmount));
+  if (filters.startDate) params.append("startDate", filters.startDate);
+  if (filters.endDate) params.append("endDate", filters.endDate);
+
+  const url = `${JAVA_API_BASE_URL}/api/transactions/export?${params.toString()}`;
+  const token = getAccessToken();
+  const basicAuthHeader =
+    !token && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: format === "json" ? "application/json" : "text/csv",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(!token && basicAuthHeader ? { Authorization: basicAuthHeader } : {}),
+    },
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(text || `Export failed: ${response.status}`);
+  }
+  if (format === "json") {
+    return response.json();
+  }
+  return response.blob();
+}
+
+export async function getTransactionDetails(transactionId: string): Promise<TransactionResponse> {
+  return apiRequest<TransactionResponse>(`/api/transactions/${transactionId}`);
+}
+
+export async function getTransactionById(id: number): Promise<TransactionResponse> {
+  return apiRequest<TransactionResponse>(`/api/transactions/${id}`);
+}
+
+export async function getTransactionByExternalId(externalId: string): Promise<TransactionResponse> {
+  return apiRequest<TransactionResponse>(`/api/transactions/external/${encodeURIComponent(externalId)}`);
 }
 
 // ========================================
-// MÉTRICAS
+// METRICS
 // ========================================
 
-/**
- * Obter métricas do dashboard
- */
 export async function getDashboardMetrics(
-  period: '1h' | '24h' | '7d' | '30d' = '24h'
+  period: "1h" | "24h" | "7d" | "30d" = "24h"
 ): Promise<DashboardMetrics> {
-  return apiRequest<DashboardMetrics>(`/api/metrics?period=${period}`);
-}
-
-/**
- * Obter métricas em tempo real (polling)
- */
-export async function getRealTimeMetrics(): Promise<{
-  transactionsPerMinute: number;
-  fraudDetectedLast5Min: number;
-  averageResponseTime: number;
-}> {
-  return apiRequest('/api/metrics/realtime');
+  return apiRequest<DashboardMetrics>(`/api/metrics?period=${encodeURIComponent(period)}`);
 }
 
 // ========================================
-// REGRAS
+// RULES
 // ========================================
 
-/**
- * Listar todas as regras configuradas
- */
 export async function listRules(): Promise<RuleConfiguration[]> {
-  const response = await apiRequest<any>('/api/rules');
-  if (Array.isArray(response)) {
-    return response;
-  }
-  if (response && Array.isArray(response.content)) {
-    return response.content;
-  }
+  const response = await apiRequest<any>("/api/rules");
+  if (Array.isArray(response)) return response;
+  if (response && Array.isArray(response.content)) return response.content;
   return [];
 }
 
-/**
- * Obter detalhes de uma regra específica
- */
 export async function getRuleDetails(ruleId: number): Promise<RuleConfiguration> {
   return apiRequest<RuleConfiguration>(`/api/rules/${ruleId}`);
 }
 
-/**
- * Criar uma nova regra
- */
 export async function createRule(
-  rule: Omit<RuleConfiguration, 'id' | 'version' | 'createdAt' | 'updatedAt'>
+  rule: Omit<RuleConfiguration, "id" | "version">
 ): Promise<RuleConfiguration> {
-  return apiRequest<RuleConfiguration>('/api/rules', {
-    method: 'POST',
+  return apiRequest<RuleConfiguration>("/api/rules", {
+    method: "POST",
     body: JSON.stringify(rule),
   });
 }
 
-/**
- * Atualizar uma regra existente
- */
 export async function updateRule(
   ruleId: number,
   rule: Partial<RuleConfiguration>
 ): Promise<RuleConfiguration> {
   return apiRequest<RuleConfiguration>(`/api/rules/${ruleId}`, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify(rule),
   });
 }
 
-/**
- * Deletar uma regra
- */
 export async function deleteRule(ruleId: number): Promise<void> {
-  return apiRequest(`/api/rules/${ruleId}`, {
-    method: 'DELETE',
-  });
+  await apiRequest<void>(`/api/rules/${ruleId}`, { method: "DELETE" });
 }
 
-/**
- * Ativar/Desativar uma regra
- */
 export async function toggleRuleStatus(
   ruleId: number,
   enabled: boolean
 ): Promise<RuleConfiguration> {
   return apiRequest<RuleConfiguration>(`/api/rules/${ruleId}/toggle`, {
-    method: 'PATCH',
+    method: "PATCH",
     body: JSON.stringify({ enabled }),
   });
 }
 
 // ========================================
-// AUDITORIA
+// AUDIT
 // ========================================
 
-/**
- * Listar logs de auditoria
- */
 export async function listAuditLogs(
   filters: {
+    actionType?: string;
+    result?: string;
     startDate?: string;
     endDate?: string;
-    action?: string;
-    transactionId?: string;
     page?: number;
     size?: number;
   } = {}
 ): Promise<PaginatedResponse<AuditLog>> {
   const params = new URLSearchParams();
-  
-  if (filters.startDate) params.append('startDate', filters.startDate);
-  if (filters.endDate) params.append('endDate', filters.endDate);
-  if (filters.action) params.append('action', filters.action);
-  if (filters.transactionId) params.append('transactionId', filters.transactionId);
-  if (filters.page !== undefined) params.append('page', filters.page.toString());
-  if (filters.size !== undefined) params.append('size', filters.size.toString());
-
-  const queryString = params.toString();
-  const endpoint = queryString ? `/api/audit?${queryString}` : '/api/audit';
-  
-  return apiRequest<PaginatedResponse<AuditLog>>(endpoint);
+  if (filters.actionType) params.append("actionType", filters.actionType);
+  if (filters.result) params.append("result", filters.result);
+  if (filters.startDate) params.append("startDate", filters.startDate);
+  if (filters.endDate) params.append("endDate", filters.endDate);
+  if (filters.page !== undefined) params.append("page", String(filters.page));
+  if (filters.size !== undefined) params.append("size", String(filters.size));
+  const qs = params.toString();
+  return apiRequest<PaginatedResponse<AuditLog>>(qs ? `/api/audit?${qs}` : "/api/audit");
 }
 
-/**
- * Exportar logs de auditoria
- */
 export async function exportAuditLogs(
-  format: 'csv' | 'json' | 'pdf',
+  format: "csv" | "json" = "csv",
   filters: {
+    actionType?: string;
+    result?: string;
     startDate?: string;
     endDate?: string;
+    limit?: number;
   } = {}
-): Promise<Blob> {
+): Promise<Blob | AuditLog[]> {
   const params = new URLSearchParams();
-  params.append('format', format);
-  if (filters.startDate) params.append('startDate', filters.startDate);
-  if (filters.endDate) params.append('endDate', filters.endDate);
+  params.append("format", format);
+  if (filters.actionType) params.append("actionType", filters.actionType);
+  if (filters.result) params.append("result", filters.result);
+  if (filters.startDate) params.append("startDate", filters.startDate);
+  if (filters.endDate) params.append("endDate", filters.endDate);
+  params.append("limit", String(filters.limit ?? 10000));
 
-  const response = await fetch(
-    `${JAVA_API_BASE_URL}/api/audit/export?${params.toString()}`,
-    {
-      headers: {
-        'Accept': format === 'json' ? 'application/json' : 
-                  format === 'csv' ? 'text/csv' : 'application/pdf',
-      },
-    }
-  );
+  const url = `${JAVA_API_BASE_URL}/api/audit/export?${params.toString()}`;
+  const token = getAccessToken();
+  const basicAuthHeader =
+    !token && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
 
+  const response = await fetch(url, {
+    headers: {
+      Accept: format === "json" ? "application/json" : "text/csv",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(!token && basicAuthHeader ? { Authorization: basicAuthHeader } : {}),
+    },
+  });
   if (!response.ok) {
-    throw new Error(`Export failed: ${response.status}`);
+    const text = await response.text().catch(() => "");
+    throw new Error(text || `Export failed: ${response.status}`);
   }
-
+  if (format === "json") {
+    return response.json();
+  }
   return response.blob();
 }
 
 // ========================================
-// HEALTH CHECK
+// HEALTH
 // ========================================
 
-/**
- * Verificar status da API Java
- */
 export async function checkApiHealth(): Promise<{
-  status: 'UP' | 'DOWN';
-  database: 'UP' | 'DOWN';
+  status: "UP" | "DOWN";
   responseTime: number;
 }> {
-  const startTime = Date.now();
-  
+  const start = Date.now();
   try {
-    const response = await fetch(`${JAVA_API_BASE_URL}/api/health`, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
+    const response = await fetch(`${JAVA_API_BASE_URL}/actuator/health`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
     });
-    
-    const responseTime = Date.now() - startTime;
-    
-    if (response.ok) {
-      const data = await response.json();
-      return {
-        status: 'UP',
-        database: data.database || 'UP',
-        responseTime,
-      };
-    }
-    
-    return {
-      status: 'DOWN',
-      database: 'DOWN',
-      responseTime,
-    };
+    const responseTime = Date.now() - start;
+    return { status: response.ok ? "UP" : "DOWN", responseTime };
   } catch {
-    return {
-      status: 'DOWN',
-      database: 'DOWN',
-      responseTime: Date.now() - startTime,
-    };
+    return { status: "DOWN", responseTime: Date.now() - start };
   }
 }
 
-// ========================================
-// EXPORTAÇÕES
-// ========================================
-
 export const javaApi = {
-  // Transações
   analyzeTransaction,
   analyzeTransactionAdvanced,
   listTransactions,
+  exportTransactions,
   getTransactionDetails,
-  
-  // Métricas
+  getTransactionById,
+  getTransactionByExternalId,
   getDashboardMetrics,
-  getRealTimeMetrics,
-  
-  // Regras
   listRules,
   getRuleDetails,
   createRule,
   updateRule,
   deleteRule,
   toggleRuleStatus,
-  
-  // Auditoria
   listAuditLogs,
   exportAuditLogs,
-  
-  // Health
   checkApiHealth,
 };
 

@@ -1,57 +1,88 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { listAuditLogs } from '@/lib/javaApi';
+import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { AuditLog, exportAuditLogs, listAuditLogs } from '@/lib/javaApi';
 import { toast } from 'sonner';
-
-interface AuditLog {
-  id: number;
-  transactionId: number | null;
-  actionType: string;
-  description: string;
-  performedBy: string;
-  result: string;
-  errorMessage: string | null;
-  createdAt: string;
-}
 
 /**
  * Página de auditoria com histórico de todas as ações.
  */
 export default function Audit() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(20);
-  const [totalElements, setTotalElements] = useState(0);
+  const [exportFormat, setExportFormat] = useState<'csv' | 'json'>('csv');
+  const [startDate, setStartDate] = useState<string>(''); // datetime-local
+  const [endDate, setEndDate] = useState<string>(''); // datetime-local
   const [filters, setFilters] = useState({
     actionType: '',
     result: '',
   });
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['auditLogs', { page, size, filters }],
+    queryKey: ['auditLogs', { page, size, filters, startDate, endDate }],
     queryFn: () =>
       listAuditLogs({
         page,
         size,
-        action: filters.actionType || undefined,
+        actionType: filters.actionType || undefined,
         result: filters.result || undefined,
+        startDate: startDate ? new Date(startDate).toISOString() : undefined,
+        endDate: endDate ? new Date(endDate).toISOString() : undefined,
       }),
-    onSuccess: (resp) => {
-      setLogs(resp.content || []);
-      setTotalElements(resp.totalElements || 0);
-    },
-    onError: () => toast.error('Falha ao buscar logs de auditoria'),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
+
+  useEffect(() => {
+    if (isError) {
+      toast.error('Falha ao buscar logs de auditoria');
+    }
+  }, [isError]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setPage(0);
+  };
+
+  const handleClear = () => {
+    setFilters({ actionType: '', result: '' });
+    setStartDate('');
+    setEndDate('');
+    setPage(0);
+  };
+
+  const handleExport = async () => {
+    try {
+      const startIso = startDate ? new Date(startDate).toISOString() : undefined;
+      const endIso = endDate ? new Date(endDate).toISOString() : undefined;
+      const exported = await exportAuditLogs(exportFormat, {
+        actionType: filters.actionType || undefined,
+        result: filters.result || undefined,
+        startDate: startIso,
+        endDate: endIso,
+        limit: 10000,
+      });
+
+      const blob =
+        exportFormat === 'json'
+          ? new Blob([JSON.stringify(exported, null, 2)], { type: 'application/json' })
+          : (exported as Blob);
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = exportFormat === 'json' ? 'rulex-audit.json' : 'rulex-audit.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Export gerado');
+    } catch (e) {
+      toast.error(`Falha ao exportar: ${e instanceof Error ? e.message : 'erro inesperado'}`);
+    }
   };
 
   const getActionTypeColor = (actionType: string) => {
@@ -99,14 +130,33 @@ export default function Audit() {
     }
   };
 
+  const logs: AuditLog[] = useMemo(() => data?.content ?? [], [data]);
+  const totalElements = data?.totalElements ?? logs.length;
   const totalPages = Math.ceil(totalElements / size);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Auditoria</h1>
-        <p className="text-muted-foreground mt-1">Histórico de todas as ações do sistema</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Auditoria</h1>
+          <p className="text-muted-foreground mt-1">Histórico de todas as ações do sistema</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={exportFormat}
+            onChange={(e) => setExportFormat(e.target.value as 'csv' | 'json')}
+            className="px-3 py-2 border border-input rounded-lg bg-background text-foreground"
+            aria-label="Formato de export"
+          >
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+          </select>
+          <Button variant="outline" onClick={handleExport} className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Exportar
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}
@@ -115,7 +165,7 @@ export default function Audit() {
           <CardTitle className="text-lg">Filtros</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Tipo de Ação</label>
               <select
@@ -143,6 +193,35 @@ export default function Audit() {
                 <option value="FAILURE">Falha</option>
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Início</label>
+              <input
+                type="datetime-local"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setPage(0);
+                }}
+                className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Fim</label>
+              <input
+                type="datetime-local"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setPage(0);
+                }}
+                className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
+              />
+            </div>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <Button variant="outline" onClick={handleClear}>
+              Limpar filtros
+            </Button>
           </div>
         </CardContent>
       </Card>
