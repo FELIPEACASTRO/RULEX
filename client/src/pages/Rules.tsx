@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit2, Trash2, ToggleRight } from 'lucide-react';
 import {
@@ -14,9 +15,11 @@ import {
 } from '@/components/ui/dialog';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  FieldDictionaryItem,
   RuleConfiguration,
   createRule,
   deleteRule,
+  listFieldDictionary,
   listRules,
   toggleRuleStatus,
   updateRule,
@@ -34,6 +37,13 @@ export default function Rules() {
     retry: 1,
   });
 
+  const fieldDictionaryQuery = useQuery({
+    queryKey: ['fieldDictionary'],
+    // Defaults used by the backend seeder for a catalog-driven FE.
+    queryFn: () => listFieldDictionary({ workflow: 'BRZLCREDIT', recordType: 'CRTRAN25', portfolio: '*' }),
+    retry: 1,
+  });
+
   const rules = useMemo(() => data ?? [], [data]);
   const [editingRule, setEditingRule] = useState<RuleConfiguration | null>(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -45,6 +55,9 @@ export default function Rules() {
     weight: 0,
     enabled: true,
     classification: 'SUSPICIOUS' as RuleConfiguration['classification'],
+    parameters: '' as string,
+    logicOperator: 'AND' as RuleConfiguration['logicOperator'],
+    conditions: [] as RuleConfiguration['conditions'],
   });
 
   const invalidateRules = () => queryClient.invalidateQueries({ queryKey: ['rules'] });
@@ -59,9 +72,12 @@ export default function Rules() {
         weight: formData.weight,
         enabled: formData.enabled,
         classification: formData.classification,
-        // Backend exige: conditions + logicOperator (podem ser vazios/AND para regras legadas por nome)
-        conditions: [],
-        logicOperator: 'AND',
+        parameters: formData.parameters?.trim() ? formData.parameters : null,
+        // Backend exige: conditions + logicOperator.
+        // - Para regras "genéricas": preencha conditions + logicOperator.
+        // - Para regras "legadas por nome": conditions pode ficar vazio e o engine cai no switch(ruleName).
+        conditions: formData.conditions ?? [],
+        logicOperator: formData.logicOperator ?? 'AND',
       };
 
       if (editingRule) {
@@ -81,6 +97,9 @@ export default function Rules() {
         weight: 0,
         enabled: true,
         classification: 'SUSPICIOUS',
+        parameters: '',
+        logicOperator: 'AND',
+        conditions: [],
       });
       invalidateRules();
     },
@@ -115,6 +134,9 @@ export default function Rules() {
       weight: rule.weight,
       enabled: rule.enabled,
       classification: rule.classification,
+      parameters: rule.parameters ?? '',
+      logicOperator: rule.logicOperator ?? 'AND',
+      conditions: rule.conditions ?? [],
     });
     setShowDialog(true);
   };
@@ -182,6 +204,9 @@ export default function Rules() {
                   weight: 0,
                   enabled: true,
                   classification: 'SUSPICIOUS',
+                  parameters: '',
+                  logicOperator: 'AND',
+                  conditions: [],
                 });
               }}
             >
@@ -189,7 +214,7 @@ export default function Rules() {
               Nova Regra
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>{editingRule ? 'Editar Regra' : 'Nova Regra'}</DialogTitle>
               <DialogDescription>
@@ -205,7 +230,7 @@ export default function Rules() {
                   id="ruleName"
                   value={formData.ruleName}
                   onChange={(e) => setFormData({ ...formData, ruleName: e.target.value })}
-                  placeholder="Ex: LOW_AUTHENTICATION_SCORE"
+                  placeholder="Ex: RULE_GENERIC_001 (ou LOW_AUTHENTICATION_SCORE para regra legada)"
                   disabled={!!editingRule}
                 />
               </div>
@@ -219,6 +244,30 @@ export default function Rules() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Descrição da regra"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="parameters" className="block text-sm font-medium text-foreground mb-2">
+                  Parâmetros (JSON) — opcional
+                </label>
+                <Textarea
+                  id="parameters"
+                  value={formData.parameters}
+                  onChange={(e) => setFormData({ ...formData, parameters: e.target.value })}
+                  placeholder={
+                    formData.ruleType === 'VELOCITY'
+                      ? `Ex (velocity/state):\n{\n  "velocity": {\n    "metric": "COUNT",\n    "dimension": "CUSTOMER",\n    "windowSeconds": 3600,\n    "operator": "GT",\n    "threshold": 3\n  }\n}`
+                      : 'JSON livre (ex.: configs avançadas futuras)'
+                  }
+                  rows={formData.ruleType === 'VELOCITY' ? 8 : 4}
+                />
+                {formData.ruleType === 'VELOCITY' ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Para regras de velocidade, use <code>metric</code> = <code>COUNT</code> ou{' '}
+                    <code>SUM_AMOUNT</code>, <code>dimension</code> = <code>CUSTOMER</code> /{' '}
+                    <code>MERCHANT</code> / <code>GLOBAL</code>.
+                  </p>
+                ) : null}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -301,6 +350,239 @@ export default function Rules() {
                   />
                 </div>
               </div>
+
+              {/* Condições / "subregras" (engine genérico) */}
+              <div className="rounded-lg border border-border p-4">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Condições (subregras)</p>
+                    <p className="text-xs text-muted-foreground">
+                      Para regras genéricas, adicione condições. Para regras legadas por nome, pode deixar vazio.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="logicOperator" className="text-xs font-medium text-muted-foreground">
+                      Operador
+                    </label>
+                    <select
+                      id="logicOperator"
+                      value={formData.logicOperator}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          logicOperator: e.target.value as RuleConfiguration['logicOperator'],
+                        })
+                      }
+                      className="px-3 py-2 border border-input rounded-lg bg-background text-foreground"
+                    >
+                      <option value="AND">AND</option>
+                      <option value="OR">OR</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-3 space-y-3">
+                  {formData.conditions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nenhuma condição adicionada.</p>
+                  ) : null}
+
+                  {formData.conditions.map((c, idx) => {
+                    const available = (fieldDictionaryQuery.data ?? []) as FieldDictionaryItem[];
+                    const fieldOptions = available
+                      .map((f) => (f.jsonPath?.startsWith('$.') ? f.jsonPath.slice(2) : f.jsonPath))
+                      .filter(Boolean);
+                    const currentField = available.find(
+                      (f) => (f.jsonPath?.startsWith('$.') ? f.jsonPath.slice(2) : f.jsonPath) === c.field,
+                    );
+                    const typeForField = currentField?.type ?? 'unknown';
+
+                    const baseOps: RuleConfiguration['conditions'][number]['operator'][] = [
+                      'EQ',
+                      'NE',
+                      'GT',
+                      'LT',
+                      'GTE',
+                      'LTE',
+                      'IN',
+                      'NOT_IN',
+                      'BETWEEN',
+                      'NOT_BETWEEN',
+                      'CONTAINS',
+                      'NOT_CONTAINS',
+                      'STARTS_WITH',
+                      'ENDS_WITH',
+                      'MATCHES_REGEX',
+                      'IS_NULL',
+                      'IS_NOT_NULL',
+                      'IS_TRUE',
+                      'IS_FALSE',
+                    ];
+                    const opsFromCatalog =
+                      currentField?.allowedOperators && currentField.allowedOperators.length > 0
+                        ? (currentField.allowedOperators as RuleConfiguration['conditions'][number]['operator'][])
+                        : null;
+                    const opsFallback =
+                      typeForField === 'number'
+                        ? baseOps.filter(
+                            (o) =>
+                              ![
+                                'CONTAINS',
+                                'NOT_CONTAINS',
+                                'STARTS_WITH',
+                                'ENDS_WITH',
+                                'MATCHES_REGEX',
+                              ].includes(o),
+                          )
+                        : typeForField === 'boolean'
+                          ? baseOps.filter((o) => ['IS_TRUE', 'IS_FALSE', 'IS_NULL', 'IS_NOT_NULL'].includes(o))
+                          : baseOps;
+                    const ops = opsFromCatalog ?? opsFallback;
+                    const isUnary = ['IS_NULL', 'IS_NOT_NULL', 'IS_TRUE', 'IS_FALSE'].includes(c.operator);
+                    const operatorLabel = (op: string) => {
+                      const map: Record<string, string> = {
+                        EQ: '== (EQ)',
+                        NE: '!= (NE)',
+                        GT: '> (GT)',
+                        LT: '< (LT)',
+                        GTE: '>= (GTE)',
+                        LTE: '<= (LTE)',
+                        IN: 'IN',
+                        NOT_IN: 'NOT IN',
+                        BETWEEN: 'BETWEEN',
+                        NOT_BETWEEN: 'NOT BETWEEN',
+                        CONTAINS: 'CONTAINS',
+                        NOT_CONTAINS: 'NOT CONTAINS',
+                        STARTS_WITH: 'STARTS WITH',
+                        ENDS_WITH: 'ENDS WITH',
+                        MATCHES_REGEX: 'MATCHES REGEX',
+                        IS_NULL: 'IS NULL',
+                        IS_NOT_NULL: 'IS NOT NULL',
+                        IS_TRUE: 'IS TRUE',
+                        IS_FALSE: 'IS FALSE',
+                        '==': '==',
+                        '!=': '!=',
+                        '>': '>',
+                        '<': '<',
+                        '>=': '>=',
+                        '<=': '<=',
+                      };
+                      return map[op] ?? op;
+                    };
+
+                    return (
+                      <div key={`${idx}-${c.field}`} className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-end">
+                        <div className="sm:col-span-5">
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            Campo
+                          </label>
+                          {/* Combobox simples: permite qualquer campo, mas sugere os do catálogo */}
+                          <Input
+                            value={c.field}
+                            onChange={(e) => {
+                              const next = [...formData.conditions];
+                              next[idx] = { ...next[idx], field: e.target.value };
+                              setFormData({ ...formData, conditions: next });
+                            }}
+                            placeholder="Ex: consumerAuthenticationScore"
+                            list="rule-condition-fields"
+                          />
+                          <datalist id="rule-condition-fields">
+                            {fieldOptions.map((f) => (
+                              <option key={f} value={f} />
+                            ))}
+                          </datalist>
+                          {fieldDictionaryQuery.isError ? (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Catálogo de campos indisponível; você ainda pode digitar o nome do campo.
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="sm:col-span-3">
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            Operador
+                          </label>
+                          <select
+                            value={c.operator}
+                            onChange={(e) => {
+                              const next = [...formData.conditions];
+                              next[idx] = {
+                                ...next[idx],
+                                operator: e.target.value as RuleConfiguration['conditions'][number]['operator'],
+                                // Operadores unários não usam value.
+                                value: ['IS_NULL', 'IS_NOT_NULL', 'IS_TRUE', 'IS_FALSE'].includes(e.target.value)
+                                  ? ''
+                                  : next[idx].value,
+                              };
+                              setFormData({ ...formData, conditions: next });
+                            }}
+                            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
+                          >
+                            {ops.map((op) => (
+                              <option key={op} value={op}>
+                                {operatorLabel(op)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="sm:col-span-3">
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            Valor
+                          </label>
+                          {isUnary ? (
+                            <Input value="" disabled placeholder="(não aplicável)" />
+                          ) : (
+                            <Input
+                              value={c.value}
+                              onChange={(e) => {
+                                const next = [...formData.conditions];
+                                next[idx] = { ...next[idx], value: e.target.value };
+                                setFormData({ ...formData, conditions: next });
+                              }}
+                              placeholder={
+                                c.operator === 'IN' || c.operator === 'NOT_IN'
+                                  ? "Ex: [1,2,3] ou ['RU','CN']"
+                                  : c.operator === 'BETWEEN' || c.operator === 'NOT_BETWEEN'
+                                    ? 'Ex: 10,20 (ou 10..20)'
+                                    : 'Ex: 10'
+                              }
+                            />
+                          )}
+                        </div>
+                        <div className="sm:col-span-1 flex sm:justify-end">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => {
+                              const next = formData.conditions.filter((_, i) => i !== idx);
+                              setFormData({ ...formData, conditions: next });
+                            }}
+                            title="Remover condição"
+                          >
+                            Remover
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        conditions: [
+                          ...formData.conditions,
+                          { field: '', operator: 'EQ', value: '' } as RuleConfiguration['conditions'][number],
+                        ],
+                      })
+                    }
+                  >
+                    Adicionar condição
+                  </Button>
+                </div>
+              </div>
+
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"

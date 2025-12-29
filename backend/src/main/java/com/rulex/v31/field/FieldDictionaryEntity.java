@@ -1,5 +1,7 @@
 package com.rulex.v31.field;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -33,9 +35,11 @@ public class FieldDictionaryEntity {
   private String dataType;
 
   @Column(name = "domain_json", columnDefinition = "jsonb")
+  @JdbcTypeCode(SqlTypes.JSON)
   private String domainJson;
 
   @Column(name = "sentinel_values_json", columnDefinition = "jsonb")
+  @JdbcTypeCode(SqlTypes.JSON)
   private String sentinelValuesJson;
 
   @Column(name = "allowed_operators", columnDefinition = "text[]", nullable = false)
@@ -45,9 +49,11 @@ public class FieldDictionaryEntity {
   private String[] allowedFunctions;
 
   @Column(name = "requiredness_by_context", columnDefinition = "jsonb")
+  @JdbcTypeCode(SqlTypes.JSON)
   private String requirednessByContext;
 
   @Column(name = "security_constraints", columnDefinition = "jsonb")
+  @JdbcTypeCode(SqlTypes.JSON)
   private String securityConstraints;
 
   @Column(name = "normalization_allowed", nullable = false)

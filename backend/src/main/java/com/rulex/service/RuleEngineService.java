@@ -509,6 +509,14 @@ public class RuleEngineService {
   /** Avalia uma regra específica contra a transação. */
   private RuleMatch evaluateRuleGeneric(
       Transaction transaction, TransactionRequest request, RuleConfiguration rule) {
+    // 0) VELOCITY/state: regras com janela temporal (exigem persistência/consulta).
+    if (rule.getRuleType() == RuleConfiguration.RuleType.VELOCITY) {
+      RuleMatch velocity = evaluateRuleVelocity(request, rule);
+      if (velocity != null) {
+        return velocity;
+      }
+    }
+
     // 1) Preferir condições genéricas (configuráveis)
     if (rule.getConditionsJson() != null && !rule.getConditionsJson().isBlank()) {
       List<RuleConditionDTO> conditions = readConditions(rule.getConditionsJson());
@@ -1200,30 +1208,47 @@ public class RuleEngineService {
   }
 
   private boolean evaluateCondition(TransactionRequest request, RuleConditionDTO condition) {
-    Object fieldValue = readFieldValue(request, TransactionRequest.class, condition.getField());
-    if (fieldValue == null) {
+    String operatorRaw = condition.getOperator() == null ? "" : condition.getOperator().trim();
+    String operator = normalizeOperator(operatorRaw);
+    String rawValue = condition.getValue() == null ? "" : condition.getValue();
+
+    Object leftValue = readComputedLeftValue(request, condition.getField());
+
+    // Operadores unários (não exigem value)
+    switch (operator) {
+      case "IS_NULL":
+        return leftValue == null;
+      case "IS_NOT_NULL":
+        return leftValue != null;
+      case "IS_TRUE":
+        return truthy(leftValue);
+      case "IS_FALSE":
+        return leftValue != null && !truthy(leftValue);
+      default:
+        // seguir
+    }
+
+    if (leftValue == null) {
       return false;
     }
 
-    String operator = condition.getOperator();
-    String rawValue = condition.getValue();
-
-    if (fieldValue instanceof Number || fieldValue instanceof BigDecimal) {
+    if (leftValue instanceof Number || leftValue instanceof BigDecimal) {
       BigDecimal left =
-          (fieldValue instanceof BigDecimal)
-              ? (BigDecimal) fieldValue
-              : new BigDecimal(fieldValue.toString());
-
+          (leftValue instanceof BigDecimal)
+              ? (BigDecimal) leftValue
+              : new BigDecimal(leftValue.toString());
       try {
         return switch (operator) {
-          case "==" -> left.compareTo(new BigDecimal(rawValue)) == 0;
-          case "!=" -> left.compareTo(new BigDecimal(rawValue)) != 0;
-          case ">" -> left.compareTo(new BigDecimal(rawValue)) > 0;
-          case "<" -> left.compareTo(new BigDecimal(rawValue)) < 0;
-          case ">=" -> left.compareTo(new BigDecimal(rawValue)) >= 0;
-          case "<=" -> left.compareTo(new BigDecimal(rawValue)) <= 0;
-          case "IN" -> inListNumber(left, rawValue);
-          case "NOT_IN" -> !inListNumber(left, rawValue);
+          case "EQ" -> left.compareTo(new BigDecimal(rawValue)) == 0;
+          case "NE" -> left.compareTo(new BigDecimal(rawValue)) != 0;
+          case "GT" -> left.compareTo(new BigDecimal(rawValue)) > 0;
+          case "LT" -> left.compareTo(new BigDecimal(rawValue)) < 0;
+          case "GTE" -> left.compareTo(new BigDecimal(rawValue)) >= 0;
+          case "LTE" -> left.compareTo(new BigDecimal(rawValue)) <= 0;
+          case "IN" -> inListNumberFlexible(left, rawValue);
+          case "NOT_IN" -> !inListNumberFlexible(left, rawValue);
+          case "BETWEEN" -> betweenNumber(left, rawValue, true);
+          case "NOT_BETWEEN" -> !betweenNumber(left, rawValue, true);
           default -> false;
         };
       } catch (Exception e) {
@@ -1231,41 +1256,129 @@ public class RuleEngineService {
       }
     }
 
-    String left = String.valueOf(fieldValue);
+    String left = String.valueOf(leftValue);
+    String right = unquote(rawValue);
     return switch (operator) {
-      case "==" -> left.equals(rawValue);
-      case "!=" -> !left.equals(rawValue);
-      case "CONTAINS" -> left.contains(rawValue);
-      case "NOT_CONTAINS" -> !left.contains(rawValue);
-      case "IN" -> inListString(left, rawValue);
-      case "NOT_IN" -> !inListString(left, rawValue);
+      case "EQ" -> left.equals(right);
+      case "NE" -> !left.equals(right);
+      case "CONTAINS" -> left.contains(right);
+      case "NOT_CONTAINS" -> !left.contains(right);
+      case "STARTS_WITH" -> left.startsWith(right);
+      case "ENDS_WITH" -> left.endsWith(right);
+      case "MATCHES_REGEX" -> matchesRegex(left, rawValue);
+      case "IN" -> inListStringFlexible(left, rawValue);
+      case "NOT_IN" -> !inListStringFlexible(left, rawValue);
       default -> false;
     };
   }
 
-  private boolean inListNumber(BigDecimal left, String csv) {
-    for (String token : csv.split(",")) {
-      String t = token.trim();
-      if (t.isEmpty()) continue;
-      if (left.compareTo(new BigDecimal(t)) == 0) {
-        return true;
+  private boolean truthy(Object v) {
+    if (v == null) return false;
+    if (v instanceof Boolean b) return b;
+    if (v instanceof Number n) return n.intValue() != 0;
+    String s = String.valueOf(v).trim().toLowerCase(java.util.Locale.ROOT);
+    return s.equals("true") || s.equals("1") || s.equals("y") || s.equals("yes");
+  }
+
+  private String normalizeOperator(String raw) {
+    if (raw == null) return "";
+    String o = raw.trim();
+    // aceitar operadores simbólicos (compatibilidade com FE/legado)
+    return switch (o) {
+      case "==" -> "EQ";
+      case "!=" -> "NE";
+      case ">" -> "GT";
+      case "<" -> "LT";
+      case ">=" -> "GTE";
+      case "<=" -> "LTE";
+      default -> o.toUpperCase(java.util.Locale.ROOT);
+    };
+  }
+
+  private boolean betweenNumber(BigDecimal left, String raw, boolean inclusive) {
+    java.util.List<String> parts = parseListTokens(raw);
+    if (parts.size() < 2) {
+      // aceitar "min..max"
+      String s = raw == null ? "" : raw.trim();
+      if (s.contains("..")) {
+        String[] p = s.split("\\.\\.", 2);
+        parts = java.util.List.of(p[0].trim(), p[1].trim());
+      } else {
+        return false;
       }
+    }
+    BigDecimal a = new BigDecimal(parts.get(0));
+    BigDecimal b = new BigDecimal(parts.get(1));
+    BigDecimal min = a.min(b);
+    BigDecimal max = a.max(b);
+    return inclusive
+        ? left.compareTo(min) >= 0 && left.compareTo(max) <= 0
+        : left.compareTo(min) > 0 && left.compareTo(max) < 0;
+  }
+
+  private boolean matchesRegex(String left, String rawRegex) {
+    try {
+      return java.util.regex.Pattern.compile(rawRegex).matcher(left).find();
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean inListNumberFlexible(BigDecimal left, String rawList) {
+    for (String token : parseListTokens(rawList)) {
+      if (token.isEmpty()) continue;
+      if (left.compareTo(new BigDecimal(token)) == 0) return true;
     }
     return false;
   }
 
-  private boolean inListString(String left, String csv) {
-    for (String token : csv.split(",")) {
-      if (left.equals(token.trim())) {
-        return true;
-      }
+  private boolean inListStringFlexible(String left, String rawList) {
+    for (String token : parseListTokens(rawList)) {
+      if (left.equals(token)) return true;
     }
     return false;
+  }
+
+  /**
+   * Aceita:
+   * - "a,b,c"
+   * - "[a,b,c]"
+   * - "['RU','CN']"
+   * - "[7995, 7994]"
+   */
+  private java.util.List<String> parseListTokens(String raw) {
+    if (raw == null) return java.util.List.of();
+    String s = raw.trim();
+    if (s.startsWith("[") && s.endsWith("]") && s.length() >= 2) {
+      s = s.substring(1, s.length() - 1).trim();
+    }
+    if (s.isEmpty()) return java.util.List.of();
+    String[] tokens = s.split(",");
+    java.util.List<String> out = new java.util.ArrayList<>(tokens.length);
+    for (String t : tokens) {
+      String v = t == null ? "" : t.trim();
+      if ((v.startsWith("'") && v.endsWith("'")) || (v.startsWith("\"") && v.endsWith("\""))) {
+        v = v.substring(1, v.length() - 1);
+      }
+      out.add(v.trim());
+    }
+    return out;
+  }
+
+  private String unquote(String raw) {
+    if (raw == null) return "";
+    String v = raw.trim();
+    if ((v.startsWith("'") && v.endsWith("'")) || (v.startsWith("\"") && v.endsWith("\""))) {
+      if (v.length() >= 2) {
+        v = v.substring(1, v.length() - 1);
+      }
+    }
+    return v;
   }
 
   private String explainCondition(
       TransactionRequest request, RuleConditionDTO condition, boolean result) {
-    Object fieldValue = readFieldValue(request, TransactionRequest.class, condition.getField());
+    Object fieldValue = readComputedLeftValue(request, condition.getField());
     return condition.getField()
         + " "
         + condition.getOperator()
@@ -1275,6 +1388,343 @@ public class RuleEngineService {
         + fieldValue
         + ") => "
         + result;
+  }
+
+  private Object readComputedLeftValue(TransactionRequest request, String fieldExpr) {
+    if (fieldExpr == null) {
+      return null;
+    }
+    String raw = fieldExpr.trim();
+    if (raw.isEmpty()) {
+      return null;
+    }
+
+    // ABS(x)
+    java.util.regex.Matcher unary =
+        java.util.regex.Pattern.compile("^(ABS|LEN|LOWER|UPPER|TRIM)\\(([A-Za-z0-9_]+)\\)$")
+            .matcher(raw);
+    if (unary.matches()) {
+      String fn = unary.group(1);
+      String arg = unary.group(2);
+      Object base = readFieldValue(request, TransactionRequest.class, arg);
+      return applyUnary(fn, base);
+    }
+
+    // ABS(<expr>) onde <expr> pode ser "a-b" (compatível com FRAUDE_REGRAS_DURAS_EXPORT.yaml)
+    java.util.regex.Matcher absExpr = java.util.regex.Pattern.compile("^ABS\\((.+)\\)$").matcher(raw);
+    if (absExpr.matches()) {
+      Object v = evalNumericExpression(request, absExpr.group(1));
+      return applyUnary("ABS", v);
+    }
+
+    // ABS_DIFF(a,b)
+    java.util.regex.Matcher absDiff =
+        java.util.regex.Pattern.compile("^ABS_DIFF\\(([A-Za-z0-9_]+)\\s*,\\s*([A-Za-z0-9_]+)\\)$")
+            .matcher(raw);
+    if (absDiff.matches()) {
+      Object a = readFieldValue(request, TransactionRequest.class, absDiff.group(1));
+      Object b = readFieldValue(request, TransactionRequest.class, absDiff.group(2));
+      return absDiff(a, b);
+    }
+
+    // COALESCE(field, literal)
+    java.util.regex.Matcher coalesce =
+        java.util.regex.Pattern.compile("^COALESCE\\(([A-Za-z0-9_]+)\\s*,\\s*(.+)\\)$").matcher(raw);
+    if (coalesce.matches()) {
+      Object base = readFieldValue(request, TransactionRequest.class, coalesce.group(1));
+      if (base != null) return base;
+      String literal = coalesce.group(2).trim();
+      if ((literal.startsWith("'") && literal.endsWith("'"))
+          || (literal.startsWith("\"") && literal.endsWith("\""))) {
+        literal = literal.substring(1, literal.length() - 1);
+      }
+      return literal;
+    }
+
+    return readFieldValue(request, TransactionRequest.class, raw);
+  }
+
+  private Object applyUnary(String fn, Object v) {
+    if (v == null) return null;
+    return switch (fn) {
+      case "ABS" -> {
+        try {
+          BigDecimal n =
+              (v instanceof BigDecimal) ? (BigDecimal) v : new BigDecimal(String.valueOf(v));
+          yield n.abs();
+        } catch (Exception e) {
+          yield null;
+        }
+      }
+      case "LEN" -> String.valueOf(v).length();
+      case "LOWER" -> String.valueOf(v).toLowerCase(java.util.Locale.ROOT);
+      case "UPPER" -> String.valueOf(v).toUpperCase(java.util.Locale.ROOT);
+      case "TRIM" -> String.valueOf(v).trim();
+      default -> v;
+    };
+  }
+
+  private Object absDiff(Object a, Object b) {
+    if (a == null || b == null) return null;
+    try {
+      BigDecimal na =
+          (a instanceof BigDecimal) ? (BigDecimal) a : new BigDecimal(String.valueOf(a));
+      BigDecimal nb =
+          (b instanceof BigDecimal) ? (BigDecimal) b : new BigDecimal(String.valueOf(b));
+      return na.subtract(nb).abs();
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * Avaliador mínimo de expressão numérica para o LHS (campo).
+   *
+   * <p>Objetivo: suportar padrão real do YAML: {@code ABS(atcCard - atcHost)}.
+   *
+   * <p>Suporta apenas:
+   * - literal numérico (ex.: "5", "10.2")
+   * - campo (property do TransactionRequest)
+   * - subtração binária: "a-b" com espaços opcionais
+   *
+   * <p>Se não conseguir avaliar, retorna null.
+   */
+  private Object evalNumericExpression(TransactionRequest request, String expr) {
+    if (expr == null) return null;
+    String e = expr.trim();
+    if (e.isEmpty()) return null;
+
+    int minus = indexOfTopLevelMinus(e);
+    if (minus > 0) {
+      String left = e.substring(0, minus).trim();
+      String right = e.substring(minus + 1).trim();
+      BigDecimal a = resolveToBigDecimal(request, left);
+      BigDecimal b = resolveToBigDecimal(request, right);
+      if (a == null || b == null) return null;
+      return a.subtract(b);
+    }
+
+    return resolveToBigDecimal(request, e);
+  }
+
+  private int indexOfTopLevelMinus(String e) {
+    // Evita confundir número negativo "-5" no primeiro char.
+    for (int i = 1; i < e.length(); i++) {
+      if (e.charAt(i) == '-') return i;
+    }
+    return -1;
+  }
+
+  private BigDecimal resolveToBigDecimal(TransactionRequest request, String token) {
+    if (token == null) return null;
+    String t = token.trim();
+    if (t.isEmpty()) return null;
+    try {
+      return new BigDecimal(t);
+    } catch (Exception ignored) {
+      // not a literal
+    }
+    Object v = readFieldValue(request, TransactionRequest.class, t);
+    if (v == null) return null;
+    try {
+      return (v instanceof BigDecimal) ? (BigDecimal) v : new BigDecimal(String.valueOf(v));
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * VELOCITY/state (janela temporal) baseado em persistência.
+   *
+   * <p>Config em {@code RuleConfiguration.parameters} (JSON):
+   *
+   * <pre>
+   * {
+   *   "velocity": {
+   *     "metric": "COUNT" | "SUM_AMOUNT",
+   *     "dimension": "CUSTOMER" | "MERCHANT" | "GLOBAL",
+   *     "windowSeconds": 3600,
+   *     "operator": "GT" | "GTE" | "LT" | "LTE" | "EQ" | "NE",
+   *     "threshold": 3
+   *   }
+   * }
+   * </pre>
+   */
+  private RuleMatch evaluateRuleVelocity(TransactionRequest request, RuleConfiguration rule) {
+    if (rule == null) return null;
+    String parameters = rule.getParameters();
+    if (parameters == null || parameters.isBlank()) return null;
+
+    VelocitySpec spec;
+    try {
+      var root = objectMapper.readTree(parameters);
+      var v = root.get("velocity");
+      if (v == null || v.isNull()) return null;
+      spec = VelocitySpec.fromJson(v);
+    } catch (Exception e) {
+      // parameters inválido: não dispara regra e não derruba o pipeline.
+      return new RuleMatch(false, "velocity.parameters inválido (JSON parse falhou)");
+    }
+
+    LocalDateTime now = LocalDateTime.now(clock);
+    LocalDateTime since = now.minusSeconds(Math.max(0L, spec.windowSeconds));
+
+    String detailPrefix =
+        "velocity "
+            + spec.metric
+            + " "
+            + spec.dimension
+            + " windowSeconds="
+            + spec.windowSeconds;
+
+    return switch (spec.metric) {
+      case COUNT -> {
+        long count =
+            switch (spec.dimension) {
+              case CUSTOMER -> {
+                String key = request.getCustomerIdFromHeader();
+                if (key == null || key.isBlank()) yield 0L;
+                Long c = transactionRepository.countTransactionsByCustomerSince(key, since);
+                yield c == null ? 0L : c;
+              }
+              case MERCHANT -> {
+                String key = request.getMerchantId();
+                if (key == null || key.isBlank()) yield 0L;
+                Long c = transactionRepository.countTransactionsByMerchantSince(key, since);
+                yield c == null ? 0L : c;
+              }
+              case GLOBAL -> {
+                Long c = transactionRepository.countSince(since);
+                yield c == null ? 0L : c;
+              }
+            };
+        boolean ok = compareLong(count, spec.operator, spec.thresholdLong);
+        yield new RuleMatch(
+            ok,
+            detailPrefix
+                + " operator="
+                + spec.operator
+                + " threshold="
+                + spec.thresholdLong
+                + " (actual="
+                + count
+                + ") => "
+                + ok);
+      }
+      case SUM_AMOUNT -> {
+        BigDecimal sum =
+            switch (spec.dimension) {
+              case CUSTOMER -> {
+                String key = request.getCustomerIdFromHeader();
+                if (key == null || key.isBlank()) yield BigDecimal.ZERO;
+                BigDecimal s = transactionRepository.sumAmountByCustomerSince(key, since);
+                yield s == null ? BigDecimal.ZERO : s;
+              }
+              case MERCHANT -> {
+                String key = request.getMerchantId();
+                if (key == null || key.isBlank()) yield BigDecimal.ZERO;
+                BigDecimal s = transactionRepository.sumAmountByMerchantSince(key, since);
+                yield s == null ? BigDecimal.ZERO : s;
+              }
+              case GLOBAL -> {
+                BigDecimal s = transactionRepository.sumAmountSince(since);
+                yield s == null ? BigDecimal.ZERO : s;
+              }
+            };
+        boolean ok = compareBigDecimal(sum, spec.operator, spec.thresholdAmount);
+        yield new RuleMatch(
+            ok,
+            detailPrefix
+                + " operator="
+                + spec.operator
+                + " threshold="
+                + spec.thresholdAmount
+                + " (actual="
+                + sum
+                + ") => "
+                + ok);
+      }
+    };
+  }
+
+  private boolean compareLong(long actual, String operator, long threshold) {
+    String op = normalizeOperator(operator == null ? "" : operator);
+    return switch (op) {
+      case "EQ" -> actual == threshold;
+      case "NE" -> actual != threshold;
+      case "GT" -> actual > threshold;
+      case "LT" -> actual < threshold;
+      case "GTE" -> actual >= threshold;
+      case "LTE" -> actual <= threshold;
+      default -> false;
+    };
+  }
+
+  private boolean compareBigDecimal(BigDecimal actual, String operator, BigDecimal threshold) {
+    if (actual == null || threshold == null) return false;
+    String op = normalizeOperator(operator == null ? "" : operator);
+    int cmp = actual.compareTo(threshold);
+    return switch (op) {
+      case "EQ" -> cmp == 0;
+      case "NE" -> cmp != 0;
+      case "GT" -> cmp > 0;
+      case "LT" -> cmp < 0;
+      case "GTE" -> cmp >= 0;
+      case "LTE" -> cmp <= 0;
+      default -> false;
+    };
+  }
+
+  private static final class VelocitySpec {
+    enum Metric {
+      COUNT,
+      SUM_AMOUNT
+    }
+
+    enum Dimension {
+      CUSTOMER,
+      MERCHANT,
+      GLOBAL
+    }
+
+    final Metric metric;
+    final Dimension dimension;
+    final long windowSeconds;
+    final String operator;
+    final long thresholdLong;
+    final BigDecimal thresholdAmount;
+
+    private VelocitySpec(
+        Metric metric,
+        Dimension dimension,
+        long windowSeconds,
+        String operator,
+        long thresholdLong,
+        BigDecimal thresholdAmount) {
+      this.metric = metric;
+      this.dimension = dimension;
+      this.windowSeconds = windowSeconds;
+      this.operator = operator;
+      this.thresholdLong = thresholdLong;
+      this.thresholdAmount = thresholdAmount;
+    }
+
+    static VelocitySpec fromJson(com.fasterxml.jackson.databind.JsonNode v) {
+      String metricRaw = v.path("metric").asText("COUNT");
+      String dimRaw = v.path("dimension").asText("CUSTOMER");
+      long windowSeconds = v.path("windowSeconds").asLong(3600);
+      String operator = v.path("operator").asText("GT");
+
+      Metric metric = Metric.valueOf(metricRaw.trim().toUpperCase(java.util.Locale.ROOT));
+      Dimension dimension = Dimension.valueOf(dimRaw.trim().toUpperCase(java.util.Locale.ROOT));
+
+      if (metric == Metric.SUM_AMOUNT) {
+        BigDecimal threshold = new BigDecimal(v.path("threshold").asText("0"));
+        return new VelocitySpec(metric, dimension, windowSeconds, operator, 0L, threshold);
+      }
+      long threshold = v.path("threshold").asLong(0L);
+      return new VelocitySpec(metric, dimension, windowSeconds, operator, threshold, null);
+    }
   }
 
   private Object readFieldValue(Object subject, Class<?> subjectClass, String fieldName) {

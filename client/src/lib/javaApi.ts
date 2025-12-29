@@ -141,16 +141,33 @@ export interface DashboardMetrics {
 export interface RuleCondition {
   field: string;
   operator:
+    // Canonical ops (preferidas; alinhadas ao field-dictionary)
+    | "EQ"
+    | "NE"
+    | "GT"
+    | "LT"
+    | "GTE"
+    | "LTE"
+    | "IN"
+    | "NOT_IN"
+    | "BETWEEN"
+    | "NOT_BETWEEN"
+    | "CONTAINS"
+    | "NOT_CONTAINS"
+    | "STARTS_WITH"
+    | "ENDS_WITH"
+    | "MATCHES_REGEX"
+    | "IS_NULL"
+    | "IS_NOT_NULL"
+    | "IS_TRUE"
+    | "IS_FALSE"
+    // Legado/compatibilidade (aceitos pelo backend via normalização)
     | "=="
     | "!="
     | ">"
     | "<"
     | ">="
-    | "<="
-    | "IN"
-    | "NOT_IN"
-    | "CONTAINS"
-    | "NOT_CONTAINS";
+    | "<=";
   value: string;
 }
 
@@ -163,6 +180,7 @@ export interface RuleConfiguration {
   weight: number;
   enabled: boolean;
   classification: "APPROVED" | "SUSPICIOUS" | "FRAUD";
+  parameters?: string | null;
   conditions: RuleCondition[];
   logicOperator: "AND" | "OR";
   version: number;
@@ -179,6 +197,21 @@ export interface AuditLog {
   errorMessage?: string | null;
   sourceIp?: string | null;
   createdAt: string;
+}
+
+export interface FieldDictionaryItem {
+  workflow: string | null;
+  recordType: string | null;
+  portfolio: string | null;
+  jsonPath: string;
+  type: string;
+  domain: unknown | null;
+  sentinelValues: unknown | null;
+  allowedOperators: string[];
+  allowedFunctions: string[];
+  requirednessByContext: unknown | null;
+  securityConstraints: unknown | null;
+  normalizationAllowed: boolean;
 }
 
 // ========================================
@@ -432,6 +465,24 @@ export async function exportAuditLogs(
 }
 
 // ========================================
+// FIELD DICTIONARY (v3.1)
+// ========================================
+
+export async function listFieldDictionary(params?: {
+  workflow?: string;
+  recordType?: string;
+  portfolio?: string;
+}): Promise<FieldDictionaryItem[]> {
+  const qs = new URLSearchParams();
+  if (params?.workflow) qs.append("workflow", params.workflow);
+  if (params?.recordType) qs.append("recordType", params.recordType);
+  if (params?.portfolio) qs.append("portfolio", params.portfolio);
+  const url = qs.toString() ? `/api/field-dictionary?${qs}` : "/api/field-dictionary";
+  const response = await apiRequest<any>(url);
+  return Array.isArray(response) ? (response as FieldDictionaryItem[]) : [];
+}
+
+// ========================================
 // HEALTH
 // ========================================
 
@@ -469,6 +520,7 @@ export const javaApi = {
   toggleRuleStatus,
   listAuditLogs,
   exportAuditLogs,
+  listFieldDictionary,
   checkApiHealth,
 };
 

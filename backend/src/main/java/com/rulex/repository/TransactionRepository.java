@@ -29,8 +29,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
           + "(:mcc IS NULL OR t.mcc = :mcc) AND "
           + "(:minAmount IS NULL OR t.transactionAmount >= :minAmount) AND "
           + "(:maxAmount IS NULL OR t.transactionAmount <= :maxAmount) AND "
-          + "(:startDate IS NULL OR t.createdAt >= :startDate) AND "
-          + "(:endDate IS NULL OR t.createdAt <= :endDate)")
+          // Use COALESCE to keep parameter typing stable in Postgres even when null.
+          + "(t.createdAt >= COALESCE(:startDate, t.createdAt)) AND "
+          + "(t.createdAt <= COALESCE(:endDate, t.createdAt))")
   Page<Transaction> findByFilters(
       @Param("customerIdFromHeader") String customerIdFromHeader,
       @Param("merchantId") String merchantId,
@@ -50,8 +51,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
           + "(:mcc IS NULL OR t.mcc = :mcc) AND "
           + "(:minAmount IS NULL OR t.transactionAmount >= :minAmount) AND "
           + "(:maxAmount IS NULL OR t.transactionAmount <= :maxAmount) AND "
-          + "(:startDate IS NULL OR t.createdAt >= :startDate) AND "
-          + "(:endDate IS NULL OR t.createdAt <= :endDate) AND "
+          // Use COALESCE to keep parameter typing stable in Postgres even when null.
+          + "(t.createdAt >= COALESCE(:startDate, t.createdAt)) AND "
+          + "(t.createdAt <= COALESCE(:endDate, t.createdAt)) AND "
           + "(:classification IS NULL OR d.classification = :classification)")
   Page<Transaction> findByFiltersWithClassification(
       @Param("customerIdFromHeader") String customerIdFromHeader,
@@ -80,6 +82,23 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
   @Query("SELECT COUNT(t) FROM Transaction t WHERE t.createdAt >= :since")
   Long countSince(@Param("since") LocalDateTime since);
+
+  @Query(
+      "SELECT COALESCE(SUM(t.transactionAmount), 0) FROM Transaction t WHERE "
+          + "t.customerIdFromHeader = :customerId AND "
+          + "t.createdAt >= :since")
+  BigDecimal sumAmountByCustomerSince(
+      @Param("customerId") String customerId, @Param("since") LocalDateTime since);
+
+  @Query(
+      "SELECT COALESCE(SUM(t.transactionAmount), 0) FROM Transaction t WHERE "
+          + "t.merchantId = :merchantId AND "
+          + "t.createdAt >= :since")
+  BigDecimal sumAmountByMerchantSince(
+      @Param("merchantId") String merchantId, @Param("since") LocalDateTime since);
+
+  @Query("SELECT COALESCE(SUM(t.transactionAmount), 0) FROM Transaction t WHERE t.createdAt >= :since")
+  BigDecimal sumAmountSince(@Param("since") LocalDateTime since);
 
   // ==================== MÉTODOS PARA AS 28 NOVAS REGRAS ====================
 
