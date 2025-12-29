@@ -351,6 +351,53 @@ export async function getDashboardMetrics(
   return apiRequest<DashboardMetrics>(`/api/metrics?period=${encodeURIComponent(period)}`);
 }
 
+export interface TimelineBucket {
+  bucket: string;
+  total: number;
+  fraud: number;
+  approved?: number;
+  suspicious?: number;
+}
+
+export interface MetricsTimeline {
+  granularity: string;
+  buckets: TimelineBucket[];
+}
+
+export async function getMetricsTimeline(
+  granularity: "hour" | "day" = "hour"
+): Promise<MetricsTimeline> {
+  return apiRequest<MetricsTimeline>(`/api/metrics/timeline?granularity=${encodeURIComponent(granularity)}`);
+}
+
+export interface MccMetrics {
+  total: number;
+  approved: number;
+  suspicious: number;
+  fraud: number;
+  fraudRate: number;
+}
+
+export async function getMetricsByMcc(
+  period: "1h" | "24h" | "7d" | "30d" = "24h"
+): Promise<Record<string, MccMetrics>> {
+  return apiRequest<Record<string, MccMetrics>>(`/api/metrics/mcc?period=${encodeURIComponent(period)}`);
+}
+
+export interface MerchantMetrics {
+  merchantId: string;
+  merchantName: string;
+  total: number;
+  fraud: number;
+  fraudRate: number;
+}
+
+export async function getMetricsByMerchant(
+  period: "1h" | "24h" | "7d" | "30d" = "24h"
+): Promise<Record<string, MerchantMetrics>> {
+  return apiRequest<Record<string, MerchantMetrics>>(`/api/metrics/merchant?period=${encodeURIComponent(period)}`);
+}
+
 // ========================================
 // RULES
 // ========================================
@@ -512,6 +559,9 @@ export const javaApi = {
   getTransactionById,
   getTransactionByExternalId,
   getDashboardMetrics,
+  getMetricsTimeline,
+  getMetricsByMcc,
+  getMetricsByMerchant,
   listRules,
   getRuleDetails,
   createRule,
