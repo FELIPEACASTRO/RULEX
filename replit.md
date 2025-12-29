@@ -24,7 +24,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend (React/Vite)
 - **Location**: `client/` directory
-- **Framework**: React 18 with TypeScript
+- **Framework**: React 19 with TypeScript
 - **Styling**: Tailwind CSS with shadcn/ui components
 - **State Management**: TanStack Query for server state
 - **Routing**: Wouter (lightweight router)

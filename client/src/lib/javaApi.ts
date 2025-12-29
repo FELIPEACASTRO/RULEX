@@ -5,7 +5,7 @@
  * (server.servlet.context-path = /api)
  */
 
-import { getAccessToken } from "@/_core/auth/tokens";
+import { getAccessToken, getBasicAuthRaw } from "@/_core/auth/tokens";
 
 // ========================================
 // CONFIG
@@ -189,8 +189,9 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
   const url = `${JAVA_API_BASE_URL}${endpoint}`;
 
   const token = getAccessToken();
+  const basicAuthRaw = BASIC_AUTH_RAW || getBasicAuthRaw() || undefined;
   const basicAuthHeader =
-    !token && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
+    !token && basicAuthRaw ? `Basic ${btoa(basicAuthRaw)}` : undefined;
 
   const headers: HeadersInit = {
     Accept: "application/json",

@@ -12,8 +12,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.flywaydb.core.Flyway;
 
-@Testcontainers
-class FlywayMigrationsTest {
+@Testcontainers(disabledWithoutDocker = true)
+class FlywayMigrationsIT {
 
   @Container
   static final PostgreSQLContainer<?> POSTGRES =

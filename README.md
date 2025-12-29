@@ -32,6 +32,14 @@ Pré-requisitos: Node + pnpm.
 - Rodar UI: `pnpm dev`
 
 A UI usa proxy de `/api` para o backend (configurado em `vite.config.ts`).
+
+### Autenticação (local/homolog)
+
+- O backend usa **HTTP Basic**.
+- A UI suporta duas formas:
+  - **Via env**: setar `VITE_API_BASIC_AUTH=usuario:senha` (ver `.env.example`)
+  - **Via tela**: acessar `http://localhost:5173/login` e informar usuário/senha (salva no `localStorage`)
+
 - **Build estrito**: compilação com `-Werror` e lint (`-Xlint:all,-processing`) no backend.
 - **Logs/erros**: mensagens em PT‑BR e sem vazamento de dados sensíveis no retorno ao cliente.
 
@@ -47,6 +55,12 @@ A UI usa proxy de `/api` para o backend (configurado em `vite.config.ts`).
 
 - **Integração (backend Java)**: `HomologSimulationIT` usa **Testcontainers (Postgres)** para validar o fluxo real (persistência + endpoints).
 - **Unidade**: quando necessário, use cases podem ser testados com *stubs/mocks* das portas (sem subir Spring).
+
+## E2E (UI)
+
+Pré-requisito: Docker (para subir o stack via `docker compose`).
+
+- `pnpm e2e`
 
 Comandos úteis (backend):
 

@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "@/_core/auth/tokens";
+import {
+  clearBasicAuth,
+  clearTokens,
+  getAccessToken,
+  getBasicAuthRaw,
+  getRefreshToken,
+  setBasicAuthRaw,
+  setTokens,
+} from "@/_core/auth/tokens";
 import { getLoginUrl } from "@/const";
 
 type User = {
@@ -14,6 +22,16 @@ type UseAuthOptions = {
 };
 
 const JAVA_API_BASE_URL = import.meta.env.VITE_JAVA_API_URL || "http://localhost:8080";
+const BASIC_AUTH_RAW_FROM_ENV = import.meta.env.VITE_API_BASIC_AUTH as string | undefined;
+
+function basicAuthToUser(raw: string): User {
+  const username = raw.split(":")[0]?.trim() || "user";
+  return {
+    id: `basic:${username}`,
+    name: username,
+    email: username.includes("@") ? username : `${username}@local`,
+  };
+}
 
 async function fetchMe(token: string, signal?: AbortSignal): Promise<User> {
   const response = await fetch(`${JAVA_API_BASE_URL}/api/auth/me`, {
@@ -72,6 +90,17 @@ export function useAuth(options?: UseAuthOptions) {
 
     const loadUser = async () => {
       const token = getAccessToken();
+      const basicAuthRaw = BASIC_AUTH_RAW_FROM_ENV || getBasicAuthRaw() || null;
+
+      // Dev/HML: se houver Basic Auth configurado, consideramos "logado" sem depender
+      // de endpoints /api/auth/* (que podem não existir no backend).
+      if (!token && basicAuthRaw) {
+        setUser(basicAuthToUser(basicAuthRaw));
+        setError(null);
+        setLoading(false);
+        return;
+      }
+
       if (!token) {
         setLoading(false);
         if (redirectOnUnauthenticated) {
@@ -96,6 +125,7 @@ export function useAuth(options?: UseAuthOptions) {
         } catch (refreshErr) {
           if (!active) return;
           clearTokens();
+          clearBasicAuth();
           setUser(null);
           setError(refreshErr as Error);
           if (redirectOnUnauthenticated) {
@@ -127,6 +157,7 @@ export function useAuth(options?: UseAuthOptions) {
       console.warn("Logout falhou", err);
     } finally {
       clearTokens();
+      clearBasicAuth();
       setUser(null);
       setError(null);
       setLoading(false);
@@ -139,6 +170,16 @@ export function useAuth(options?: UseAuthOptions) {
     const me = await fetchMe(accessToken);
     setUser(me);
     setError(null);
+    return me;
+  }, []);
+
+  const loginWithBasicAuth = useCallback(async (username: string, password: string) => {
+    setBasicAuthRaw(username, password);
+    const raw = `${username}:${password}`;
+    const me = basicAuthToUser(raw);
+    setUser(me);
+    setError(null);
+    setLoading(false);
     return me;
   }, []);
 
@@ -163,6 +204,7 @@ export function useAuth(options?: UseAuthOptions) {
     ...state,
     refresh,
     loginWithToken,
+    loginWithBasicAuth,
     logout,
   };
 }
