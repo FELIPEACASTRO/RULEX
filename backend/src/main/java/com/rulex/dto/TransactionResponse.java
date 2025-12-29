@@ -1,5 +1,6 @@
 package com.rulex.dto;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -17,8 +18,26 @@ import lombok.NoArgsConstructor;
 @Builder
 public class TransactionResponse {
 
+  /** ID interno (DB). Opcional. */
+  private Long id;
+
   /** ID externo da transação (canônico). */
   private String transactionId;
+
+  /** Campos de contexto (para UI/listagem). Omitidos quando não disponíveis. */
+  private String customerIdFromHeader;
+
+  private String merchantId;
+
+  private String merchantName;
+
+  private BigDecimal transactionAmount;
+
+  /** YYYYMMDD */
+  private Integer transactionDate;
+
+  /** HHMMSS */
+  private Integer transactionTime;
 
   /** APPROVED, SUSPICIOUS, FRAUD */
   private String classification;

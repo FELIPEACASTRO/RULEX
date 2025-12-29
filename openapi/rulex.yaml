@@ -447,7 +447,14 @@ components:
         - timestamp
         - success
       properties:
+        id: { type: integer, format: int64, description: "ID interno (DB). Opcional." }
         transactionId: { type: string }
+        customerIdFromHeader: { type: string }
+        merchantId: { type: string }
+        merchantName: { type: string }
+        transactionAmount: { type: number }
+        transactionDate: { type: integer, description: 'YYYYMMDD' }
+        transactionTime: { type: integer, description: 'HHMMSS' }
         classification: { type: string, enum: [APPROVED, SUSPICIOUS, FRAUD] }
         riskScore: { type: integer, minimum: 0, maximum: 100 }
         triggeredRules:

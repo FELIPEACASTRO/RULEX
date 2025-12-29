@@ -659,7 +659,18 @@ public class RuleEngineService {
       TransactionDecision decision, long startTime) {
     long processingTime = System.currentTimeMillis() - startTime;
     return TransactionResponse.builder()
+        .id(decision.getTransaction() != null ? decision.getTransaction().getId() : null)
         .transactionId(decision.getExternalTransactionId())
+        .customerIdFromHeader(
+            decision.getTransaction() != null ? decision.getTransaction().getCustomerIdFromHeader() : null)
+        .merchantId(decision.getTransaction() != null ? decision.getTransaction().getMerchantId() : null)
+        .merchantName(decision.getTransaction() != null ? decision.getTransaction().getMerchantName() : null)
+        .transactionAmount(
+            decision.getTransaction() != null ? decision.getTransaction().getTransactionAmount() : null)
+        .transactionDate(
+            decision.getTransaction() != null ? decision.getTransaction().getTransactionDate() : null)
+        .transactionTime(
+            decision.getTransaction() != null ? decision.getTransaction().getTransactionTime() : null)
         .classification(decision.getClassification().name())
         .riskScore(decision.getRiskScore())
         .triggeredRules(java.util.List.of())
@@ -778,7 +789,14 @@ public class RuleEngineService {
       RuleEvaluationResult result,
       long processingTime) {
     return TransactionResponse.builder()
+        .id(transaction.getId())
         .transactionId(transaction.getExternalTransactionId())
+        .customerIdFromHeader(transaction.getCustomerIdFromHeader())
+        .merchantId(transaction.getMerchantId())
+        .merchantName(transaction.getMerchantName())
+        .transactionAmount(transaction.getTransactionAmount())
+        .transactionDate(transaction.getTransactionDate())
+        .transactionTime(transaction.getTransactionTime())
         .classification(decision.getClassification().name())
         .riskScore(decision.getRiskScore())
         .triggeredRules(result.getTriggeredRules())
@@ -989,7 +1007,14 @@ public class RuleEngineService {
         null);
 
     return TransactionResponse.builder()
+        .id(transaction.getId())
         .transactionId(transaction.getExternalTransactionId())
+        .customerIdFromHeader(transaction.getCustomerIdFromHeader())
+        .merchantId(transaction.getMerchantId())
+        .merchantName(transaction.getMerchantName())
+        .transactionAmount(transaction.getTransactionAmount())
+        .transactionDate(transaction.getTransactionDate())
+        .transactionTime(transaction.getTransactionTime())
         .classification(decision.getClassification().name())
         .riskScore(decision.getRiskScore())
         .triggeredRules(triggeredRules)
@@ -1012,7 +1037,14 @@ public class RuleEngineService {
     List<TriggeredRuleDTO> triggeredRules = readTriggeredRules(decision.getRulesApplied());
 
     return TransactionResponse.builder()
+        .id(transaction != null ? transaction.getId() : null)
         .transactionId(transaction.getExternalTransactionId())
+        .customerIdFromHeader(transaction.getCustomerIdFromHeader())
+        .merchantId(transaction.getMerchantId())
+        .merchantName(transaction.getMerchantName())
+        .transactionAmount(transaction.getTransactionAmount())
+        .transactionDate(transaction.getTransactionDate())
+        .transactionTime(transaction.getTransactionTime())
         .classification(decision.getClassification().name())
         .riskScore(decision.getRiskScore())
         .triggeredRules(triggeredRules)

@@ -80,6 +80,13 @@ export interface TriggeredRule {
 
 export interface TransactionResponse {
   transactionId: string;
+  id?: number | null;
+  customerIdFromHeader?: string | null;
+  merchantId?: string | null;
+  merchantName?: string | null;
+  transactionAmount?: number | null;
+  transactionDate?: number | null;
+  transactionTime?: number | null;
   classification: "APPROVED" | "SUSPICIOUS" | "FRAUD" | "UNKNOWN";
   riskScore: number;
   triggeredRules: TriggeredRule[];

@@ -184,6 +184,9 @@ export default function TransactionsProfessional() {
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="px-6 py-3 text-left font-semibold text-gray-700">ID Transação</th>
+                  <th className="px-6 py-3 text-left font-semibold text-gray-700">Cliente</th>
+                  <th className="px-6 py-3 text-left font-semibold text-gray-700">Merchant</th>
+                  <th className="px-6 py-3 text-right font-semibold text-gray-700">Valor</th>
                   <th className="px-6 py-3 text-right font-semibold text-gray-700">Score</th>
                   <th className="px-6 py-3 text-left font-semibold text-gray-700">Status</th>
                   <th className="px-6 py-3 text-left font-semibold text-gray-700">Data/Hora</th>
@@ -198,6 +201,11 @@ export default function TransactionsProfessional() {
                     role="row"
                   >
                     <td className="px-6 py-4 font-mono text-blue-600">{tx.transactionId}</td>
+                    <td className="px-6 py-4 text-gray-700">{tx.customerIdFromHeader || "-"}</td>
+                    <td className="px-6 py-4 text-gray-700">{tx.merchantName || tx.merchantId || "-"}</td>
+                    <td className="px-6 py-4 text-right font-semibold text-gray-900">
+                      {typeof tx.transactionAmount === "number" ? `R$ ${tx.transactionAmount.toFixed(2)}` : "-"}
+                    </td>
                     <td className="px-6 py-4 text-right font-semibold text-gray-900">
                       {tx.riskScore}
                     </td>
@@ -257,10 +265,24 @@ export default function TransactionsProfessional() {
                     </Badge>
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                  <div>
+                    <p className="text-gray-600">Cliente</p>
+                    <p className="font-medium text-gray-900">{tx.customerIdFromHeader || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Merchant</p>
+                    <p className="font-medium text-gray-900">{tx.merchantName || tx.merchantId || "-"}</p>
+                  </div>
+                </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-gray-600" />
-                    <span className="font-semibold text-gray-900">Score: {tx.riskScore}</span>
+                    <span className="font-semibold text-gray-900">
+                      {typeof tx.transactionAmount === "number"
+                        ? `R$ ${tx.transactionAmount.toFixed(2)}`
+                        : `Score: ${tx.riskScore}`}
+                    </span>
                   </div>
                   <button
                     className="p-2 hover:bg-blue-100 rounded-lg transition-colors"

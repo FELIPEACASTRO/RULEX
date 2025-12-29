@@ -75,7 +75,14 @@ public class TransactionQueryService {
         decisionRepository.findByTransactionId(transaction.getId()).orElse(null);
 
     return TransactionResponse.builder()
+        .id(transaction.getId())
         .transactionId(transaction.getExternalTransactionId())
+        .customerIdFromHeader(transaction.getCustomerIdFromHeader())
+        .merchantId(transaction.getMerchantId())
+        .merchantName(transaction.getMerchantName())
+        .transactionAmount(transaction.getTransactionAmount())
+        .transactionDate(transaction.getTransactionDate())
+        .transactionTime(transaction.getTransactionTime())
         .classification(decision != null ? decision.getClassification().name() : "UNKNOWN")
         .riskScore(decision != null ? decision.getRiskScore() : 0)
         .triggeredRules(

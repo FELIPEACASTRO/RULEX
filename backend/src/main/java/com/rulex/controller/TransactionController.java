@@ -140,6 +140,12 @@ public class TransactionController {
 
     return ResponseEntity.ok(
         TransactionResponse.builder()
+            .customerIdFromHeader(request.getCustomerIdFromHeader())
+            .merchantId(request.getMerchantId())
+            .merchantName(request.getMerchantName())
+            .transactionAmount(request.getTransactionAmount())
+            .transactionDate(request.getTransactionDate())
+            .transactionTime(request.getTransactionTime())
             .transactionId(request.getExternalTransactionId())
             .classification(result.name())
             .riskScore(
