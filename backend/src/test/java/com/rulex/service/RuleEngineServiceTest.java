@@ -205,6 +205,66 @@ class RuleEngineServiceTest {
   }
 
   @Test
+  void evaluatesGenericConditions_withCatalogOperators_nullOps_andFunctions() throws Exception {
+    String conditionsJson =
+        objectMapper.writeValueAsString(
+            List.of(
+                // Numeric IN supports bracket list syntax (YAML-like)
+                java.util.Map.of("field", "mcc", "operator", "IN", "value", "[7995,7994,5967]"),
+                // String IN supports quoted list syntax
+                java.util.Map.of(
+                    "field",
+                    "merchantCountryCode",
+                    "operator",
+                    "IN",
+                    "value",
+                    "['RU','CN']"),
+                // Unary operator (value may be empty)
+                java.util.Map.of("field", "cardExpireDate", "operator", "IS_NULL", "value", ""),
+                // Function in LHS: ABS_DIFF(a,b) >= 5
+                java.util.Map.of(
+                    "field", "ABS_DIFF(atcCard,atcHost)", "operator", "GTE", "value", "5")));
+
+    RuleConfiguration rule =
+        RuleConfiguration.builder()
+            .ruleName("GENERIC_CATALOG_OPS")
+            .ruleType(RuleConfiguration.RuleType.SECURITY)
+            .threshold(0)
+            .weight(55)
+            .enabled(true)
+            .classification(TransactionDecision.TransactionClassification.SUSPICIOUS)
+            .conditionsJson(conditionsJson)
+            .logicOperator(RuleConfiguration.LogicOperator.AND)
+            .build();
+
+    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(rule));
+    when(transactionRepository.save(any(Transaction.class)))
+        .thenAnswer(
+            invocation -> {
+              Transaction t = invocation.getArgument(0, Transaction.class);
+              t.setId(99L);
+              return t;
+            });
+    when(decisionRepository.save(any(TransactionDecision.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
+    doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
+
+    TransactionRequest req = minimalRequest();
+    req.setMcc(7995);
+    req.setMerchantCountryCode("RU");
+    req.setCardExpireDate(null);
+    req.setAtcCard(10);
+    req.setAtcHost(4);
+
+    TransactionResponse response = service.analyzeTransaction(req);
+
+    assertThat(response.getTriggeredRules()).hasSize(1);
+    assertThat(response.getTriggeredRules().getFirst().getName()).isEqualTo("GENERIC_CATALOG_OPS");
+    assertThat(response.getClassification()).isEqualTo("SUSPICIOUS");
+    assertThat(response.getRiskScore()).isEqualTo(55);
+  }
+
+  @Test
   void riskScoreIsClampedTo100() {
     RuleConfiguration r1 =
         RuleConfiguration.builder()

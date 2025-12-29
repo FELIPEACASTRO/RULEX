@@ -281,7 +281,45 @@ public class RuleConfigurationService {
         conditions.stream()
             .map(RuleConditionDTO::getField)
             .filter(f -> f != null && !f.isBlank())
-            .filter(f -> !allowedFields.contains(f))
+            .flatMap(
+                f -> {
+                  // Suporte mínimo a "funções" no lado esquerdo sem mudar schema:
+                  // - ABS(field)
+                  // - LEN(field)
+                  // - LOWER(field), UPPER(field), TRIM(field)
+                  // - ABS_DIFF(a,b)
+                  // - COALESCE(field, literal)
+                  //
+                  // Se não casar, é um campo simples (property name do TransactionRequest).
+                  String raw = f.trim();
+                  // unary: FUNC(x)
+                  java.util.regex.Matcher unary =
+                      java.util.regex.Pattern.compile(
+                              "^(ABS|LEN|LOWER|UPPER|TRIM)\\(([A-Za-z0-9_]+)\\)$")
+                          .matcher(raw);
+                  if (unary.matches()) {
+                    return java.util.stream.Stream.of(unary.group(2));
+                  }
+                  // ABS_DIFF(a,b)
+                  java.util.regex.Matcher absDiff =
+                      java.util.regex.Pattern.compile(
+                              "^ABS_DIFF\\(([A-Za-z0-9_]+)\\s*,\\s*([A-Za-z0-9_]+)\\)$")
+                          .matcher(raw);
+                  if (absDiff.matches()) {
+                    return java.util.stream.Stream.of(absDiff.group(1), absDiff.group(2));
+                  }
+                  // COALESCE(field, ...)
+                  java.util.regex.Matcher coalesce =
+                      java.util.regex.Pattern.compile(
+                              "^COALESCE\\(([A-Za-z0-9_]+)\\s*,\\s*(.+)\\)$")
+                          .matcher(raw);
+                  if (coalesce.matches()) {
+                    return java.util.stream.Stream.of(coalesce.group(1));
+                  }
+                  return java.util.stream.Stream.of(raw);
+                })
+            .filter(name -> name != null && !name.isBlank())
+            .filter(name -> !allowedFields.contains(name))
             .distinct()
             .toList();
 

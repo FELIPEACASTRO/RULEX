@@ -367,16 +367,25 @@ export default function Rules() {
                     const typeForField = currentField?.type ?? 'unknown';
 
                     const baseOps: RuleConfiguration['conditions'][number]['operator'][] = [
-                      '==',
-                      '!=',
-                      '>',
-                      '<',
-                      '>=',
-                      '<=',
+                      'EQ',
+                      'NE',
+                      'GT',
+                      'LT',
+                      'GTE',
+                      'LTE',
                       'IN',
                       'NOT_IN',
+                      'BETWEEN',
+                      'NOT_BETWEEN',
                       'CONTAINS',
                       'NOT_CONTAINS',
+                      'STARTS_WITH',
+                      'ENDS_WITH',
+                      'MATCHES_REGEX',
+                      'IS_NULL',
+                      'IS_NOT_NULL',
+                      'IS_TRUE',
+                      'IS_FALSE',
                     ];
                     const opsFromCatalog =
                       currentField?.allowedOperators && currentField.allowedOperators.length > 0
@@ -384,11 +393,51 @@ export default function Rules() {
                         : null;
                     const opsFallback =
                       typeForField === 'number'
-                        ? baseOps.filter((o) => !['CONTAINS', 'NOT_CONTAINS'].includes(o))
+                        ? baseOps.filter(
+                            (o) =>
+                              ![
+                                'CONTAINS',
+                                'NOT_CONTAINS',
+                                'STARTS_WITH',
+                                'ENDS_WITH',
+                                'MATCHES_REGEX',
+                              ].includes(o),
+                          )
                         : typeForField === 'boolean'
-                          ? baseOps.filter((o) => ['==', '!='].includes(o))
+                          ? baseOps.filter((o) => ['IS_TRUE', 'IS_FALSE', 'IS_NULL', 'IS_NOT_NULL'].includes(o))
                           : baseOps;
                     const ops = opsFromCatalog ?? opsFallback;
+                    const isUnary = ['IS_NULL', 'IS_NOT_NULL', 'IS_TRUE', 'IS_FALSE'].includes(c.operator);
+                    const operatorLabel = (op: string) => {
+                      const map: Record<string, string> = {
+                        EQ: '== (EQ)',
+                        NE: '!= (NE)',
+                        GT: '> (GT)',
+                        LT: '< (LT)',
+                        GTE: '>= (GTE)',
+                        LTE: '<= (LTE)',
+                        IN: 'IN',
+                        NOT_IN: 'NOT IN',
+                        BETWEEN: 'BETWEEN',
+                        NOT_BETWEEN: 'NOT BETWEEN',
+                        CONTAINS: 'CONTAINS',
+                        NOT_CONTAINS: 'NOT CONTAINS',
+                        STARTS_WITH: 'STARTS WITH',
+                        ENDS_WITH: 'ENDS WITH',
+                        MATCHES_REGEX: 'MATCHES REGEX',
+                        IS_NULL: 'IS NULL',
+                        IS_NOT_NULL: 'IS NOT NULL',
+                        IS_TRUE: 'IS TRUE',
+                        IS_FALSE: 'IS FALSE',
+                        '==': '==',
+                        '!=': '!=',
+                        '>': '>',
+                        '<': '<',
+                        '>=': '>=',
+                        '<=': '<=',
+                      };
+                      return map[op] ?? op;
+                    };
 
                     return (
                       <div key={`${idx}-${c.field}`} className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-end">
@@ -429,6 +478,10 @@ export default function Rules() {
                               next[idx] = {
                                 ...next[idx],
                                 operator: e.target.value as RuleConfiguration['conditions'][number]['operator'],
+                                // Operadores unários não usam value.
+                                value: ['IS_NULL', 'IS_NOT_NULL', 'IS_TRUE', 'IS_FALSE'].includes(e.target.value)
+                                  ? ''
+                                  : next[idx].value,
                               };
                               setFormData({ ...formData, conditions: next });
                             }}
@@ -436,7 +489,7 @@ export default function Rules() {
                           >
                             {ops.map((op) => (
                               <option key={op} value={op}>
-                                {op}
+                                {operatorLabel(op)}
                               </option>
                             ))}
                           </select>
@@ -445,15 +498,25 @@ export default function Rules() {
                           <label className="block text-xs font-medium text-muted-foreground mb-1">
                             Valor
                           </label>
-                          <Input
-                            value={c.value}
-                            onChange={(e) => {
-                              const next = [...formData.conditions];
-                              next[idx] = { ...next[idx], value: e.target.value };
-                              setFormData({ ...formData, conditions: next });
-                            }}
-                            placeholder={c.operator === 'IN' || c.operator === 'NOT_IN' ? 'Ex: 1,2,3' : 'Ex: 10'}
-                          />
+                          {isUnary ? (
+                            <Input value="" disabled placeholder="(não aplicável)" />
+                          ) : (
+                            <Input
+                              value={c.value}
+                              onChange={(e) => {
+                                const next = [...formData.conditions];
+                                next[idx] = { ...next[idx], value: e.target.value };
+                                setFormData({ ...formData, conditions: next });
+                              }}
+                              placeholder={
+                                c.operator === 'IN' || c.operator === 'NOT_IN'
+                                  ? "Ex: [1,2,3] ou ['RU','CN']"
+                                  : c.operator === 'BETWEEN' || c.operator === 'NOT_BETWEEN'
+                                    ? 'Ex: 10,20 (ou 10..20)'
+                                    : 'Ex: 10'
+                              }
+                            />
+                          )}
                         </div>
                         <div className="sm:col-span-1 flex sm:justify-end">
                           <Button
@@ -480,7 +543,7 @@ export default function Rules() {
                         ...formData,
                         conditions: [
                           ...formData.conditions,
-                          { field: '', operator: '==', value: '' } as RuleConfiguration['conditions'][number],
+                          { field: '', operator: 'EQ', value: '' } as RuleConfiguration['conditions'][number],
                         ],
                       })
                     }

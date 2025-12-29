@@ -141,16 +141,33 @@ export interface DashboardMetrics {
 export interface RuleCondition {
   field: string;
   operator:
+    // Canonical ops (preferidas; alinhadas ao field-dictionary)
+    | "EQ"
+    | "NE"
+    | "GT"
+    | "LT"
+    | "GTE"
+    | "LTE"
+    | "IN"
+    | "NOT_IN"
+    | "BETWEEN"
+    | "NOT_BETWEEN"
+    | "CONTAINS"
+    | "NOT_CONTAINS"
+    | "STARTS_WITH"
+    | "ENDS_WITH"
+    | "MATCHES_REGEX"
+    | "IS_NULL"
+    | "IS_NOT_NULL"
+    | "IS_TRUE"
+    | "IS_FALSE"
+    // Legado/compatibilidade (aceitos pelo backend via normalização)
     | "=="
     | "!="
     | ">"
     | "<"
     | ">="
-    | "<="
-    | "IN"
-    | "NOT_IN"
-    | "CONTAINS"
-    | "NOT_CONTAINS";
+    | "<=";
   value: string;
 }
 

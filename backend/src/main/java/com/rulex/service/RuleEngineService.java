@@ -1200,30 +1200,47 @@ public class RuleEngineService {
   }
 
   private boolean evaluateCondition(TransactionRequest request, RuleConditionDTO condition) {
-    Object fieldValue = readFieldValue(request, TransactionRequest.class, condition.getField());
-    if (fieldValue == null) {
+    String operatorRaw = condition.getOperator() == null ? "" : condition.getOperator().trim();
+    String operator = normalizeOperator(operatorRaw);
+    String rawValue = condition.getValue() == null ? "" : condition.getValue();
+
+    Object leftValue = readComputedLeftValue(request, condition.getField());
+
+    // Operadores unários (não exigem value)
+    switch (operator) {
+      case "IS_NULL":
+        return leftValue == null;
+      case "IS_NOT_NULL":
+        return leftValue != null;
+      case "IS_TRUE":
+        return truthy(leftValue);
+      case "IS_FALSE":
+        return leftValue != null && !truthy(leftValue);
+      default:
+        // seguir
+    }
+
+    if (leftValue == null) {
       return false;
     }
 
-    String operator = condition.getOperator();
-    String rawValue = condition.getValue();
-
-    if (fieldValue instanceof Number || fieldValue instanceof BigDecimal) {
+    if (leftValue instanceof Number || leftValue instanceof BigDecimal) {
       BigDecimal left =
-          (fieldValue instanceof BigDecimal)
-              ? (BigDecimal) fieldValue
-              : new BigDecimal(fieldValue.toString());
-
+          (leftValue instanceof BigDecimal)
+              ? (BigDecimal) leftValue
+              : new BigDecimal(leftValue.toString());
       try {
         return switch (operator) {
-          case "==" -> left.compareTo(new BigDecimal(rawValue)) == 0;
-          case "!=" -> left.compareTo(new BigDecimal(rawValue)) != 0;
-          case ">" -> left.compareTo(new BigDecimal(rawValue)) > 0;
-          case "<" -> left.compareTo(new BigDecimal(rawValue)) < 0;
-          case ">=" -> left.compareTo(new BigDecimal(rawValue)) >= 0;
-          case "<=" -> left.compareTo(new BigDecimal(rawValue)) <= 0;
-          case "IN" -> inListNumber(left, rawValue);
-          case "NOT_IN" -> !inListNumber(left, rawValue);
+          case "EQ" -> left.compareTo(new BigDecimal(rawValue)) == 0;
+          case "NE" -> left.compareTo(new BigDecimal(rawValue)) != 0;
+          case "GT" -> left.compareTo(new BigDecimal(rawValue)) > 0;
+          case "LT" -> left.compareTo(new BigDecimal(rawValue)) < 0;
+          case "GTE" -> left.compareTo(new BigDecimal(rawValue)) >= 0;
+          case "LTE" -> left.compareTo(new BigDecimal(rawValue)) <= 0;
+          case "IN" -> inListNumberFlexible(left, rawValue);
+          case "NOT_IN" -> !inListNumberFlexible(left, rawValue);
+          case "BETWEEN" -> betweenNumber(left, rawValue, true);
+          case "NOT_BETWEEN" -> !betweenNumber(left, rawValue, true);
           default -> false;
         };
       } catch (Exception e) {
@@ -1231,41 +1248,129 @@ public class RuleEngineService {
       }
     }
 
-    String left = String.valueOf(fieldValue);
+    String left = String.valueOf(leftValue);
+    String right = unquote(rawValue);
     return switch (operator) {
-      case "==" -> left.equals(rawValue);
-      case "!=" -> !left.equals(rawValue);
-      case "CONTAINS" -> left.contains(rawValue);
-      case "NOT_CONTAINS" -> !left.contains(rawValue);
-      case "IN" -> inListString(left, rawValue);
-      case "NOT_IN" -> !inListString(left, rawValue);
+      case "EQ" -> left.equals(right);
+      case "NE" -> !left.equals(right);
+      case "CONTAINS" -> left.contains(right);
+      case "NOT_CONTAINS" -> !left.contains(right);
+      case "STARTS_WITH" -> left.startsWith(right);
+      case "ENDS_WITH" -> left.endsWith(right);
+      case "MATCHES_REGEX" -> matchesRegex(left, rawValue);
+      case "IN" -> inListStringFlexible(left, rawValue);
+      case "NOT_IN" -> !inListStringFlexible(left, rawValue);
       default -> false;
     };
   }
 
-  private boolean inListNumber(BigDecimal left, String csv) {
-    for (String token : csv.split(",")) {
-      String t = token.trim();
-      if (t.isEmpty()) continue;
-      if (left.compareTo(new BigDecimal(t)) == 0) {
-        return true;
+  private boolean truthy(Object v) {
+    if (v == null) return false;
+    if (v instanceof Boolean b) return b;
+    if (v instanceof Number n) return n.intValue() != 0;
+    String s = String.valueOf(v).trim().toLowerCase(java.util.Locale.ROOT);
+    return s.equals("true") || s.equals("1") || s.equals("y") || s.equals("yes");
+  }
+
+  private String normalizeOperator(String raw) {
+    if (raw == null) return "";
+    String o = raw.trim();
+    // aceitar operadores simbólicos (compatibilidade com FE/legado)
+    return switch (o) {
+      case "==" -> "EQ";
+      case "!=" -> "NE";
+      case ">" -> "GT";
+      case "<" -> "LT";
+      case ">=" -> "GTE";
+      case "<=" -> "LTE";
+      default -> o.toUpperCase(java.util.Locale.ROOT);
+    };
+  }
+
+  private boolean betweenNumber(BigDecimal left, String raw, boolean inclusive) {
+    java.util.List<String> parts = parseListTokens(raw);
+    if (parts.size() < 2) {
+      // aceitar "min..max"
+      String s = raw == null ? "" : raw.trim();
+      if (s.contains("..")) {
+        String[] p = s.split("\\.\\.", 2);
+        parts = java.util.List.of(p[0].trim(), p[1].trim());
+      } else {
+        return false;
       }
+    }
+    BigDecimal a = new BigDecimal(parts.get(0));
+    BigDecimal b = new BigDecimal(parts.get(1));
+    BigDecimal min = a.min(b);
+    BigDecimal max = a.max(b);
+    return inclusive
+        ? left.compareTo(min) >= 0 && left.compareTo(max) <= 0
+        : left.compareTo(min) > 0 && left.compareTo(max) < 0;
+  }
+
+  private boolean matchesRegex(String left, String rawRegex) {
+    try {
+      return java.util.regex.Pattern.compile(rawRegex).matcher(left).find();
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean inListNumberFlexible(BigDecimal left, String rawList) {
+    for (String token : parseListTokens(rawList)) {
+      if (token.isEmpty()) continue;
+      if (left.compareTo(new BigDecimal(token)) == 0) return true;
     }
     return false;
   }
 
-  private boolean inListString(String left, String csv) {
-    for (String token : csv.split(",")) {
-      if (left.equals(token.trim())) {
-        return true;
-      }
+  private boolean inListStringFlexible(String left, String rawList) {
+    for (String token : parseListTokens(rawList)) {
+      if (left.equals(token)) return true;
     }
     return false;
+  }
+
+  /**
+   * Aceita:
+   * - "a,b,c"
+   * - "[a,b,c]"
+   * - "['RU','CN']"
+   * - "[7995, 7994]"
+   */
+  private java.util.List<String> parseListTokens(String raw) {
+    if (raw == null) return java.util.List.of();
+    String s = raw.trim();
+    if (s.startsWith("[") && s.endsWith("]") && s.length() >= 2) {
+      s = s.substring(1, s.length() - 1).trim();
+    }
+    if (s.isEmpty()) return java.util.List.of();
+    String[] tokens = s.split(",");
+    java.util.List<String> out = new java.util.ArrayList<>(tokens.length);
+    for (String t : tokens) {
+      String v = t == null ? "" : t.trim();
+      if ((v.startsWith("'") && v.endsWith("'")) || (v.startsWith("\"") && v.endsWith("\""))) {
+        v = v.substring(1, v.length() - 1);
+      }
+      out.add(v.trim());
+    }
+    return out;
+  }
+
+  private String unquote(String raw) {
+    if (raw == null) return "";
+    String v = raw.trim();
+    if ((v.startsWith("'") && v.endsWith("'")) || (v.startsWith("\"") && v.endsWith("\""))) {
+      if (v.length() >= 2) {
+        v = v.substring(1, v.length() - 1);
+      }
+    }
+    return v;
   }
 
   private String explainCondition(
       TransactionRequest request, RuleConditionDTO condition, boolean result) {
-    Object fieldValue = readFieldValue(request, TransactionRequest.class, condition.getField());
+    Object fieldValue = readComputedLeftValue(request, condition.getField());
     return condition.getField()
         + " "
         + condition.getOperator()
@@ -1275,6 +1380,86 @@ public class RuleEngineService {
         + fieldValue
         + ") => "
         + result;
+  }
+
+  private Object readComputedLeftValue(TransactionRequest request, String fieldExpr) {
+    if (fieldExpr == null) {
+      return null;
+    }
+    String raw = fieldExpr.trim();
+    if (raw.isEmpty()) {
+      return null;
+    }
+
+    // ABS(x)
+    java.util.regex.Matcher unary =
+        java.util.regex.Pattern.compile("^(ABS|LEN|LOWER|UPPER|TRIM)\\(([A-Za-z0-9_]+)\\)$")
+            .matcher(raw);
+    if (unary.matches()) {
+      String fn = unary.group(1);
+      String arg = unary.group(2);
+      Object base = readFieldValue(request, TransactionRequest.class, arg);
+      return applyUnary(fn, base);
+    }
+
+    // ABS_DIFF(a,b)
+    java.util.regex.Matcher absDiff =
+        java.util.regex.Pattern.compile("^ABS_DIFF\\(([A-Za-z0-9_]+)\\s*,\\s*([A-Za-z0-9_]+)\\)$")
+            .matcher(raw);
+    if (absDiff.matches()) {
+      Object a = readFieldValue(request, TransactionRequest.class, absDiff.group(1));
+      Object b = readFieldValue(request, TransactionRequest.class, absDiff.group(2));
+      return absDiff(a, b);
+    }
+
+    // COALESCE(field, literal)
+    java.util.regex.Matcher coalesce =
+        java.util.regex.Pattern.compile("^COALESCE\\(([A-Za-z0-9_]+)\\s*,\\s*(.+)\\)$").matcher(raw);
+    if (coalesce.matches()) {
+      Object base = readFieldValue(request, TransactionRequest.class, coalesce.group(1));
+      if (base != null) return base;
+      String literal = coalesce.group(2).trim();
+      if ((literal.startsWith("'") && literal.endsWith("'"))
+          || (literal.startsWith("\"") && literal.endsWith("\""))) {
+        literal = literal.substring(1, literal.length() - 1);
+      }
+      return literal;
+    }
+
+    return readFieldValue(request, TransactionRequest.class, raw);
+  }
+
+  private Object applyUnary(String fn, Object v) {
+    if (v == null) return null;
+    return switch (fn) {
+      case "ABS" -> {
+        try {
+          BigDecimal n =
+              (v instanceof BigDecimal) ? (BigDecimal) v : new BigDecimal(String.valueOf(v));
+          yield n.abs();
+        } catch (Exception e) {
+          yield null;
+        }
+      }
+      case "LEN" -> String.valueOf(v).length();
+      case "LOWER" -> String.valueOf(v).toLowerCase(java.util.Locale.ROOT);
+      case "UPPER" -> String.valueOf(v).toUpperCase(java.util.Locale.ROOT);
+      case "TRIM" -> String.valueOf(v).trim();
+      default -> v;
+    };
+  }
+
+  private Object absDiff(Object a, Object b) {
+    if (a == null || b == null) return null;
+    try {
+      BigDecimal na =
+          (a instanceof BigDecimal) ? (BigDecimal) a : new BigDecimal(String.valueOf(a));
+      BigDecimal nb =
+          (b instanceof BigDecimal) ? (BigDecimal) b : new BigDecimal(String.valueOf(b));
+      return na.subtract(nb).abs();
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   private Object readFieldValue(Object subject, Class<?> subjectClass, String fieldName) {
