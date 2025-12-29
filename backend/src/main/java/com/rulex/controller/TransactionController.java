@@ -86,10 +86,11 @@ public class TransactionController {
     LocalDateTime endDateTime = null;
 
     if (startDate != null && !startDate.isEmpty()) {
-      startDateTime = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_DATE_TIME);
+      // Frontend can send ISO with timezone (e.g. "...Z"); accept both.
+      startDateTime = parseIsoToLocalDateTime(startDate);
     }
     if (endDate != null && !endDate.isEmpty()) {
-      endDateTime = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_DATE_TIME);
+      endDateTime = parseIsoToLocalDateTime(endDate);
     }
 
     Page<TransactionResponse> transactions =
@@ -105,6 +106,17 @@ public class TransactionController {
             pageable);
 
     return ResponseEntity.ok(transactions);
+  }
+  
+  private static LocalDateTime parseIsoToLocalDateTime(String raw) {
+    if (raw == null || raw.isBlank()) {
+      return null;
+    }
+    try {
+      return OffsetDateTime.parse(raw, DateTimeFormatter.ISO_DATE_TIME).toLocalDateTime();
+    } catch (Exception ignored) {
+      return LocalDateTime.parse(raw, DateTimeFormatter.ISO_DATE_TIME);
+    }
   }
 
   /**

@@ -29,8 +29,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
           + "(:mcc IS NULL OR t.mcc = :mcc) AND "
           + "(:minAmount IS NULL OR t.transactionAmount >= :minAmount) AND "
           + "(:maxAmount IS NULL OR t.transactionAmount <= :maxAmount) AND "
-          + "(:startDate IS NULL OR t.createdAt >= :startDate) AND "
-          + "(:endDate IS NULL OR t.createdAt <= :endDate)")
+          // Use COALESCE to keep parameter typing stable in Postgres even when null.
+          + "(t.createdAt >= COALESCE(:startDate, t.createdAt)) AND "
+          + "(t.createdAt <= COALESCE(:endDate, t.createdAt))")
   Page<Transaction> findByFilters(
       @Param("customerIdFromHeader") String customerIdFromHeader,
       @Param("merchantId") String merchantId,
@@ -50,8 +51,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
           + "(:mcc IS NULL OR t.mcc = :mcc) AND "
           + "(:minAmount IS NULL OR t.transactionAmount >= :minAmount) AND "
           + "(:maxAmount IS NULL OR t.transactionAmount <= :maxAmount) AND "
-          + "(:startDate IS NULL OR t.createdAt >= :startDate) AND "
-          + "(:endDate IS NULL OR t.createdAt <= :endDate) AND "
+          // Use COALESCE to keep parameter typing stable in Postgres even when null.
+          + "(t.createdAt >= COALESCE(:startDate, t.createdAt)) AND "
+          + "(t.createdAt <= COALESCE(:endDate, t.createdAt)) AND "
           + "(:classification IS NULL OR d.classification = :classification)")
   Page<Transaction> findByFiltersWithClassification(
       @Param("customerIdFromHeader") String customerIdFromHeader,
