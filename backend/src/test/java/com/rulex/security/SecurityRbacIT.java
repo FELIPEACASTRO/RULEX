@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.rulex.config.RulexSecurityProperties;
 import com.rulex.config.SecurityConfig;
 import com.rulex.controller.EvaluateController;
 import com.rulex.controller.RuleController;
@@ -28,9 +27,9 @@ import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -63,8 +62,10 @@ class SecurityRbacTest {
 
   @Autowired private MockMvc mockMvc;
 
+  @SuppressWarnings("removal")
   @MockBean private RuleConfigurationService ruleConfigurationService;
 
+  @SuppressWarnings("removal")
   @MockBean private RuleEngineService ruleEngineService;
 
   @Test
