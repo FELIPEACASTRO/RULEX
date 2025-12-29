@@ -3,6 +3,8 @@ package com.rulex.service;
 import com.rulex.dto.AuditLogDTO;
 import com.rulex.entity.AuditLog;
 import com.rulex.repository.AuditLogRepository;
+import java.io.IOException;
+import java.io.Writer;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,7 +12,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,5 +91,89 @@ public class AuditQueryService {
         .sourceIp(log.getSourceIp())
         .createdAt(log.getCreatedAt())
         .build();
+  }
+
+  public List<AuditLogDTO> exportAsList(
+      String actionType,
+      String result,
+      LocalDateTime startDate,
+      LocalDateTime endDate,
+      Pageable firstPage,
+      int limit) {
+    java.util.ArrayList<AuditLogDTO> out = new java.util.ArrayList<>();
+    Pageable pageable =
+        firstPage != null
+            ? firstPage
+            : PageRequest.of(0, Math.min(1000, limit), Sort.by(Sort.Direction.DESC, "createdAt"));
+
+    while (out.size() < limit) {
+      Page<AuditLogDTO> page = findAuditLogs(actionType, result, startDate, endDate, pageable);
+      out.addAll(page.getContent());
+      if (!page.hasNext()) break;
+      pageable = PageRequest.of(pageable.getPageNumber() + 1, pageable.getPageSize(), pageable.getSort());
+    }
+    if (out.size() > limit) {
+      return out.subList(0, limit);
+    }
+    return out;
+  }
+
+  public void exportAsCsv(
+      Writer w,
+      String actionType,
+      String result,
+      LocalDateTime startDate,
+      LocalDateTime endDate,
+      Pageable firstPage,
+      int limit)
+      throws IOException {
+    int written = 0;
+    Pageable pageable =
+        firstPage != null
+            ? firstPage
+            : PageRequest.of(0, Math.min(1000, limit), Sort.by(Sort.Direction.DESC, "createdAt"));
+
+    while (written < limit) {
+      Page<AuditLogDTO> page = findAuditLogs(actionType, result, startDate, endDate, pageable);
+      for (AuditLogDTO row : page.getContent()) {
+        if (written >= limit) break;
+        w.write(toCsvLine(row));
+        w.write("\n");
+        written++;
+      }
+      if (!page.hasNext()) break;
+      pageable = PageRequest.of(pageable.getPageNumber() + 1, pageable.getPageSize(), pageable.getSort());
+    }
+  }
+
+  private String toCsvLine(AuditLogDTO r) {
+    return csv(r.getId())
+        + ","
+        + csv(r.getTransactionId())
+        + ","
+        + csv(r.getActionType())
+        + ","
+        + csv(r.getResult())
+        + ","
+        + csv(r.getPerformedBy())
+        + ","
+        + csv(r.getCreatedAt())
+        + ","
+        + csv(r.getDescription())
+        + ","
+        + csv(r.getErrorMessage())
+        + ","
+        + csv(r.getSourceIp())
+        + ","
+        + csv(r.getDetails());
+  }
+
+  private static String csv(Object v) {
+    if (v == null) return "";
+    String s = String.valueOf(v).replace("\r", " ").replace("\n", " ");
+    if (s.contains(",") || s.contains("\"")) {
+      s = "\"" + s.replace("\"", "\"\"") + "\"";
+    }
+    return s;
   }
 }

@@ -288,6 +288,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PageAuditLog'
+  /api/audit/export:
+    get:
+      summary: Export audit logs (CSV/JSON)
+      operationId: exportAuditLogs
+      parameters:
+        - in: query
+          name: format
+          schema: { type: string, enum: [csv, json], default: csv }
+        - in: query
+          name: actionType
+          schema: { type: string }
+        - in: query
+          name: result
+          schema: { type: string }
+        - in: query
+          name: startDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: endDate
+          schema: { type: string, format: date-time }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 10000, minimum: 1, maximum: 50000 }
+      responses:
+        '200':
+          description: Export file or JSON array
+          content:
+            text/csv:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AuditLog' }
   /api/metrics:
     get:
       summary: Get system metrics

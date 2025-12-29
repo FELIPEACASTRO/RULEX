@@ -299,6 +299,14 @@ export async function getTransactionDetails(transactionId: string): Promise<Tran
   return apiRequest<TransactionResponse>(`/api/transactions/${transactionId}`);
 }
 
+export async function getTransactionById(id: number): Promise<TransactionResponse> {
+  return apiRequest<TransactionResponse>(`/api/transactions/${id}`);
+}
+
+export async function getTransactionByExternalId(externalId: string): Promise<TransactionResponse> {
+  return apiRequest<TransactionResponse>(`/api/transactions/external/${encodeURIComponent(externalId)}`);
+}
+
 // ========================================
 // METRICS
 // ========================================
@@ -383,21 +391,42 @@ export async function listAuditLogs(
 }
 
 export async function exportAuditLogs(
-  format: "csv" | "json" | "pdf",
-  filters: { startDate?: string; endDate?: string } = {}
-): Promise<Blob> {
+  format: "csv" | "json" = "csv",
+  filters: {
+    actionType?: string;
+    result?: string;
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+  } = {}
+): Promise<Blob | AuditLog[]> {
   const params = new URLSearchParams();
   params.append("format", format);
+  if (filters.actionType) params.append("actionType", filters.actionType);
+  if (filters.result) params.append("result", filters.result);
   if (filters.startDate) params.append("startDate", filters.startDate);
   if (filters.endDate) params.append("endDate", filters.endDate);
+  params.append("limit", String(filters.limit ?? 10000));
 
   const url = `${JAVA_API_BASE_URL}/api/audit/export?${params.toString()}`;
+  const token = getAccessToken();
+  const basicAuthHeader =
+    !token && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
+
   const response = await fetch(url, {
     headers: {
-      Accept: format === "json" ? "application/json" : format === "csv" ? "text/csv" : "application/pdf",
+      Accept: format === "json" ? "application/json" : "text/csv",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(!token && basicAuthHeader ? { Authorization: basicAuthHeader } : {}),
     },
   });
-  if (!response.ok) throw new Error(`Export failed: ${response.status}`);
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(text || `Export failed: ${response.status}`);
+  }
+  if (format === "json") {
+    return response.json();
+  }
   return response.blob();
 }
 
@@ -428,6 +457,8 @@ export const javaApi = {
   listTransactions,
   exportTransactions,
   getTransactionDetails,
+  getTransactionById,
+  getTransactionByExternalId,
   getDashboardMetrics,
   listRules,
   getRuleDetails,
