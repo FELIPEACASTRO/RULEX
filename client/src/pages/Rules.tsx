@@ -14,9 +14,11 @@ import {
 } from '@/components/ui/dialog';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  FieldDictionaryItem,
   RuleConfiguration,
   createRule,
   deleteRule,
+  listFieldDictionary,
   listRules,
   toggleRuleStatus,
   updateRule,
@@ -34,6 +36,12 @@ export default function Rules() {
     retry: 1,
   });
 
+  const fieldDictionaryQuery = useQuery({
+    queryKey: ['fieldDictionary'],
+    queryFn: () => listFieldDictionary(),
+    retry: 1,
+  });
+
   const rules = useMemo(() => data ?? [], [data]);
   const [editingRule, setEditingRule] = useState<RuleConfiguration | null>(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -45,6 +53,8 @@ export default function Rules() {
     weight: 0,
     enabled: true,
     classification: 'SUSPICIOUS' as RuleConfiguration['classification'],
+    logicOperator: 'AND' as RuleConfiguration['logicOperator'],
+    conditions: [] as RuleConfiguration['conditions'],
   });
 
   const invalidateRules = () => queryClient.invalidateQueries({ queryKey: ['rules'] });
@@ -59,9 +69,11 @@ export default function Rules() {
         weight: formData.weight,
         enabled: formData.enabled,
         classification: formData.classification,
-        // Backend exige: conditions + logicOperator (podem ser vazios/AND para regras legadas por nome)
-        conditions: [],
-        logicOperator: 'AND',
+        // Backend exige: conditions + logicOperator.
+        // - Para regras "genéricas": preencha conditions + logicOperator.
+        // - Para regras "legadas por nome": conditions pode ficar vazio e o engine cai no switch(ruleName).
+        conditions: formData.conditions ?? [],
+        logicOperator: formData.logicOperator ?? 'AND',
       };
 
       if (editingRule) {
@@ -81,6 +93,8 @@ export default function Rules() {
         weight: 0,
         enabled: true,
         classification: 'SUSPICIOUS',
+        logicOperator: 'AND',
+        conditions: [],
       });
       invalidateRules();
     },
@@ -115,6 +129,8 @@ export default function Rules() {
       weight: rule.weight,
       enabled: rule.enabled,
       classification: rule.classification,
+      logicOperator: rule.logicOperator ?? 'AND',
+      conditions: rule.conditions ?? [],
     });
     setShowDialog(true);
   };
@@ -182,6 +198,8 @@ export default function Rules() {
                   weight: 0,
                   enabled: true,
                   classification: 'SUSPICIOUS',
+                  logicOperator: 'AND',
+                  conditions: [],
                 });
               }}
             >
@@ -205,7 +223,7 @@ export default function Rules() {
                   id="ruleName"
                   value={formData.ruleName}
                   onChange={(e) => setFormData({ ...formData, ruleName: e.target.value })}
-                  placeholder="Ex: LOW_AUTHENTICATION_SCORE"
+                  placeholder="Ex: RULE_GENERIC_001 (ou LOW_AUTHENTICATION_SCORE para regra legada)"
                   disabled={!!editingRule}
                 />
               </div>
@@ -301,6 +319,170 @@ export default function Rules() {
                   />
                 </div>
               </div>
+
+              {/* Condições / "subregras" (engine genérico) */}
+              <div className="rounded-lg border border-border p-4">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Condições (subregras)</p>
+                    <p className="text-xs text-muted-foreground">
+                      Para regras genéricas, adicione condições. Para regras legadas por nome, pode deixar vazio.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="logicOperator" className="text-xs font-medium text-muted-foreground">
+                      Operador
+                    </label>
+                    <select
+                      id="logicOperator"
+                      value={formData.logicOperator}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          logicOperator: e.target.value as RuleConfiguration['logicOperator'],
+                        })
+                      }
+                      className="px-3 py-2 border border-input rounded-lg bg-background text-foreground"
+                    >
+                      <option value="AND">AND</option>
+                      <option value="OR">OR</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-3 space-y-3">
+                  {formData.conditions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nenhuma condição adicionada.</p>
+                  ) : null}
+
+                  {formData.conditions.map((c, idx) => {
+                    const available = (fieldDictionaryQuery.data ?? []) as FieldDictionaryItem[];
+                    const fieldOptions = available
+                      .map((f) => (f.jsonPath?.startsWith('$.') ? f.jsonPath.slice(2) : f.jsonPath))
+                      .filter(Boolean);
+                    const typeForField =
+                      available.find((f) => (f.jsonPath?.startsWith('$.') ? f.jsonPath.slice(2) : f.jsonPath) === c.field)
+                        ?.type ?? 'unknown';
+
+                    const baseOps: RuleConfiguration['conditions'][number]['operator'][] = [
+                      '==',
+                      '!=',
+                      '>',
+                      '<',
+                      '>=',
+                      '<=',
+                      'IN',
+                      'NOT_IN',
+                      'CONTAINS',
+                      'NOT_CONTAINS',
+                    ];
+                    const ops =
+                      typeForField === 'number'
+                        ? baseOps.filter((o) => !['CONTAINS', 'NOT_CONTAINS'].includes(o))
+                        : typeForField === 'boolean'
+                        ? baseOps.filter((o) => ['==', '!='].includes(o))
+                        : baseOps;
+
+                    return (
+                      <div key={`${idx}-${c.field}`} className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-end">
+                        <div className="sm:col-span-5">
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            Campo
+                          </label>
+                          {/* Combobox simples: permite qualquer campo, mas sugere os do catálogo */}
+                          <Input
+                            value={c.field}
+                            onChange={(e) => {
+                              const next = [...formData.conditions];
+                              next[idx] = { ...next[idx], field: e.target.value };
+                              setFormData({ ...formData, conditions: next });
+                            }}
+                            placeholder="Ex: consumerAuthenticationScore"
+                            list="rule-condition-fields"
+                          />
+                          <datalist id="rule-condition-fields">
+                            {fieldOptions.slice(0, 500).map((f) => (
+                              <option key={f} value={f} />
+                            ))}
+                          </datalist>
+                          {fieldDictionaryQuery.isError ? (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Catálogo de campos indisponível; você ainda pode digitar o nome do campo.
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="sm:col-span-3">
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            Operador
+                          </label>
+                          <select
+                            value={c.operator}
+                            onChange={(e) => {
+                              const next = [...formData.conditions];
+                              next[idx] = {
+                                ...next[idx],
+                                operator: e.target.value as RuleConfiguration['conditions'][number]['operator'],
+                              };
+                              setFormData({ ...formData, conditions: next });
+                            }}
+                            className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
+                          >
+                            {ops.map((op) => (
+                              <option key={op} value={op}>
+                                {op}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="sm:col-span-3">
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            Valor
+                          </label>
+                          <Input
+                            value={c.value}
+                            onChange={(e) => {
+                              const next = [...formData.conditions];
+                              next[idx] = { ...next[idx], value: e.target.value };
+                              setFormData({ ...formData, conditions: next });
+                            }}
+                            placeholder={c.operator === 'IN' || c.operator === 'NOT_IN' ? 'Ex: 1,2,3' : 'Ex: 10'}
+                          />
+                        </div>
+                        <div className="sm:col-span-1 flex sm:justify-end">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => {
+                              const next = formData.conditions.filter((_, i) => i !== idx);
+                              setFormData({ ...formData, conditions: next });
+                            }}
+                            title="Remover condição"
+                          >
+                            Remover
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        conditions: [
+                          ...formData.conditions,
+                          { field: '', operator: '==', value: '' } as RuleConfiguration['conditions'][number],
+                        ],
+                      })
+                    }
+                  >
+                    Adicionar condição
+                  </Button>
+                </div>
+              </div>
+
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"

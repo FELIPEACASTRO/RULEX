@@ -45,7 +45,7 @@ exports[`Rules popup (Rules.tsx) > snapshot: popup visual regression (modal cont
         class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
         data-slot="input"
         id="ruleName"
-        placeholder="Ex: LOW_AUTHENTICATION_SCORE"
+        placeholder="Ex: RULE_GENERIC_001 (ou LOW_AUTHENTICATION_SCORE para regra legada)"
         value=""
       />
     </div>
@@ -165,6 +165,67 @@ exports[`Rules popup (Rules.tsx) > snapshot: popup visual regression (modal cont
           type="number"
           value="0"
         />
+      </div>
+    </div>
+    <div
+      class="rounded-lg border border-border p-4"
+    >
+      <div
+        class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <p
+            class="text-sm font-medium text-foreground"
+          >
+            Condições (subregras)
+          </p>
+          <p
+            class="text-xs text-muted-foreground"
+          >
+            Para regras genéricas, adicione condições. Para regras legadas por nome, pode deixar vazio.
+          </p>
+        </div>
+        <div
+          class="flex items-center gap-2"
+        >
+          <label
+            class="text-xs font-medium text-muted-foreground"
+            for="logicOperator"
+          >
+            Operador
+          </label>
+          <select
+            class="px-3 py-2 border border-input rounded-lg bg-background text-foreground"
+            id="logicOperator"
+          >
+            <option
+              value="AND"
+            >
+              AND
+            </option>
+            <option
+              value="OR"
+            >
+              OR
+            </option>
+          </select>
+        </div>
+      </div>
+      <div
+        class="mt-3 space-y-3"
+      >
+        <p
+          class="text-sm text-muted-foreground"
+        >
+          Nenhuma condição adicionada.
+        </p>
+        <button
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-transparent shadow-xs hover:bg-accent dark:bg-transparent dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[>svg]:px-3"
+          data-slot="button"
+          type="button"
+        >
+          Adicionar condição
+        </button>
       </div>
     </div>
     <div

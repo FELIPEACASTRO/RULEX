@@ -43,6 +43,11 @@ function mockRulesApi(initialContent: any[] = []) {
     const bodyText = await reqBody(input, init);
     calls.push({ url, method, bodyText });
 
+    // Field dictionary (used by the rule builder UI)
+    if (url.includes('/api/field-dictionary') && method === 'GET') {
+      return okJson([]);
+    }
+
     // GET list
     if (url.includes('/api/rules') && method === 'GET') {
       return okJson(rules);
@@ -142,10 +147,7 @@ describe('Rules popup (Rules.tsx)', () => {
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByRole('heading', { name: 'Nova Regra' })).toBeInTheDocument();
 
-    await user.type(
-      screen.getByPlaceholderText('Ex: LOW_AUTHENTICATION_SCORE'),
-      'LOW_AUTHENTICATION_SCORE',
-    );
+    await user.type(screen.getByLabelText('Nome da Regra'), 'LOW_AUTHENTICATION_SCORE');
     await user.type(screen.getByPlaceholderText('Descrição da regra'), 'Score baixo de autenticação');
 
     // threshold + weight
@@ -172,6 +174,8 @@ describe('Rules popup (Rules.tsx)', () => {
       weight: 25,
       enabled: true,
       classification: 'SUSPICIOUS',
+      logicOperator: 'AND',
+      conditions: [],
     });
 
     // dialog should close on success
@@ -203,7 +207,7 @@ describe('Rules popup (Rules.tsx)', () => {
     await user.click(screen.getByTitle('Editar'));
     await screen.findByText('Editar Regra');
 
-    const ruleNameInput = screen.getByPlaceholderText('Ex: LOW_AUTHENTICATION_SCORE') as HTMLInputElement;
+    const ruleNameInput = screen.getByLabelText('Nome da Regra') as HTMLInputElement;
     expect(ruleNameInput).toBeDisabled();
     expect(ruleNameInput.value).toBe('LOW_EXTERNAL_SCORE');
 

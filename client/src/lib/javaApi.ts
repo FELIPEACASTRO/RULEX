@@ -181,6 +181,21 @@ export interface AuditLog {
   createdAt: string;
 }
 
+export interface FieldDictionaryItem {
+  workflow: string | null;
+  recordType: string | null;
+  portfolio: string | null;
+  jsonPath: string;
+  type: string;
+  domain: unknown | null;
+  sentinelValues: unknown | null;
+  allowedOperators: string[];
+  allowedFunctions: string[];
+  requirednessByContext: unknown | null;
+  securityConstraints: unknown | null;
+  normalizationAllowed: boolean;
+}
+
 // ========================================
 // HTTP helper
 // ========================================
@@ -432,6 +447,24 @@ export async function exportAuditLogs(
 }
 
 // ========================================
+// FIELD DICTIONARY (v3.1)
+// ========================================
+
+export async function listFieldDictionary(params?: {
+  workflow?: string;
+  recordType?: string;
+  portfolio?: string;
+}): Promise<FieldDictionaryItem[]> {
+  const qs = new URLSearchParams();
+  if (params?.workflow) qs.append("workflow", params.workflow);
+  if (params?.recordType) qs.append("recordType", params.recordType);
+  if (params?.portfolio) qs.append("portfolio", params.portfolio);
+  const url = qs.toString() ? `/api/field-dictionary?${qs}` : "/api/field-dictionary";
+  const response = await apiRequest<any>(url);
+  return Array.isArray(response) ? (response as FieldDictionaryItem[]) : [];
+}
+
+// ========================================
 // HEALTH
 // ========================================
 
@@ -469,6 +502,7 @@ export const javaApi = {
   toggleRuleStatus,
   listAuditLogs,
   exportAuditLogs,
+  listFieldDictionary,
   checkApiHealth,
 };
 
