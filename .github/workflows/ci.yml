@@ -16,8 +16,8 @@ jobs:
       # Secret scanning (GO/NO-GO: qualquer segredo detectado falha o job)
       - name: Gitleaks (secret scan)
         uses: gitleaks/gitleaks-action@v2
-        with:
-          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Supply-chain vulnerability scan (GO/NO-GO: HIGH/CRITICAL falha o job)
       - name: Trivy filesystem scan (HIGH/CRITICAL)
@@ -49,9 +49,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: pnpm
       - name: Enable Corepack (pnpm from packageManager)
-        run: corepack enable
+        run: |
+          corepack enable
+          PM="$(node -p "require('./package.json').packageManager")"
+          VER="${PM#pnpm@}"
+          VER="${VER%%+*}"
+          corepack prepare "pnpm@${VER}" --activate
+          pnpm --version
+      - name: Detect pnpm store path
+        run: echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Typecheck
@@ -81,9 +95,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: pnpm
       - name: Enable Corepack (pnpm from packageManager)
-        run: corepack enable
+        run: |
+          corepack enable
+          PM="$(node -p "require('./package.json').packageManager")"
+          VER="${PM#pnpm@}"
+          VER="${VER%%+*}"
+          corepack prepare "pnpm@${VER}" --activate
+          pnpm --version
+      - name: Detect pnpm store path
+        run: echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
