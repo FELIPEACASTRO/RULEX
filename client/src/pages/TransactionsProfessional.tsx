@@ -20,18 +20,48 @@ import { toast } from 'sonner';
 export default function TransactionsProfessional() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [exportFormat, setExportFormat] = useState<'csv' | 'json'>('csv');
+  const [minAmount, setMinAmount] = useState<string>('');
+  const [maxAmount, setMaxAmount] = useState<string>('');
+  const [mcc, setMcc] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>(''); // datetime-local
+  const [endDate, setEndDate] = useState<string>(''); // datetime-local
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const buildFilters = () => {
+    const classification =
+      filterStatus === 'all'
+        ? undefined
+        : (filterStatus as 'APPROVED' | 'SUSPICIOUS' | 'FRAUD');
+
+    const parsedMin = minAmount.trim() ? Number(minAmount) : undefined;
+    const parsedMax = maxAmount.trim() ? Number(maxAmount) : undefined;
+    const parsedMcc = mcc.trim() ? Number(mcc) : undefined;
+
+    const startIso = startDate ? new Date(startDate).toISOString() : undefined;
+    const endIso = endDate ? new Date(endDate).toISOString() : undefined;
+
+    return {
+      customerId: searchTerm || undefined,
+      merchantId: searchTerm || undefined,
+      classification,
+      minAmount: Number.isFinite(parsedMin as number) ? parsedMin : undefined,
+      maxAmount: Number.isFinite(parsedMax as number) ? parsedMax : undefined,
+      mcc: Number.isFinite(parsedMcc as number) ? (parsedMcc as number) : undefined,
+      startDate: startIso,
+      endDate: endIso,
+    };
+  };
+
   const { data, isLoading, isError, error, isFetching } = useQuery({
-    queryKey: ['transactions', { searchTerm, filterStatus, currentPage }],
+    queryKey: [
+      'transactions',
+      { searchTerm, filterStatus, currentPage, minAmount, maxAmount, mcc, startDate, endDate },
+    ],
     queryFn: () =>
       listTransactions({
-        customerId: searchTerm || undefined,
-        merchantId: searchTerm || undefined,
-        classification:
-          filterStatus === "all"
-            ? undefined
-            : (filterStatus as "APPROVED" | "SUSPICIOUS" | "FRAUD"),
+        ...buildFilters(),
         page: currentPage - 1,
         size: itemsPerPage,
       }),
@@ -41,23 +71,16 @@ export default function TransactionsProfessional() {
 
   const handleExport = async () => {
     try {
-      const blob = (await exportTransactions(
-        "csv",
-        {
-          customerId: searchTerm || undefined,
-          merchantId: searchTerm || undefined,
-          classification:
-            filterStatus === "all"
-              ? undefined
-              : (filterStatus as "APPROVED" | "SUSPICIOUS" | "FRAUD"),
-        },
-        10000
-      )) as Blob;
+      const exported = await exportTransactions(exportFormat, buildFilters(), 10000);
+      const blob =
+        exportFormat === 'json'
+          ? new Blob([JSON.stringify(exported, null, 2)], { type: 'application/json' })
+          : (exported as Blob);
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "rulex-transactions.csv";
+      a.download = exportFormat === 'json' ? 'rulex-transactions.json' : 'rulex-transactions.csv';
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -179,6 +202,82 @@ export default function TransactionsProfessional() {
                 <Download className="w-4 h-4" />
                 Exportar
               </Button>
+            </div>
+          </div>
+
+          {/* Advanced filters */}
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-6 gap-3">
+            <div className="md:col-span-2">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Início</label>
+              <input
+                type="datetime-local"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Fim</label>
+              <input
+                type="datetime-local"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">MCC</label>
+              <input
+                type="number"
+                value={mcc}
+                onChange={(e) => {
+                  setMcc(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
+                placeholder="ex: 5411"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Export</label>
+              <select
+                value={exportFormat}
+                onChange={(e) => setExportFormat(e.target.value as 'csv' | 'json')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
+              >
+                <option value="csv">CSV</option>
+                <option value="json">JSON</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Min (R$)</label>
+              <input
+                type="number"
+                value={minAmount}
+                onChange={(e) => {
+                  setMinAmount(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Max (R$)</label>
+              <input
+                type="number"
+                value={maxAmount}
+                onChange={(e) => {
+                  setMaxAmount(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
+              />
             </div>
           </div>
         </CardContent>
