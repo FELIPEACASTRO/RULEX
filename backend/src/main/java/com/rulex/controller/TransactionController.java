@@ -56,6 +56,7 @@ public class TransactionController {
   public ResponseEntity<Page<TransactionResponse>> listTransactions(
       @RequestParam(required = false) String customerId,
       @RequestParam(required = false) String merchantId,
+      @RequestParam(required = false) String classification,
       @RequestParam(required = false) Integer mcc,
       @RequestParam(required = false) BigDecimal minAmount,
       @RequestParam(required = false) BigDecimal maxAmount,
@@ -87,6 +88,7 @@ public class TransactionController {
         transactionQueryService.findTransactions(
             customerId,
             merchantId,
+            classification,
             mcc,
             minAmount,
             maxAmount,

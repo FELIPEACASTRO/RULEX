@@ -52,6 +52,9 @@ paths:
           name: merchantId
           schema: { type: string }
         - in: query
+          name: classification
+          schema: { type: string, enum: [APPROVED, SUSPICIOUS, FRAUD] }
+        - in: query
           name: mcc
           schema: { type: integer }
         - in: query

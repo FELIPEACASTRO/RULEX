@@ -35,6 +35,7 @@ public class TransactionQueryService {
   public Page<TransactionResponse> findTransactions(
       String customerId,
       String merchantId,
+      String classification,
       Integer mcc,
       BigDecimal minAmount,
       BigDecimal maxAmount,
@@ -42,9 +43,27 @@ public class TransactionQueryService {
       LocalDateTime endDate,
       Pageable pageable) {
 
+    TransactionDecision.TransactionClassification classificationEnum = null;
+    if (classification != null && !classification.isBlank()) {
+      try {
+        classificationEnum = TransactionDecision.TransactionClassification.valueOf(classification);
+      } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException(
+            "classification inválida (use APPROVED, SUSPICIOUS ou FRAUD)");
+      }
+    }
+
     Page<Transaction> transactions =
-        transactionRepository.findByFilters(
-            customerId, merchantId, mcc, minAmount, maxAmount, startDate, endDate, pageable);
+        transactionRepository.findByFiltersWithClassification(
+            customerId,
+            merchantId,
+            mcc,
+            minAmount,
+            maxAmount,
+            startDate,
+            endDate,
+            classificationEnum,
+            pageable);
 
     return transactions.map(this::convertToResponse);
   }

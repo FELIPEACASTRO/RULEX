@@ -102,6 +102,7 @@ export type ProcessedTransaction = TransactionResponse;
 export interface TransactionFilters {
   customerId?: string;
   merchantId?: string;
+  classification?: "APPROVED" | "SUSPICIOUS" | "FRAUD";
   mcc?: number;
   minAmount?: number;
   maxAmount?: number;
@@ -109,7 +110,6 @@ export interface TransactionFilters {
   endDate?: string; // ISO_DATE_TIME
   page?: number;
   size?: number;
-  // Nota: o backend atual não filtra por classification na listagem.
 }
 
 export interface PaginatedResponse<T> {
@@ -241,6 +241,7 @@ export async function listTransactions(
   const params = new URLSearchParams();
   if (filters.customerId) params.append("customerId", filters.customerId);
   if (filters.merchantId) params.append("merchantId", filters.merchantId);
+  if (filters.classification) params.append("classification", filters.classification);
   if (filters.mcc !== undefined) params.append("mcc", String(filters.mcc));
   if (filters.minAmount !== undefined) params.append("minAmount", String(filters.minAmount));
   if (filters.maxAmount !== undefined) params.append("maxAmount", String(filters.maxAmount));

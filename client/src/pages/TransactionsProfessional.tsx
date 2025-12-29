@@ -28,6 +28,10 @@ export default function TransactionsProfessional() {
       listTransactions({
         customerId: searchTerm || undefined,
         merchantId: searchTerm || undefined,
+        classification:
+          filterStatus === "all"
+            ? undefined
+            : (filterStatus as "APPROVED" | "SUSPICIOUS" | "FRAUD"),
         page: currentPage - 1,
         size: itemsPerPage,
       }),
