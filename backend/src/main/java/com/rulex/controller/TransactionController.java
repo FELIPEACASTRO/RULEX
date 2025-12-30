@@ -27,8 +27,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 /** Controller REST para processamento e consulta de transações. */
 @RestController
@@ -107,7 +107,7 @@ public class TransactionController {
 
     return ResponseEntity.ok(transactions);
   }
-  
+
   private static LocalDateTime parseIsoToLocalDateTime(String raw) {
     if (raw == null || raw.isBlank()) {
       return null;
@@ -274,5 +274,4 @@ public class TransactionController {
             .success(true)
             .build());
   }
-
 }

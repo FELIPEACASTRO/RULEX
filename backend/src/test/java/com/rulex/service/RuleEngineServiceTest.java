@@ -214,12 +214,7 @@ class RuleEngineServiceTest {
                 java.util.Map.of("field", "mcc", "operator", "IN", "value", "[7995,7994,5967]"),
                 // String IN supports quoted list syntax
                 java.util.Map.of(
-                    "field",
-                    "merchantCountryCode",
-                    "operator",
-                    "IN",
-                    "value",
-                    "['RU','CN']"),
+                    "field", "merchantCountryCode", "operator", "IN", "value", "['RU','CN']"),
                 // Unary operator (value may be empty)
                 java.util.Map.of("field", "cardExpireDate", "operator", "IS_NULL", "value", ""),
                 // Function+expr in LHS: ABS(atcCard-atcHost) >= 5 (YAML real)
@@ -303,8 +298,7 @@ class RuleEngineServiceTest {
         .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
     doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
 
-    when(transactionRepository.countTransactionsByCustomerSince(anyString(), any()))
-        .thenReturn(5L);
+    when(transactionRepository.countTransactionsByCustomerSince(anyString(), any())).thenReturn(5L);
 
     TransactionRequest req = minimalRequest();
     req.setCustomerIdFromHeader("CUST-1");
@@ -314,8 +308,10 @@ class RuleEngineServiceTest {
     assertThat(response.getClassification()).isEqualTo("SUSPICIOUS");
     assertThat(response.getRiskScore()).isEqualTo(25);
     assertThat(response.getTriggeredRules()).hasSize(1);
-    assertThat(response.getTriggeredRules().getFirst().getName()).isEqualTo("VELOCITY_CUSTOMER_COUNT");
-    assertThat(response.getTriggeredRules().getFirst().getDetail()).contains("velocity COUNT CUSTOMER");
+    assertThat(response.getTriggeredRules().getFirst().getName())
+        .isEqualTo("VELOCITY_CUSTOMER_COUNT");
+    assertThat(response.getTriggeredRules().getFirst().getDetail())
+        .contains("velocity COUNT CUSTOMER");
   }
 
   @Test

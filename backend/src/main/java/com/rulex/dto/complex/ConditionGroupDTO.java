@@ -10,8 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO para grupos de condições com suporte a aninhamento.
- * Permite criar estruturas como: (A AND B) OR (C AND D)
+ * DTO para grupos de condições com suporte a aninhamento. Permite criar estruturas como: (A AND B)
+ * OR (C AND D)
  */
 @Data
 @NoArgsConstructor
@@ -19,40 +19,32 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ConditionGroupDTO {
 
-    private UUID id;
+  private UUID id;
 
-    @NotNull(message = "Operador lógico é obrigatório")
-    private LogicOperatorType logicOperator;
+  @NotNull(message = "Operador lógico é obrigatório")
+  private LogicOperatorType logicOperator;
 
-    private String name;
-    
-    private String description;
+  private String name;
 
-    private Integer position;
+  private String description;
 
-    private Boolean enabled;
+  private Integer position;
 
-    /**
-     * Condições diretas deste grupo
-     */
-    @Valid
-    private List<ConditionDTO> conditions;
+  private Boolean enabled;
 
-    /**
-     * Grupos filhos (aninhados) - permite criar estruturas complexas
-     */
-    @Valid
-    private List<ConditionGroupDTO> children;
+  /** Condições diretas deste grupo */
+  @Valid private List<ConditionDTO> conditions;
 
-    /**
-     * Operadores lógicos suportados
-     */
-    public enum LogicOperatorType {
-        AND,    // Todas as condições devem ser verdadeiras
-        OR,     // Pelo menos uma condição deve ser verdadeira
-        NOT,    // Inverte o resultado do grupo
-        XOR,    // Exatamente uma condição deve ser verdadeira
-        NAND,   // NOT AND - pelo menos uma condição deve ser falsa
-        NOR     // NOT OR - todas as condições devem ser falsas
-    }
+  /** Grupos filhos (aninhados) - permite criar estruturas complexas */
+  @Valid private List<ConditionGroupDTO> children;
+
+  /** Operadores lógicos suportados */
+  public enum LogicOperatorType {
+    AND, // Todas as condições devem ser verdadeiras
+    OR, // Pelo menos uma condição deve ser verdadeira
+    NOT, // Inverte o resultado do grupo
+    XOR, // Exatamente uma condição deve ser verdadeira
+    NAND, // NOT AND - pelo menos uma condição deve ser falsa
+    NOR // NOT OR - todas as condições devem ser falsas
+  }
 }

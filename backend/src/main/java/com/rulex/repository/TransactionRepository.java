@@ -97,7 +97,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
   BigDecimal sumAmountByMerchantSince(
       @Param("merchantId") String merchantId, @Param("since") LocalDateTime since);
 
-  @Query("SELECT COALESCE(SUM(t.transactionAmount), 0) FROM Transaction t WHERE t.createdAt >= :since")
+  @Query(
+      "SELECT COALESCE(SUM(t.transactionAmount), 0) FROM Transaction t WHERE t.createdAt >= :since")
   BigDecimal sumAmountSince(@Param("since") LocalDateTime since);
 
   // ==================== MÉTODOS PARA AS 28 NOVAS REGRAS ====================

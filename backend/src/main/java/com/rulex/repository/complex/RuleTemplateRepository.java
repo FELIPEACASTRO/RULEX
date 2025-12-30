@@ -7,44 +7,28 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-/**
- * Repositório para templates de regras.
- */
+/** Repositório para templates de regras. */
 @Repository
 public interface RuleTemplateRepository extends JpaRepository<RuleTemplate, UUID> {
 
-    /**
-     * Busca template por nome
-     */
-    Optional<RuleTemplate> findByName(String name);
+  /** Busca template por nome */
+  Optional<RuleTemplate> findByName(String name);
 
-    /**
-     * Busca templates por categoria
-     */
-    List<RuleTemplate> findByCategoryOrderByNameAsc(String category);
+  /** Busca templates por categoria */
+  List<RuleTemplate> findByCategoryOrderByNameAsc(String category);
 
-    /**
-     * Busca templates do sistema
-     */
-    List<RuleTemplate> findByIsSystemTrueOrderByNameAsc();
+  /** Busca templates do sistema */
+  List<RuleTemplate> findByIsSystemTrueOrderByNameAsc();
 
-    /**
-     * Busca templates criados por um usuário
-     */
-    List<RuleTemplate> findByCreatedByOrderByNameAsc(UUID createdBy);
+  /** Busca templates criados por um usuário */
+  List<RuleTemplate> findByCreatedByOrderByNameAsc(UUID createdBy);
 
-    /**
-     * Busca templates não-sistema (customizados)
-     */
-    List<RuleTemplate> findByIsSystemFalseOrderByNameAsc();
+  /** Busca templates não-sistema (customizados) */
+  List<RuleTemplate> findByIsSystemFalseOrderByNameAsc();
 
-    /**
-     * Busca todas as categorias distintas
-     */
-    List<String> findDistinctCategory();
+  /** Busca todas as categorias distintas */
+  List<String> findDistinctCategory();
 
-    /**
-     * Verifica se existe template com determinado nome
-     */
-    boolean existsByName(String name);
+  /** Verifica se existe template com determinado nome */
+  boolean existsByName(String name);
 }

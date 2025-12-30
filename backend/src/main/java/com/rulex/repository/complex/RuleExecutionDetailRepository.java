@@ -11,70 +11,50 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-/**
- * Repositório para detalhes de execução de regras.
- */
+/** Repositório para detalhes de execução de regras. */
 @Repository
 public interface RuleExecutionDetailRepository extends JpaRepository<RuleExecutionDetail, UUID> {
 
-    /**
-     * Busca detalhes por log de decisão
-     */
-    List<RuleExecutionDetail> findByDecisionLogIdOrderByCreatedAtAsc(UUID decisionLogId);
+  /** Busca detalhes por log de decisão */
+  List<RuleExecutionDetail> findByDecisionLogIdOrderByCreatedAtAsc(UUID decisionLogId);
 
-    /**
-     * Busca detalhes por versão de regra
-     */
-    Page<RuleExecutionDetail> findByRuleVersionId(UUID ruleVersionId, Pageable pageable);
+  /** Busca detalhes por versão de regra */
+  Page<RuleExecutionDetail> findByRuleVersionId(UUID ruleVersionId, Pageable pageable);
 
-    /**
-     * Busca detalhes que falharam (result = false)
-     */
-    List<RuleExecutionDetail> findByDecisionLogIdAndResultFalse(UUID decisionLogId);
+  /** Busca detalhes que falharam (result = false) */
+  List<RuleExecutionDetail> findByDecisionLogIdAndResultFalse(UUID decisionLogId);
 
-    /**
-     * Busca detalhes que passaram (result = true)
-     */
-    List<RuleExecutionDetail> findByDecisionLogIdAndResultTrue(UUID decisionLogId);
+  /** Busca detalhes que passaram (result = true) */
+  List<RuleExecutionDetail> findByDecisionLogIdAndResultTrue(UUID decisionLogId);
 
-    /**
-     * Busca detalhes com erro
-     */
-    List<RuleExecutionDetail> findByDecisionLogIdAndErrorMessageIsNotNull(UUID decisionLogId);
+  /** Busca detalhes com erro */
+  List<RuleExecutionDetail> findByDecisionLogIdAndErrorMessageIsNotNull(UUID decisionLogId);
 
-    /**
-     * Conta execuções por resultado para uma regra
-     */
-    @Query("""
+  /** Conta execuções por resultado para uma regra */
+  @Query(
+      """
         SELECT d.result, COUNT(d) FROM RuleExecutionDetail d
         WHERE d.ruleVersionId = :ruleVersionId
         GROUP BY d.result
         """)
-    List<Object[]> countByRuleVersionIdGroupByResult(@Param("ruleVersionId") UUID ruleVersionId);
+  List<Object[]> countByRuleVersionIdGroupByResult(@Param("ruleVersionId") UUID ruleVersionId);
 
-    /**
-     * Calcula tempo médio de execução por regra
-     */
-    @Query("""
+  /** Calcula tempo médio de execução por regra */
+  @Query(
+      """
         SELECT AVG(d.executionTimeMs) FROM RuleExecutionDetail d
         WHERE d.ruleVersionId = :ruleVersionId
         AND d.executionTimeMs IS NOT NULL
         """)
-    Double findAverageExecutionTimeByRuleVersionId(@Param("ruleVersionId") UUID ruleVersionId);
+  Double findAverageExecutionTimeByRuleVersionId(@Param("ruleVersionId") UUID ruleVersionId);
 
-    /**
-     * Busca detalhes por campo
-     */
-    List<RuleExecutionDetail> findByFieldName(String fieldName);
+  /** Busca detalhes por campo */
+  List<RuleExecutionDetail> findByFieldName(String fieldName);
 
-    /**
-     * Busca detalhes em um período
-     */
-    Page<RuleExecutionDetail> findByCreatedAtBetween(
-            OffsetDateTime start, OffsetDateTime end, Pageable pageable);
+  /** Busca detalhes em um período */
+  Page<RuleExecutionDetail> findByCreatedAtBetween(
+      OffsetDateTime start, OffsetDateTime end, Pageable pageable);
 
-    /**
-     * Deleta detalhes antigos (para limpeza)
-     */
-    void deleteByCreatedAtBefore(OffsetDateTime before);
+  /** Deleta detalhes antigos (para limpeza) */
+  void deleteByCreatedAtBefore(OffsetDateTime before);
 }
