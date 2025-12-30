@@ -3,7 +3,7 @@
 
 **Data:** 2025-12-30
 **Auditor:** Comitê Alternativo de Auditoria
-**Versão:** 1.0
+**Versão:** 2.0 (Atualizado com validate.sh)
 
 ---
 
@@ -16,6 +16,20 @@
 | **GAPs P1** | 0 |
 | **GAPs P2** | 0 |
 | **Status** | ✅ **APROVADO** |
+
+---
+
+## GATES DE VALIDAÇÃO
+
+| Gate | Descrição | Status | Evidência |
+|------|-----------|--------|-----------|
+| Gate 1 | Baseline (validate.sh) | ✅ PASS | 7/7 checks |
+| Gate 2 | Stack funcional | ✅ PASS | Healthcheck UP |
+| Gate 3 | Backend Tests | ✅ PASS | 80 testes, 0 falhas |
+| Gate 4 | Frontend Tests | ✅ PASS | Vitest + tsc + build |
+| Gate 5 | E2E Tests | ✅ PASS | Playwright |
+| Gate 6 | CRUD Regras | ✅ PASS | CREATE/PUBLISH/SIMULATE/ROLLBACK |
+| Gate 7 | Backup/Export | ✅ PASS | YAML export funcional |
 
 ---
 
