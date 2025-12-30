@@ -36,8 +36,8 @@ class HomologSimulationIT {
   private static final ParameterizedTypeReference<Map<String, Object>> MAP_RESPONSE =
       new ParameterizedTypeReference<>() {};
 
-  @SuppressWarnings("resource")
   @Container
+  @SuppressWarnings("resource")
   static final PostgreSQLContainer<?> postgres =
       new PostgreSQLContainer<>("postgres:16-alpine")
           .withDatabaseName("rulex_db")
@@ -45,12 +45,10 @@ class HomologSimulationIT {
           .withPassword("postgres");
 
   @DynamicPropertySource
-  static void props(DynamicPropertyRegistry r) {
-    r.add("spring.datasource.url", postgres::getJdbcUrl);
-    r.add("spring.datasource.username", postgres::getUsername);
-    r.add("spring.datasource.password", postgres::getPassword);
-    r.add("spring.jpa.hibernate.ddl-auto", () -> "none");
-    r.add("spring.flyway.enabled", () -> "true");
+  static void configureProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    registry.add("spring.datasource.username", postgres::getUsername);
+    registry.add("spring.datasource.password", postgres::getPassword);
   }
 
   @LocalServerPort int port;
