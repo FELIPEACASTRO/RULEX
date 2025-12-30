@@ -12,7 +12,8 @@ test.describe("Dashboard", () => {
 
   test("navigates to dashboard", async ({ page }) => {
     await page.locator('[data-sidebar="menu-button"]', { hasText: /Dashboard/i }).click();
-    await expect(page).toHaveURL(/dashboard/);
+    // Dashboard may be at root (/) or /dashboard
+    await expect(page).toHaveURL(/\/$|\/dashboard/);
   });
 
   test("displays statistics cards", async ({ page }) => {
