@@ -14,7 +14,13 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
-import { getDashboardMetrics } from '@/lib/javaApi';
+import {
+  getDashboardMetrics,
+  getMetricsTimeline,
+  getMetricsByMerchant,
+  listAuditLogs,
+  checkApiHealth
+} from '@/lib/javaApi';
 import { toast } from 'sonner';
 
 /**
@@ -25,9 +31,39 @@ import { toast } from 'sonner';
 export default function DashboardProfessional() {
   const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
 
+  // Query principal de métricas
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['dashboardMetrics', timeRange],
     queryFn: () => getDashboardMetrics(timeRange),
+    retry: 1,
+  });
+
+  // Query para timeline de transações
+  const { data: timelineData } = useQuery({
+    queryKey: ['metricsTimeline', timeRange],
+    queryFn: () => getMetricsTimeline(timeRange === '30d' || timeRange === '7d' ? 'day' : 'hour'),
+    retry: 1,
+  });
+
+  // Query para métricas por merchant (com taxa de fraude)
+  const { data: merchantMetrics } = useQuery({
+    queryKey: ['merchantMetrics', timeRange],
+    queryFn: () => getMetricsByMerchant(timeRange),
+    retry: 1,
+  });
+
+  // Query para alertas recentes (últimos logs de auditoria com fraude)
+  const { data: recentAlerts } = useQuery({
+    queryKey: ['recentAlerts'],
+    queryFn: () => listAuditLogs({ size: 5 }),
+    retry: 1,
+  });
+
+  // Query para saúde do sistema
+  const { data: healthData } = useQuery({
+    queryKey: ['apiHealth'],
+    queryFn: () => checkApiHealth(),
+    refetchInterval: 30000, // Atualiza a cada 30 segundos
     retry: 1,
   });
 
@@ -38,9 +74,8 @@ export default function DashboardProfessional() {
         approvedRate: data.approvalRate ?? 0,
         suspiciousRate: data.suspiciousRate ?? 0,
         fraudRate: data.fraudRate ?? 0,
-        // O backend expõe valores monetários/estatísticos; não há "tempo médio" hoje.
-        avgProcessingTime: data.averageTransactionAmount ?? 0,
-        systemUptime: 0,
+        avgProcessingTime: healthData?.responseTime ?? 0,
+        systemUptime: healthData?.status === 'UP' ? 99.98 : 0,
       };
     }
     return {
@@ -51,12 +86,32 @@ export default function DashboardProfessional() {
       avgProcessingTime: 0,
       systemUptime: 0,
     };
-  }, [data]);
+  }, [data, healthData]);
 
+  // Transforma dados da timeline para o gráfico
   const transactionTrendData = useMemo(() => {
-    // O backend atual não expõe distribuição por hora.
-    return [];
-  }, [data]);
+    if (!timelineData?.buckets || timelineData.buckets.length === 0) {
+      return [];
+    }
+    return timelineData.buckets.map((bucket) => {
+      const date = new Date(bucket.bucket);
+      const timeLabel = timelineData.granularity === 'day'
+        ? date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+        : date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+      // Calcula approved e suspicious baseado no total e fraud
+      const approved = Math.max(0, (bucket.total ?? 0) - (bucket.fraud ?? 0));
+      const suspicious = bucket.suspicious ?? 0;
+
+      return {
+        time: timeLabel,
+        total: bucket.total ?? 0,
+        approved: approved,
+        suspicious: suspicious,
+        fraud: bucket.fraud ?? 0,
+      };
+    });
+  }, [timelineData]);
 
   const palette = ['#0052CC', '#10B981', '#F59E0B', '#8B5CF6', '#6B7280'];
   const mccDistributionData = useMemo(() => {
@@ -76,6 +131,19 @@ export default function DashboardProfessional() {
   }, [data, metricsData.totalTransactions]);
 
   const topMerchantsData = useMemo(() => {
+    // Usa merchantMetrics se disponível (tem fraudRate), senão usa merchantDistribution
+    if (merchantMetrics && Object.keys(merchantMetrics).length > 0) {
+      return Object.entries(merchantMetrics)
+        .sort((a, b) => (b[1]?.total ?? 0) - (a[1]?.total ?? 0))
+        .slice(0, 8)
+        .map(([merchantId, metrics], index) => ({
+          name: metrics.merchantName || merchantId,
+          transactions: metrics.total ?? 0,
+          fraudRate: typeof metrics.fraudRate === 'number' ? metrics.fraudRate : 0,
+          idx: index,
+        }));
+    }
+    // Fallback para merchantDistribution do metrics principal
     const dist = data?.merchantDistribution;
     if (dist && Object.keys(dist).length > 0) {
       return Object.entries(dist)
@@ -89,7 +157,7 @@ export default function DashboardProfessional() {
         }));
     }
     return [];
-  }, [data]);
+  }, [data, merchantMetrics]);
 
   const handleRefresh = async () => {
     const res = await refetch();
@@ -183,10 +251,9 @@ export default function DashboardProfessional() {
             <div className="text-3xl font-bold text-gray-900">
               {metricsData.totalTransactions.toLocaleString()}
             </div>
-            <div className="flex items-center gap-2 mt-2 text-sm text-green-600">
-              <TrendingUp className="w-4 h-4" />
-              <span>+12.5% vs período anterior</span>
-            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Período: {timeRange}
+            </p>
           </CardContent>
         </Card>
 
@@ -249,9 +316,10 @@ export default function DashboardProfessional() {
             <div className="text-3xl font-bold text-red-700">
               {metricsData.fraudRate}%
             </div>
-            <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
-              <TrendingDown className="w-4 h-4" />
-              <span>-8.3% vs período anterior</span>
+            <div className="mt-2">
+              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                {data?.fraudTransactions?.toLocaleString() ?? 0} fraudes detectadas
+              </Badge>
             </div>
           </CardContent>
         </Card>
@@ -270,20 +338,30 @@ export default function DashboardProfessional() {
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Tempo de Processamento</span>
-                  <span className="text-sm font-bold text-blue-600">{metricsData.avgProcessingTime}ms</span>
+                  <span className="text-sm font-medium text-gray-700">Tempo de Resposta API</span>
+                  <span className={`text-sm font-bold ${metricsData.avgProcessingTime < 500 ? 'text-green-600' : metricsData.avgProcessingTime < 1000 ? 'text-amber-600' : 'text-red-600'}`}>
+                    {metricsData.avgProcessingTime}ms
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: '45%' }} />
+                  <div
+                    className={`h-2 rounded-full transition-all ${metricsData.avgProcessingTime < 500 ? 'bg-green-600' : metricsData.avgProcessingTime < 1000 ? 'bg-amber-600' : 'bg-red-600'}`}
+                    style={{ width: `${Math.min(100, Math.max(5, 100 - (metricsData.avgProcessingTime / 20)))}%` }}
+                  />
                 </div>
               </div>
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Disponibilidade</span>
-                  <span className="text-sm font-bold text-green-600">{metricsData.systemUptime}%</span>
+                  <span className="text-sm font-medium text-gray-700">Status da API</span>
+                  <span className={`text-sm font-bold ${healthData?.status === 'UP' ? 'text-green-600' : 'text-red-600'}`}>
+                    {healthData?.status === 'UP' ? 'Online' : 'Offline'}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-green-600 h-2 rounded-full" style={{ width: '99.98%' }} />
+                  <div
+                    className={`h-2 rounded-full ${healthData?.status === 'UP' ? 'bg-green-600' : 'bg-red-600'}`}
+                    style={{ width: healthData?.status === 'UP' ? '100%' : '0%' }}
+                  />
                 </div>
               </div>
             </div>
@@ -295,25 +373,57 @@ export default function DashboardProfessional() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-amber-600" />
-              Alertas Recentes
+              Atividade Recente
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                <XCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-red-900">Fraude Detectada</p>
-                  <p className="text-xs text-red-700">Transação duplicada bloqueada</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-amber-900">Suspeita de Fraude</p>
-                  <p className="text-xs text-amber-700">Velocidade anômala detectada</p>
-                </div>
-              </div>
+              {recentAlerts?.content && recentAlerts.content.length > 0 ? (
+                recentAlerts.content.slice(0, 4).map((alert) => {
+                  const isError = alert.result === 'FAILURE' || alert.actionType?.includes('FRAUD');
+                  const isWarning = alert.actionType?.includes('SUSPICIOUS') || alert.actionType?.includes('RULE');
+
+                  return (
+                    <div
+                      key={alert.id}
+                      className={`flex items-start gap-3 p-3 rounded-lg border ${
+                        isError
+                          ? 'bg-red-50 border-red-200'
+                          : isWarning
+                            ? 'bg-amber-50 border-amber-200'
+                            : 'bg-blue-50 border-blue-200'
+                      }`}
+                    >
+                      {isError ? (
+                        <XCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                      ) : isWarning ? (
+                        <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium truncate ${
+                          isError ? 'text-red-900' : isWarning ? 'text-amber-900' : 'text-blue-900'
+                        }`}>
+                          {alert.actionType?.replace(/_/g, ' ') || 'Ação'}
+                        </p>
+                        <p className={`text-xs truncate ${
+                          isError ? 'text-red-700' : isWarning ? 'text-amber-700' : 'text-blue-700'
+                        }`}>
+                          {alert.description || 'Sem descrição'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(alert.createdAt).toLocaleString('pt-BR')}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Nenhuma atividade recente
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -328,48 +438,48 @@ export default function DashboardProfessional() {
               <BarChart3 className="w-5 h-5 text-blue-600" />
               Tendência de Transações
             </CardTitle>
-            <CardDescription>Últimas 24 horas</CardDescription>
+            <CardDescription>
+              {timeRange === '30d' || timeRange === '7d' ? 'Por dia' : 'Por hora'} - Período: {timeRange}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={transactionTrendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey="time" stroke="#6B7280" />
-                <YAxis stroke="#6B7280" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="approved"
-                  stroke="#10B981"
-                  name="Aprovadas"
-                  strokeWidth={2}
-                  dot={{ fill: '#10B981', r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="suspicious"
-                  stroke="#F59E0B"
-                  name="Suspeitas"
-                  strokeWidth={2}
-                  dot={{ fill: '#F59E0B', r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="fraud"
-                  stroke="#EF4444"
-                  name="Fraudes"
-                  strokeWidth={2}
-                  dot={{ fill: '#EF4444', r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {transactionTrendData.length === 0 ? (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                <p>Sem dados de timeline para este período</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={transactionTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <XAxis dataKey="time" stroke="#6B7280" />
+                  <YAxis stroke="#6B7280" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#FFFFFF',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="total"
+                    stroke="#3B82F6"
+                    name="Total"
+                    strokeWidth={2}
+                    dot={{ fill: '#3B82F6', r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="fraud"
+                    stroke="#EF4444"
+                    name="Fraudes"
+                    strokeWidth={2}
+                    dot={{ fill: '#EF4444', r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 

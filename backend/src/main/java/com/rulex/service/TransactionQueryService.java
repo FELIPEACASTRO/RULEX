@@ -8,17 +8,17 @@ import com.rulex.entity.Transaction;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
+import java.io.IOException;
+import java.io.Writer;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.io.IOException;
-import java.io.Writer;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -102,11 +102,13 @@ public class TransactionQueryService {
 
   /** Converte uma entidade Transaction para TransactionResponse. */
   private TransactionResponse convertToResponse(Transaction transaction) {
-    TransactionDecision decision = decisionRepository.findByTransactionId(transaction.getId()).orElse(null);
+    TransactionDecision decision =
+        decisionRepository.findByTransactionId(transaction.getId()).orElse(null);
     return convertToResponse(transaction, decision);
   }
 
-  private TransactionResponse convertToResponse(Transaction transaction, TransactionDecision decision) {
+  private TransactionResponse convertToResponse(
+      Transaction transaction, TransactionDecision decision) {
     return TransactionResponse.builder()
         .id(transaction.getId())
         .transactionId(transaction.getExternalTransactionId())
@@ -118,11 +120,14 @@ public class TransactionQueryService {
         .transactionTime(transaction.getTransactionTime())
         .classification(decision != null ? decision.getClassification().name() : "UNKNOWN")
         .riskScore(decision != null ? decision.getRiskScore() : 0)
-        .triggeredRules(decision != null ? readTriggeredRules(decision.getRulesApplied()) : List.of())
+        .triggeredRules(
+            decision != null ? readTriggeredRules(decision.getRulesApplied()) : List.of())
         .reason(decision != null ? decision.getReason() : "Sem decisão registrada")
         .rulesetVersion(decision != null ? decision.getRulesVersion() : "1")
         .processingTimeMs(0L)
-        .timestamp(toOffsetDateTime(decision != null ? decision.getCreatedAt() : transaction.getCreatedAt()))
+        .timestamp(
+            toOffsetDateTime(
+                decision != null ? decision.getCreatedAt() : transaction.getCreatedAt()))
         .success(true)
         .build();
   }
@@ -203,7 +208,8 @@ public class TransactionQueryService {
               pageable);
       out.addAll(page.getContent());
       if (!page.hasNext()) break;
-      pageable = PageRequest.of(pageable.getPageNumber() + 1, pageable.getPageSize(), pageable.getSort());
+      pageable =
+          PageRequest.of(pageable.getPageNumber() + 1, pageable.getPageSize(), pageable.getSort());
     }
     if (out.size() > limit) {
       return out.subList(0, limit);
@@ -250,7 +256,8 @@ public class TransactionQueryService {
         written++;
       }
       if (!page.hasNext()) break;
-      pageable = PageRequest.of(pageable.getPageNumber() + 1, pageable.getPageSize(), pageable.getSort());
+      pageable =
+          PageRequest.of(pageable.getPageNumber() + 1, pageable.getPageSize(), pageable.getSort());
     }
   }
 

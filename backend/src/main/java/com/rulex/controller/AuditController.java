@@ -94,7 +94,8 @@ public class AuditController {
 
     if ("json".equalsIgnoreCase(format)) {
       List<AuditLogDTO> out =
-          auditQueryService.exportAsList(actionType, result, startDateTime, endDateTime, firstPage, limit);
+          auditQueryService.exportAsList(
+              actionType, result, startDateTime, endDateTime, firstPage, limit);
       return ResponseEntity.ok(out);
     }
 

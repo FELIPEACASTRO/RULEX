@@ -63,16 +63,16 @@ class SecurityRbacTest {
   @Autowired private MockMvc mockMvc;
 
   @SuppressWarnings("removal")
-  @MockBean private RuleConfigurationService ruleConfigurationService;
+  @MockBean
+  private RuleConfigurationService ruleConfigurationService;
 
   @SuppressWarnings("removal")
-  @MockBean private RuleEngineService ruleEngineService;
+  @MockBean
+  private RuleEngineService ruleEngineService;
 
   @Test
   void actuatorHealth_isPublicBySecurityMatcher() throws Exception {
-    mockMvc
-      .perform(get("/api/actuator/health").contextPath("/api"))
-        .andExpect(status().isOk());
+    mockMvc.perform(get("/api/actuator/health").contextPath("/api")).andExpect(status().isOk());
   }
 
   @Test
@@ -80,11 +80,11 @@ class SecurityRbacTest {
     when(ruleEngineService.evaluateRaw(any(), any(), any())).thenReturn(new EvaluateResponse());
 
     mockMvc
-      .perform(
-        post("/api/evaluate")
-          .contextPath("/api")
-          .contentType(MediaType.APPLICATION_JSON)
-          .content("{}"))
+        .perform(
+            post("/api/evaluate")
+                .contextPath("/api")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
         .andExpect(status().isOk());
   }
 
@@ -100,7 +100,7 @@ class SecurityRbacTest {
     when(ruleConfigurationService.listRules(any())).thenReturn(emptyPage);
 
     mockMvc
-      .perform(get("/api/rules").contextPath("/api").with(httpBasic("analyst", "analystpw")))
+        .perform(get("/api/rules").contextPath("/api").with(httpBasic("analyst", "analystpw")))
         .andExpect(status().isOk());
   }
 
@@ -108,8 +108,8 @@ class SecurityRbacTest {
   void rulesToggle_forbidsAnalyst() throws Exception {
     mockMvc
         .perform(
-        patch("/api/rules/1/toggle")
-          .contextPath("/api")
+            patch("/api/rules/1/toggle")
+                .contextPath("/api")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"enabled\":true}")
                 .with(httpBasic("analyst", "analystpw")))
@@ -134,8 +134,8 @@ class SecurityRbacTest {
 
     mockMvc
         .perform(
-        patch("/api/rules/1/toggle")
-          .contextPath("/api")
+            patch("/api/rules/1/toggle")
+                .contextPath("/api")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"enabled\":true}")
                 .with(httpBasic("admin", "adminpw")))

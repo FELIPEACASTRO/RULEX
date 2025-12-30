@@ -110,7 +110,8 @@ public class AuditQueryService {
       Page<AuditLogDTO> page = findAuditLogs(actionType, result, startDate, endDate, pageable);
       out.addAll(page.getContent());
       if (!page.hasNext()) break;
-      pageable = PageRequest.of(pageable.getPageNumber() + 1, pageable.getPageSize(), pageable.getSort());
+      pageable =
+          PageRequest.of(pageable.getPageNumber() + 1, pageable.getPageSize(), pageable.getSort());
     }
     if (out.size() > limit) {
       return out.subList(0, limit);
@@ -142,7 +143,8 @@ public class AuditQueryService {
         written++;
       }
       if (!page.hasNext()) break;
-      pageable = PageRequest.of(pageable.getPageNumber() + 1, pageable.getPageSize(), pageable.getSort());
+      pageable =
+          PageRequest.of(pageable.getPageNumber() + 1, pageable.getPageSize(), pageable.getSort());
     }
   }
 

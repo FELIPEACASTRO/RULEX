@@ -670,15 +670,25 @@ public class RuleEngineService {
         .id(decision.getTransaction() != null ? decision.getTransaction().getId() : null)
         .transactionId(decision.getExternalTransactionId())
         .customerIdFromHeader(
-            decision.getTransaction() != null ? decision.getTransaction().getCustomerIdFromHeader() : null)
-        .merchantId(decision.getTransaction() != null ? decision.getTransaction().getMerchantId() : null)
-        .merchantName(decision.getTransaction() != null ? decision.getTransaction().getMerchantName() : null)
+            decision.getTransaction() != null
+                ? decision.getTransaction().getCustomerIdFromHeader()
+                : null)
+        .merchantId(
+            decision.getTransaction() != null ? decision.getTransaction().getMerchantId() : null)
+        .merchantName(
+            decision.getTransaction() != null ? decision.getTransaction().getMerchantName() : null)
         .transactionAmount(
-            decision.getTransaction() != null ? decision.getTransaction().getTransactionAmount() : null)
+            decision.getTransaction() != null
+                ? decision.getTransaction().getTransactionAmount()
+                : null)
         .transactionDate(
-            decision.getTransaction() != null ? decision.getTransaction().getTransactionDate() : null)
+            decision.getTransaction() != null
+                ? decision.getTransaction().getTransactionDate()
+                : null)
         .transactionTime(
-            decision.getTransaction() != null ? decision.getTransaction().getTransactionTime() : null)
+            decision.getTransaction() != null
+                ? decision.getTransaction().getTransactionTime()
+                : null)
         .classification(decision.getClassification().name())
         .riskScore(decision.getRiskScore())
         .triggeredRules(java.util.List.of())
@@ -1339,13 +1349,7 @@ public class RuleEngineService {
     return false;
   }
 
-  /**
-   * Aceita:
-   * - "a,b,c"
-   * - "[a,b,c]"
-   * - "['RU','CN']"
-   * - "[7995, 7994]"
-   */
+  /** Aceita: - "a,b,c" - "[a,b,c]" - "['RU','CN']" - "[7995, 7994]" */
   private java.util.List<String> parseListTokens(String raw) {
     if (raw == null) return java.util.List.of();
     String s = raw.trim();
@@ -1411,7 +1415,8 @@ public class RuleEngineService {
     }
 
     // ABS(<expr>) onde <expr> pode ser "a-b" (compatível com FRAUDE_REGRAS_DURAS_EXPORT.yaml)
-    java.util.regex.Matcher absExpr = java.util.regex.Pattern.compile("^ABS\\((.+)\\)$").matcher(raw);
+    java.util.regex.Matcher absExpr =
+        java.util.regex.Pattern.compile("^ABS\\((.+)\\)$").matcher(raw);
     if (absExpr.matches()) {
       Object v = evalNumericExpression(request, absExpr.group(1));
       return applyUnary("ABS", v);
@@ -1429,7 +1434,8 @@ public class RuleEngineService {
 
     // COALESCE(field, literal)
     java.util.regex.Matcher coalesce =
-        java.util.regex.Pattern.compile("^COALESCE\\(([A-Za-z0-9_]+)\\s*,\\s*(.+)\\)$").matcher(raw);
+        java.util.regex.Pattern.compile("^COALESCE\\(([A-Za-z0-9_]+)\\s*,\\s*(.+)\\)$")
+            .matcher(raw);
     if (coalesce.matches()) {
       Object base = readFieldValue(request, TransactionRequest.class, coalesce.group(1));
       if (base != null) return base;
@@ -1482,10 +1488,8 @@ public class RuleEngineService {
    *
    * <p>Objetivo: suportar padrão real do YAML: {@code ABS(atcCard - atcHost)}.
    *
-   * <p>Suporta apenas:
-   * - literal numérico (ex.: "5", "10.2")
-   * - campo (property do TransactionRequest)
-   * - subtração binária: "a-b" com espaços opcionais
+   * <p>Suporta apenas: - literal numérico (ex.: "5", "10.2") - campo (property do
+   * TransactionRequest) - subtração binária: "a-b" com espaços opcionais
    *
    * <p>Se não conseguir avaliar, retorna null.
    */
@@ -1570,12 +1574,7 @@ public class RuleEngineService {
     LocalDateTime since = now.minusSeconds(Math.max(0L, spec.windowSeconds));
 
     String detailPrefix =
-        "velocity "
-            + spec.metric
-            + " "
-            + spec.dimension
-            + " windowSeconds="
-            + spec.windowSeconds;
+        "velocity " + spec.metric + " " + spec.dimension + " windowSeconds=" + spec.windowSeconds;
 
     return switch (spec.metric) {
       case COUNT -> {

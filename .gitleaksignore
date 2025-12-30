@@ -1,0 +1,2 @@
+# Ignore example/placeholder secrets in documentation
+README.md:sidekiq-secret:42
