@@ -1,18 +1,19 @@
 package com.rulex.service;
 
-import com.rulex.entity.DecisionLogEntity;
-import com.rulex.repository.DecisionLogRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rulex.entity.AuditLog;
+import com.rulex.repository.AuditLogRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -23,64 +24,93 @@ import static org.mockito.Mockito.*;
 class AuditServiceTest {
 
     @Mock
-    private DecisionLogRepository decisionLogRepository;
+    private AuditLogRepository auditLogRepository;
 
     private AuditService auditService;
+    private ObjectMapper objectMapper;
+    private Clock fixedClock;
 
     @BeforeEach
     void setUp() {
-        auditService = new AuditService(decisionLogRepository);
+        objectMapper = new ObjectMapper();
+        fixedClock = Clock.fixed(Instant.parse("2024-12-30T10:00:00Z"), ZoneId.of("UTC"));
+        auditService = new AuditService(auditLogRepository, objectMapper, fixedClock);
     }
 
     @Test
-    @DisplayName("Should log decision successfully")
-    void shouldLogDecisionSuccessfully() {
-        DecisionLogEntity entity = createTestDecisionLog();
-        when(decisionLogRepository.save(any(DecisionLogEntity.class))).thenReturn(entity);
+    @DisplayName("Should log rule created successfully")
+    void shouldLogRuleCreatedSuccessfully() {
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        auditService.logDecision(
-            "TXN-001",
-            "APPROVED",
+        auditService.logRuleCreated("HIGH_VALUE_RULE", "admin");
+
+        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
+        verify(auditLogRepository, times(1)).save(captor.capture());
+        
+        AuditLog saved = captor.getValue();
+        assertEquals(AuditLog.AuditActionType.RULE_CREATED, saved.getActionType());
+        assertEquals("admin", saved.getPerformedBy());
+        assertEquals(AuditLog.AuditResult.SUCCESS, saved.getResult());
+        assertTrue(saved.getDescription().contains("HIGH_VALUE_RULE"));
+    }
+
+    @Test
+    @DisplayName("Should log rule updated successfully")
+    void shouldLogRuleUpdatedSuccessfully() {
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        auditService.logRuleUpdated(
             "HIGH_VALUE_RULE",
-            "Transaction approved"
+            java.util.Map.of("threshold", 5000, "enabled", true),
+            "admin"
         );
 
-        verify(decisionLogRepository, times(1)).save(any(DecisionLogEntity.class));
+        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
+        verify(auditLogRepository, times(1)).save(captor.capture());
+        
+        AuditLog saved = captor.getValue();
+        assertEquals(AuditLog.AuditActionType.RULE_UPDATED, saved.getActionType());
+        assertEquals("admin", saved.getPerformedBy());
+        assertNotNull(saved.getDetails());
     }
 
     @Test
-    @DisplayName("Should retrieve decision logs by transaction ID")
-    void shouldRetrieveDecisionLogsByTransactionId() {
-        List<DecisionLogEntity> logs = Arrays.asList(
-            createTestDecisionLog(),
-            createTestDecisionLog()
-        );
-        when(decisionLogRepository.findByTransactionId("TXN-001")).thenReturn(logs);
+    @DisplayName("Should log rule deleted successfully")
+    void shouldLogRuleDeletedSuccessfully() {
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        List<DecisionLogEntity> result = auditService.getDecisionsByTransactionId("TXN-001");
+        auditService.logRuleDeleted("OLD_RULE", "admin");
 
-        assertEquals(2, result.size());
-        verify(decisionLogRepository).findByTransactionId("TXN-001");
+        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
+        verify(auditLogRepository, times(1)).save(captor.capture());
+        
+        AuditLog saved = captor.getValue();
+        assertEquals(AuditLog.AuditActionType.RULE_DELETED, saved.getActionType());
+        assertTrue(saved.getDescription().contains("OLD_RULE"));
     }
 
     @Test
-    @DisplayName("Should handle empty result gracefully")
-    void shouldHandleEmptyResultGracefully() {
-        when(decisionLogRepository.findByTransactionId("UNKNOWN")).thenReturn(List.of());
+    @DisplayName("Should log error gracefully")
+    void shouldLogErrorGracefully() {
+        when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        List<DecisionLogEntity> result = auditService.getDecisionsByTransactionId("UNKNOWN");
+        auditService.logError("TXN-001", new RuntimeException("Test error"));
 
-        assertTrue(result.isEmpty());
+        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
+        verify(auditLogRepository, times(1)).save(captor.capture());
+        
+        AuditLog saved = captor.getValue();
+        assertEquals(AuditLog.AuditActionType.TRANSACTION_PROCESSED, saved.getActionType());
+        assertEquals(AuditLog.AuditResult.FAILURE, saved.getResult());
+        assertEquals("Test error", saved.getErrorMessage());
     }
 
-    private DecisionLogEntity createTestDecisionLog() {
-        DecisionLogEntity entity = new DecisionLogEntity();
-        entity.setId(1L);
-        entity.setTransactionId("TXN-001");
-        entity.setDecision("APPROVED");
-        entity.setRuleName("HIGH_VALUE_RULE");
-        entity.setDetails("Test decision");
-        entity.setCreatedAt(LocalDateTime.now());
-        return entity;
+    @Test
+    @DisplayName("Should handle repository exception gracefully")
+    void shouldHandleRepositoryExceptionGracefully() {
+        when(auditLogRepository.save(any(AuditLog.class))).thenThrow(new RuntimeException("DB error"));
+
+        // Should not throw - logs error internally
+        assertDoesNotThrow(() -> auditService.logRuleCreated("RULE", "admin"));
     }
 }
