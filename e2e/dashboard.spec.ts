@@ -11,12 +11,12 @@ test.describe("Dashboard", () => {
   });
 
   test("navigates to dashboard", async ({ page }) => {
-    await page.getByRole("button", { name: /Dashboard/i }).click();
+    await page.locator('[data-sidebar="menu-button"]', { hasText: /Dashboard/i }).click();
     await expect(page).toHaveURL(/dashboard/);
   });
 
   test("displays statistics cards", async ({ page }) => {
-    await page.getByRole("button", { name: /Dashboard/i }).click();
+    await page.locator('[data-sidebar="menu-button"]', { hasText: /Dashboard/i }).click();
     // Wait for dashboard to load
     await page.waitForLoadState("networkidle");
     // Should have some statistics visible
@@ -25,7 +25,7 @@ test.describe("Dashboard", () => {
   });
 
   test("displays charts", async ({ page }) => {
-    await page.getByRole("button", { name: /Dashboard/i }).click();
+    await page.locator('[data-sidebar="menu-button"]', { hasText: /Dashboard/i }).click();
     await page.waitForLoadState("networkidle");
     // Charts should be rendered
     const chartContainer = page.locator('[class*="chart"], svg, canvas').first();
