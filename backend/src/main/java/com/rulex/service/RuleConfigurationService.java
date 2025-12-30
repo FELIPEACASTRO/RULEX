@@ -33,6 +33,7 @@ public class RuleConfigurationService {
   private final RuleConfigurationRepository ruleConfigRepository;
   private final RuleConfigurationHistoryRepository historyRepository;
   private final AuditService auditService;
+  private final SecurityContextService securityContextService;
   private final ObjectMapper objectMapper;
 
   /** Lista todas as regras. */
@@ -76,6 +77,9 @@ public class RuleConfigurationService {
 
     rule = ruleConfigRepository.save(rule);
 
+    String currentUser = securityContextService.getCurrentUsernameOrSystem();
+    String clientIp = securityContextService.getCurrentClientIp();
+
     historyRepository.save(
         RuleConfigurationHistory.builder()
             .ruleId(rule.getId())
@@ -83,11 +87,12 @@ public class RuleConfigurationService {
             .version(rule.getVersion())
             .previousJson(null)
             .currentJson(serializeRule(rule))
-            .performedBy("SYSTEM")
+            .performedBy(currentUser)
+            .clientIp(clientIp)
             .build());
 
-    auditService.logRuleCreated(dto.getRuleName(), "SYSTEM");
-    log.info("Regra criada: {}", dto.getRuleName());
+    auditService.logRuleCreated(dto.getRuleName(), currentUser);
+    log.info("Regra criada: {} por usuário: {} de IP: {}", dto.getRuleName(), currentUser, clientIp);
 
     return convertToDTO(rule);
   }
@@ -116,6 +121,9 @@ public class RuleConfigurationService {
 
     rule = ruleConfigRepository.save(rule);
 
+    String currentUser = securityContextService.getCurrentUsernameOrSystem();
+    String clientIp = securityContextService.getCurrentClientIp();
+
     historyRepository.save(
         RuleConfigurationHistory.builder()
             .ruleId(rule.getId())
@@ -123,7 +131,8 @@ public class RuleConfigurationService {
             .version(rule.getVersion())
             .previousJson(previous)
             .currentJson(serializeRule(rule))
-            .performedBy("SYSTEM")
+            .performedBy(currentUser)
+            .clientIp(clientIp)
             .build());
 
     auditService.logRuleUpdated(
@@ -131,10 +140,12 @@ public class RuleConfigurationService {
         java.util.Map.of(
             "threshold", dto.getThreshold(),
             "weight", dto.getWeight(),
-            "enabled", dto.getEnabled()),
-        "SYSTEM");
+            "enabled", dto.getEnabled(),
+            "updatedBy", currentUser,
+            "clientIp", clientIp),
+        currentUser);
 
-    log.info("Regra atualizada: {}", rule.getRuleName());
+    log.info("Regra atualizada: {} por usuário: {} de IP: {}", rule.getRuleName(), currentUser, clientIp);
 
     return convertToDTO(rule);
   }
@@ -150,6 +161,9 @@ public class RuleConfigurationService {
 
     ruleConfigRepository.delete(rule);
 
+    String currentUser = securityContextService.getCurrentUsernameOrSystem();
+    String clientIp = securityContextService.getCurrentClientIp();
+
     historyRepository.save(
         RuleConfigurationHistory.builder()
             .ruleId(id)
@@ -157,11 +171,12 @@ public class RuleConfigurationService {
             .version(rule.getVersion())
             .previousJson(previous)
             .currentJson(null)
-            .performedBy("SYSTEM")
+            .performedBy(currentUser)
+            .clientIp(clientIp)
             .build());
 
-    auditService.logRuleDeleted(rule.getRuleName(), "SYSTEM");
-    log.info("Regra deletada: {}", rule.getRuleName());
+    auditService.logRuleDeleted(rule.getRuleName(), currentUser);
+    log.info("Regra deletada: {} por usuário: {} de IP: {}", rule.getRuleName(), currentUser, clientIp);
   }
 
   /** Ativa/desativa uma regra. */
@@ -177,6 +192,9 @@ public class RuleConfigurationService {
     rule.setVersion(rule.getVersion() + 1);
     rule = ruleConfigRepository.save(rule);
 
+    String currentUser = securityContextService.getCurrentUsernameOrSystem();
+    String clientIp = securityContextService.getCurrentClientIp();
+
     historyRepository.save(
         RuleConfigurationHistory.builder()
             .ruleId(rule.getId())
@@ -184,13 +202,14 @@ public class RuleConfigurationService {
             .version(rule.getVersion())
             .previousJson(previous)
             .currentJson(serializeRule(rule))
-            .performedBy("SYSTEM")
+            .performedBy(currentUser)
+            .clientIp(clientIp)
             .build());
 
     auditService.logRuleUpdated(
-        rule.getRuleName(), java.util.Map.of("enabled", rule.getEnabled()), "SYSTEM");
+        rule.getRuleName(), java.util.Map.of("enabled", rule.getEnabled(), "toggledBy", currentUser), currentUser);
 
-    log.info("Regra alternada: {} - Habilitada: {}", rule.getRuleName(), rule.getEnabled());
+    log.info("Regra alternada: {} - Habilitada: {} por usuário: {}", rule.getRuleName(), rule.getEnabled(), currentUser);
 
     return convertToDTO(rule);
   }
@@ -212,6 +231,9 @@ public class RuleConfigurationService {
     rule.setVersion(rule.getVersion() + 1);
     rule = ruleConfigRepository.save(rule);
 
+    String currentUser = securityContextService.getCurrentUsernameOrSystem();
+    String clientIp = securityContextService.getCurrentClientIp();
+
     historyRepository.save(
         RuleConfigurationHistory.builder()
             .ruleId(rule.getId())
@@ -219,13 +241,14 @@ public class RuleConfigurationService {
             .version(rule.getVersion())
             .previousJson(previous)
             .currentJson(serializeRule(rule))
-            .performedBy("SYSTEM")
+            .performedBy(currentUser)
+            .clientIp(clientIp)
             .build());
 
     auditService.logRuleUpdated(
-        rule.getRuleName(), java.util.Map.of("enabled", rule.getEnabled()), "SYSTEM");
+        rule.getRuleName(), java.util.Map.of("enabled", rule.getEnabled(), "setBy", currentUser), currentUser);
 
-    log.info("Regra setEnabled: {} - Habilitada: {}", rule.getRuleName(), rule.getEnabled());
+    log.info("Regra setEnabled: {} - Habilitada: {} por usuário: {}", rule.getRuleName(), rule.getEnabled(), currentUser);
 
     return convertToDTO(rule);
   }
