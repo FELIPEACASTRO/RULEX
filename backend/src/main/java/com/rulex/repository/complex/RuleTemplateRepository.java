@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 /** Repositório para templates de regras. */
@@ -27,7 +28,8 @@ public interface RuleTemplateRepository extends JpaRepository<RuleTemplate, UUID
   List<RuleTemplate> findByIsSystemFalseOrderByNameAsc();
 
   /** Busca todas as categorias distintas */
-  List<String> findDistinctCategory();
+  @Query("SELECT DISTINCT r.category FROM RuleTemplate r WHERE r.category IS NOT NULL ORDER BY r.category")
+  List<String> findDistinctCategories();
 
   /** Verifica se existe template com determinado nome */
   boolean existsByName(String name);
