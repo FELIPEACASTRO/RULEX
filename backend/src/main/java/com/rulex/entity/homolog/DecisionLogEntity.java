@@ -5,7 +5,9 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(
@@ -38,18 +40,22 @@ public class DecisionLogEntity {
   private Integer currencyCode;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+  @Column(nullable = false, columnDefinition = "decision_outcome")
   private DecisionOutcome decision;
 
   @Column(name = "risk_score", nullable = false)
   private Integer riskScore;
 
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "triggered_rules_json", nullable = false, columnDefinition = "jsonb")
   private String triggeredRulesJson;
 
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "explain_json", nullable = false, columnDefinition = "jsonb")
   private String explainJson;
 
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "payload_json", nullable = false, columnDefinition = "jsonb")
   private String payloadJson;
 

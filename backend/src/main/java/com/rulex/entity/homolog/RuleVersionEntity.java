@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(
@@ -29,7 +31,8 @@ public class RuleVersionEntity {
   private Integer version;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+  @Column(nullable = false, columnDefinition = "rule_status")
   private RuleStatus status;
 
   @Column(nullable = false)
@@ -39,7 +42,8 @@ public class RuleVersionEntity {
   private Integer severity;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+  @Column(nullable = false, columnDefinition = "decision_outcome")
   private DecisionOutcome decision;
 
   @Column(name = "reason_template", nullable = false)
@@ -49,9 +53,11 @@ public class RuleVersionEntity {
   private String[] fieldsUsed;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+  @Column(nullable = false, columnDefinition = "logic_operator")
   private LogicOperator logic;
 
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "conditions_json", nullable = false, columnDefinition = "jsonb")
   private String conditionsJson;
 
