@@ -10,7 +10,6 @@ import com.rulex.repository.TransactionRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -22,8 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Serviço para simulação e teste de regras.
- * Permite testar regras antes de ativá-las e fazer backtesting.
+ * Serviço para simulação e teste de regras. Permite testar regras antes de ativá-las e fazer
+ * backtesting.
  */
 @Service
 @RequiredArgsConstructor
@@ -35,9 +34,7 @@ public class RuleSimulationService {
   private final TransactionRepository transactionRepository;
   private final ObjectMapper objectMapper;
 
-  /**
-   * Simula uma regra contra um payload de teste.
-   */
+  /** Simula uma regra contra um payload de teste. */
   public SimulationResult simulateRule(RuleConfigurationDTO rule, TransactionRequest testPayload) {
     log.info("Simulando regra: {} contra payload de teste", rule.getRuleName());
 
@@ -76,9 +73,12 @@ public class RuleSimulationService {
       triggered = allConditionsMet;
     }
 
-    String reason = triggered
-        ? String.format("Regra disparada com classificação %s e peso %d", rule.getClassification(), rule.getWeight())
-        : "Condições não atendidas";
+    String reason =
+        triggered
+            ? String.format(
+                "Regra disparada com classificação %s e peso %d",
+                rule.getClassification(), rule.getWeight())
+            : "Condições não atendidas";
 
     return SimulationResult.builder()
         .ruleName(rule.getRuleName())
@@ -92,19 +92,26 @@ public class RuleSimulationService {
         .build();
   }
 
-  /**
-   * Faz backtesting de uma regra contra transações históricas.
-   */
-  public BacktestResult backtestRule(Long ruleId, LocalDateTime startDate, LocalDateTime endDate, int sampleSize) {
-    log.info("Iniciando backtest da regra {} de {} a {} com amostra de {}", ruleId, startDate, endDate, sampleSize);
+  /** Faz backtesting de uma regra contra transações históricas. */
+  public BacktestResult backtestRule(
+      Long ruleId, LocalDateTime startDate, LocalDateTime endDate, int sampleSize) {
+    log.info(
+        "Iniciando backtest da regra {} de {} a {} com amostra de {}",
+        ruleId,
+        startDate,
+        endDate,
+        sampleSize);
 
-    RuleConfiguration rule = ruleConfigRepository.findById(ruleId)
-        .orElseThrow(() -> new IllegalArgumentException("Regra não encontrada: " + ruleId));
+    RuleConfiguration rule =
+        ruleConfigRepository
+            .findById(ruleId)
+            .orElseThrow(() -> new IllegalArgumentException("Regra não encontrada: " + ruleId));
 
     RuleConfigurationDTO ruleDto = convertToDTO(rule);
 
     // Buscar transações do período (limitado por sample size)
-    List<TransactionRequest> transactions = getHistoricalTransactions(startDate, endDate, sampleSize);
+    List<TransactionRequest> transactions =
+        getHistoricalTransactions(startDate, endDate, sampleSize);
 
     long totalEvaluated = 0;
     long totalTriggered = 0;
@@ -155,11 +162,11 @@ public class RuleSimulationService {
         .build();
   }
 
-  /**
-   * Compara duas versões de uma regra.
-   */
-  public ComparisonResult compareRules(RuleConfigurationDTO ruleA, RuleConfigurationDTO ruleB,
-                                        List<TransactionRequest> testPayloads) {
+  /** Compara duas versões de uma regra. */
+  public ComparisonResult compareRules(
+      RuleConfigurationDTO ruleA,
+      RuleConfigurationDTO ruleB,
+      List<TransactionRequest> testPayloads) {
     log.info("Comparando regras: {} vs {}", ruleA.getRuleName(), ruleB.getRuleName());
 
     int triggeredByA = 0;
@@ -183,11 +190,12 @@ public class RuleSimulationService {
       }
 
       if (details.size() < 20) {
-        details.add(ComparisonDetail.builder()
-            .transactionId(payload.getExternalTransactionId())
-            .triggeredByA(resultA.isTriggered())
-            .triggeredByB(resultB.isTriggered())
-            .build());
+        details.add(
+            ComparisonDetail.builder()
+                .transactionId(payload.getExternalTransactionId())
+                .triggeredByA(resultA.isTriggered())
+                .triggeredByB(resultB.isTriggered())
+                .build());
       }
     }
 
@@ -203,10 +211,9 @@ public class RuleSimulationService {
         .build();
   }
 
-  /**
-   * Avalia uma condição individual.
-   */
-  private ConditionResult evaluateCondition(RuleConditionDTO condition, TransactionRequest payload) {
+  /** Avalia uma condição individual. */
+  private ConditionResult evaluateCondition(
+      RuleConditionDTO condition, TransactionRequest payload) {
     String field = condition.getField();
     String operator = condition.getOperator();
     String expectedValue = condition.getValue();
@@ -223,9 +230,7 @@ public class RuleSimulationService {
         .build();
   }
 
-  /**
-   * Obtém o valor de um campo do payload.
-   */
+  /** Obtém o valor de um campo do payload. */
   private Object getFieldValue(TransactionRequest payload, String field) {
     if (field == null || payload == null) {
       return null;
@@ -242,9 +247,7 @@ public class RuleSimulationService {
     }
   }
 
-  /**
-   * Avalia um operador de comparação.
-   */
+  /** Avalia um operador de comparação. */
   private boolean evaluateOperator(Object actual, String operator, String expected) {
     if (operator == null) {
       return false;
@@ -346,7 +349,8 @@ public class RuleSimulationService {
     return false;
   }
 
-  private List<TransactionRequest> getHistoricalTransactions(LocalDateTime startDate, LocalDateTime endDate, int limit) {
+  private List<TransactionRequest> getHistoricalTransactions(
+      LocalDateTime startDate, LocalDateTime endDate, int limit) {
     // Simplificado - em produção, buscaria do repositório
     return new ArrayList<>();
   }
@@ -355,9 +359,12 @@ public class RuleSimulationService {
     List<RuleConditionDTO> conditions = new ArrayList<>();
     try {
       if (rule.getConditionsJson() != null && !rule.getConditionsJson().isBlank()) {
-        conditions = objectMapper.readValue(
-            rule.getConditionsJson(),
-            objectMapper.getTypeFactory().constructCollectionType(List.class, RuleConditionDTO.class));
+        conditions =
+            objectMapper.readValue(
+                rule.getConditionsJson(),
+                objectMapper
+                    .getTypeFactory()
+                    .constructCollectionType(List.class, RuleConditionDTO.class));
       }
     } catch (Exception e) {
       log.warn("Erro ao parsear condições: {}", e.getMessage());

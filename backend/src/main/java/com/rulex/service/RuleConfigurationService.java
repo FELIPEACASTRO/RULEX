@@ -92,7 +92,8 @@ public class RuleConfigurationService {
             .build());
 
     auditService.logRuleCreated(dto.getRuleName(), currentUser);
-    log.info("Regra criada: {} por usuário: {} de IP: {}", dto.getRuleName(), currentUser, clientIp);
+    log.info(
+        "Regra criada: {} por usuário: {} de IP: {}", dto.getRuleName(), currentUser, clientIp);
 
     return convertToDTO(rule);
   }
@@ -145,7 +146,11 @@ public class RuleConfigurationService {
             "clientIp", clientIp),
         currentUser);
 
-    log.info("Regra atualizada: {} por usuário: {} de IP: {}", rule.getRuleName(), currentUser, clientIp);
+    log.info(
+        "Regra atualizada: {} por usuário: {} de IP: {}",
+        rule.getRuleName(),
+        currentUser,
+        clientIp);
 
     return convertToDTO(rule);
   }
@@ -176,7 +181,8 @@ public class RuleConfigurationService {
             .build());
 
     auditService.logRuleDeleted(rule.getRuleName(), currentUser);
-    log.info("Regra deletada: {} por usuário: {} de IP: {}", rule.getRuleName(), currentUser, clientIp);
+    log.info(
+        "Regra deletada: {} por usuário: {} de IP: {}", rule.getRuleName(), currentUser, clientIp);
   }
 
   /** Ativa/desativa uma regra. */
@@ -207,9 +213,15 @@ public class RuleConfigurationService {
             .build());
 
     auditService.logRuleUpdated(
-        rule.getRuleName(), java.util.Map.of("enabled", rule.getEnabled(), "toggledBy", currentUser), currentUser);
+        rule.getRuleName(),
+        java.util.Map.of("enabled", rule.getEnabled(), "toggledBy", currentUser),
+        currentUser);
 
-    log.info("Regra alternada: {} - Habilitada: {} por usuário: {}", rule.getRuleName(), rule.getEnabled(), currentUser);
+    log.info(
+        "Regra alternada: {} - Habilitada: {} por usuário: {}",
+        rule.getRuleName(),
+        rule.getEnabled(),
+        currentUser);
 
     return convertToDTO(rule);
   }
@@ -246,9 +258,15 @@ public class RuleConfigurationService {
             .build());
 
     auditService.logRuleUpdated(
-        rule.getRuleName(), java.util.Map.of("enabled", rule.getEnabled(), "setBy", currentUser), currentUser);
+        rule.getRuleName(),
+        java.util.Map.of("enabled", rule.getEnabled(), "setBy", currentUser),
+        currentUser);
 
-    log.info("Regra setEnabled: {} - Habilitada: {} por usuário: {}", rule.getRuleName(), rule.getEnabled(), currentUser);
+    log.info(
+        "Regra setEnabled: {} - Habilitada: {} por usuário: {}",
+        rule.getRuleName(),
+        rule.getEnabled(),
+        currentUser);
 
     return convertToDTO(rule);
   }

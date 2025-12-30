@@ -10,8 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Entidade para métricas de performance e eficácia das regras.
- * Permite análise de falsos positivos e otimização de regras.
+ * Entidade para métricas de performance e eficácia das regras. Permite análise de falsos positivos
+ * e otimização de regras.
  */
 @Entity
 @Table(
@@ -21,7 +21,9 @@ import lombok.NoArgsConstructor;
       @Index(name = "idx_rule_metrics_rule_id", columnList = "rule_id")
     },
     uniqueConstraints = {
-      @UniqueConstraint(name = "uk_rule_metrics_rule_date", columnNames = {"rule_id", "metric_date"})
+      @UniqueConstraint(
+          name = "uk_rule_metrics_rule_date",
+          columnNames = {"rule_id", "metric_date"})
     })
 @Data
 @NoArgsConstructor
@@ -88,9 +90,7 @@ public class RuleMetrics {
     updatedAt = LocalDateTime.now();
   }
 
-  /**
-   * Calcula a taxa de disparo (trigger rate).
-   */
+  /** Calcula a taxa de disparo (trigger rate). */
   public double getTriggerRate() {
     if (totalEvaluations == null || totalEvaluations == 0) {
       return 0.0;
@@ -98,9 +98,7 @@ public class RuleMetrics {
     return (double) totalTriggered / totalEvaluations * 100;
   }
 
-  /**
-   * Calcula a taxa de falsos positivos.
-   */
+  /** Calcula a taxa de falsos positivos. */
   public double getFalsePositiveRate() {
     if (totalTriggered == null || totalTriggered == 0) {
       return 0.0;
@@ -108,9 +106,7 @@ public class RuleMetrics {
     return (double) falsePositives / totalTriggered * 100;
   }
 
-  /**
-   * Calcula a precisão da regra.
-   */
+  /** Calcula a precisão da regra. */
   public double getPrecision() {
     if (totalTriggered == null || totalTriggered == 0) {
       return 0.0;
@@ -118,9 +114,7 @@ public class RuleMetrics {
     return (double) truePositives / totalTriggered * 100;
   }
 
-  /**
-   * Incrementa contadores de avaliação.
-   */
+  /** Incrementa contadores de avaliação. */
   public void incrementEvaluation(boolean triggered, BigDecimal amount) {
     this.totalEvaluations++;
     if (triggered) {
@@ -131,16 +125,12 @@ public class RuleMetrics {
     }
   }
 
-  /**
-   * Registra feedback de falso positivo.
-   */
+  /** Registra feedback de falso positivo. */
   public void recordFalsePositive() {
     this.falsePositives++;
   }
 
-  /**
-   * Registra feedback de verdadeiro positivo.
-   */
+  /** Registra feedback de verdadeiro positivo. */
   public void recordTruePositive() {
     this.truePositives++;
   }

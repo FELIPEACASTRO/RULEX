@@ -10,46 +10,32 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-/**
- * Repositório para listas de bloqueio/permissão.
- */
+/** Repositório para listas de bloqueio/permissão. */
 @Repository
 public interface RuleListRepository extends JpaRepository<RuleList, Long> {
 
-  /**
-   * Busca lista por nome.
-   */
+  /** Busca lista por nome. */
   Optional<RuleList> findByListName(String listName);
 
-  /**
-   * Busca listas por tipo.
-   */
+  /** Busca listas por tipo. */
   List<RuleList> findByListTypeAndIsActiveTrueOrderByListNameAsc(ListType listType);
 
-  /**
-   * Busca listas por tipo de entidade.
-   */
+  /** Busca listas por tipo de entidade. */
   List<RuleList> findByEntityTypeAndIsActiveTrueOrderByListNameAsc(EntityType entityType);
 
-  /**
-   * Busca listas ativas.
-   */
+  /** Busca listas ativas. */
   List<RuleList> findByIsActiveTrueOrderByListNameAsc();
 
-  /**
-   * Verifica se existe lista com o nome.
-   */
+  /** Verifica se existe lista com o nome. */
   boolean existsByListName(String listName);
 
-  /**
-   * Busca blacklists ativas para um tipo de entidade.
-   */
-  @Query("SELECT l FROM RuleList l WHERE l.listType = 'BLACKLIST' AND l.entityType = :entityType AND l.isActive = true")
+  /** Busca blacklists ativas para um tipo de entidade. */
+  @Query(
+      "SELECT l FROM RuleList l WHERE l.listType = 'BLACKLIST' AND l.entityType = :entityType AND l.isActive = true")
   List<RuleList> findActiveBlacklistsByEntityType(@Param("entityType") EntityType entityType);
 
-  /**
-   * Busca whitelists ativas para um tipo de entidade.
-   */
-  @Query("SELECT l FROM RuleList l WHERE l.listType = 'WHITELIST' AND l.entityType = :entityType AND l.isActive = true")
+  /** Busca whitelists ativas para um tipo de entidade. */
+  @Query(
+      "SELECT l FROM RuleList l WHERE l.listType = 'WHITELIST' AND l.entityType = :entityType AND l.isActive = true")
   List<RuleList> findActiveWhitelistsByEntityType(@Param("entityType") EntityType entityType);
 }

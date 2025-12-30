@@ -10,8 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Entidade para listas de bloqueio/permissão (blacklist/whitelist).
- * Permite gerenciar listas de PANs, merchants, países, etc.
+ * Entidade para listas de bloqueio/permissão (blacklist/whitelist). Permite gerenciar listas de
+ * PANs, merchants, países, etc.
  */
 @Entity
 @Table(name = "rule_lists")

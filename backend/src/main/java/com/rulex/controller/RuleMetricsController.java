@@ -11,9 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Controller para métricas de regras.
- */
+/** Controller para métricas de regras. */
 @RestController
 @RequestMapping("/rules/metrics")
 @RequiredArgsConstructor
@@ -22,14 +20,13 @@ public class RuleMetricsController {
 
   private final RuleMetricsService metricsService;
 
-  /**
-   * Obtém dashboard de métricas.
-   * GET /api/rules/metrics/dashboard
-   */
+  /** Obtém dashboard de métricas. GET /api/rules/metrics/dashboard */
   @GetMapping("/dashboard")
   public ResponseEntity<MetricsDashboard> getDashboard(
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate startDate,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate endDate) {
 
     if (startDate == null) {
       startDate = LocalDate.now().minusDays(30);
@@ -43,15 +40,14 @@ public class RuleMetricsController {
     return ResponseEntity.ok(dashboard);
   }
 
-  /**
-   * Obtém métricas de uma regra específica.
-   * GET /api/rules/metrics/{ruleId}
-   */
+  /** Obtém métricas de uma regra específica. GET /api/rules/metrics/{ruleId} */
   @GetMapping("/{ruleId}")
   public ResponseEntity<RuleMetricsSummary> getRuleMetrics(
       @PathVariable Long ruleId,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate startDate,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate endDate) {
 
     if (startDate == null) {
       startDate = LocalDate.now().minusDays(30);
@@ -65,14 +61,13 @@ public class RuleMetricsController {
     return ResponseEntity.ok(metrics);
   }
 
-  /**
-   * Obtém métricas de todas as regras.
-   * GET /api/rules/metrics/all
-   */
+  /** Obtém métricas de todas as regras. GET /api/rules/metrics/all */
   @GetMapping("/all")
   public ResponseEntity<List<RuleMetricsSummary>> getAllRulesMetrics(
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate startDate,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate endDate) {
 
     if (startDate == null) {
       startDate = LocalDate.now().minusDays(30);
@@ -86,10 +81,7 @@ public class RuleMetricsController {
     return ResponseEntity.ok(metrics);
   }
 
-  /**
-   * Registra feedback de falso positivo.
-   * POST /api/rules/metrics/{ruleId}/false-positive
-   */
+  /** Registra feedback de falso positivo. POST /api/rules/metrics/{ruleId}/false-positive */
   @PostMapping("/{ruleId}/false-positive")
   public ResponseEntity<Void> recordFalsePositive(@PathVariable Long ruleId) {
     log.info("Registrando falso positivo para regra {}", ruleId);
@@ -97,10 +89,7 @@ public class RuleMetricsController {
     return ResponseEntity.ok().build();
   }
 
-  /**
-   * Registra feedback de verdadeiro positivo.
-   * POST /api/rules/metrics/{ruleId}/true-positive
-   */
+  /** Registra feedback de verdadeiro positivo. POST /api/rules/metrics/{ruleId}/true-positive */
   @PostMapping("/{ruleId}/true-positive")
   public ResponseEntity<Void> recordTruePositive(@PathVariable Long ruleId) {
     log.info("Registrando verdadeiro positivo para regra {}", ruleId);

@@ -7,9 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Entidade para entradas das listas de bloqueio/permissão.
- */
+/** Entidade para entradas das listas de bloqueio/permissão. */
 @Entity
 @Table(
     name = "rule_list_entries",
@@ -58,9 +56,7 @@ public class RuleListEntry {
     }
   }
 
-  /**
-   * Verifica se a entrada está expirada.
-   */
+  /** Verifica se a entrada está expirada. */
   public boolean isExpired() {
     if (expiresAt == null) {
       return false;
@@ -68,9 +64,7 @@ public class RuleListEntry {
     return LocalDateTime.now().isAfter(expiresAt);
   }
 
-  /**
-   * Verifica se a entrada está ativa e não expirada.
-   */
+  /** Verifica se a entrada está ativa e não expirada. */
   public boolean isEffective() {
     return Boolean.TRUE.equals(isActive) && !isExpired();
   }

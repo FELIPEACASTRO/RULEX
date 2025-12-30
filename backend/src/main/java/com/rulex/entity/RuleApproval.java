@@ -8,8 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Entidade para workflow de aprovação de regras (4 olhos).
- * Implementa segregação de funções para compliance.
+ * Entidade para workflow de aprovação de regras (4 olhos). Implementa segregação de funções para
+ * compliance.
  */
 @Entity
 @Table(

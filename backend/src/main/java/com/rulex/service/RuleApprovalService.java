@@ -19,8 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Serviço para workflow de aprovação de regras (4 olhos).
- * Implementa segregação de funções para compliance.
+ * Serviço para workflow de aprovação de regras (4 olhos). Implementa segregação de funções para
+ * compliance.
  */
 @Service
 @RequiredArgsConstructor
@@ -34,14 +34,15 @@ public class RuleApprovalService {
   private final AuditService auditService;
   private final ObjectMapper objectMapper;
 
-  /**
-   * Solicita aprovação para criar uma regra.
-   */
+  /** Solicita aprovação para criar uma regra. */
   public RuleApproval requestCreateApproval(RuleConfigurationDTO ruleDto) {
     String currentUser = securityContextService.getCurrentUsernameOrSystem();
     String clientIp = securityContextService.getCurrentClientIp();
 
-    log.info("Usuário {} solicitando aprovação para criar regra: {}", currentUser, ruleDto.getRuleName());
+    log.info(
+        "Usuário {} solicitando aprovação para criar regra: {}",
+        currentUser,
+        ruleDto.getRuleName());
 
     // Verificar se já existe solicitação pendente
     if (approvalRepository.existsByRuleIdAndStatus(0L, ApprovalStatus.PENDING)) {
@@ -50,15 +51,16 @@ public class RuleApprovalService {
 
     String payloadJson = serializePayload(ruleDto);
 
-    RuleApproval approval = RuleApproval.builder()
-        .ruleId(0L) // Será atualizado após criação
-        .ruleName(ruleDto.getRuleName())
-        .actionType(ActionType.CREATE)
-        .requestedBy(currentUser)
-        .status(ApprovalStatus.PENDING)
-        .payloadJson(payloadJson)
-        .clientIp(clientIp)
-        .build();
+    RuleApproval approval =
+        RuleApproval.builder()
+            .ruleId(0L) // Será atualizado após criação
+            .ruleName(ruleDto.getRuleName())
+            .actionType(ActionType.CREATE)
+            .requestedBy(currentUser)
+            .status(ApprovalStatus.PENDING)
+            .payloadJson(payloadJson)
+            .clientIp(clientIp)
+            .build();
 
     approval = approvalRepository.save(approval);
 
@@ -68,9 +70,7 @@ public class RuleApprovalService {
     return approval;
   }
 
-  /**
-   * Solicita aprovação para atualizar uma regra.
-   */
+  /** Solicita aprovação para atualizar uma regra. */
   public RuleApproval requestUpdateApproval(Long ruleId, RuleConfigurationDTO ruleDto) {
     String currentUser = securityContextService.getCurrentUsernameOrSystem();
     String clientIp = securityContextService.getCurrentClientIp();
@@ -87,27 +87,28 @@ public class RuleApprovalService {
 
     String payloadJson = serializePayload(ruleDto);
 
-    RuleApproval approval = RuleApproval.builder()
-        .ruleId(ruleId)
-        .ruleName(ruleDto.getRuleName())
-        .actionType(ActionType.UPDATE)
-        .requestedBy(currentUser)
-        .status(ApprovalStatus.PENDING)
-        .payloadJson(payloadJson)
-        .clientIp(clientIp)
-        .build();
+    RuleApproval approval =
+        RuleApproval.builder()
+            .ruleId(ruleId)
+            .ruleName(ruleDto.getRuleName())
+            .actionType(ActionType.UPDATE)
+            .requestedBy(currentUser)
+            .status(ApprovalStatus.PENDING)
+            .payloadJson(payloadJson)
+            .clientIp(clientIp)
+            .build();
 
     approval = approvalRepository.save(approval);
 
-    auditService.logRuleUpdated("APPROVAL_REQUEST:" + ruleDto.getRuleName(), 
-        java.util.Map.of("action", "UPDATE_REQUEST"), currentUser);
+    auditService.logRuleUpdated(
+        "APPROVAL_REQUEST:" + ruleDto.getRuleName(),
+        java.util.Map.of("action", "UPDATE_REQUEST"),
+        currentUser);
 
     return approval;
   }
 
-  /**
-   * Solicita aprovação para excluir uma regra.
-   */
+  /** Solicita aprovação para excluir uma regra. */
   public RuleApproval requestDeleteApproval(Long ruleId) {
     String currentUser = securityContextService.getCurrentUsernameOrSystem();
     String clientIp = securityContextService.getCurrentClientIp();
@@ -121,14 +122,15 @@ public class RuleApprovalService {
       throw new IllegalStateException("Já existe uma solicitação pendente para esta regra");
     }
 
-    RuleApproval approval = RuleApproval.builder()
-        .ruleId(ruleId)
-        .ruleName(rule.getRuleName())
-        .actionType(ActionType.DELETE)
-        .requestedBy(currentUser)
-        .status(ApprovalStatus.PENDING)
-        .clientIp(clientIp)
-        .build();
+    RuleApproval approval =
+        RuleApproval.builder()
+            .ruleId(ruleId)
+            .ruleName(rule.getRuleName())
+            .actionType(ActionType.DELETE)
+            .requestedBy(currentUser)
+            .status(ApprovalStatus.PENDING)
+            .clientIp(clientIp)
+            .build();
 
     approval = approvalRepository.save(approval);
 
@@ -137,16 +139,16 @@ public class RuleApprovalService {
     return approval;
   }
 
-  /**
-   * Aprova uma solicitação.
-   */
+  /** Aprova uma solicitação. */
   public ApprovalResult approve(Long approvalId, String comments) {
     String currentUser = securityContextService.getCurrentUsernameOrSystem();
 
     log.info("Usuário {} aprovando solicitação: {}", currentUser, approvalId);
 
-    RuleApproval approval = approvalRepository.findById(approvalId)
-        .orElseThrow(() -> new NotFoundException("Solicitação não encontrada"));
+    RuleApproval approval =
+        approvalRepository
+            .findById(approvalId)
+            .orElseThrow(() -> new NotFoundException("Solicitação não encontrada"));
 
     // Verificar se está pendente
     if (approval.getStatus() != ApprovalStatus.PENDING) {
@@ -168,7 +170,8 @@ public class RuleApprovalService {
     approval.setComments(comments);
     approvalRepository.save(approval);
 
-    auditService.logRuleUpdated("APPROVAL_APPROVED:" + approval.getRuleName(),
+    auditService.logRuleUpdated(
+        "APPROVAL_APPROVED:" + approval.getRuleName(),
         java.util.Map.of("approvalId", approvalId, "action", approval.getActionType().name()),
         currentUser);
 
@@ -180,16 +183,16 @@ public class RuleApprovalService {
         .build();
   }
 
-  /**
-   * Rejeita uma solicitação.
-   */
+  /** Rejeita uma solicitação. */
   public RuleApproval reject(Long approvalId, String reason) {
     String currentUser = securityContextService.getCurrentUsernameOrSystem();
 
     log.info("Usuário {} rejeitando solicitação: {}", currentUser, approvalId);
 
-    RuleApproval approval = approvalRepository.findById(approvalId)
-        .orElseThrow(() -> new NotFoundException("Solicitação não encontrada"));
+    RuleApproval approval =
+        approvalRepository
+            .findById(approvalId)
+            .orElseThrow(() -> new NotFoundException("Solicitação não encontrada"));
 
     if (approval.getStatus() != ApprovalStatus.PENDING) {
       throw new IllegalStateException("Solicitação não está pendente");
@@ -202,21 +205,22 @@ public class RuleApprovalService {
 
     approval = approvalRepository.save(approval);
 
-    auditService.logRuleUpdated("APPROVAL_REJECTED:" + approval.getRuleName(),
+    auditService.logRuleUpdated(
+        "APPROVAL_REJECTED:" + approval.getRuleName(),
         java.util.Map.of("approvalId", approvalId, "reason", reason),
         currentUser);
 
     return approval;
   }
 
-  /**
-   * Cancela uma solicitação (apenas pelo solicitante).
-   */
+  /** Cancela uma solicitação (apenas pelo solicitante). */
   public RuleApproval cancel(Long approvalId) {
     String currentUser = securityContextService.getCurrentUsernameOrSystem();
 
-    RuleApproval approval = approvalRepository.findById(approvalId)
-        .orElseThrow(() -> new NotFoundException("Solicitação não encontrada"));
+    RuleApproval approval =
+        approvalRepository
+            .findById(approvalId)
+            .orElseThrow(() -> new NotFoundException("Solicitação não encontrada"));
 
     if (approval.getStatus() != ApprovalStatus.PENDING) {
       throw new IllegalStateException("Solicitação não está pendente");
@@ -232,38 +236,29 @@ public class RuleApprovalService {
     return approvalRepository.save(approval);
   }
 
-  /**
-   * Lista solicitações pendentes.
-   */
+  /** Lista solicitações pendentes. */
   public List<RuleApproval> listPendingApprovals() {
     return approvalRepository.findByStatusOrderByRequestedAtDesc(ApprovalStatus.PENDING);
   }
 
-  /**
-   * Lista solicitações pendentes paginadas.
-   */
+  /** Lista solicitações pendentes paginadas. */
   public Page<RuleApproval> listPendingApprovals(Pageable pageable) {
     return approvalRepository.findByStatus(ApprovalStatus.PENDING, pageable);
   }
 
-  /**
-   * Conta solicitações pendentes.
-   */
+  /** Conta solicitações pendentes. */
   public long countPendingApprovals() {
     return approvalRepository.countByStatus(ApprovalStatus.PENDING);
   }
 
-  /**
-   * Busca solicitação por ID.
-   */
+  /** Busca solicitação por ID. */
   public RuleApproval getApprovalById(Long id) {
-    return approvalRepository.findById(id)
+    return approvalRepository
+        .findById(id)
         .orElseThrow(() -> new NotFoundException("Solicitação não encontrada"));
   }
 
-  /**
-   * Lista histórico de aprovações de uma regra.
-   */
+  /** Lista histórico de aprovações de uma regra. */
   public List<RuleApproval> getApprovalHistory(Long ruleId) {
     return approvalRepository.findByRuleIdOrderByRequestedAtDesc(ruleId);
   }

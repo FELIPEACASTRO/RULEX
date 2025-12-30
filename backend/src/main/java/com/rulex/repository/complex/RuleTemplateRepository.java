@@ -28,7 +28,8 @@ public interface RuleTemplateRepository extends JpaRepository<RuleTemplate, UUID
   List<RuleTemplate> findByIsSystemFalseOrderByNameAsc();
 
   /** Busca todas as categorias distintas */
-  @Query("SELECT DISTINCT r.category FROM RuleTemplate r WHERE r.category IS NOT NULL ORDER BY r.category")
+  @Query(
+      "SELECT DISTINCT r.category FROM RuleTemplate r WHERE r.category IS NOT NULL ORDER BY r.category")
   List<String> findDistinctCategories();
 
   /** Verifica se existe template com determinado nome */

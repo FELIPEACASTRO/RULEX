@@ -46,7 +46,11 @@ class RuleConfigurationServiceTest {
     objectMapper = new ObjectMapper();
     ruleConfigurationService =
         new RuleConfigurationService(
-            ruleConfigRepository, historyRepository, auditService, securityContextService, objectMapper);
+            ruleConfigRepository,
+            historyRepository,
+            auditService,
+            securityContextService,
+            objectMapper);
     // Default mock behavior for security context
     lenient().when(securityContextService.getCurrentUsernameOrSystem()).thenReturn("test-user");
     lenient().when(securityContextService.getCurrentClientIp()).thenReturn("127.0.0.1");
