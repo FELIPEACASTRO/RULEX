@@ -63,7 +63,7 @@ public class RuleConfiguration {
   private String parameters;
 
   /** Condições genéricas da regra (JSON array de {field, operator, value}). */
-  @Column(columnDefinition = "TEXT")
+  @Column(columnDefinition = "jsonb")
   private String conditionsJson;
 
   /** Operador lógico para combinar condições. */
