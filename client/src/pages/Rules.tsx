@@ -267,7 +267,16 @@ export default function Rules() {
 
   const handleSave = async () => {
     if (!validateForm()) {
-      toast.error('Corrija os erros no formulário antes de salvar');
+      // Mostrar mensagem mais específica sobre os erros
+      const errorKeys = Object.keys(validationErrors);
+      const errorMessages = Object.values(validationErrors);
+      if (errorMessages.length === 1) {
+        toast.error(errorMessages[0]);
+      } else if (errorMessages.length > 1) {
+        toast.error(`Corrija ${errorMessages.length} erros no formulário: ${errorMessages.slice(0, 2).join(', ')}${errorMessages.length > 2 ? '...' : ''}`);
+      } else {
+        toast.error('Corrija os erros no formulário antes de salvar');
+      }
       return;
     }
     saveRule.mutate();
@@ -479,7 +488,14 @@ export default function Rules() {
                       })
                     }
                     placeholder="0"
+                    aria-invalid={!!validationErrors.threshold}
+                    className={validationErrors.threshold ? 'border-red-500 focus:ring-red-500' : ''}
                   />
+                  {validationErrors.threshold && (
+                    <p className="mt-1 text-xs text-red-500" role="alert">
+                      {validationErrors.threshold}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="weight" className="block text-sm font-medium text-foreground mb-2">
@@ -498,7 +514,14 @@ export default function Rules() {
                       })
                     }
                     placeholder="0"
+                    aria-invalid={!!validationErrors.weight}
+                    className={validationErrors.weight ? 'border-red-500 focus:ring-red-500' : ''}
                   />
+                  {validationErrors.weight && (
+                    <p className="mt-1 text-xs text-red-500" role="alert">
+                      {validationErrors.weight}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -636,7 +659,14 @@ export default function Rules() {
                             }}
                             placeholder="Ex: consumerAuthenticationScore"
                             list="rule-condition-fields"
+                            aria-invalid={!!validationErrors[`condition_${idx}_field`]}
+                            className={validationErrors[`condition_${idx}_field`] ? 'border-red-500 focus:ring-red-500' : ''}
                           />
+                          {validationErrors[`condition_${idx}_field`] && (
+                            <p className="mt-1 text-xs text-red-500" role="alert">
+                              {validationErrors[`condition_${idx}_field`]}
+                            </p>
+                          )}
                           <datalist id="rule-condition-fields">
                             {fieldOptions.map((f) => (
                               <option key={f} value={f} />
@@ -696,7 +726,14 @@ export default function Rules() {
                                     ? 'Ex: 10,20 (ou 10..20)'
                                     : 'Ex: 10'
                               }
+                              aria-invalid={!!validationErrors[`condition_${idx}_value`]}
+                              className={validationErrors[`condition_${idx}_value`] ? 'border-red-500 focus:ring-red-500' : ''}
                             />
+                          )}
+                          {validationErrors[`condition_${idx}_value`] && (
+                            <p className="mt-1 text-xs text-red-500" role="alert">
+                              {validationErrors[`condition_${idx}_value`]}
+                            </p>
                           )}
                         </div>
                         <div className="sm:col-span-1 flex sm:justify-end">
