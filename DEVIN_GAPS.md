@@ -9,7 +9,7 @@
 | Severidade | Total | Fechados |
 |------------|-------|----------|
 | P0 (Crítico) | 3 | 3 ✅ |
-| P1 (Alto) | 4 | 1 |
+| P1 (Alto) | 4 | 2 ✅ |
 | P2 (Médio) | 3 | 0 |
 
 ---
@@ -135,7 +135,7 @@ const conditionOperators = [
 
 ---
 
-### GAP-006: Frontend usa NE vs backend NEQ
+### GAP-006: Frontend usa NE vs backend NEQ ✅ FECHADO
 **Severidade:** P1
 **Componente:** Frontend - RuleFormDialog
 
@@ -147,7 +147,13 @@ const conditionOperators = [
 
 **Fix:** Alinhar nomenclatura.
 
-**Evidência de Fechamento:** Pendente
+**Evidência de Fechamento:**
+```bash
+# Commit: cae0904
+# Arquivos: javaApi.ts, schema.ts, types.ts
+# NEQ adicionado, NE mantido como legacy
+# Testes: 167 PASS
+```
 
 ---
 
