@@ -1,20 +1,20 @@
 # DEVIN RUNBOOK - RULEX MODO HARDCORE 10/10
 
-## Última Atualização: 2024-12-31 18:36 UTC
+## Última Atualização: 2024-12-31 18:53 UTC
 
 ---
 
 ## PLANO POR FASES
 
-### F0 - AUDITORIA DEVASTADORA ✅ EM PROGRESSO
-**Status:** Mapeamento inicial completo
+### F0 - AUDITORIA DEVASTADORA ✅ COMPLETO
+**Status:** Auditoria completa, gaps identificados e documentados
 **Gates:**
 - [x] Mapear controllers/endpoints
 - [x] Mapear operadores backend
 - [x] Mapear operadores frontend
 - [x] Identificar gaps
-- [ ] Gerar documentação de capacidades reais
-- [ ] Gerar DEVIN_GAPS.md completo
+- [x] Gerar documentação de capacidades reais
+- [x] Gerar DEVIN_GAPS.md completo
 
 ### F1 - POPUP/MODAL 10/10
 **Status:** Pendente
@@ -97,34 +97,45 @@ cd ~/repos/RULEX && cp .env.example .env && docker compose up -d --build
 
 ## ÚLTIMO CHECKPOINT CONCLUÍDO
 
-**Fase:** F0 - Auditoria (parcial)
-**Data:** 2024-12-31 18:36 UTC
+**Fase:** F0 - Auditoria COMPLETA + Correção de P0s
+**Data:** 2024-12-31 18:53 UTC
 **O que foi feito:**
 - Mapeamento de controllers (16 controllers)
 - Mapeamento de operadores backend (42 operadores)
 - Mapeamento de operadores frontend (gaps identificados)
-- Testes passando: 165 frontend + 171 backend = 336 total
+- **TODOS P0s CORRIGIDOS:**
+  - GAP-001: GEO operators adicionados ao ComplexRuleBuilder
+  - GAP-002: REGEX alinhado (MATCHES_REGEX mantido como legacy)
+  - GAP-003: NOT_NULL alinhado (IS_NOT_NULL mantido como legacy)
+- **P1 GAP-006 CORRIGIDO:** NE → NEQ no RuleFormDialog
+- Testes passando: 167 frontend + 171 backend = 338 total
 
 ---
 
 ## PRÓXIMO PASSO
 
-1. Completar documentação de capacidades reais
-2. Gerar DEVIN_GAPS.md com todos os gaps P0/P1/P2
-3. Iniciar F1 - Popup/Modal 10/10
+1. ~~Completar documentação de capacidades reais~~ ✅
+2. ~~Gerar DEVIN_GAPS.md com todos os gaps P0/P1/P2~~ ✅
+3. ~~Corrigir P0s~~ ✅
+4. Continuar com P1s restantes (GAP-005: ReDoS, GAP-007: VelocityService integration)
+5. Iniciar F1 - Popup/Modal 10/10
 
 ---
 
-## GAPS CRÍTICOS IDENTIFICADOS
+## GAPS STATUS
 
-| ID | Severidade | Descrição |
-|----|------------|-----------|
-| GAP-001 | P0 | Frontend ComplexRuleBuilder falta GEO_* operators |
-| GAP-002 | P0 | Frontend usa MATCHES_REGEX vs backend REGEX |
-| GAP-003 | P0 | Frontend usa IS_NOT_NULL vs backend NOT_NULL |
-| GAP-004 | P1 | RuleFormDialog (simples) falta maioria dos operadores avançados |
-| GAP-005 | P1 | Sem validação de ReDoS no REGEX |
-| GAP-006 | P2 | Sem testes E2E Playwright |
+| ID | Severidade | Descrição | Status |
+|----|------------|-----------|--------|
+| GAP-001 | P0 | Frontend ComplexRuleBuilder falta GEO_* operators | ✅ FECHADO |
+| GAP-002 | P0 | Frontend usa MATCHES_REGEX vs backend REGEX | ✅ FECHADO |
+| GAP-003 | P0 | Frontend usa IS_NOT_NULL vs backend NOT_NULL | ✅ FECHADO |
+| GAP-004 | P1 | RuleFormDialog (simples) falta maioria dos operadores avançados | 🔄 Parcial |
+| GAP-005 | P1 | Sem validação de ReDoS no REGEX | ⏳ Pendente |
+| GAP-006 | P1 | Frontend usa NE vs backend NEQ | ✅ FECHADO |
+| GAP-007 | P1 | VelocityService não integrado ao ComplexRuleEvaluator | ⏳ Pendente |
+| GAP-008 | P2 | Sem testes E2E Playwright funcionais | ⏳ Pendente |
+| GAP-009 | P2 | Sem preview JSON no modal de criação | ⏳ Pendente |
+| GAP-010 | P2 | Acessibilidade WCAG/ARIA incompleta nos modais | ⏳ Pendente |
 
 ---
 
