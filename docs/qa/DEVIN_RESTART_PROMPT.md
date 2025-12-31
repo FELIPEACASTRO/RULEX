@@ -1,58 +1,61 @@
-# DEVIN RESTART PROMPT - RULEX HARDCORE AUDIT
+# DEVIN RESTART PROMPT - RULEX
 
 ## Contexto Rápido
-Você é o Devin retomando uma auditoria HARDCORE do RULEX. O objetivo é atingir 10/10 em todos os domínios.
+Você está auditando o RULEX, um motor de regras de fraude com React + Spring Boot.
 
-## Estado Atual
-- **Branch**: cursor/rulex-project-review-1c58
-- **Git Status**: CLEAN (commit c525a79)
-- **Passada Atual**: 3 (Implementação) - quase completa
-- **Scorecard**: 8.1/10
-- **Gaps P0**: 1 aberto (GAP-P0-03), 3 fechados
+## Estado Atual (2024-12-31T23:25:00Z)
 
-## O Que Foi Feito
-1. ✅ PASSADA 1 - Auditoria Estática completa
-2. ✅ PASSADA 2 - Auditoria de Integração completa
-   - Docker Compose + Postgres + Flyway V1-V17
-   - CRUD completo (POST/GET/PUT/DELETE)
-   - Optimistic locking funcionando (409 em conflito)
-   - RBAC verificado (401/403/200)
+### ✅ Concluído
+- PASSADA 1: Auditoria estática completa
+- PASSADA 2: Auditoria de integração completa
+- PASSADA 3: Implementação de P0 completa
+- Stack rodando: `docker compose up -d`
+- 396 testes passando (198 FE + 198 BE)
+- Score: 8.7/10
 
-3. ✅ Implementações concluídas
-   - GAP-P0-01: RuleFormDialog completo (commit b9444c9)
-   - GAP-P0-02: 52 operadores no popup (commit 8fc0d41)
-   - GAP-P0-04: Optimistic locking (commit a92f167)
-   - GAP-P1-01: Limites anti-abuso (commit 88753c6)
+### ⏳ Em Andamento
+- PASSADA 4: Test suite (expandir E2E)
 
-## Próximos Passos
-1. **GAP-P0-03**: Ativar constraint CHECK em V12 (com backfill)
-2. **PASSADA 4**: Criar suite de testes E2E
-3. **GAP-P1-02**: Testes E2E Playwright
-
-## Arquivos Chave
-- RuleFormDialog: `client/src/components/RuleFormDialog/RuleFormDialog.tsx`
-- Backend operators: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java`
-- Migrations: `backend/src/main/resources/db/migration/`
+### 🔲 Pendente para 10/10
+1. Expandir E2E Playwright (CRUD completo, RBAC)
+2. Criar testes unitários por operador (50 operadores)
 
 ## Comandos Úteis
+
 ```bash
-# Verificar status
-cd ~/repos/RULEX && git status
+# Verificar stack
+cd ~/repos/RULEX && docker compose ps
 
-# Rodar testes frontend (198 testes)
+# Rodar testes
 cd ~/repos/RULEX && pnpm test --run
-
-# Rodar testes backend (198 testes)
 cd ~/repos/RULEX && mvn -f backend/pom.xml test
 
-# Subir ambiente
-cd ~/repos/RULEX && docker compose up -d --build
+# Verificar migrations
+docker exec rulex-postgres-1 psql -U postgres -d rulex_db -c "SELECT version, description FROM flyway_schema_history ORDER BY installed_rank;"
+
+# Testar RBAC
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/rules  # 401
+curl -s -o /dev/null -w "%{http_code}" -u analyst:rulex http://localhost:8080/api/rules  # 200
+curl -s -o /dev/null -w "%{http_code}" -u analyst:rulex -X POST http://localhost:8080/api/rules  # 403
 ```
 
-## Restrições
-- NÃO alterar payload de entrada
-- MANTER git limpo
-- PROVAR tudo com evidências
+## Arquivos Importantes
 
-## Última Atualização
-2024-12-31T22:45:00Z
+- `docs/qa/HARDCORE_SCORECARD.md` - Score atual
+- `docs/qa/GAPS_REGISTER.md` - Gaps abertos/fechados
+- `docs/qa/DEVIN_PROGRESS.md` - Progresso detalhado
+- `docs/qa/EXTREME_CAPABILITIES_MAP.md` - Capacidades do sistema
+
+## Próximo Passo
+
+Para atingir 10/10:
+1. Criar testes E2E para CRUD completo de regras
+2. Criar testes unitários para cada operador
+
+## Credenciais Dev
+- Admin: admin/rulex
+- Analyst: analyst/rulex
+
+## Git Status
+Branch: cursor/rulex-project-review-1c58
+Working tree: clean

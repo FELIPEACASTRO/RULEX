@@ -1,273 +1,290 @@
 # ENDPOINTS REAL MAP - RULEX
 
-## Fonte
-Mapeado a partir dos Controllers Java em:
-- `backend/src/main/java/com/rulex/controller/`
-- `backend/src/main/java/com/rulex/v31/`
+## Data da Auditoria
+2024-12-31T23:05:00Z
 
-**Context-Path:** `/api` (configurado em application.properties)
+## Base URL
+- Context Path: `/api`
+- Full URL: `http://localhost:8080/api`
 
 ---
 
-## 1. Regras Simples (`/api/rules`)
+## 1. RULES (RuleController)
 
-| Método | Endpoint | Descrição | Role |
-|--------|----------|-----------|------|
-| GET | `/rules` | Listar todas as regras | ANALYST, ADMIN |
-| GET | `/rules/{id}` | Buscar regra por ID | ANALYST, ADMIN |
-| POST | `/rules` | Criar nova regra | ADMIN |
-| PUT | `/rules/{id}` | Atualizar regra | ADMIN |
-| DELETE | `/rules/{id}` | Deletar regra | ADMIN |
-| GET | `/rules/enabled/{enabled}` | Listar por status | ANALYST, ADMIN |
-| GET | `/rules/{id}/history` | Histórico de versões | ANALYST, ADMIN |
+### GET /api/rules
+Lista todas as regras com paginação.
 
-### Exemplo: Criar Regra
 ```bash
-curl -X POST http://localhost:8080/api/rules \
+curl -u admin:rulex http://localhost:8080/api/rules
+```
+
+**Response:** `Page<RuleConfiguration>`
+
+### GET /api/rules/{id}
+Busca regra por ID.
+
+```bash
+curl -u admin:rulex http://localhost:8080/api/rules/1
+```
+
+### POST /api/rules
+Cria nova regra. **Requer ADMIN.**
+
+```bash
+curl -u admin:rulex -X POST \
   -H "Content-Type: application/json" \
-  -u admin:admin123 \
   -d '{
-    "ruleName": "HIGH_AMOUNT_RULE",
-    "description": "Transações acima de R$5000",
+    "ruleName": "HIGH_AMOUNT",
     "ruleType": "SECURITY",
     "classification": "SUSPICIOUS",
-    "threshold": 0,
-    "weight": 50,
-    "enabled": true,
     "logicOperator": "AND",
-    "conditions": [
-      {"field": "transactionAmount", "operator": "GT", "value": "500000"}
-    ]
-  }'
+    "conditions": [{"field": "transactionAmount", "operator": "GT", "value": "10000"}]
+  }' \
+  http://localhost:8080/api/rules
+```
+
+### PUT /api/rules/{id}
+Atualiza regra existente. **Requer ADMIN + version para optimistic locking.**
+
+```bash
+curl -u admin:rulex -X PUT \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ruleName": "HIGH_AMOUNT_UPDATED",
+    "ruleType": "SECURITY",
+    "classification": "FRAUD",
+    "logicOperator": "AND",
+    "conditions": [],
+    "version": 1
+  }' \
+  http://localhost:8080/api/rules/1
+```
+
+### DELETE /api/rules/{id}
+Deleta regra. **Requer ADMIN.**
+
+```bash
+curl -u admin:rulex -X DELETE http://localhost:8080/api/rules/1
 ```
 
 ---
 
-## 2. Regras Complexas - CRUD (`/api/complex-rules`)
+## 2. COMPLEX RULES (ComplexRuleCrudController)
 
-| Método | Endpoint | Descrição | Role |
-|--------|----------|-----------|------|
-| GET | `/complex-rules` | Listar regras complexas | ANALYST, ADMIN |
-| GET | `/complex-rules/{id}` | Buscar por ID | ANALYST, ADMIN |
-| GET | `/complex-rules/key/{key}` | Buscar por chave | ANALYST, ADMIN |
-| POST | `/complex-rules` | Criar regra complexa | ADMIN |
-| PUT | `/complex-rules/{id}` | Atualizar regra | ADMIN |
-| DELETE | `/complex-rules/{id}` | Deletar regra | ADMIN |
-| POST | `/complex-rules/{id}/duplicate` | Duplicar regra | ADMIN |
-| POST | `/complex-rules/validate` | Validar sem salvar | ANALYST, ADMIN |
+### GET /api/complex-rules
+Lista regras complexas.
 
-### Exemplo: Criar Regra Complexa
 ```bash
-curl -X POST http://localhost:8080/api/complex-rules \
-  -H "Content-Type: application/json" \
-  -u admin:admin123 \
-  -d '{
-    "key": "EXTREME_RULE_001",
-    "title": "Regra Extrema de Fraude",
-    "description": "Detecta padrões complexos",
-    "status": "DRAFT",
-    "priority": 100,
-    "severity": 80,
-    "decision": "SUSPEITA_DE_FRAUDE",
-    "enabled": true,
-    "rootConditionGroup": {
-      "logicOperator": "AND",
-      "conditions": [
-        {"fieldName": "transactionAmount", "operator": "GT", "valueType": "NUMBER", "valueSingle": "1000"}
-      ],
-      "children": []
-    }
-  }'
+curl -u admin:rulex http://localhost:8080/api/complex-rules
 ```
 
----
+### GET /api/complex-rules/{id}
+Busca regra complexa por ID.
 
-## 3. Regras Complexas - Estrutura (`/api/v1/complex-rules`)
+### GET /api/complex-rules/key/{key}
+Busca regra complexa por chave.
 
-| Método | Endpoint | Descrição | Role |
-|--------|----------|-----------|------|
-| POST | `/{ruleVersionId}/conditions` | Salvar grupo de condições | ADMIN |
-| GET | `/{ruleVersionId}/conditions` | Buscar grupo de condições | ANALYST, ADMIN |
-| POST | `/{ruleVersionId}/expressions` | Salvar expressões | ADMIN |
-| GET | `/{ruleVersionId}/expressions` | Buscar expressões | ANALYST, ADMIN |
-| POST | `/{ruleVersionId}/variables` | Salvar variáveis | ADMIN |
-| GET | `/{ruleVersionId}/variables` | Buscar variáveis | ANALYST, ADMIN |
-| POST | `/{ruleVersionId}/actions` | Salvar ações | ADMIN |
-| GET | `/{ruleVersionId}/actions` | Buscar ações | ANALYST, ADMIN |
-| GET | `/{ruleVersionId}/fields` | Campos usados | ANALYST, ADMIN |
-| GET | `/{ruleVersionId}/validate-depth` | Validar profundidade | ANALYST, ADMIN |
-| POST | `/{ruleVersionId}/evaluate` | Avaliar com payload | ADMIN |
-| DELETE | `/{ruleVersionId}` | Deletar estrutura | ADMIN |
+### POST /api/complex-rules
+Cria regra complexa. **Requer ADMIN.**
 
-### Templates
-| Método | Endpoint | Descrição | Role |
-|--------|----------|-----------|------|
-| GET | `/templates` | Listar todos | ANALYST, ADMIN |
-| GET | `/templates/system` | Templates do sistema | ANALYST, ADMIN |
-| GET | `/templates/category/{category}` | Por categoria | ANALYST, ADMIN |
-| GET | `/templates/{name}` | Por nome | ANALYST, ADMIN |
+### PUT /api/complex-rules/{id}
+Atualiza regra complexa. **Requer ADMIN.**
+
+### DELETE /api/complex-rules/{id}
+Deleta regra complexa. **Requer ADMIN.**
+
+### POST /api/complex-rules/{id}/duplicate
+Duplica regra complexa. **Requer ADMIN.**
+
+### POST /api/complex-rules/validate
+Valida regra sem salvar.
 
 ---
 
-## 4. Avaliação (`/api/evaluate`, `/api/transactions`)
+## 3. EVALUATE (EvaluateController)
 
-| Método | Endpoint | Descrição | Role |
-|--------|----------|-----------|------|
-| POST | `/evaluate` | Avaliar transação | PUBLIC |
-| POST | `/transactions/analyze` | Analisar transação | PUBLIC |
-| POST | `/transactions/analyze-advanced` | Análise avançada | PUBLIC |
-| GET | `/transactions` | Listar transações | ANALYST, ADMIN |
-| GET | `/transactions/{id}` | Buscar por ID | ANALYST, ADMIN |
-| GET | `/transactions/external/{externalId}` | Buscar por ID externo | ANALYST, ADMIN |
-| GET | `/transactions/export` | Exportar | ANALYST, ADMIN |
+### POST /api/evaluate
+Avalia transação contra regras. **Público.**
 
-### Exemplo: Avaliar Transação
 ```bash
-curl -X POST http://localhost:8080/api/evaluate \
+curl -X POST \
   -H "Content-Type: application/json" \
   -d '{
-    "externalTransactionId": "TXN-001",
-    "customerIdFromHeader": "CUST-123",
-    "pan": "4111111111111111",
-    "transactionAmount": 100000,
-    "transactionCurrencyCode": 986,
-    "merchantId": "MERCH-001",
-    "merchantCountryCode": "076",
+    "externalTransactionId": "TXN123",
+    "transactionAmount": 15000,
     "mcc": 5411
-  }'
+  }' \
+  http://localhost:8080/api/evaluate
+```
+
+**Response:**
+```json
+{
+  "transactionId": "TXN123",
+  "classification": "SUSPICIOUS",
+  "riskScore": 75,
+  "triggeredRules": [
+    {"name": "HIGH_AMOUNT", "weight": 50, "contribution": 50}
+  ]
+}
 ```
 
 ---
 
-## 5. Simulação (`/api/rules/simulation`)
+## 4. TRANSACTIONS (TransactionController)
 
-| Método | Endpoint | Descrição | Role |
-|--------|----------|-----------|------|
-| POST | `/rules/simulation/test` | Testar regra | ADMIN |
-| POST | `/rules/simulation/backtest/{ruleId}` | Backtest | ADMIN |
-| POST | `/rules/simulation/compare` | Comparar regras | ADMIN |
-| POST | `/rules/simulation/batch` | Batch de transações | ADMIN |
+### POST /api/transactions/analyze
+Analisa transação. **Público.**
 
----
+### POST /api/transactions/analyze-advanced
+Análise avançada com contexto derivado. **Público.**
 
-## 6. Validação e Lint (`/api/rules`)
+### GET /api/transactions
+Lista transações. **Requer ANALYST ou ADMIN.**
 
-| Método | Endpoint | Descrição | Role |
-|--------|----------|-----------|------|
-| POST | `/rules/validate` | Validar regra | ANALYST, ADMIN |
-| POST | `/rules/lint` | Lint de regra | ANALYST, ADMIN |
-| POST | `/rules/simulate` | Simular regra | ADMIN |
+### GET /api/transactions/{id}
+Busca transação por ID.
 
----
+### GET /api/transactions/external/{externalId}
+Busca por ID externo.
 
-## 7. Auditoria (`/api/audit`)
-
-| Método | Endpoint | Descrição | Role |
-|--------|----------|-----------|------|
-| GET | `/audit` | Listar logs de auditoria | ANALYST, ADMIN |
-| GET | `/audit/export` | Exportar logs | ANALYST, ADMIN |
-| GET | `/audit/transaction/{transactionId}` | Por transação | ANALYST, ADMIN |
+### GET /api/transactions/export
+Exporta transações.
 
 ---
 
-## 8. Métricas (`/api/metrics`, `/api/rules/metrics`)
+## 5. AUDIT (AuditController)
 
-| Método | Endpoint | Descrição | Role |
-|--------|----------|-----------|------|
-| GET | `/metrics` | Métricas gerais | ANALYST, ADMIN |
-| GET | `/metrics/mcc` | Por MCC | ANALYST, ADMIN |
-| GET | `/metrics/merchant` | Por merchant | ANALYST, ADMIN |
-| GET | `/metrics/timeline` | Timeline | ANALYST, ADMIN |
-| GET | `/rules/metrics/dashboard` | Dashboard | ANALYST, ADMIN |
-| GET | `/rules/metrics/{ruleId}` | Por regra | ANALYST, ADMIN |
-| GET | `/rules/metrics/all` | Todas as regras | ANALYST, ADMIN |
-| POST | `/rules/metrics/{ruleId}/false-positive` | Marcar FP | ADMIN |
-| POST | `/rules/metrics/{ruleId}/true-positive` | Marcar TP | ADMIN |
+### GET /api/audit
+Lista logs de auditoria. **Requer ANALYST ou ADMIN.**
+
+### GET /api/audit/export
+Exporta logs de auditoria.
+
+### GET /api/audit/transaction/{transactionId}
+Logs de uma transação específica.
 
 ---
 
-## 9. Export/Import (`/api/v1/rules/export-import`)
+## 6. SIMULATION (RuleSimulationController)
 
-| Método | Endpoint | Descrição | Role |
-|--------|----------|-----------|------|
-| GET | `/export` | Exportar todas | ADMIN |
-| POST | `/export/selective` | Exportar selecionadas | ADMIN |
-| GET | `/export/complex` | Exportar complexas | ADMIN |
-| POST | `/import` | Importar JSON | ADMIN |
-| POST | `/import/file` | Importar arquivo | ADMIN |
-| POST | `/validate` | Validar import | ADMIN |
-| GET | `/template/simple` | Template simples | ANALYST, ADMIN |
-| GET | `/template/complex` | Template complexo | ANALYST, ADMIN |
+### POST /api/rules/simulation/test
+Testa regra com transação de exemplo. **Requer ADMIN.**
 
----
+### POST /api/rules/simulation/backtest/{ruleId}
+Backtest de regra com histórico.
 
-## 10. Homologação (`/api/homolog`)
+### POST /api/rules/simulation/compare
+Compara duas versões de regra.
 
-| Método | Endpoint | Descrição | Role |
-|--------|----------|-----------|------|
-| POST | `/homolog/rules` | Criar regra | ADMIN |
-| GET | `/homolog/rules/{ruleId}/latest` | Última versão | ADMIN |
-| POST | `/homolog/rules/versions/{versionId}/publish` | Publicar | ADMIN |
-| POST | `/homolog/rules/{ruleId}/rollback/{version}` | Rollback | ADMIN |
-| POST | `/homolog/rulesets` | Criar ruleset | ADMIN |
-| POST | `/homolog/rulesets/versions/{versionId}/publish` | Publicar | ADMIN |
-| POST | `/homolog/rulesets/activate` | Ativar | ADMIN |
-| POST | `/homolog/simulations/run` | Executar simulação | ADMIN |
+### POST /api/rules/simulation/batch
+Simulação em lote.
 
 ---
 
-## 11. Field Dictionary (`/api/field-dictionary`)
+## 7. METRICS (MetricsController)
 
-| Método | Endpoint | Descrição | Role |
-|--------|----------|-----------|------|
-| GET | `/field-dictionary` | Listar campos | ANALYST, ADMIN |
+### GET /api/metrics
+Métricas gerais. **Requer ANALYST ou ADMIN.**
 
----
+### GET /api/metrics/mcc
+Métricas por MCC.
 
-## 12. Aprovações (`/api/rules/approvals`)
+### GET /api/metrics/merchant
+Métricas por merchant.
 
-| Método | Endpoint | Descrição | Role |
-|--------|----------|-----------|------|
-| POST | `/create` | Solicitar criação | ADMIN |
-| POST | `/update/{ruleId}` | Solicitar update | ADMIN |
-| POST | `/delete/{ruleId}` | Solicitar delete | ADMIN |
-| POST | `/{id}/approve` | Aprovar | ADMIN |
-| POST | `/{id}/reject` | Rejeitar | ADMIN |
-| POST | `/{id}/cancel` | Cancelar | ADMIN |
-| GET | `/pending` | Listar pendentes | ADMIN |
-| GET | `/pending/page` | Paginado | ADMIN |
-| GET | `/pending/count` | Contar pendentes | ADMIN |
-| GET | `/{id}` | Buscar por ID | ADMIN |
-| GET | `/history/{ruleId}` | Histórico | ADMIN |
+### GET /api/metrics/timeline
+Timeline de métricas.
 
 ---
 
-## Autenticação
+## 8. FIELD DICTIONARY (FieldDictionaryController)
 
-**Tipo:** HTTP Basic Auth
+### GET /api/field-dictionary
+Lista campos disponíveis. **Requer ANALYST ou ADMIN.**
 
-**Usuários (dev):**
-- `admin:admin123` → Role: ADMIN
-- `analyst:analyst123` → Role: ANALYST
-
-**Headers:**
-```
-Authorization: Basic YWRtaW46YWRtaW4xMjM=
-Content-Type: application/json
+```bash
+curl -u analyst:rulex "http://localhost:8080/api/field-dictionary?workflow=BRZLCREDIT&recordType=CRTRAN25&portfolio=*"
 ```
 
 ---
 
-## Códigos de Resposta
+## 9. APPROVALS (RuleApprovalController)
 
-| Código | Significado |
-|--------|-------------|
-| 200 | Sucesso |
-| 201 | Criado |
-| 204 | Sem conteúdo (delete) |
-| 400 | Requisição inválida |
-| 401 | Não autenticado |
-| 403 | Não autorizado |
-| 404 | Não encontrado |
-| 409 | Conflito (versão) |
-| 500 | Erro interno |
+### POST /api/rules/approvals/create
+Solicita aprovação para criar regra.
+
+### POST /api/rules/approvals/update/{ruleId}
+Solicita aprovação para atualizar.
+
+### POST /api/rules/approvals/delete/{ruleId}
+Solicita aprovação para deletar.
+
+### POST /api/rules/approvals/{id}/approve
+Aprova solicitação. **Requer ADMIN.**
+
+### POST /api/rules/approvals/{id}/reject
+Rejeita solicitação.
+
+### GET /api/rules/approvals/pending
+Lista solicitações pendentes.
+
+---
+
+## 10. EXPORT/IMPORT (RuleExportImportController)
+
+### GET /api/v1/rules/export-import/export
+Exporta todas as regras.
+
+### POST /api/v1/rules/export-import/import
+Importa regras.
+
+### GET /api/v1/rules/export-import/template/simple
+Template de regra simples.
+
+### GET /api/v1/rules/export-import/template/complex
+Template de regra complexa.
+
+---
+
+## 11. HOMOLOG (HomologRuleController, HomologRuleSetController)
+
+### POST /api/homolog/rules
+Cria regra em homologação. **Requer ADMIN.**
+
+### GET /api/homolog/rules/{ruleId}/latest
+Última versão da regra.
+
+### POST /api/homolog/rules/versions/{ruleVersionId}/publish
+Publica versão.
+
+### POST /api/homolog/rules/{ruleId}/rollback/{version}
+Rollback para versão anterior.
+
+### POST /api/homolog/rulesets
+Cria ruleset.
+
+### POST /api/homolog/rulesets/activate
+Ativa ruleset.
+
+### POST /api/homolog/simulations/run
+Executa simulação em homologação.
+
+---
+
+## RBAC Summary
+
+| Endpoint Pattern | ANALYST | ADMIN |
+|-----------------|---------|-------|
+| GET /api/rules/** | ✅ | ✅ |
+| POST/PUT/DELETE /api/rules/** | ❌ | ✅ |
+| GET /api/transactions/** | ✅ | ✅ |
+| GET /api/audit/** | ✅ | ✅ |
+| GET /api/metrics/** | ✅ | ✅ |
+| POST /api/evaluate | ✅ (público) | ✅ |
+| /api/homolog/** | ❌ | ✅ |
+
+---
+
+## Última Atualização
+2024-12-31T23:05:00Z
