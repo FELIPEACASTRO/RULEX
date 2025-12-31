@@ -9,16 +9,16 @@
 
 ## P0 - Crítico
 
-### GAP-P0-01: RuleFormDialog Incompleto
-**Descrição:** O componente RuleFormDialog está marcado como TODO e não implementado.
-**Impacto:** Popup de criação/edição de regras não funciona como componente reutilizável.
-**Evidência:**
-```typescript
-// client/src/components/RuleFormDialog/index.tsx
-// TODO: Implementar RuleFormDialog componente
-```
-**Solução:** Implementar o componente ou integrar com ComplexRuleBuilder.
-**Status:** ❌ Aberto
+### GAP-P0-01: RuleFormDialog Incompleto ✅ FECHADO
+**Descrição:** O componente RuleFormDialog estava marcado como TODO e não implementado.
+**Impacto:** Popup de criação/edição de regras não funcionava como componente reutilizável.
+**Solução:** Implementado RuleFormDialog.tsx completo com:
+- Tabs: Básico, Condições, Avançado
+- Suporte a todos os 52 operadores
+- Preview JSON antes de salvar
+- Aviso de alterações não salvas
+- Acessibilidade completa (ARIA, keyboard navigation)
+**Status:** ✅ Fechado (commit b9444c9)
 
 ---
 
@@ -185,20 +185,20 @@ ls e2e/
 
 | Prioridade | Total | Abertos | Fechados |
 |------------|-------|---------|----------|
-| P0 | 4 | 2 | 2 |
+| P0 | 4 | 1 | 3 |
 | P1 | 7 | 6 | 1 |
 | P2 | 5 | 5 | 0 |
-| **Total** | **16** | **13** | **3** |
+| **Total** | **16** | **12** | **4** |
 
 ---
 
 ## Próximos Passos
 
 1. ✅ **Passada 2**: Stack validada (CRUD + RBAC + Optimistic Locking)
-2. ⏳ **Passada 3**: Implementar GAP-P0-01 (RuleFormDialog) e GAP-P0-03 (constraint CHECK)
+2. ⏳ **Passada 3**: Implementar GAP-P0-03 (constraint CHECK)
 3. 🔲 **Passada 4**: Criar test suite extrema
 
 ---
 
 ## Última Atualização
-2024-12-31T22:30:00Z
+2024-12-31T22:35:00Z
