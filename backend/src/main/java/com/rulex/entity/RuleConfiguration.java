@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Entidade que armazena configurações dinâmicas de regras. Permite ajustar pesos, thresholds e
@@ -64,6 +66,7 @@ public class RuleConfiguration {
 
   /** Condições genéricas da regra (JSON array de {field, operator, value}). */
   @Column(columnDefinition = "jsonb")
+  @JdbcTypeCode(SqlTypes.JSON)
   private String conditionsJson;
 
   /** Operador lógico para combinar condições. */
