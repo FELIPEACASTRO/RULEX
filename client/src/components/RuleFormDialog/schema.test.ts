@@ -542,3 +542,175 @@ describe('Schema de Regras - Testes Adversariais', () => {
     });
   });
 });
+
+// ============================================
+// Testes adicionais para funções auxiliares
+// ============================================
+import { formatValueForPreview, getPlaceholderForOperator } from './schema';
+
+describe('formatValueForPreview', () => {
+  it('formata valor monetário para transactionAmount', () => {
+    const result = formatValueForPreview('100000', 'transactionAmount');
+    expect(result).toMatch(/R\$/);
+    expect(result).toContain('1.000');
+  });
+
+  it('formata horário para transactionTime', () => {
+    const result = formatValueForPreview('143025', 'transactionTime');
+    expect(result).toBe('14:30:25');
+  });
+
+  it('formata data para transactionDate', () => {
+    const result = formatValueForPreview('20241231', 'transactionDate');
+    expect(result).toBe('31/12/2024');
+  });
+
+  it('retorna valor original para campos não especiais', () => {
+    const result = formatValueForPreview('test', 'otherField');
+    expect(result).toBe('test');
+  });
+
+  it('retorna valor original para transactionTime com formato inválido', () => {
+    const result = formatValueForPreview('invalid', 'transactionTime');
+    expect(result).toBe('invalid');
+  });
+
+  it('retorna valor original para transactionDate com formato inválido', () => {
+    const result = formatValueForPreview('invalid', 'transactionDate');
+    expect(result).toBe('invalid');
+  });
+});
+
+describe('getPlaceholderForOperator', () => {
+  it('retorna placeholder para IN', () => {
+    const result = getPlaceholderForOperator('IN');
+    expect(result).toContain('valor1,valor2');
+  });
+
+  it('retorna placeholder para NOT_IN', () => {
+    const result = getPlaceholderForOperator('NOT_IN');
+    expect(result).toContain('valor1,valor2');
+  });
+
+  it('retorna placeholder para BETWEEN', () => {
+    const result = getPlaceholderForOperator('BETWEEN');
+    expect(result).toContain('10,100');
+  });
+
+  it('retorna placeholder para NOT_BETWEEN', () => {
+    const result = getPlaceholderForOperator('NOT_BETWEEN');
+    expect(result).toContain('10,100');
+  });
+
+  it('retorna placeholder para MATCHES_REGEX', () => {
+    const result = getPlaceholderForOperator('MATCHES_REGEX');
+    expect(result).toContain('regex');
+  });
+
+  it('retorna placeholder para CONTAINS', () => {
+    const result = getPlaceholderForOperator('CONTAINS');
+    expect(result).toContain('texto');
+  });
+
+  it('retorna placeholder para NOT_CONTAINS', () => {
+    const result = getPlaceholderForOperator('NOT_CONTAINS');
+    expect(result).toContain('texto');
+  });
+
+  it('retorna placeholder para STARTS_WITH', () => {
+    const result = getPlaceholderForOperator('STARTS_WITH');
+    expect(result).toContain('prefixo');
+  });
+
+  it('retorna placeholder para ENDS_WITH', () => {
+    const result = getPlaceholderForOperator('ENDS_WITH');
+    expect(result).toContain('sufixo');
+  });
+
+  it('retorna placeholder para IS_NULL', () => {
+    const result = getPlaceholderForOperator('IS_NULL');
+    expect(result).toContain('aplicavel');
+  });
+
+  it('retorna placeholder para IS_NOT_NULL', () => {
+    const result = getPlaceholderForOperator('IS_NOT_NULL');
+    expect(result).toContain('aplicavel');
+  });
+
+  it('retorna placeholder para IS_TRUE', () => {
+    const result = getPlaceholderForOperator('IS_TRUE');
+    expect(result).toContain('aplicavel');
+  });
+
+  it('retorna placeholder para IS_FALSE', () => {
+    const result = getPlaceholderForOperator('IS_FALSE');
+    expect(result).toContain('aplicavel');
+  });
+
+  it('retorna placeholder padrão para operador desconhecido', () => {
+    const result = getPlaceholderForOperator('EQ');
+    expect(result).toContain('100');
+  });
+});
+
+describe('validateValueForFieldType - cobertura adicional', () => {
+  it('valida campo number com operador IN', () => {
+    const result = validateValueForFieldType('1,2,3', 'number', 'IN');
+    expect(result.valid).toBe(true);
+  });
+
+  it('falha para campo number com operador IN e valores inválidos', () => {
+    const result = validateValueForFieldType('a,b,c', 'number', 'IN');
+    expect(result.valid).toBe(false);
+  });
+
+  it('valida campo number com operador BETWEEN', () => {
+    const result = validateValueForFieldType('10,20', 'number', 'BETWEEN');
+    expect(result.valid).toBe(true);
+  });
+
+  it('falha para campo number com operador BETWEEN e valores inválidos', () => {
+    const result = validateValueForFieldType('a,b', 'number', 'BETWEEN');
+    expect(result.valid).toBe(false);
+  });
+
+  it('valida campo boolean', () => {
+    const result = validateValueForFieldType('true', 'boolean', 'EQ');
+    expect(result.valid).toBe(true);
+  });
+
+  it('valida campo boolean com yes', () => {
+    const result = validateValueForFieldType('yes', 'boolean', 'EQ');
+    expect(result.valid).toBe(true);
+  });
+
+  it('falha para campo boolean com valor inválido', () => {
+    const result = validateValueForFieldType('maybe', 'boolean', 'EQ');
+    expect(result.valid).toBe(false);
+  });
+
+  it('valida campo date com formato YYYYMMDD', () => {
+    const result = validateValueForFieldType('20241231', 'date', 'EQ');
+    expect(result.valid).toBe(true);
+  });
+
+  it('valida campo date com formato ISO', () => {
+    const result = validateValueForFieldType('2024-12-31', 'date', 'EQ');
+    expect(result.valid).toBe(true);
+  });
+
+  it('falha para campo date com formato inválido', () => {
+    const result = validateValueForFieldType('invalid-date', 'date', 'EQ');
+    expect(result.valid).toBe(false);
+  });
+
+  it('valida campo number simples', () => {
+    const result = validateValueForFieldType('123', 'number', 'EQ');
+    expect(result.valid).toBe(true);
+  });
+
+  it('falha para campo number com valor não numérico', () => {
+    const result = validateValueForFieldType('abc', 'number', 'EQ');
+    expect(result.valid).toBe(false);
+  });
+});
