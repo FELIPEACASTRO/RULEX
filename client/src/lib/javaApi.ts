@@ -162,6 +162,19 @@ export interface RuleCondition {
     | "NOT_NULL"   // Alinhado com backend (IS_NOT_NULL é legacy)
     | "IS_TRUE"
     | "IS_FALSE"
+    // Geolocalização
+    | "GEO_DISTANCE_LT"
+    | "GEO_DISTANCE_GT"
+    | "GEO_IN_POLYGON"
+    // Velocity (agregações temporais)
+    | "VELOCITY_COUNT_GT"
+    | "VELOCITY_COUNT_LT"
+    | "VELOCITY_SUM_GT"
+    | "VELOCITY_SUM_LT"
+    | "VELOCITY_AVG_GT"
+    | "VELOCITY_AVG_LT"
+    | "VELOCITY_DISTINCT_GT"
+    | "VELOCITY_DISTINCT_LT"
     // Legado/compatibilidade (aceitos pelo backend via normalização)
     | "NE"
     | "MATCHES_REGEX"

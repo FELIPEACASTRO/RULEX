@@ -1,6 +1,6 @@
 # DEVIN RUNBOOK - RULEX MODO HARDCORE 10/10
 
-## Última Atualização: 2024-12-31 18:53 UTC
+## Última Atualização: 2024-12-31 19:15 UTC
 
 ---
 
@@ -17,13 +17,13 @@
 - [x] Gerar DEVIN_GAPS.md completo
 
 ### F1 - POPUP/MODAL 10/10
-**Status:** Pendente
+**Status:** ✅ PARCIAL (ReDoS implementado)
 **Gates:**
 - [ ] Matriz de compatibilidade (tipo × operador × formato)
-- [ ] Validações UI sincronizadas com backend
+- [x] Validações UI sincronizadas com backend
 - [ ] Acessibilidade WCAG/ARIA
-- [ ] Segurança REGEX (ReDoS mitigation)
-- [ ] Testes unitários do validador
+- [x] Segurança REGEX (ReDoS mitigation) ✅
+- [x] Testes unitários do validador ✅
 
 ### F2 - INTEGRAÇÃO FRONT ↔ BACK ↔ DB
 **Status:** Pendente
@@ -35,11 +35,11 @@
 - [ ] Coerência de contrato
 
 ### F3 - EXTREME RULES (15+)
-**Status:** Pendente
+**Status:** ✅ COMPLETO
 **Gates:**
-- [ ] 15+ regras extremas criadas
-- [ ] Nesting profundo testado
-- [ ] Edge cases cobertos
+- [x] 18 regras extremas criadas em docs/rules/EXTREME_RULES.md
+- [x] Nesting profundo testado (3 níveis)
+- [x] Edge cases cobertos (todos operadores)
 
 ### F4 - VELOCITY/AGREGAÇÃO
 **Status:** ✅ IMPLEMENTADO (sessão anterior)
@@ -130,9 +130,9 @@ cd ~/repos/RULEX && cp .env.example .env && docker compose up -d --build
 | GAP-002 | P0 | Frontend usa MATCHES_REGEX vs backend REGEX | ✅ FECHADO |
 | GAP-003 | P0 | Frontend usa IS_NOT_NULL vs backend NOT_NULL | ✅ FECHADO |
 | GAP-004 | P1 | RuleFormDialog (simples) falta maioria dos operadores avançados | 🔄 Parcial |
-| GAP-005 | P1 | Sem validação de ReDoS no REGEX | ⏳ Pendente |
+| GAP-005 | P1 | Sem validação de ReDoS no REGEX | ✅ FECHADO |
 | GAP-006 | P1 | Frontend usa NE vs backend NEQ | ✅ FECHADO |
-| GAP-007 | P1 | VelocityService não integrado ao ComplexRuleEvaluator | ⏳ Pendente |
+| GAP-007 | P1 | VelocityService não integrado ao ComplexRuleEvaluator | ✅ FECHADO |
 | GAP-008 | P2 | Sem testes E2E Playwright funcionais | ⏳ Pendente |
 | GAP-009 | P2 | Sem preview JSON no modal de criação | ⏳ Pendente |
 | GAP-010 | P2 | Acessibilidade WCAG/ARIA incompleta nos modais | ⏳ Pendente |

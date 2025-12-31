@@ -5,6 +5,8 @@ import com.rulex.entity.complex.RuleCondition;
 import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleExecutionDetail;
 import com.rulex.service.GeoService;
+import com.rulex.service.VelocityService;
+import com.rulex.util.RegexValidator;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,6 +30,7 @@ import org.springframework.stereotype.Component;
 public class ComplexRuleEvaluator {
 
   private final GeoService geoService;
+  private final VelocityService velocityService;
 
   /** Resultado da avaliação de uma regra */
   @Data
@@ -293,6 +296,16 @@ public class ComplexRuleEvaluator {
       case GEO_DISTANCE_LT -> evaluateGeoDistanceLt(condition, context);
       case GEO_DISTANCE_GT -> evaluateGeoDistanceGt(condition, context);
       case GEO_IN_POLYGON -> evaluateGeoInPolygon(condition, context);
+
+        // Velocity (agregações temporais)
+      case VELOCITY_COUNT_GT -> evaluateVelocityCount(condition, context, true);
+      case VELOCITY_COUNT_LT -> evaluateVelocityCount(condition, context, false);
+      case VELOCITY_SUM_GT -> evaluateVelocitySum(condition, context, true);
+      case VELOCITY_SUM_LT -> evaluateVelocitySum(condition, context, false);
+      case VELOCITY_AVG_GT -> evaluateVelocityAvg(condition, context, true);
+      case VELOCITY_AVG_LT -> evaluateVelocityAvg(condition, context, false);
+      case VELOCITY_DISTINCT_GT -> evaluateVelocityDistinct(condition, context, true);
+      case VELOCITY_DISTINCT_LT -> evaluateVelocityDistinct(condition, context, false);
     };
   }
 
@@ -368,8 +381,19 @@ public class ComplexRuleEvaluator {
   private boolean evaluateRegex(Object fieldValue, String pattern) {
     if (fieldValue == null || pattern == null) return false;
 
+    // Validar pattern contra ReDoS antes de executar
+    RegexValidator.ValidationResult validation = RegexValidator.validate(pattern);
+    if (!validation.valid()) {
+      log.warn("Regex rejeitada por segurança: {} - {}", pattern, validation.errorMessage());
+      return false;
+    }
+
     try {
-      return Pattern.matches(pattern, String.valueOf(fieldValue));
+      Pattern compiledPattern = Pattern.compile(pattern);
+      return RegexValidator.matchWithTimeout(compiledPattern, String.valueOf(fieldValue));
+    } catch (RegexValidator.TimeoutException e) {
+      log.warn("Regex timeout: {} - {}", pattern, e.getMessage());
+      return false;
     } catch (Exception e) {
       log.warn("Regex inválida: {}", pattern);
       return false;
@@ -616,6 +640,161 @@ public class ComplexRuleEvaluator {
       log.error("Erro ao avaliar GEO_IN_POLYGON: {}", e.getMessage());
       return false;
     }
+  }
+
+  // ========== Métodos de Velocity ==========
+
+  /**
+   * Avalia VELOCITY_COUNT: contagem de transações em janela temporal.
+   * Formato do valor: "keyType,windowMinutes,threshold" (ex: "PAN,60,5")
+   */
+  private boolean evaluateVelocityCount(RuleCondition condition, EvaluationContext context, boolean greaterThan) {
+    if (context.getTransactionRequest() == null) {
+      log.warn("TransactionRequest não disponível para VELOCITY_COUNT");
+      return false;
+    }
+
+    try {
+      String[] parts = condition.getValueSingle().split(",");
+      if (parts.length < 3) {
+        log.warn("Formato inválido para VELOCITY_COUNT. Esperado: keyType,windowMinutes,threshold");
+        return false;
+      }
+
+      VelocityService.KeyType keyType = VelocityService.KeyType.valueOf(parts[0].trim().toUpperCase());
+      VelocityService.TimeWindow window = parseTimeWindow(Integer.parseInt(parts[1].trim()));
+      long threshold = Long.parseLong(parts[2].trim());
+
+      VelocityService.VelocityStats stats = velocityService.getStats(
+          context.getTransactionRequest(), keyType, window);
+
+      return greaterThan
+          ? stats.getTransactionCount() > threshold
+          : stats.getTransactionCount() < threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar VELOCITY_COUNT: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Avalia VELOCITY_SUM: soma de valores em janela temporal.
+   * Formato do valor: "keyType,windowMinutes,threshold" (ex: "PAN,1440,10000")
+   */
+  private boolean evaluateVelocitySum(RuleCondition condition, EvaluationContext context, boolean greaterThan) {
+    if (context.getTransactionRequest() == null) {
+      log.warn("TransactionRequest não disponível para VELOCITY_SUM");
+      return false;
+    }
+
+    try {
+      String[] parts = condition.getValueSingle().split(",");
+      if (parts.length < 3) {
+        log.warn("Formato inválido para VELOCITY_SUM. Esperado: keyType,windowMinutes,threshold");
+        return false;
+      }
+
+      VelocityService.KeyType keyType = VelocityService.KeyType.valueOf(parts[0].trim().toUpperCase());
+      VelocityService.TimeWindow window = parseTimeWindow(Integer.parseInt(parts[1].trim()));
+      BigDecimal threshold = new BigDecimal(parts[2].trim());
+
+      VelocityService.VelocityStats stats = velocityService.getStats(
+          context.getTransactionRequest(), keyType, window);
+
+      return greaterThan
+          ? stats.getTotalAmount().compareTo(threshold) > 0
+          : stats.getTotalAmount().compareTo(threshold) < 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar VELOCITY_SUM: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Avalia VELOCITY_AVG: média de valores em janela temporal.
+   * Formato do valor: "keyType,windowMinutes,threshold" (ex: "PAN,1440,500")
+   */
+  private boolean evaluateVelocityAvg(RuleCondition condition, EvaluationContext context, boolean greaterThan) {
+    if (context.getTransactionRequest() == null) {
+      log.warn("TransactionRequest não disponível para VELOCITY_AVG");
+      return false;
+    }
+
+    try {
+      String[] parts = condition.getValueSingle().split(",");
+      if (parts.length < 3) {
+        log.warn("Formato inválido para VELOCITY_AVG. Esperado: keyType,windowMinutes,threshold");
+        return false;
+      }
+
+      VelocityService.KeyType keyType = VelocityService.KeyType.valueOf(parts[0].trim().toUpperCase());
+      VelocityService.TimeWindow window = parseTimeWindow(Integer.parseInt(parts[1].trim()));
+      BigDecimal threshold = new BigDecimal(parts[2].trim());
+
+      VelocityService.VelocityStats stats = velocityService.getStats(
+          context.getTransactionRequest(), keyType, window);
+
+      return greaterThan
+          ? stats.getAvgAmount().compareTo(threshold) > 0
+          : stats.getAvgAmount().compareTo(threshold) < 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar VELOCITY_AVG: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Avalia VELOCITY_DISTINCT: contagem de valores distintos em janela temporal.
+   * Formato do valor: "keyType,windowMinutes,distinctType,threshold" (ex: "PAN,1440,MERCHANTS,3")
+   */
+  private boolean evaluateVelocityDistinct(RuleCondition condition, EvaluationContext context, boolean greaterThan) {
+    if (context.getTransactionRequest() == null) {
+      log.warn("TransactionRequest não disponível para VELOCITY_DISTINCT");
+      return false;
+    }
+
+    try {
+      String[] parts = condition.getValueSingle().split(",");
+      if (parts.length < 4) {
+        log.warn("Formato inválido para VELOCITY_DISTINCT. Esperado: keyType,windowMinutes,distinctType,threshold");
+        return false;
+      }
+
+      VelocityService.KeyType keyType = VelocityService.KeyType.valueOf(parts[0].trim().toUpperCase());
+      VelocityService.TimeWindow window = parseTimeWindow(Integer.parseInt(parts[1].trim()));
+      String distinctType = parts[2].trim().toUpperCase();
+      long threshold = Long.parseLong(parts[3].trim());
+
+      VelocityService.VelocityStats stats = velocityService.getStats(
+          context.getTransactionRequest(), keyType, window);
+
+      long distinctCount = switch (distinctType) {
+        case "MERCHANTS" -> stats.getDistinctMerchants();
+        case "MCCS" -> stats.getDistinctMccs();
+        case "COUNTRIES" -> stats.getDistinctCountries();
+        default -> 0;
+      };
+
+      return greaterThan ? distinctCount > threshold : distinctCount < threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar VELOCITY_DISTINCT: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Converte minutos para TimeWindow mais próxima.
+   */
+  private VelocityService.TimeWindow parseTimeWindow(int minutes) {
+    if (minutes <= 5) return VelocityService.TimeWindow.MINUTE_5;
+    if (minutes <= 15) return VelocityService.TimeWindow.MINUTE_15;
+    if (minutes <= 30) return VelocityService.TimeWindow.MINUTE_30;
+    if (minutes <= 60) return VelocityService.TimeWindow.HOUR_1;
+    if (minutes <= 360) return VelocityService.TimeWindow.HOUR_6;
+    if (minutes <= 720) return VelocityService.TimeWindow.HOUR_12;
+    if (minutes <= 1440) return VelocityService.TimeWindow.HOUR_24;
+    if (minutes <= 10080) return VelocityService.TimeWindow.DAY_7;
+    return VelocityService.TimeWindow.DAY_30;
   }
 
   // ========== Métodos utilitários ==========

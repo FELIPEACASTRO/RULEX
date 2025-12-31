@@ -233,11 +233,12 @@ describe('Schema de Regras - Testes Adversariais', () => {
       expect(error).toContain('inválida');
     });
 
-    it('REG-02: regex ReDoS deve ser aceita (sem proteção atual)', () => {
-      // NOTA: Atualmente não há proteção contra ReDoS
+    it('REG-02: regex ReDoS deve ser REJEITADA (com proteção ReDoS)', () => {
+      // NOTA: Agora há proteção contra ReDoS via regexValidator
       const error = validateValueByOperator('MATCHES_REGEX', '(a+)+');
-      // Deve passar pois é regex válida sintaticamente
-      expect(error).toBeNull();
+      // Deve falhar pois é regex perigosa (catastrophic backtracking)
+      expect(error).not.toBeNull();
+      expect(error).toContain('perigosa');
     });
 
     it('REG-03: regex match-all deve ser aceita', () => {

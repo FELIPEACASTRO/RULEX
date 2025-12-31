@@ -45,13 +45,18 @@ export type ComparisonOperator =
   // Matemáticos
   | 'MOD_EQ' | 'MOD_NEQ'
   // Geolocalização
-  | 'GEO_DISTANCE_LT' | 'GEO_DISTANCE_GT' | 'GEO_IN_POLYGON';
+  | 'GEO_DISTANCE_LT' | 'GEO_DISTANCE_GT' | 'GEO_IN_POLYGON'
+  // Velocity (agregações temporais)
+  | 'VELOCITY_COUNT_GT' | 'VELOCITY_COUNT_LT'
+  | 'VELOCITY_SUM_GT' | 'VELOCITY_SUM_LT'
+  | 'VELOCITY_AVG_GT' | 'VELOCITY_AVG_LT'
+  | 'VELOCITY_DISTINCT_GT' | 'VELOCITY_DISTINCT_LT';
 
 export interface OperatorInfo {
   value: ComparisonOperator;
   label: string;
   description: string;
-  category: 'basic' | 'list' | 'range' | 'string' | 'null' | 'boolean' | 'field' | 'date' | 'array' | 'math' | 'geo';
+  category: 'basic' | 'list' | 'range' | 'string' | 'null' | 'boolean' | 'field' | 'date' | 'array' | 'math' | 'geo' | 'velocity';
   requiresValue: boolean;
   requiresSecondValue?: boolean;
   requiresFieldRef?: boolean;
@@ -124,6 +129,16 @@ export const COMPARISON_OPERATORS: OperatorInfo[] = [
   { value: 'GEO_DISTANCE_LT', label: 'distância <', description: 'Distância menor que (km). Formato: lat,lon,distKm', category: 'geo', requiresValue: true, applicableTypes: ['STRING'] },
   { value: 'GEO_DISTANCE_GT', label: 'distância >', description: 'Distância maior que (km). Formato: lat,lon,distKm', category: 'geo', requiresValue: true, applicableTypes: ['STRING'] },
   { value: 'GEO_IN_POLYGON', label: 'no polígono', description: 'Dentro do polígono. Valor: nome do polígono', category: 'geo', requiresValue: true, applicableTypes: ['STRING'] },
+
+  // Velocity (agregações temporais)
+  { value: 'VELOCITY_COUNT_GT', label: 'contagem >', description: 'Contagem de transações maior que. Formato: keyType,windowMinutes,threshold', category: 'velocity', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'VELOCITY_COUNT_LT', label: 'contagem <', description: 'Contagem de transações menor que. Formato: keyType,windowMinutes,threshold', category: 'velocity', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'VELOCITY_SUM_GT', label: 'soma >', description: 'Soma de valores maior que. Formato: keyType,windowMinutes,threshold', category: 'velocity', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'VELOCITY_SUM_LT', label: 'soma <', description: 'Soma de valores menor que. Formato: keyType,windowMinutes,threshold', category: 'velocity', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'VELOCITY_AVG_GT', label: 'média >', description: 'Média de valores maior que. Formato: keyType,windowMinutes,threshold', category: 'velocity', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'VELOCITY_AVG_LT', label: 'média <', description: 'Média de valores menor que. Formato: keyType,windowMinutes,threshold', category: 'velocity', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'VELOCITY_DISTINCT_GT', label: 'distintos >', description: 'Valores distintos maior que. Formato: keyType,windowMinutes,distinctType,threshold', category: 'velocity', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'VELOCITY_DISTINCT_LT', label: 'distintos <', description: 'Valores distintos menor que. Formato: keyType,windowMinutes,distinctType,threshold', category: 'velocity', requiresValue: true, applicableTypes: ['NUMBER'] },
 ];
 
 // ============================================

@@ -147,7 +147,16 @@ public class RuleCondition {
     // Geolocalização
     GEO_DISTANCE_LT,
     GEO_DISTANCE_GT,
-    GEO_IN_POLYGON
+    GEO_IN_POLYGON,
+    // Velocity (agregações temporais)
+    VELOCITY_COUNT_GT,
+    VELOCITY_COUNT_LT,
+    VELOCITY_SUM_GT,
+    VELOCITY_SUM_LT,
+    VELOCITY_AVG_GT,
+    VELOCITY_AVG_LT,
+    VELOCITY_DISTINCT_GT,
+    VELOCITY_DISTINCT_LT
   }
 
   /** Tipos de valor suportados */

@@ -5,6 +5,7 @@
 import { z } from 'zod';
 import type { RuleCondition } from '@/lib/javaApi';
 import { UNARY_OPERATORS } from './types';
+import { validateRegex, getRegexValidationError } from '@/lib/validators/regexValidator';
 
 // ============================================
 // SCHEMA DE CONDIÇÃO
@@ -47,19 +48,15 @@ export const conditionSchema = z.object({
   }
 ).refine(
   (data) => {
-    // P0-01: Validar REGEX (inclui REGEX, NOT_REGEX e legacy MATCHES_REGEX)
+    // P0-01: Validar REGEX com proteção ReDoS (inclui REGEX, NOT_REGEX e legacy MATCHES_REGEX)
     if (data.operator === 'REGEX' || data.operator === 'NOT_REGEX' || data.operator === 'MATCHES_REGEX') {
-      try {
-        new RegExp(data.value);
-        return true;
-      } catch {
-        return false;
-      }
+      const result = validateRegex(data.value);
+      return result.valid;
     }
     return true;
   },
   {
-    message: 'Expressão regular inválida. Verifique a sintaxe.',
+    message: 'Expressão regular inválida ou potencialmente perigosa (ReDoS).',
     path: ['value'],
   }
 ).refine(
@@ -311,10 +308,9 @@ export function validateValueByOperator(
     case 'REGEX':
     case 'NOT_REGEX':
     case 'MATCHES_REGEX':
-      try {
-        new RegExp(trimmedValue);
-      } catch (e) {
-        return `Expressão regular inválida: ${e instanceof Error ? e.message : 'erro de sintaxe'}`;
+      const regexError = getRegexValidationError(trimmedValue);
+      if (regexError) {
+        return regexError;
       }
       break;
 
