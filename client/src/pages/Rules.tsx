@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Trash2, ToggleRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, ToggleRight, Loader2, AlertTriangle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  validateValueByOperator,
+  getPlaceholderForOperator,
+  MAX_CONDITIONS,
+} from '@/components/RuleFormDialog/schema';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   FieldDictionaryItem,
@@ -60,11 +75,58 @@ export default function Rules() {
     conditions: [] as RuleConfiguration['conditions'],
   });
 
+  // P0-04: Estado para unsaved changes warning
+  const [isDirty, setIsDirty] = useState(false);
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
+  const [pendingClose, setPendingClose] = useState(false);
+
+  // P1-09: Estado para confirmação de delete
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
+  // P1-02: Estado para erros de validação
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
   const invalidateRules = () => queryClient.invalidateQueries({ queryKey: ['rules'] });
+
+  // P0-04: Marcar como dirty quando formData muda
+  const updateFormData = useCallback((updates: Partial<typeof formData>) => {
+    setFormData(prev => ({ ...prev, ...updates }));
+    setIsDirty(true);
+  }, []);
+
+  // P0-04: Handler para fechar dialog com verificação de unsaved changes
+  const handleDialogClose = useCallback((open: boolean) => {
+    if (!open && isDirty) {
+      setShowUnsavedWarning(true);
+      setPendingClose(true);
+      return;
+    }
+    setShowDialog(open);
+    if (!open) {
+      setIsDirty(false);
+      setValidationErrors({});
+    }
+  }, [isDirty]);
+
+  // P0-04: Confirmar descarte de alterações
+  const confirmDiscard = useCallback(() => {
+    setShowUnsavedWarning(false);
+    setPendingClose(false);
+    setShowDialog(false);
+    setIsDirty(false);
+    setValidationErrors({});
+    setEditingRule(null);
+  }, []);
+
+  // P0-04: Cancelar descarte
+  const cancelDiscard = useCallback(() => {
+    setShowUnsavedWarning(false);
+    setPendingClose(false);
+  }, []);
 
   const saveRule = useMutation({
     mutationFn: async () => {
-      const payload: Omit<RuleConfiguration, 'id' | 'version'> = {
+      const payload: Omit<RuleConfiguration, 'id' | 'version'> & { version?: number } = {
         ruleName: formData.ruleName,
         description: formData.description,
         ruleType: formData.ruleType,
@@ -74,21 +136,23 @@ export default function Rules() {
         classification: formData.classification,
         parameters: formData.parameters?.trim() ? formData.parameters : null,
         // Backend exige: conditions + logicOperator.
-        // - Para regras "genéricas": preencha conditions + logicOperator.
-        // - Para regras "legadas por nome": conditions pode ficar vazio e o engine cai no switch(ruleName).
         conditions: formData.conditions ?? [],
         logicOperator: formData.logicOperator ?? 'AND',
       };
 
       if (editingRule) {
+        // P0-05: Enviar version para optimistic locking
+        payload.version = editingRule.version;
         return updateRule(editingRule.id, payload);
       }
       return createRule(payload);
     },
     onSuccess: () => {
-      toast.success('Regra salva com sucesso');
+      toast.success(editingRule ? 'Regra atualizada com sucesso!' : 'Regra criada com sucesso!');
       setShowDialog(false);
       setEditingRule(null);
+      setIsDirty(false);
+      setValidationErrors({});
       setFormData({
         ruleName: '',
         description: '',
@@ -103,7 +167,24 @@ export default function Rules() {
       });
       invalidateRules();
     },
-    onError: () => toast.error('Falha ao salvar regra'),
+    onError: (error: Error) => {
+      // P0-05: Tratar conflito de versão
+      if (error.message.includes('409') || error.message.toLowerCase().includes('conflict')) {
+        toast.error('Esta regra foi modificada por outro usuário. Recarregue a página e tente novamente.');
+        invalidateRules();
+        return;
+      }
+      // P1-07: Mensagens de erro amigáveis
+      if (error.message.includes('400')) {
+        toast.error('Dados inválidos. Verifique os campos e tente novamente.');
+      } else if (error.message.includes('401') || error.message.includes('403')) {
+        toast.error('Você não tem permissão para realizar esta ação.');
+      } else if (error.message.includes('500')) {
+        toast.error('Erro interno do servidor. Tente novamente mais tarde.');
+      } else {
+        toast.error(`Erro ao salvar regra: ${error.message}`);
+      }
+    },
   });
 
   const deleteMutation = useMutation({
@@ -141,14 +222,71 @@ export default function Rules() {
     setShowDialog(true);
   };
 
+  // P1-01/P1-02: Validação antes de salvar
+  const validateForm = useCallback((): boolean => {
+    const errors: Record<string, string> = {};
+
+    // Validar ruleName
+    if (!formData.ruleName.trim()) {
+      errors.ruleName = 'Nome da regra é obrigatório';
+    } else if (formData.ruleName.length < 3) {
+      errors.ruleName = 'Nome deve ter pelo menos 3 caracteres';
+    } else if (!/^[A-Z][A-Z0-9_]*$/.test(formData.ruleName)) {
+      errors.ruleName = 'Nome deve começar com letra maiúscula e conter apenas letras maiúsculas, números e underscores';
+    }
+
+    // Validar threshold
+    if (formData.threshold < 0 || formData.threshold > 1000) {
+      errors.threshold = 'Threshold deve ser entre 0 e 1000';
+    }
+
+    // Validar weight
+    if (formData.weight < 0 || formData.weight > 100) {
+      errors.weight = 'Peso deve ser entre 0 e 100';
+    }
+
+    // Validar condições
+    formData.conditions.forEach((c, idx) => {
+      if (!c.field.trim()) {
+        errors[`condition_${idx}_field`] = 'Campo é obrigatório';
+      }
+      const valueError = validateValueByOperator(c.operator, c.value);
+      if (valueError) {
+        errors[`condition_${idx}_value`] = valueError;
+      }
+    });
+
+    // P1-03: Limite de condições
+    if (formData.conditions.length > MAX_CONDITIONS) {
+      errors.conditions = `Máximo de ${MAX_CONDITIONS} condições permitidas`;
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [formData]);
+
   const handleSave = async () => {
+    if (!validateForm()) {
+      toast.error('Corrija os erros no formulário antes de salvar');
+      return;
+    }
     saveRule.mutate();
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Tem certeza que deseja deletar esta regra?')) return;
+  // P1-09: Usar AlertDialog em vez de confirm()
+  const handleDeleteClick = (id: number) => {
+    setDeleteConfirmId(id);
+  };
 
-    deleteMutation.mutate(id);
+  const confirmDelete = () => {
+    if (deleteConfirmId !== null) {
+      deleteMutation.mutate(deleteConfirmId);
+      setDeleteConfirmId(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmId(null);
   };
 
   const handleToggle = async (id: number) => {
@@ -191,11 +329,13 @@ export default function Rules() {
           <h1 className="text-3xl font-bold text-foreground">Configuração de Regras</h1>
           <p className="text-muted-foreground mt-1">Gerenciar regras de detecção de fraude</p>
         </div>
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <Dialog open={showDialog} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
             <Button
               onClick={() => {
                 setEditingRule(null);
+                setIsDirty(false);
+                setValidationErrors({});
                 setFormData({
                   ruleName: '',
                   description: '',
@@ -224,15 +364,26 @@ export default function Rules() {
             <div className="space-y-4">
               <div>
                 <label htmlFor="ruleName" className="block text-sm font-medium text-foreground mb-2">
-                  Nome da Regra
+                  Nome da Regra <span className="text-red-500">*</span>
                 </label>
                 <Input
                   id="ruleName"
                   value={formData.ruleName}
-                  onChange={(e) => setFormData({ ...formData, ruleName: e.target.value })}
-                  placeholder="Ex: RULE_GENERIC_001 (ou LOW_AUTHENTICATION_SCORE para regra legada)"
+                  onChange={(e) => updateFormData({ ruleName: e.target.value.toUpperCase() })}
+                  placeholder="Ex: HIGH_AMOUNT_RULE"
                   disabled={!!editingRule}
+                  aria-invalid={!!validationErrors.ruleName}
+                  aria-describedby={validationErrors.ruleName ? 'ruleName-error' : undefined}
+                  className={validationErrors.ruleName ? 'border-red-500 focus:ring-red-500' : ''}
                 />
+                {validationErrors.ruleName && (
+                  <p id="ruleName-error" className="mt-1 text-xs text-red-500" role="alert">
+                    {validationErrors.ruleName}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Use UPPER_SNAKE_CASE (ex: HIGH_AMOUNT_RULE)
+                </p>
               </div>
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-foreground mb-2">
@@ -241,7 +392,7 @@ export default function Rules() {
                 <Input
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) => updateFormData({ description: e.target.value })}
                   placeholder="Descrição da regra"
                 />
               </div>
@@ -596,10 +747,11 @@ export default function Rules() {
                 </label>
               </div>
               <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setShowDialog(false)}>
+                <Button variant="outline" onClick={() => handleDialogClose(false)} disabled={saveRule.isPending}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSave}>
+                <Button onClick={handleSave} disabled={saveRule.isPending}>
+                  {saveRule.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   {editingRule ? 'Atualizar' : 'Criar'}
                 </Button>
               </div>
@@ -686,7 +838,7 @@ export default function Rules() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(rule.id)}
+                          onClick={() => handleDeleteClick(rule.id)}
                           title="Deletar"
                           className="text-red-600 hover:text-red-700"
                         >
@@ -701,6 +853,45 @@ export default function Rules() {
           )}
         </CardContent>
       </Card>
+
+      {/* P1-09: AlertDialog para confirmação de delete */}
+      <AlertDialog open={deleteConfirmId !== null} onOpenChange={(open) => !open && cancelDelete()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deletar esta regra? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+              Deletar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* P0-04: AlertDialog para unsaved changes warning */}
+      <AlertDialog open={showUnsavedWarning} onOpenChange={(open) => !open && cancelDiscard()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Alterações não salvas
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem alterações não salvas. Deseja descartá-las?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDiscard}>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDiscard} className="bg-amber-600 hover:bg-amber-700">
+              Descartar alterações
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
