@@ -8,12 +8,13 @@
  * - Loading states
  * - Acessibilidade completa (focus trap, keyboard navigation)
  * - Suporte a criação e edição
+ * - Preview JSON antes de salvar
+ * - Suporte a todos os 52 operadores
  * 
  * @version 2.0.0
  */
 
-// TODO: Implementar RuleFormDialog componente
-// export { RuleFormDialog } from './RuleFormDialog';
+export { RuleFormDialog, default } from './RuleFormDialog';
 export { useRuleForm } from './useRuleForm';
 export { 
   ruleFormSchema, 

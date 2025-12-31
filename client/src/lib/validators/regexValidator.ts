@@ -157,8 +157,9 @@ export function validateRegex(pattern: string): RegexValidationResult {
  * Procura padrões perigosos no pattern.
  */
 function findDangerousPattern(pattern: string): string | null {
-  // Verificar padrões exatos
-  for (const dangerous of DANGEROUS_PATTERNS) {
+  // Verificar padrões exatos (converter Set para Array para compatibilidade)
+  const dangerousPatternsArray = Array.from(DANGEROUS_PATTERNS);
+  for (const dangerous of dangerousPatternsArray) {
     if (pattern.includes(dangerous)) {
       return dangerous;
     }
