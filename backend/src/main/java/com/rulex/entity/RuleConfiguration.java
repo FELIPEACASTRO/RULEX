@@ -74,7 +74,8 @@ public class RuleConfiguration {
   @Enumerated(EnumType.STRING)
   private LogicOperator logicOperator;
 
-  /** Versão da configuração */
+  /** Versão da configuração (usado para optimistic locking) */
+  @Version
   @Column(nullable = false)
   private Integer version;
 
@@ -93,7 +94,7 @@ public class RuleConfiguration {
     if (updatedAt == null) {
       updatedAt = createdAt;
     }
-    version = 1;
+    // version é gerenciado automaticamente pelo @Version do JPA
     if (logicOperator == null) {
       logicOperator = LogicOperator.AND;
     }

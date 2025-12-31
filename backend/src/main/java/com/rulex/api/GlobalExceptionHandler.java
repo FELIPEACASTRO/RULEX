@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -49,6 +50,16 @@ public class GlobalExceptionHandler {
       IllegalStateException ex, HttpServletRequest req) {
     log.warn("⚠️ Estado inválido path={} msg={}", req.getRequestURI(), ex.getMessage());
     return build(HttpStatus.CONFLICT, ex.getMessage(), req);
+  }
+
+  @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+  public ResponseEntity<ApiErrorResponse> handleOptimisticLock(
+      ObjectOptimisticLockingFailureException ex, HttpServletRequest req) {
+    log.warn("⚠️ Conflito de versão path={} msg={}", req.getRequestURI(), ex.getMessage());
+    return build(
+        HttpStatus.CONFLICT,
+        "Este registro foi modificado por outro usuário. Recarregue e tente novamente.",
+        req);
   }
 
   @ExceptionHandler(Exception.class)
