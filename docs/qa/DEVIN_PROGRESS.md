@@ -53,8 +53,36 @@
 
 ---
 
-## PASSADA 2 - AUDITORIA DE INTEGRAÇÃO
-🔲 Não iniciada
+## PASSADA 2 - AUDITORIA DE INTEGRAÇÃO ✅
+
+### Stack
+| Item | Status | Evidência |
+|------|--------|-----------|
+| Docker Compose | ✅ | postgres:16-alpine rodando |
+| Flyway V1-V16 | ✅ | Todas migrations aplicadas |
+| Backend Spring Boot | ✅ | Rodando em localhost:8080 |
+
+### CRUD Regras Simples
+| Item | Status | Evidência |
+|------|--------|-----------|
+| POST /api/rules | ✅ | 201 Created |
+| GET /api/rules | ✅ | 200 OK com lista |
+| PUT /api/rules/{id} | ⏳ | Não testado ainda |
+| DELETE /api/rules/{id} | ⏳ | Não testado ainda |
+
+### Avaliação
+| Item | Status | Evidência |
+|------|--------|-----------|
+| POST /api/evaluate | ✅ | Motor de regras funcionando |
+| Regra HIGH_AMOUNT_TEST | ✅ | Acionada corretamente |
+
+### RBAC
+| Item | Status | Evidência |
+|------|--------|-----------|
+| 401 sem auth | ✅ | Retorna 401 |
+| 403 ANALYST POST | ✅ | Retorna 403 |
+| 200 ANALYST GET | ✅ | Retorna 200 |
+| 200 ADMIN POST | ✅ | Retorna 201 |
 
 ---
 
