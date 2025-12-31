@@ -50,6 +50,8 @@ class RuleEngineServiceTest {
   private final RuleExecutionLogService ruleExecutionLogService =
       Mockito.mock(RuleExecutionLogService.class);
 
+  private final EnrichmentService enrichmentService = Mockito.mock(EnrichmentService.class);
+
   private final RuleEngineService service =
       new RuleEngineService(
           transactionRepository,
@@ -60,7 +62,8 @@ class RuleEngineServiceTest {
           clock,
           payloadHashService,
           rawStoreService,
-          ruleExecutionLogService);
+          ruleExecutionLogService,
+          enrichmentService);
 
   @Test
   void returnsApproved_whenNoEnabledRules() {
@@ -127,6 +130,9 @@ class RuleEngineServiceTest {
         .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
     doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
     doNothing().when(auditService).logError(any(), any());
+    // Mock EnrichmentService for HIGH_RISK_MCC
+    when(enrichmentService.isHighRiskMcc(7995)).thenReturn(true);
+    when(enrichmentService.isHighRiskMcc(5411)).thenReturn(false);
 
     TransactionRequest req = minimalRequest();
     // Configure request fields to trigger each legacy rule deterministically.

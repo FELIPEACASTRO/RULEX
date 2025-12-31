@@ -54,6 +54,7 @@ public class RuleEngineService {
   private final PayloadHashService payloadHashService;
   private final TransactionRawStoreService rawStoreService;
   private final RuleExecutionLogService ruleExecutionLogService;
+  private final EnrichmentService enrichmentService;
 
   /** Processa uma transação e retorna a classificação de fraude. */
   public TransactionResponse analyzeTransaction(TransactionRequest request) {
@@ -599,18 +600,9 @@ public class RuleEngineService {
     return new RuleMatch(legacy, legacy ? "regra legada por nome" : null);
   }
 
-  /** Verifica se o MCC é de alto risco. */
+  /** Verifica se o MCC é de alto risco usando EnrichmentService com fallback. */
   private boolean isHighRiskMcc(Integer mcc) {
-    // MCCs de alto risco: Jogos, Criptomoedas, Transferências de dinheiro, etc.
-    Set<Integer> highRiskMccs =
-        Set.of(
-            7995, // Gambling
-            6211, // Securities Brokers
-            6051, // Crypto
-            7273, // Dating Services
-            7994 // Video Amusement
-            );
-    return highRiskMccs.contains(mcc);
+    return enrichmentService.isHighRiskMcc(mcc);
   }
 
   /** Verifica se é uma transação internacional. */
