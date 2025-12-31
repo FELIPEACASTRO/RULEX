@@ -1,2 +1,24 @@
 # Ignore example/placeholder secrets in documentation
 README.md:sidekiq-secret:42
+
+# Ignore example curl commands with placeholder credentials in QA docs
+# These are documentation examples, not real credentials
+docs/qa/ALT_COMMITTEE_BACKUP_DR.md:curl-auth-user:26
+docs/qa/ALT_COMMITTEE_BACKUP_DR.md:curl-auth-user:144
+docs/qa/ALT_COMMITTEE_GAPS.md:curl-auth-user:36
+docs/qa/ALT_COMMITTEE_FINAL_SCORECARD.md:curl-auth-user:97
+docs/qa/ALT_COMMITTEE_RULES_CRUD_EVIDENCE.md:curl-auth-user:28
+docs/qa/ALT_COMMITTEE_RULES_CRUD_EVIDENCE.md:curl-auth-user:65
+docs/qa/ALT_COMMITTEE_RULES_CRUD_EVIDENCE.md:curl-auth-user:83
+docs/qa/ALT_COMMITTEE_RULES_CRUD_EVIDENCE.md:curl-auth-user:120
+docs/qa/ALT_COMMITTEE_RULES_CRUD_EVIDENCE.md:curl-auth-user:135
+docs/qa/ALT_COMMITTEE_RULES_CRUD_EVIDENCE.md:curl-auth-user:173
+docs/qa/ALT_COMMITTEE_RULES_CRUD_PROOFS.md:curl-auth-user:27
+docs/qa/ALT_COMMITTEE_RULES_CRUD_PROOFS.md:curl-auth-user:76
+docs/qa/ALT_COMMITTEE_RULES_CRUD_PROOFS.md:curl-auth-user:114
+docs/qa/ALT_COMMITTEE_RULES_CRUD_PROOFS.md:curl-auth-user:139
+docs/qa/ALT_COMMITTEE_RULES_CRUD_PROOFS.md:curl-auth-user:166
+docs/qa/ALT_COMMITTEE_RULES_CRUD_PROOFS.md:curl-auth-user:229
+docs/qa/ALT_COMMITTEE_RULES_CRUD_PROOFS.md:curl-auth-user:257
+docs/qa/ALT_COMMITTEE_RULES_CRUD_PROOFS.md:curl-auth-user:268
+docs/qa/MEGACOMMITTEE_RULES_CRUD_EVIDENCE.md:curl-auth-user:32
