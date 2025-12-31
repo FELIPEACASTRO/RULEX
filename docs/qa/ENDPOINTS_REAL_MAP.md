@@ -1,345 +1,260 @@
 # ENDPOINTS REAL MAP - RULEX
 
-## Última Atualização: 2024-12-31
+## Fonte
+Mapeado a partir dos Controllers Java em:
+- `backend/src/main/java/com/rulex/controller/`
+- `backend/src/main/java/com/rulex/v31/`
+
+**Context-Path:** `/api` (configurado em application.properties)
 
 ---
 
 ## 1. Regras Simples (`/api/rules`)
 
-### 1.1 Listar Regras
-```bash
-curl -X GET "http://localhost:8080/api/rules" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg=" \
-  -H "Content-Type: application/json"
-```
+| Método | Endpoint | Descrição | Role |
+|--------|----------|-----------|------|
+| GET | `/rules` | Listar todas as regras | ANALYST, ADMIN |
+| GET | `/rules/{id}` | Buscar regra por ID | ANALYST, ADMIN |
+| POST | `/rules` | Criar nova regra | ADMIN |
+| PUT | `/rules/{id}` | Atualizar regra | ADMIN |
+| DELETE | `/rules/{id}` | Deletar regra | ADMIN |
+| GET | `/rules/enabled/{enabled}` | Listar por status | ANALYST, ADMIN |
+| GET | `/rules/{id}/history` | Histórico de versões | ANALYST, ADMIN |
 
-**Response:**
-```json
-{
-  "content": [
-    {
-      "id": 1,
-      "ruleName": "HIGH_AMOUNT_RULE",
-      "description": "Bloqueia transações acima de R$ 10.000",
-      "ruleType": "SECURITY",
-      "classification": "SUSPICIOUS",
-      "threshold": 1000000,
-      "weight": 80,
-      "enabled": true,
-      "conditionsJson": "[{\"field\":\"transactionAmount\",\"operator\":\"GT\",\"value\":\"1000000\"}]",
-      "logicOperator": "AND"
-    }
-  ],
-  "totalElements": 1,
-  "totalPages": 1
-}
-```
-
-### 1.2 Criar Regra
+### Exemplo: Criar Regra
 ```bash
-curl -X POST "http://localhost:8080/api/rules" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg=" \
+curl -X POST http://localhost:8080/api/rules \
   -H "Content-Type: application/json" \
+  -u admin:admin123 \
   -d '{
     "ruleName": "HIGH_AMOUNT_RULE",
-    "description": "Bloqueia transações acima de R$ 10.000",
+    "description": "Transações acima de R$5000",
     "ruleType": "SECURITY",
     "classification": "SUSPICIOUS",
-    "threshold": 1000000,
-    "weight": 80,
+    "threshold": 0,
+    "weight": 50,
     "enabled": true,
-    "conditionsJson": "[{\"field\":\"transactionAmount\",\"operator\":\"GT\",\"value\":\"1000000\"}]",
-    "logicOperator": "AND"
+    "logicOperator": "AND",
+    "conditions": [
+      {"field": "transactionAmount", "operator": "GT", "value": "500000"}
+    ]
   }'
-```
-
-### 1.3 Atualizar Regra
-```bash
-curl -X PUT "http://localhost:8080/api/rules/1" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg=" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ruleName": "HIGH_AMOUNT_RULE",
-    "description": "Atualizado",
-    "ruleType": "SECURITY",
-    "classification": "FRAUD",
-    "threshold": 500000,
-    "weight": 90,
-    "enabled": true
-  }'
-```
-
-### 1.4 Deletar Regra
-```bash
-curl -X DELETE "http://localhost:8080/api/rules/1" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg="
-```
-
-### 1.5 Toggle Enabled
-```bash
-curl -X PUT "http://localhost:8080/api/rules/1/toggle" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg="
 ```
 
 ---
 
-## 2. Regras Complexas (`/api/v1/complex-rules`)
+## 2. Regras Complexas - CRUD (`/api/complex-rules`)
 
-### 2.1 Listar Regras Complexas
-```bash
-curl -X GET "http://localhost:8080/api/v1/complex-rules" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg=" \
-  -H "Content-Type: application/json"
-```
+| Método | Endpoint | Descrição | Role |
+|--------|----------|-----------|------|
+| GET | `/complex-rules` | Listar regras complexas | ANALYST, ADMIN |
+| GET | `/complex-rules/{id}` | Buscar por ID | ANALYST, ADMIN |
+| GET | `/complex-rules/key/{key}` | Buscar por chave | ANALYST, ADMIN |
+| POST | `/complex-rules` | Criar regra complexa | ADMIN |
+| PUT | `/complex-rules/{id}` | Atualizar regra | ADMIN |
+| DELETE | `/complex-rules/{id}` | Deletar regra | ADMIN |
+| POST | `/complex-rules/{id}/duplicate` | Duplicar regra | ADMIN |
+| POST | `/complex-rules/validate` | Validar sem salvar | ANALYST, ADMIN |
 
-### 2.2 Criar Regra Complexa
+### Exemplo: Criar Regra Complexa
 ```bash
-curl -X POST "http://localhost:8080/api/v1/complex-rules" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg=" \
+curl -X POST http://localhost:8080/api/complex-rules \
   -H "Content-Type: application/json" \
+  -u admin:admin123 \
   -d '{
-    "key": "GAMBLING_INTERNATIONAL",
-    "title": "Gambling Internacional",
-    "description": "Detecta transações de gambling fora do Brasil",
+    "key": "EXTREME_RULE_001",
+    "title": "Regra Extrema de Fraude",
+    "description": "Detecta padrões complexos",
     "status": "DRAFT",
-    "priority": 90,
-    "severity": 85,
-    "decision": "FRAUDE",
-    "reasonTemplate": "Transação de gambling no país ${merchantCountryCode}",
+    "priority": 100,
+    "severity": 80,
+    "decision": "SUSPEITA_DE_FRAUDE",
     "enabled": true,
     "rootConditionGroup": {
       "logicOperator": "AND",
       "conditions": [
-        {
-          "fieldName": "mcc",
-          "operator": "IN",
-          "valueType": "NUMBER",
-          "valueArray": ["7995", "7994"]
-        },
-        {
-          "fieldName": "merchantCountryCode",
-          "operator": "NEQ",
-          "valueType": "STRING",
-          "valueSingle": "076"
-        }
+        {"fieldName": "transactionAmount", "operator": "GT", "valueType": "NUMBER", "valueSingle": "1000"}
       ],
       "children": []
     }
   }'
 ```
 
-### 2.3 Validar Regra (sem salvar)
-```bash
-curl -X POST "http://localhost:8080/api/v1/complex-rules/validate" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg=" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "key": "TEST_RULE",
-    "title": "Test",
-    "rootConditionGroup": {
-      "logicOperator": "AND",
-      "conditions": [
-        {
-          "fieldName": "transactionAmount",
-          "operator": "GT",
-          "valueSingle": "1000"
-        }
-      ]
-    }
-  }'
-```
+---
 
-### 2.4 Duplicar Regra
-```bash
-curl -X POST "http://localhost:8080/api/v1/complex-rules/{id}/duplicate?newKey=COPY_RULE" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg="
-```
+## 3. Regras Complexas - Estrutura (`/api/v1/complex-rules`)
+
+| Método | Endpoint | Descrição | Role |
+|--------|----------|-----------|------|
+| POST | `/{ruleVersionId}/conditions` | Salvar grupo de condições | ADMIN |
+| GET | `/{ruleVersionId}/conditions` | Buscar grupo de condições | ANALYST, ADMIN |
+| POST | `/{ruleVersionId}/expressions` | Salvar expressões | ADMIN |
+| GET | `/{ruleVersionId}/expressions` | Buscar expressões | ANALYST, ADMIN |
+| POST | `/{ruleVersionId}/variables` | Salvar variáveis | ADMIN |
+| GET | `/{ruleVersionId}/variables` | Buscar variáveis | ANALYST, ADMIN |
+| POST | `/{ruleVersionId}/actions` | Salvar ações | ADMIN |
+| GET | `/{ruleVersionId}/actions` | Buscar ações | ANALYST, ADMIN |
+| GET | `/{ruleVersionId}/fields` | Campos usados | ANALYST, ADMIN |
+| GET | `/{ruleVersionId}/validate-depth` | Validar profundidade | ANALYST, ADMIN |
+| POST | `/{ruleVersionId}/evaluate` | Avaliar com payload | ADMIN |
+| DELETE | `/{ruleVersionId}` | Deletar estrutura | ADMIN |
+
+### Templates
+| Método | Endpoint | Descrição | Role |
+|--------|----------|-----------|------|
+| GET | `/templates` | Listar todos | ANALYST, ADMIN |
+| GET | `/templates/system` | Templates do sistema | ANALYST, ADMIN |
+| GET | `/templates/category/{category}` | Por categoria | ANALYST, ADMIN |
+| GET | `/templates/{name}` | Por nome | ANALYST, ADMIN |
 
 ---
 
-## 3. Complex Rules CRUD (`/api/complex-rules`)
+## 4. Avaliação (`/api/evaluate`, `/api/transactions`)
 
-**Nota:** Endpoint alternativo para CRUD de regras complexas.
+| Método | Endpoint | Descrição | Role |
+|--------|----------|-----------|------|
+| POST | `/evaluate` | Avaliar transação | PUBLIC |
+| POST | `/transactions/analyze` | Analisar transação | PUBLIC |
+| POST | `/transactions/analyze-advanced` | Análise avançada | PUBLIC |
+| GET | `/transactions` | Listar transações | ANALYST, ADMIN |
+| GET | `/transactions/{id}` | Buscar por ID | ANALYST, ADMIN |
+| GET | `/transactions/external/{externalId}` | Buscar por ID externo | ANALYST, ADMIN |
+| GET | `/transactions/export` | Exportar | ANALYST, ADMIN |
 
-### 3.1 Listar
+### Exemplo: Avaliar Transação
 ```bash
-curl -X GET "http://localhost:8080/api/complex-rules" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg="
-```
-
-### 3.2 Buscar por Key
-```bash
-curl -X GET "http://localhost:8080/api/complex-rules/key/GAMBLING_INTERNATIONAL" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg="
-```
-
----
-
-## 4. Avaliação de Transações (`/api/evaluate`)
-
-### 4.1 Avaliar Transação
-```bash
-curl -X POST "http://localhost:8080/api/evaluate" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg=" \
+curl -X POST http://localhost:8080/api/evaluate \
   -H "Content-Type: application/json" \
   -d '{
     "externalTransactionId": "TXN-001",
-    "customerIdFromHeader": "CUST-001",
-    "customerAcctNumber": 123456789,
+    "customerIdFromHeader": "CUST-123",
     "pan": "4111111111111111",
-    "merchantId": "MERCH-001",
-    "merchantName": "Test Merchant",
-    "merchantCity": "SAO PAULO",
-    "merchantState": "SP",
-    "merchantCountryCode": "076",
     "transactionAmount": 100000,
     "transactionCurrencyCode": 986,
-    "transactionDate": 20241231,
-    "transactionTime": 143000,
-    "mcc": 5411,
-    "consumerAuthenticationScore": 80,
-    "externalScore3": 70,
-    "cavvResult": 0,
-    "eciIndicator": 5,
-    "atcCard": 100,
-    "atcHost": 100,
-    "tokenAssuranceLevel": 1,
-    "availableCredit": 500000,
-    "cardCashBalance": 0,
-    "cardDelinquentAmount": 0
+    "merchantId": "MERCH-001",
+    "merchantCountryCode": "076",
+    "mcc": 5411
   }'
-```
-
-**Response:**
-```json
-{
-  "transactionId": "TXN-001",
-  "classification": "APPROVED",
-  "riskScore": 0,
-  "reason": "Transação aprovada. Nenhuma regra crítica foi acionada.",
-  "rulesetVersion": "1.0",
-  "processingTimeMs": 45,
-  "timestamp": "2024-12-31T14:30:00Z",
-  "ruleHits": [],
-  "popups": []
-}
 ```
 
 ---
 
-## 5. Transações (`/api/transactions`)
+## 5. Simulação (`/api/rules/simulation`)
 
-### 5.1 Analisar Transação
-```bash
-curl -X POST "http://localhost:8080/api/transactions/analyze" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg=" \
-  -H "Content-Type: application/json" \
-  -d '{ ... mesmo payload do /evaluate ... }'
-```
-
-### 5.2 Listar Transações
-```bash
-curl -X GET "http://localhost:8080/api/transactions?page=0&size=20" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg="
-```
-
-### 5.3 Buscar por ID
-```bash
-curl -X GET "http://localhost:8080/api/transactions/TXN-001" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg="
-```
+| Método | Endpoint | Descrição | Role |
+|--------|----------|-----------|------|
+| POST | `/rules/simulation/test` | Testar regra | ADMIN |
+| POST | `/rules/simulation/backtest/{ruleId}` | Backtest | ADMIN |
+| POST | `/rules/simulation/compare` | Comparar regras | ADMIN |
+| POST | `/rules/simulation/batch` | Batch de transações | ADMIN |
 
 ---
 
-## 6. Simulação (`/api/rules/simulation`)
+## 6. Validação e Lint (`/api/rules`)
 
-### 6.1 Executar Simulação
-```bash
-curl -X POST "http://localhost:8080/api/rules/simulation/run" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg=" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ruleIds": [1, 2, 3],
-    "transactionIds": ["TXN-001", "TXN-002"]
-  }'
-```
+| Método | Endpoint | Descrição | Role |
+|--------|----------|-----------|------|
+| POST | `/rules/validate` | Validar regra | ANALYST, ADMIN |
+| POST | `/rules/lint` | Lint de regra | ANALYST, ADMIN |
+| POST | `/rules/simulate` | Simular regra | ADMIN |
 
 ---
 
 ## 7. Auditoria (`/api/audit`)
 
-### 7.1 Listar Logs de Auditoria
-```bash
-curl -X GET "http://localhost:8080/api/audit?page=0&size=20" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg="
-```
-
-### 7.2 Exportar Auditoria
-```bash
-curl -X GET "http://localhost:8080/api/audit/export?format=csv" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg="
-```
+| Método | Endpoint | Descrição | Role |
+|--------|----------|-----------|------|
+| GET | `/audit` | Listar logs de auditoria | ANALYST, ADMIN |
+| GET | `/audit/export` | Exportar logs | ANALYST, ADMIN |
+| GET | `/audit/transaction/{transactionId}` | Por transação | ANALYST, ADMIN |
 
 ---
 
-## 8. Aprovações (`/api/rules/approvals`)
+## 8. Métricas (`/api/metrics`, `/api/rules/metrics`)
 
-### 8.1 Listar Pendentes
-```bash
-curl -X GET "http://localhost:8080/api/rules/approvals/pending" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg="
-```
-
-### 8.2 Aprovar
-```bash
-curl -X POST "http://localhost:8080/api/rules/approvals/1/approve" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg=" \
-  -H "Content-Type: application/json" \
-  -d '{"comment": "Aprovado após revisão"}'
-```
-
-### 8.3 Rejeitar
-```bash
-curl -X POST "http://localhost:8080/api/rules/approvals/1/reject" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg=" \
-  -H "Content-Type: application/json" \
-  -d '{"comment": "Regra muito permissiva"}'
-```
+| Método | Endpoint | Descrição | Role |
+|--------|----------|-----------|------|
+| GET | `/metrics` | Métricas gerais | ANALYST, ADMIN |
+| GET | `/metrics/mcc` | Por MCC | ANALYST, ADMIN |
+| GET | `/metrics/merchant` | Por merchant | ANALYST, ADMIN |
+| GET | `/metrics/timeline` | Timeline | ANALYST, ADMIN |
+| GET | `/rules/metrics/dashboard` | Dashboard | ANALYST, ADMIN |
+| GET | `/rules/metrics/{ruleId}` | Por regra | ANALYST, ADMIN |
+| GET | `/rules/metrics/all` | Todas as regras | ANALYST, ADMIN |
+| POST | `/rules/metrics/{ruleId}/false-positive` | Marcar FP | ADMIN |
+| POST | `/rules/metrics/{ruleId}/true-positive` | Marcar TP | ADMIN |
 
 ---
 
-## 9. Métricas (`/api/rules/metrics`)
+## 9. Export/Import (`/api/v1/rules/export-import`)
 
-### 9.1 Métricas de Regras
-```bash
-curl -X GET "http://localhost:8080/api/rules/metrics" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg="
-```
+| Método | Endpoint | Descrição | Role |
+|--------|----------|-----------|------|
+| GET | `/export` | Exportar todas | ADMIN |
+| POST | `/export/selective` | Exportar selecionadas | ADMIN |
+| GET | `/export/complex` | Exportar complexas | ADMIN |
+| POST | `/import` | Importar JSON | ADMIN |
+| POST | `/import/file` | Importar arquivo | ADMIN |
+| POST | `/validate` | Validar import | ADMIN |
+| GET | `/template/simple` | Template simples | ANALYST, ADMIN |
+| GET | `/template/complex` | Template complexo | ANALYST, ADMIN |
 
 ---
 
-## 10. Homolog (`/api/homolog/*`)
+## 10. Homologação (`/api/homolog`)
 
-### 10.1 Listar Rulesets
-```bash
-curl -X GET "http://localhost:8080/api/homolog/rulesets" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg="
-```
+| Método | Endpoint | Descrição | Role |
+|--------|----------|-----------|------|
+| POST | `/homolog/rules` | Criar regra | ADMIN |
+| GET | `/homolog/rules/{ruleId}/latest` | Última versão | ADMIN |
+| POST | `/homolog/rules/versions/{versionId}/publish` | Publicar | ADMIN |
+| POST | `/homolog/rules/{ruleId}/rollback/{version}` | Rollback | ADMIN |
+| POST | `/homolog/rulesets` | Criar ruleset | ADMIN |
+| POST | `/homolog/rulesets/versions/{versionId}/publish` | Publicar | ADMIN |
+| POST | `/homolog/rulesets/activate` | Ativar | ADMIN |
+| POST | `/homolog/simulations/run` | Executar simulação | ADMIN |
 
-### 10.2 Listar Regras de um Ruleset
-```bash
-curl -X GET "http://localhost:8080/api/homolog/rules?rulesetId=1" \
-  -H "Authorization: Basic YWRtaW46cnVsZXg="
-```
+---
+
+## 11. Field Dictionary (`/api/field-dictionary`)
+
+| Método | Endpoint | Descrição | Role |
+|--------|----------|-----------|------|
+| GET | `/field-dictionary` | Listar campos | ANALYST, ADMIN |
+
+---
+
+## 12. Aprovações (`/api/rules/approvals`)
+
+| Método | Endpoint | Descrição | Role |
+|--------|----------|-----------|------|
+| POST | `/create` | Solicitar criação | ADMIN |
+| POST | `/update/{ruleId}` | Solicitar update | ADMIN |
+| POST | `/delete/{ruleId}` | Solicitar delete | ADMIN |
+| POST | `/{id}/approve` | Aprovar | ADMIN |
+| POST | `/{id}/reject` | Rejeitar | ADMIN |
+| POST | `/{id}/cancel` | Cancelar | ADMIN |
+| GET | `/pending` | Listar pendentes | ADMIN |
+| GET | `/pending/page` | Paginado | ADMIN |
+| GET | `/pending/count` | Contar pendentes | ADMIN |
+| GET | `/{id}` | Buscar por ID | ADMIN |
+| GET | `/history/{ruleId}` | Histórico | ADMIN |
 
 ---
 
 ## Autenticação
 
-Todos os endpoints requerem autenticação Basic Auth:
-- **Username:** admin
-- **Password:** rulex
-- **Header:** `Authorization: Basic YWRtaW46cnVsZXg=`
+**Tipo:** HTTP Basic Auth
+
+**Usuários (dev):**
+- `admin:admin123` → Role: ADMIN
+- `analyst:analyst123` → Role: ANALYST
+
+**Headers:**
+```
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+Content-Type: application/json
+```
 
 ---
 
@@ -349,9 +264,10 @@ Todos os endpoints requerem autenticação Basic Auth:
 |--------|-------------|
 | 200 | Sucesso |
 | 201 | Criado |
+| 204 | Sem conteúdo (delete) |
 | 400 | Requisição inválida |
-| 401 | Não autorizado |
-| 403 | Proibido |
+| 401 | Não autenticado |
+| 403 | Não autorizado |
 | 404 | Não encontrado |
-| 409 | Conflito (ex: chave duplicada) |
+| 409 | Conflito (versão) |
 | 500 | Erro interno |

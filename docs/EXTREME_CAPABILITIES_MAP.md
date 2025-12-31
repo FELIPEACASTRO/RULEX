@@ -87,7 +87,7 @@ O RULEX é um motor de regras de fraude que suporta desde regras simples até ex
 | `MOD_EQ` | Módulo igual a | `transactionAmount MOD_EQ 100,0` (divisível por 100) |
 | `MOD_NEQ` | Módulo diferente de | `mcc MOD_NEQ 1000,0` |
 
-### 1.10 Operadores de Geolocalização (NOVO)
+### 1.10 Operadores de Geolocalização
 | Operador | Descrição | Exemplo |
 |----------|-----------|---------|
 | `GEO_DISTANCE_LT` | Distância menor que (km) | `merchantLocation GEO_DISTANCE_LT -23.55,-46.63,100` |
@@ -95,6 +95,25 @@ O RULEX é um motor de regras de fraude que suporta desde regras simples até ex
 | `GEO_IN_POLYGON` | Dentro do polígono | `merchantLocation GEO_IN_POLYGON BRASIL` |
 
 **Nota:** Coordenadas são derivadas de `merchantCity`, `merchantState`, `merchantCountryCode` via tabela `geo_reference`.
+
+### 1.11 Operadores de Velocity (Agregações Temporais)
+| Operador | Descrição | Formato do Valor |
+|----------|-----------|------------------|
+| `VELOCITY_COUNT_GT` | Contagem de transações maior que | `keyType,windowMinutes,threshold` |
+| `VELOCITY_COUNT_LT` | Contagem de transações menor que | `keyType,windowMinutes,threshold` |
+| `VELOCITY_SUM_GT` | Soma de valores maior que | `keyType,windowMinutes,threshold` |
+| `VELOCITY_SUM_LT` | Soma de valores menor que | `keyType,windowMinutes,threshold` |
+| `VELOCITY_AVG_GT` | Média de valores maior que | `keyType,windowMinutes,threshold` |
+| `VELOCITY_AVG_LT` | Média de valores menor que | `keyType,windowMinutes,threshold` |
+| `VELOCITY_DISTINCT_GT` | Valores distintos maior que | `keyType,windowMinutes,distinctType,threshold` |
+| `VELOCITY_DISTINCT_LT` | Valores distintos menor que | `keyType,windowMinutes,distinctType,threshold` |
+
+**Exemplos:**
+- `VELOCITY_COUNT_GT PAN,60,5` → Mais de 5 transações do mesmo PAN na última hora
+- `VELOCITY_SUM_GT PAN,1440,10000` → Soma > R$10.000 do mesmo PAN nas últimas 24h
+- `VELOCITY_DISTINCT_GT PAN,1440,MERCHANTS,3` → Mais de 3 merchants distintos em 24h
+
+**Nota:** Agregações calculadas via `velocity_transaction_log` sem alterar o payload de entrada.
 
 ---
 
