@@ -29,10 +29,10 @@ export type ComparisonOperator =
   | 'IN' | 'NOT_IN'
   // Range
   | 'BETWEEN' | 'NOT_BETWEEN'
-  // Strings
-  | 'CONTAINS' | 'NOT_CONTAINS' | 'STARTS_WITH' | 'ENDS_WITH' | 'MATCHES_REGEX'
-  // Nulos
-  | 'IS_NULL' | 'IS_NOT_NULL'
+  // Strings (REGEX alinhado com backend, MATCHES_REGEX mantido para compatibilidade)
+  | 'CONTAINS' | 'NOT_CONTAINS' | 'STARTS_WITH' | 'ENDS_WITH' | 'REGEX' | 'NOT_REGEX' | 'MATCHES_REGEX'
+  // Nulos (NOT_NULL alinhado com backend, IS_NOT_NULL mantido para compatibilidade)
+  | 'IS_NULL' | 'NOT_NULL' | 'IS_NOT_NULL'
   // Booleanos
   | 'IS_TRUE' | 'IS_FALSE'
   // Comparação entre campos
@@ -43,13 +43,15 @@ export type ComparisonOperator =
   // Arrays
   | 'ARRAY_CONTAINS' | 'ARRAY_NOT_CONTAINS' | 'ARRAY_SIZE_EQ' | 'ARRAY_SIZE_GT' | 'ARRAY_SIZE_LT'
   // Matemáticos
-  | 'MOD_EQ' | 'MOD_NEQ';
+  | 'MOD_EQ' | 'MOD_NEQ'
+  // Geolocalização
+  | 'GEO_DISTANCE_LT' | 'GEO_DISTANCE_GT' | 'GEO_IN_POLYGON';
 
 export interface OperatorInfo {
   value: ComparisonOperator;
   label: string;
   description: string;
-  category: 'basic' | 'list' | 'range' | 'string' | 'null' | 'boolean' | 'field' | 'date' | 'array' | 'math';
+  category: 'basic' | 'list' | 'range' | 'string' | 'null' | 'boolean' | 'field' | 'date' | 'array' | 'math' | 'geo';
   requiresValue: boolean;
   requiresSecondValue?: boolean;
   requiresFieldRef?: boolean;
@@ -64,30 +66,33 @@ export const COMPARISON_OPERATORS: OperatorInfo[] = [
   { value: 'GTE', label: '≥', description: 'Maior ou igual a', category: 'basic', requiresValue: true, applicableTypes: ['NUMBER', 'DATE', 'TIME', 'DATETIME'] },
   { value: 'LT', label: '<', description: 'Menor que', category: 'basic', requiresValue: true, applicableTypes: ['NUMBER', 'DATE', 'TIME', 'DATETIME'] },
   { value: 'LTE', label: '≤', description: 'Menor ou igual a', category: 'basic', requiresValue: true, applicableTypes: ['NUMBER', 'DATE', 'TIME', 'DATETIME'] },
-  
+
   // Listas
   { value: 'IN', label: 'está em', description: 'Valor está na lista', category: 'list', requiresValue: true, applicableTypes: ['STRING', 'NUMBER'] },
   { value: 'NOT_IN', label: 'não está em', description: 'Valor não está na lista', category: 'list', requiresValue: true, applicableTypes: ['STRING', 'NUMBER'] },
-  
+
   // Range
   { value: 'BETWEEN', label: 'entre', description: 'Valor está entre dois valores', category: 'range', requiresValue: true, requiresSecondValue: true, applicableTypes: ['NUMBER', 'DATE', 'TIME', 'DATETIME'] },
   { value: 'NOT_BETWEEN', label: 'não entre', description: 'Valor não está entre dois valores', category: 'range', requiresValue: true, requiresSecondValue: true, applicableTypes: ['NUMBER', 'DATE', 'TIME', 'DATETIME'] },
-  
+
   // Strings
   { value: 'CONTAINS', label: 'contém', description: 'Texto contém', category: 'string', requiresValue: true, applicableTypes: ['STRING'] },
   { value: 'NOT_CONTAINS', label: 'não contém', description: 'Texto não contém', category: 'string', requiresValue: true, applicableTypes: ['STRING'] },
   { value: 'STARTS_WITH', label: 'começa com', description: 'Texto começa com', category: 'string', requiresValue: true, applicableTypes: ['STRING'] },
   { value: 'ENDS_WITH', label: 'termina com', description: 'Texto termina com', category: 'string', requiresValue: true, applicableTypes: ['STRING'] },
-  { value: 'MATCHES_REGEX', label: 'regex', description: 'Corresponde à expressão regular', category: 'string', requiresValue: true, applicableTypes: ['STRING'] },
-  
+  { value: 'REGEX', label: 'regex', description: 'Corresponde à expressão regular', category: 'string', requiresValue: true, applicableTypes: ['STRING'] },
+  { value: 'NOT_REGEX', label: 'não regex', description: 'Não corresponde à expressão regular', category: 'string', requiresValue: true, applicableTypes: ['STRING'] },
+  { value: 'MATCHES_REGEX', label: 'regex (legacy)', description: 'Corresponde à regex (use REGEX)', category: 'string', requiresValue: true, applicableTypes: ['STRING'] },
+
   // Nulos
   { value: 'IS_NULL', label: 'é nulo', description: 'Campo é nulo', category: 'null', requiresValue: false, applicableTypes: ['STRING', 'NUMBER', 'BOOLEAN', 'DATE', 'TIME', 'DATETIME', 'ARRAY_STRING', 'ARRAY_NUMBER'] },
-  { value: 'IS_NOT_NULL', label: 'não é nulo', description: 'Campo não é nulo', category: 'null', requiresValue: false, applicableTypes: ['STRING', 'NUMBER', 'BOOLEAN', 'DATE', 'TIME', 'DATETIME', 'ARRAY_STRING', 'ARRAY_NUMBER'] },
-  
+  { value: 'NOT_NULL', label: 'não é nulo', description: 'Campo não é nulo', category: 'null', requiresValue: false, applicableTypes: ['STRING', 'NUMBER', 'BOOLEAN', 'DATE', 'TIME', 'DATETIME', 'ARRAY_STRING', 'ARRAY_NUMBER'] },
+  { value: 'IS_NOT_NULL', label: 'não é nulo (legacy)', description: 'Campo não é nulo (use NOT_NULL)', category: 'null', requiresValue: false, applicableTypes: ['STRING', 'NUMBER', 'BOOLEAN', 'DATE', 'TIME', 'DATETIME', 'ARRAY_STRING', 'ARRAY_NUMBER'] },
+
   // Booleanos
   { value: 'IS_TRUE', label: 'é verdadeiro', description: 'Campo é verdadeiro', category: 'boolean', requiresValue: false, applicableTypes: ['BOOLEAN'] },
   { value: 'IS_FALSE', label: 'é falso', description: 'Campo é falso', category: 'boolean', requiresValue: false, applicableTypes: ['BOOLEAN'] },
-  
+
   // Comparação entre campos
   { value: 'FIELD_EQ', label: '= campo', description: 'Igual a outro campo', category: 'field', requiresValue: false, requiresFieldRef: true, applicableTypes: ['STRING', 'NUMBER', 'DATE', 'TIME', 'DATETIME'] },
   { value: 'FIELD_NEQ', label: '≠ campo', description: 'Diferente de outro campo', category: 'field', requiresValue: false, requiresFieldRef: true, applicableTypes: ['STRING', 'NUMBER', 'DATE', 'TIME', 'DATETIME'] },
@@ -95,7 +100,7 @@ export const COMPARISON_OPERATORS: OperatorInfo[] = [
   { value: 'FIELD_GTE', label: '≥ campo', description: 'Maior ou igual a outro campo', category: 'field', requiresValue: false, requiresFieldRef: true, applicableTypes: ['NUMBER', 'DATE', 'TIME', 'DATETIME'] },
   { value: 'FIELD_LT', label: '< campo', description: 'Menor que outro campo', category: 'field', requiresValue: false, requiresFieldRef: true, applicableTypes: ['NUMBER', 'DATE', 'TIME', 'DATETIME'] },
   { value: 'FIELD_LTE', label: '≤ campo', description: 'Menor ou igual a outro campo', category: 'field', requiresValue: false, requiresFieldRef: true, applicableTypes: ['NUMBER', 'DATE', 'TIME', 'DATETIME'] },
-  
+
   // Data/Hora
   { value: 'DATE_BEFORE', label: 'data antes de', description: 'Data anterior a', category: 'date', requiresValue: true, applicableTypes: ['DATE', 'DATETIME'] },
   { value: 'DATE_AFTER', label: 'data após', description: 'Data posterior a', category: 'date', requiresValue: true, applicableTypes: ['DATE', 'DATETIME'] },
@@ -103,34 +108,41 @@ export const COMPARISON_OPERATORS: OperatorInfo[] = [
   { value: 'TIME_BEFORE', label: 'hora antes de', description: 'Hora anterior a', category: 'date', requiresValue: true, applicableTypes: ['TIME', 'DATETIME'] },
   { value: 'TIME_AFTER', label: 'hora após', description: 'Hora posterior a', category: 'date', requiresValue: true, applicableTypes: ['TIME', 'DATETIME'] },
   { value: 'TIME_BETWEEN', label: 'hora entre', description: 'Hora entre dois horários', category: 'date', requiresValue: true, requiresSecondValue: true, applicableTypes: ['TIME', 'DATETIME'] },
-  
+
   // Arrays
   { value: 'ARRAY_CONTAINS', label: 'array contém', description: 'Array contém o valor', category: 'array', requiresValue: true, applicableTypes: ['ARRAY_STRING', 'ARRAY_NUMBER'] },
   { value: 'ARRAY_NOT_CONTAINS', label: 'array não contém', description: 'Array não contém o valor', category: 'array', requiresValue: true, applicableTypes: ['ARRAY_STRING', 'ARRAY_NUMBER'] },
   { value: 'ARRAY_SIZE_EQ', label: 'tamanho =', description: 'Tamanho do array igual a', category: 'array', requiresValue: true, applicableTypes: ['ARRAY_STRING', 'ARRAY_NUMBER'] },
   { value: 'ARRAY_SIZE_GT', label: 'tamanho >', description: 'Tamanho do array maior que', category: 'array', requiresValue: true, applicableTypes: ['ARRAY_STRING', 'ARRAY_NUMBER'] },
   { value: 'ARRAY_SIZE_LT', label: 'tamanho <', description: 'Tamanho do array menor que', category: 'array', requiresValue: true, applicableTypes: ['ARRAY_STRING', 'ARRAY_NUMBER'] },
-  
+
   // Matemáticos
   { value: 'MOD_EQ', label: 'módulo =', description: 'Resto da divisão igual a', category: 'math', requiresValue: true, requiresSecondValue: true, applicableTypes: ['NUMBER'] },
   { value: 'MOD_NEQ', label: 'módulo ≠', description: 'Resto da divisão diferente de', category: 'math', requiresValue: true, requiresSecondValue: true, applicableTypes: ['NUMBER'] },
+
+  // Geolocalização
+  { value: 'GEO_DISTANCE_LT', label: 'distância <', description: 'Distância menor que (km). Formato: lat,lon,distKm', category: 'geo', requiresValue: true, applicableTypes: ['STRING'] },
+  { value: 'GEO_DISTANCE_GT', label: 'distância >', description: 'Distância maior que (km). Formato: lat,lon,distKm', category: 'geo', requiresValue: true, applicableTypes: ['STRING'] },
+  { value: 'GEO_IN_POLYGON', label: 'no polígono', description: 'Dentro do polígono. Valor: nome do polígono', category: 'geo', requiresValue: true, applicableTypes: ['STRING'] },
 ];
 
 // ============================================
 // TIPOS DE VALOR
 // ============================================
 
-export type ValueType = 
-  | 'STRING' 
-  | 'NUMBER' 
-  | 'BOOLEAN' 
-  | 'DATE' 
-  | 'TIME' 
-  | 'DATETIME' 
-  | 'ARRAY_STRING' 
-  | 'ARRAY_NUMBER' 
-  | 'FIELD_REFERENCE' 
-  | 'EXPRESSION';
+export type ValueType =
+  | 'STRING'
+  | 'NUMBER'
+  | 'BOOLEAN'
+  | 'DATE'
+  | 'TIME'
+  | 'DATETIME'
+  | 'ARRAY_STRING'
+  | 'ARRAY_NUMBER'
+  | 'FIELD_REFERENCE'
+  | 'EXPRESSION'
+  | 'GEO_POINT'
+  | 'GEO_POLYGON';
 
 export const VALUE_TYPES: { value: ValueType; label: string }[] = [
   { value: 'STRING', label: 'Texto' },
@@ -143,6 +155,8 @@ export const VALUE_TYPES: { value: ValueType; label: string }[] = [
   { value: 'ARRAY_NUMBER', label: 'Lista de Números' },
   { value: 'FIELD_REFERENCE', label: 'Referência a Campo' },
   { value: 'EXPRESSION', label: 'Expressão' },
+  { value: 'GEO_POINT', label: 'Ponto Geográfico' },
+  { value: 'GEO_POLYGON', label: 'Polígono Geográfico' },
 ];
 
 // ============================================

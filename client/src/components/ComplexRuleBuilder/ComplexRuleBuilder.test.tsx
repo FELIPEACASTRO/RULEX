@@ -146,10 +146,12 @@ describe('ComplexRuleBuilder Types', () => {
     });
 
     it('VALUE_TYPES has all expected types', () => {
-      expect(VALUE_TYPES.length).toBe(10);
+      expect(VALUE_TYPES.length).toBe(12); // Inclui GEO_POINT e GEO_POLYGON
       expect(VALUE_TYPES.map(t => t.value)).toContain('STRING');
       expect(VALUE_TYPES.map(t => t.value)).toContain('NUMBER');
       expect(VALUE_TYPES.map(t => t.value)).toContain('BOOLEAN');
+      expect(VALUE_TYPES.map(t => t.value)).toContain('GEO_POINT');
+      expect(VALUE_TYPES.map(t => t.value)).toContain('GEO_POLYGON');
     });
 
     it('RULE_STATUSES has all expected statuses', () => {
