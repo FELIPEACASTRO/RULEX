@@ -12,10 +12,25 @@ import org.springframework.stereotype.Service;
 /**
  * Serviço de validação de regras.
  * Valida regras antes de persistir para garantir que apenas operadores implementados sejam usados.
+ * Também aplica limites anti-abuso para evitar regras monstruosas.
  */
 @Service
 @Slf4j
 public class RuleValidationService {
+
+    // ========== Limites Anti-Abuso ==========
+    /** Profundidade máxima de aninhamento de grupos */
+    public static final int MAX_NESTING_DEPTH = 10;
+    /** Número máximo de condições por grupo */
+    public static final int MAX_CONDITIONS_PER_GROUP = 50;
+    /** Número máximo total de condições em uma regra */
+    public static final int MAX_TOTAL_CONDITIONS = 200;
+    /** Tamanho máximo de listas IN/NOT_IN */
+    public static final int MAX_LIST_SIZE = 1000;
+    /** Tamanho máximo de padrão REGEX */
+    public static final int MAX_REGEX_LENGTH = 500;
+    /** Tamanho máximo do JSON da regra (em bytes) */
+    public static final int MAX_RULE_JSON_SIZE = 100_000;
 
     /**
      * Operadores que estão declarados mas NÃO implementados.
@@ -68,6 +83,14 @@ public class RuleValidationService {
             return ValidationResult.success();
         }
 
+        // Validar contagem total de condições
+        int totalConditions = countTotalConditions(group);
+        if (totalConditions > MAX_TOTAL_CONDITIONS) {
+            errors.add(String.format(
+                "Número total de condições excede o máximo permitido (máximo: %d, encontrado: %d)",
+                MAX_TOTAL_CONDITIONS, totalConditions));
+        }
+
         validateGroupRecursively(group, errors, warnings, 0);
 
         if (!errors.isEmpty()) {
@@ -93,9 +116,18 @@ public class RuleValidationService {
             int depth) {
 
         // Validar profundidade máxima
-        if (depth > 10) {
-            errors.add("Profundidade máxima de aninhamento excedida (máximo: 10 níveis)");
+        if (depth > MAX_NESTING_DEPTH) {
+            errors.add(String.format(
+                "Profundidade máxima de aninhamento excedida (máximo: %d níveis)",
+                MAX_NESTING_DEPTH));
             return;
+        }
+
+        // Validar número de condições por grupo
+        if (group.getConditions() != null && group.getConditions().size() > MAX_CONDITIONS_PER_GROUP) {
+            errors.add(String.format(
+                "Número máximo de condições por grupo excedido (máximo: %d, encontrado: %d)",
+                MAX_CONDITIONS_PER_GROUP, group.getConditions().size()));
         }
 
         // Validar condições do grupo
@@ -186,6 +218,65 @@ public class RuleValidationService {
                 ));
             }
         }
+
+        // Validar tamanho de listas IN/NOT_IN
+        if (operator != null && isListOperator(operator) && condition.getValueArray() != null) {
+            if (condition.getValueArray().size() > MAX_LIST_SIZE) {
+                errors.add(String.format(
+                    "Lista no campo '%s' excede o tamanho máximo (máximo: %d, encontrado: %d)",
+                    fieldName != null ? fieldName : "desconhecido",
+                    MAX_LIST_SIZE,
+                    condition.getValueArray().size()
+                ));
+            }
+        }
+
+        // Validar tamanho de REGEX
+        if (operator != null && isRegexOperator(operator) && condition.getValueSingle() != null) {
+            if (condition.getValueSingle().length() > MAX_REGEX_LENGTH) {
+                errors.add(String.format(
+                    "Expressão regular no campo '%s' excede o tamanho máximo (máximo: %d caracteres)",
+                    fieldName != null ? fieldName : "desconhecido",
+                    MAX_REGEX_LENGTH
+                ));
+            }
+        }
+    }
+
+    /**
+     * Verifica se é um operador de lista.
+     */
+    private boolean isListOperator(ConditionDTO.OperatorType operator) {
+        return switch (operator) {
+            case IN, NOT_IN -> true;
+            default -> false;
+        };
+    }
+
+    /**
+     * Verifica se é um operador de regex.
+     */
+    private boolean isRegexOperator(ConditionDTO.OperatorType operator) {
+        return switch (operator) {
+            case REGEX, NOT_REGEX -> true;
+            default -> false;
+        };
+    }
+
+    /**
+     * Conta o número total de condições em um grupo (recursivamente).
+     */
+    private int countTotalConditions(ConditionGroupDTO group) {
+        if (group == null) {
+            return 0;
+        }
+        int count = group.getConditions() != null ? group.getConditions().size() : 0;
+        if (group.getChildren() != null) {
+            for (ConditionGroupDTO child : group.getChildren()) {
+                count += countTotalConditions(child);
+            }
+        }
+        return count;
     }
 
     /**
