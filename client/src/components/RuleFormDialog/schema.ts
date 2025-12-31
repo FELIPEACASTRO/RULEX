@@ -11,11 +11,16 @@ import { UNARY_OPERATORS } from './types';
 // ============================================
 
 const conditionOperators = [
-  'EQ', 'NE', 'GT', 'LT', 'GTE', 'LTE',
+  // Básicos (NEQ alinhado com backend)
+  'EQ', 'NEQ', 'GT', 'LT', 'GTE', 'LTE',
+  // Listas
   'IN', 'NOT_IN', 'BETWEEN', 'NOT_BETWEEN',
-  'CONTAINS', 'NOT_CONTAINS', 'STARTS_WITH', 'ENDS_WITH', 'MATCHES_REGEX',
-  'IS_NULL', 'IS_NOT_NULL', 'IS_TRUE', 'IS_FALSE',
-  // Legado
+  // Strings (REGEX alinhado com backend)
+  'CONTAINS', 'NOT_CONTAINS', 'STARTS_WITH', 'ENDS_WITH', 'REGEX', 'NOT_REGEX',
+  // Nulos (NOT_NULL alinhado com backend)
+  'IS_NULL', 'NOT_NULL', 'IS_TRUE', 'IS_FALSE',
+  // Legado (mantido para compatibilidade)
+  'NE', 'MATCHES_REGEX', 'IS_NOT_NULL',
   '==', '!=', '>', '<', '>=', '<=',
 ] as const;
 
@@ -42,8 +47,8 @@ export const conditionSchema = z.object({
   }
 ).refine(
   (data) => {
-    // P0-01: Validar REGEX
-    if (data.operator === 'MATCHES_REGEX') {
+    // P0-01: Validar REGEX (inclui REGEX, NOT_REGEX e legacy MATCHES_REGEX)
+    if (data.operator === 'REGEX' || data.operator === 'NOT_REGEX' || data.operator === 'MATCHES_REGEX') {
       try {
         new RegExp(data.value);
         return true;
@@ -303,6 +308,8 @@ export function validateValueByOperator(
 
   // Validação específica por operador
   switch (operator) {
+    case 'REGEX':
+    case 'NOT_REGEX':
     case 'MATCHES_REGEX':
       try {
         new RegExp(trimmedValue);
@@ -377,8 +384,10 @@ export function getPlaceholderForOperator(operator: string): string {
     case 'BETWEEN':
     case 'NOT_BETWEEN':
       return 'Ex: 10,100 ou 10..100';
+    case 'REGEX':
+    case 'NOT_REGEX':
     case 'MATCHES_REGEX':
-      return 'Ex: regex';
+      return 'Ex: ^[A-Z]+$ (expressão regular)';
     case 'CONTAINS':
     case 'NOT_CONTAINS':
       return 'Ex: texto a buscar';
@@ -387,10 +396,11 @@ export function getPlaceholderForOperator(operator: string): string {
     case 'ENDS_WITH':
       return 'Ex: sufixo';
     case 'IS_NULL':
+    case 'NOT_NULL':
     case 'IS_NOT_NULL':
     case 'IS_TRUE':
     case 'IS_FALSE':
-      return '(nao aplicavel)';
+      return '(não aplicável)';
     default:
       return 'Ex: 100';
   }

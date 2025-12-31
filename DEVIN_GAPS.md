@@ -8,15 +8,15 @@
 
 | Severidade | Total | Fechados |
 |------------|-------|----------|
-| P0 (Crítico) | 3 | 0 |
-| P1 (Alto) | 4 | 0 |
+| P0 (Crítico) | 3 | 3 ✅ |
+| P1 (Alto) | 4 | 1 |
 | P2 (Médio) | 3 | 0 |
 
 ---
 
 ## P0 - CRÍTICOS (Bloqueiam 10/10)
 
-### GAP-001: Frontend ComplexRuleBuilder falta operadores GEO
+### GAP-001: Frontend ComplexRuleBuilder falta operadores GEO ✅ FECHADO
 **Severidade:** P0
 **Componente:** Frontend - ComplexRuleBuilder
 **Arquivo:** `client/src/components/ComplexRuleBuilder/types.ts`
@@ -32,11 +32,17 @@ export type ComparisonOperator =
 
 **Fix:** Adicionar operadores GEO ao tipo ComparisonOperator e COMPARISON_OPERATORS array.
 
-**Evidência de Fechamento:** Pendente
+**Evidência de Fechamento:**
+```bash
+# Commit: 4ebe969
+# Arquivo: client/src/components/ComplexRuleBuilder/types.ts
+# Operadores adicionados: GEO_DISTANCE_LT, GEO_DISTANCE_GT, GEO_IN_POLYGON
+# Testes: 165 PASS
+```
 
 ---
 
-### GAP-002: Inconsistência de nomenclatura REGEX
+### GAP-002: Inconsistência de nomenclatura REGEX ✅ FECHADO
 **Severidade:** P0
 **Componente:** Frontend vs Backend
 
@@ -53,11 +59,17 @@ export type ComparisonOperator =
 
 **Fix:** Alinhar nomenclatura (preferir REGEX do backend).
 
-**Evidência de Fechamento:** Pendente
+**Evidência de Fechamento:**
+```bash
+# Commit: 4ebe969
+# Adicionado REGEX e NOT_REGEX ao frontend
+# MATCHES_REGEX mantido como legacy para compatibilidade
+# Testes: 165 PASS
+```
 
 ---
 
-### GAP-003: Inconsistência de nomenclatura NULL operators
+### GAP-003: Inconsistência de nomenclatura NULL operators ✅ FECHADO
 **Severidade:** P0
 **Componente:** Frontend vs Backend
 
@@ -69,7 +81,13 @@ export type ComparisonOperator =
 
 **Fix:** Alinhar nomenclatura.
 
-**Evidência de Fechamento:** Pendente
+**Evidência de Fechamento:**
+```bash
+# Commit: 4ebe969
+# Adicionado NOT_NULL ao frontend
+# IS_NOT_NULL mantido como legacy para compatibilidade
+# Testes: 165 PASS
+```
 
 ---
 
@@ -107,7 +125,7 @@ const conditionOperators = [
 
 **Impacto:** DoS potencial no servidor.
 
-**Fix:** 
+**Fix:**
 1. Limitar tamanho do pattern
 2. Timeout na execução
 3. Denylist de construções perigosas

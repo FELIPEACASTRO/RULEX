@@ -141,9 +141,9 @@ export interface DashboardMetrics {
 export interface RuleCondition {
   field: string;
   operator:
-    // Canonical ops (preferidas; alinhadas ao field-dictionary)
+    // Canonical ops (preferidas; alinhadas ao backend ConditionDTO.OperatorType)
     | "EQ"
-    | "NE"
+    | "NEQ"  // Alinhado com backend (NE é legacy)
     | "GT"
     | "LT"
     | "GTE"
@@ -156,12 +156,16 @@ export interface RuleCondition {
     | "NOT_CONTAINS"
     | "STARTS_WITH"
     | "ENDS_WITH"
-    | "MATCHES_REGEX"
+    | "REGEX"      // Alinhado com backend (MATCHES_REGEX é legacy)
+    | "NOT_REGEX"  // Novo
     | "IS_NULL"
-    | "IS_NOT_NULL"
+    | "NOT_NULL"   // Alinhado com backend (IS_NOT_NULL é legacy)
     | "IS_TRUE"
     | "IS_FALSE"
     // Legado/compatibilidade (aceitos pelo backend via normalização)
+    | "NE"
+    | "MATCHES_REGEX"
+    | "IS_NOT_NULL"
     | "=="
     | "!="
     | ">"

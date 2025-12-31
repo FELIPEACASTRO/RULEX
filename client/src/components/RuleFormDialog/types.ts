@@ -79,9 +79,9 @@ export const LOGIC_OPERATORS: { value: LogicOperator; label: string; description
 ];
 
 export const OPERATORS: OperatorOption[] = [
-  // Comparação
+  // Comparação (NEQ alinhado com backend)
   { value: 'EQ', label: '== (Igual)', description: 'Valor igual a' },
-  { value: 'NE', label: '!= (Diferente)', description: 'Valor diferente de' },
+  { value: 'NEQ', label: '!= (Diferente)', description: 'Valor diferente de' },
   { value: 'GT', label: '> (Maior)', description: 'Valor maior que' },
   { value: 'LT', label: '< (Menor)', description: 'Valor menor que' },
   { value: 'GTE', label: '>= (Maior ou igual)', description: 'Valor maior ou igual a' },
@@ -92,28 +92,33 @@ export const OPERATORS: OperatorOption[] = [
   // Range
   { value: 'BETWEEN', label: 'BETWEEN (Entre)', description: 'Valor entre dois limites' },
   { value: 'NOT_BETWEEN', label: 'NOT BETWEEN', description: 'Valor fora do intervalo' },
-  // String
+  // String (REGEX alinhado com backend)
   { value: 'CONTAINS', label: 'CONTAINS (Contém)', description: 'Texto contém substring' },
   { value: 'NOT_CONTAINS', label: 'NOT CONTAINS', description: 'Texto não contém substring' },
   { value: 'STARTS_WITH', label: 'STARTS WITH', description: 'Texto começa com' },
   { value: 'ENDS_WITH', label: 'ENDS WITH', description: 'Texto termina com' },
-  { value: 'MATCHES_REGEX', label: 'REGEX', description: 'Corresponde à expressão regular' },
-  // Null/Boolean
+  { value: 'REGEX', label: 'REGEX', description: 'Corresponde à expressão regular' },
+  { value: 'NOT_REGEX', label: 'NOT REGEX', description: 'Não corresponde à expressão regular' },
+  // Null/Boolean (NOT_NULL alinhado com backend)
   { value: 'IS_NULL', label: 'IS NULL', description: 'Valor é nulo', requiresValue: false },
-  { value: 'IS_NOT_NULL', label: 'IS NOT NULL', description: 'Valor não é nulo', requiresValue: false },
+  { value: 'NOT_NULL', label: 'NOT NULL', description: 'Valor não é nulo', requiresValue: false },
   { value: 'IS_TRUE', label: 'IS TRUE', description: 'Valor é verdadeiro', requiresValue: false },
   { value: 'IS_FALSE', label: 'IS FALSE', description: 'Valor é falso', requiresValue: false },
+  // Legacy (mantidos para compatibilidade)
+  { value: 'NE', label: '!= (legacy)', description: 'Use NEQ' },
+  { value: 'MATCHES_REGEX', label: 'REGEX (legacy)', description: 'Use REGEX' },
+  { value: 'IS_NOT_NULL', label: 'NOT NULL (legacy)', description: 'Use NOT_NULL', requiresValue: false },
 ];
 
 // Operadores que não requerem valor
-export const UNARY_OPERATORS: ConditionOperator[] = ['IS_NULL', 'IS_NOT_NULL', 'IS_TRUE', 'IS_FALSE'];
+export const UNARY_OPERATORS: ConditionOperator[] = ['IS_NULL', 'NOT_NULL', 'IS_NOT_NULL', 'IS_TRUE', 'IS_FALSE'];
 
-// Mapeamento de tipo de campo para operadores permitidos
+// Mapeamento de tipo de campo para operadores permitidos (alinhado com backend)
 export const OPERATORS_BY_TYPE: Record<string, ConditionOperator[]> = {
-  number: ['EQ', 'NE', 'GT', 'LT', 'GTE', 'LTE', 'IN', 'NOT_IN', 'BETWEEN', 'NOT_BETWEEN', 'IS_NULL', 'IS_NOT_NULL'],
-  string: ['EQ', 'NE', 'IN', 'NOT_IN', 'CONTAINS', 'NOT_CONTAINS', 'STARTS_WITH', 'ENDS_WITH', 'MATCHES_REGEX', 'IS_NULL', 'IS_NOT_NULL'],
-  boolean: ['IS_TRUE', 'IS_FALSE', 'IS_NULL', 'IS_NOT_NULL'],
-  date: ['EQ', 'NE', 'GT', 'LT', 'GTE', 'LTE', 'BETWEEN', 'NOT_BETWEEN', 'IS_NULL', 'IS_NOT_NULL'],
+  number: ['EQ', 'NEQ', 'GT', 'LT', 'GTE', 'LTE', 'IN', 'NOT_IN', 'BETWEEN', 'NOT_BETWEEN', 'IS_NULL', 'NOT_NULL'],
+  string: ['EQ', 'NEQ', 'IN', 'NOT_IN', 'CONTAINS', 'NOT_CONTAINS', 'STARTS_WITH', 'ENDS_WITH', 'REGEX', 'NOT_REGEX', 'IS_NULL', 'NOT_NULL'],
+  boolean: ['IS_TRUE', 'IS_FALSE', 'IS_NULL', 'NOT_NULL'],
+  date: ['EQ', 'NEQ', 'GT', 'LT', 'GTE', 'LTE', 'BETWEEN', 'NOT_BETWEEN', 'IS_NULL', 'NOT_NULL'],
 };
 
 // Campos fallback quando a API não está disponível
@@ -123,19 +128,19 @@ export const FALLBACK_FIELDS: ConditionFieldOption[] = [
   { value: 'merchantId', label: 'ID do Merchant', type: 'string', category: 'Identificação' },
   { value: 'pan', label: 'PAN (Cartão)', type: 'string', category: 'Identificação' },
   { value: 'externalTransactionId', label: 'ID Externo', type: 'string', category: 'Identificação' },
-  
+
   // Valores/Datas
   { value: 'transactionAmount', label: 'Valor da Transação', type: 'number', category: 'Valores' },
   { value: 'transactionDate', label: 'Data da Transação', type: 'number', category: 'Valores', description: 'Formato YYYYMMDD' },
   { value: 'transactionTime', label: 'Hora da Transação', type: 'number', category: 'Valores', description: 'Formato HHMMSS' },
   { value: 'transactionCurrencyCode', label: 'Código da Moeda', type: 'number', category: 'Valores' },
-  
+
   // Localização
   { value: 'merchantCountryCode', label: 'País do Merchant', type: 'string', category: 'Localização' },
   { value: 'merchantCity', label: 'Cidade do Merchant', type: 'string', category: 'Localização' },
   { value: 'merchantState', label: 'Estado do Merchant', type: 'string', category: 'Localização' },
   { value: 'merchantPostalCode', label: 'CEP do Merchant', type: 'string', category: 'Localização' },
-  
+
   // Segurança
   { value: 'consumerAuthenticationScore', label: 'Score de Autenticação', type: 'number', category: 'Segurança', description: '0-999' },
   { value: 'externalScore3', label: 'Score Externo', type: 'number', category: 'Segurança', description: '0-999' },
@@ -143,7 +148,7 @@ export const FALLBACK_FIELDS: ConditionFieldOption[] = [
   { value: 'cryptogramValid', label: 'Criptograma Válido', type: 'string', category: 'Segurança' },
   { value: 'cvv2Response', label: 'Resposta CVV2', type: 'string', category: 'Segurança' },
   { value: 'eciIndicator', label: 'Indicador ECI', type: 'number', category: 'Segurança' },
-  
+
   // Categoria
   { value: 'mcc', label: 'MCC (Categoria)', type: 'number', category: 'Categoria', description: 'Merchant Category Code' },
   { value: 'posEntryMode', label: 'Modo de Entrada', type: 'string', category: 'Categoria' },

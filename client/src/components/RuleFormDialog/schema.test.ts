@@ -604,7 +604,12 @@ describe('getPlaceholderForOperator', () => {
 
   it('retorna placeholder para MATCHES_REGEX', () => {
     const result = getPlaceholderForOperator('MATCHES_REGEX');
-    expect(result).toContain('regex');
+    expect(result).toContain('regular'); // Expressão regular
+  });
+
+  it('retorna placeholder para REGEX', () => {
+    const result = getPlaceholderForOperator('REGEX');
+    expect(result).toContain('regular'); // Expressão regular
   });
 
   it('retorna placeholder para CONTAINS', () => {
@@ -629,22 +634,27 @@ describe('getPlaceholderForOperator', () => {
 
   it('retorna placeholder para IS_NULL', () => {
     const result = getPlaceholderForOperator('IS_NULL');
-    expect(result).toContain('aplicavel');
+    expect(result).toContain('aplicável'); // Com acento
   });
 
   it('retorna placeholder para IS_NOT_NULL', () => {
     const result = getPlaceholderForOperator('IS_NOT_NULL');
-    expect(result).toContain('aplicavel');
+    expect(result).toContain('aplicável'); // Com acento
+  });
+
+  it('retorna placeholder para NOT_NULL', () => {
+    const result = getPlaceholderForOperator('NOT_NULL');
+    expect(result).toContain('aplicável'); // Com acento
   });
 
   it('retorna placeholder para IS_TRUE', () => {
     const result = getPlaceholderForOperator('IS_TRUE');
-    expect(result).toContain('aplicavel');
+    expect(result).toContain('aplicável'); // Com acento
   });
 
   it('retorna placeholder para IS_FALSE', () => {
     const result = getPlaceholderForOperator('IS_FALSE');
-    expect(result).toContain('aplicavel');
+    expect(result).toContain('aplicável'); // Com acento
   });
 
   it('retorna placeholder padrão para operador desconhecido', () => {
