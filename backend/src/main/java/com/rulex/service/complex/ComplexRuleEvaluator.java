@@ -283,10 +283,17 @@ public class ComplexRuleEvaluator {
       case MOD_NEQ ->
           evaluateModulo(fieldValue, condition.getValueSingle(), condition.getValueMin(), false);
 
-        // Geolocalização (implementação básica)
+        // Geolocalização - DESABILITADO (requer enriquecimento externo)
+        // Estes operadores estão declarados mas não implementados.
+        // Para habilitar, é necessário integrar com serviço de geolocalização externo.
       case GEO_DISTANCE_LT, GEO_DISTANCE_GT, GEO_IN_POLYGON -> {
-        log.warn("Operador de geolocalização não implementado: {}", operator);
-        yield false;
+        String errorMsg = String.format(
+            "Operador de geolocalização '%s' não está implementado. " +
+            "Operadores GEO requerem integração com serviço de geolocalização externo. " +
+            "Contate o administrador para habilitar esta funcionalidade.",
+            operator.name());
+        log.error(errorMsg);
+        throw new UnsupportedOperationException(errorMsg);
       }
     };
   }
