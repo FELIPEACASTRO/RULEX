@@ -1,8 +1,10 @@
 package com.rulex.service.complex;
 
+import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.complex.RuleCondition;
 import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleExecutionDetail;
+import com.rulex.service.GeoService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +27,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class ComplexRuleEvaluator {
 
+  private final GeoService geoService;
+
   /** Resultado da avaliação de uma regra */
   @Data
   @Builder
@@ -43,6 +47,7 @@ public class ComplexRuleEvaluator {
     private Map<String, Object> variables;
     private UUID decisionLogId;
     private UUID ruleVersionId;
+    private TransactionRequest transactionRequest; // Para operadores GEO
   }
 
   /** Avalia um grupo de condições contra um contexto */
@@ -283,18 +288,11 @@ public class ComplexRuleEvaluator {
       case MOD_NEQ ->
           evaluateModulo(fieldValue, condition.getValueSingle(), condition.getValueMin(), false);
 
-        // Geolocalização - DESABILITADO (requer enriquecimento externo)
-        // Estes operadores estão declarados mas não implementados.
-        // Para habilitar, é necessário integrar com serviço de geolocalização externo.
-      case GEO_DISTANCE_LT, GEO_DISTANCE_GT, GEO_IN_POLYGON -> {
-        String errorMsg = String.format(
-            "Operador de geolocalização '%s' não está implementado. " +
-            "Operadores GEO requerem integração com serviço de geolocalização externo. " +
-            "Contate o administrador para habilitar esta funcionalidade.",
-            operator.name());
-        log.error(errorMsg);
-        throw new UnsupportedOperationException(errorMsg);
-      }
+        // Geolocalização - Implementado via GeoService
+        // Coordenadas são derivadas de merchantCity/State/CountryCode
+      case GEO_DISTANCE_LT -> evaluateGeoDistanceLt(condition, context);
+      case GEO_DISTANCE_GT -> evaluateGeoDistanceGt(condition, context);
+      case GEO_IN_POLYGON -> evaluateGeoInPolygon(condition, context);
     };
   }
 
@@ -510,6 +508,112 @@ public class ComplexRuleEvaluator {
       boolean result = (value % div) == rem;
       return equals ? result : !result;
     } catch (Exception e) {
+      return false;
+    }
+  }
+
+  // ========== Métodos de Geolocalização ==========
+
+  /**
+   * Avalia GEO_DISTANCE_LT: distância menor que threshold.
+   * Formato do valor: "lat,lon,distanceKm" (ex: "-23.55,-46.63,100")
+   */
+  private boolean evaluateGeoDistanceLt(RuleCondition condition, EvaluationContext context) {
+    if (context.getTransactionRequest() == null) {
+      log.warn("TransactionRequest não disponível para GEO_DISTANCE_LT");
+      return false;
+    }
+
+    try {
+      String[] parts = condition.getValueSingle().split(",");
+      if (parts.length < 3) {
+        log.warn("Formato inválido para GEO_DISTANCE_LT. Esperado: lat,lon,distanceKm");
+        return false;
+      }
+
+      double targetLat = Double.parseDouble(parts[0].trim());
+      double targetLon = Double.parseDouble(parts[1].trim());
+      double thresholdKm = Double.parseDouble(parts[2].trim());
+
+      GeoService.GeoResult result = geoService.evaluateDistanceLessThan(
+          context.getTransactionRequest(), targetLat, targetLon, thresholdKm);
+
+      if (!result.isSuccess()) {
+        log.warn("GEO_DISTANCE_LT falhou: {}", result.getErrorMessage());
+        return false;
+      }
+
+      return result.isResult();
+    } catch (Exception e) {
+      log.error("Erro ao avaliar GEO_DISTANCE_LT: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Avalia GEO_DISTANCE_GT: distância maior que threshold.
+   * Formato do valor: "lat,lon,distanceKm" (ex: "-23.55,-46.63,100")
+   */
+  private boolean evaluateGeoDistanceGt(RuleCondition condition, EvaluationContext context) {
+    if (context.getTransactionRequest() == null) {
+      log.warn("TransactionRequest não disponível para GEO_DISTANCE_GT");
+      return false;
+    }
+
+    try {
+      String[] parts = condition.getValueSingle().split(",");
+      if (parts.length < 3) {
+        log.warn("Formato inválido para GEO_DISTANCE_GT. Esperado: lat,lon,distanceKm");
+        return false;
+      }
+
+      double targetLat = Double.parseDouble(parts[0].trim());
+      double targetLon = Double.parseDouble(parts[1].trim());
+      double thresholdKm = Double.parseDouble(parts[2].trim());
+
+      GeoService.GeoResult result = geoService.evaluateDistanceGreaterThan(
+          context.getTransactionRequest(), targetLat, targetLon, thresholdKm);
+
+      if (!result.isSuccess()) {
+        log.warn("GEO_DISTANCE_GT falhou: {}", result.getErrorMessage());
+        return false;
+      }
+
+      return result.isResult();
+    } catch (Exception e) {
+      log.error("Erro ao avaliar GEO_DISTANCE_GT: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Avalia GEO_IN_POLYGON: ponto dentro de polígono.
+   * Formato do valor: nome do polígono (ex: "BRASIL", "SAO_PAULO_ESTADO")
+   */
+  private boolean evaluateGeoInPolygon(RuleCondition condition, EvaluationContext context) {
+    if (context.getTransactionRequest() == null) {
+      log.warn("TransactionRequest não disponível para GEO_IN_POLYGON");
+      return false;
+    }
+
+    try {
+      String polygonName = condition.getValueSingle();
+      if (polygonName == null || polygonName.isBlank()) {
+        log.warn("Nome do polígono não especificado para GEO_IN_POLYGON");
+        return false;
+      }
+
+      GeoService.GeoResult result = geoService.evaluateInPolygon(
+          context.getTransactionRequest(), polygonName.trim());
+
+      if (!result.isSuccess()) {
+        log.warn("GEO_IN_POLYGON falhou: {}", result.getErrorMessage());
+        return false;
+      }
+
+      return result.isResult();
+    } catch (Exception e) {
+      log.error("Erro ao avaliar GEO_IN_POLYGON: {}", e.getMessage());
       return false;
     }
   }

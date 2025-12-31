@@ -18,22 +18,20 @@ import org.springframework.stereotype.Service;
 public class RuleValidationService {
 
     /**
-     * Operadores de geolocalização que estão declarados mas NÃO implementados.
+     * Operadores que estão declarados mas NÃO implementados.
      * Regras com estes operadores devem ser rejeitadas na criação.
+     *
+     * NOTA: GEO_DISTANCE_LT, GEO_DISTANCE_GT, GEO_IN_POLYGON foram implementados
+     * via GeoService e agora estão disponíveis.
      */
-    private static final Set<String> UNSUPPORTED_OPERATORS = Set.of(
-        "GEO_DISTANCE_LT",
-        "GEO_DISTANCE_GT",
-        "GEO_IN_POLYGON"
-    );
+    private static final Set<String> UNSUPPORTED_OPERATORS = Set.of();
 
     /**
-     * Tipos de valor que requerem operadores GEO (não suportados).
+     * Tipos de valor que não estão suportados.
+     *
+     * NOTA: GEO_POINT e GEO_POLYGON agora são suportados via GeoService.
      */
-    private static final Set<String> UNSUPPORTED_VALUE_TYPES = Set.of(
-        "GEO_POINT",
-        "GEO_POLYGON"
-    );
+    private static final Set<String> UNSUPPORTED_VALUE_TYPES = Set.of();
 
     /**
      * Resultado da validação de uma regra.
@@ -58,7 +56,7 @@ public class RuleValidationService {
 
     /**
      * Valida um grupo de condições (DTO) antes de persistir.
-     * 
+     *
      * @param group O grupo de condições a validar
      * @return Resultado da validação com erros se houver
      */
@@ -168,8 +166,8 @@ public class RuleValidationService {
         }
 
         // Validar valor para operadores que requerem
-        if (operator != null && requiresValue(operator) && 
-            condition.getValueSingle() == null && 
+        if (operator != null && requiresValue(operator) &&
+            condition.getValueSingle() == null &&
             (condition.getValueArray() == null || condition.getValueArray().isEmpty())) {
             warnings.add(String.format(
                 "Operador '%s' no campo '%s' geralmente requer um valor",

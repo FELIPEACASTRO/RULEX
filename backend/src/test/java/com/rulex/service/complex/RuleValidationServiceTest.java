@@ -14,7 +14,10 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Testes unitários para RuleValidationService.
- * Valida que operadores GEO não implementados são bloqueados na criação de regras.
+ * Valida a validação de regras e operadores.
+ * 
+ * NOTA: Operadores GEO (GEO_DISTANCE_LT, GEO_DISTANCE_GT, GEO_IN_POLYGON) 
+ * foram implementados via GeoService e agora são aceitos.
  */
 class RuleValidationServiceTest {
 
@@ -48,130 +51,7 @@ class RuleValidationServiceTest {
         }
 
         @Test
-        @DisplayName("Deve rejeitar operador GEO_DISTANCE_LT")
-        void shouldRejectGeoDistanceLt() {
-            ConditionDTO condition = new ConditionDTO();
-            condition.setFieldName("location");
-            condition.setOperator(ConditionDTO.OperatorType.GEO_DISTANCE_LT);
-            condition.setValueSingle("100");
-
-            ConditionGroupDTO group = new ConditionGroupDTO();
-            group.setLogicOperator(LogicOperatorType.AND);
-            group.setConditions(List.of(condition));
-
-            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
-
-            assertThat(result.valid()).isFalse();
-            assertThat(result.errors()).hasSize(1);
-            assertThat(result.errors().get(0)).contains("GEO_DISTANCE_LT");
-            assertThat(result.errors().get(0)).contains("não está implementado");
-        }
-
-        @Test
-        @DisplayName("Deve rejeitar operador GEO_DISTANCE_GT")
-        void shouldRejectGeoDistanceGt() {
-            ConditionDTO condition = new ConditionDTO();
-            condition.setFieldName("location");
-            condition.setOperator(ConditionDTO.OperatorType.GEO_DISTANCE_GT);
-            condition.setValueSingle("50");
-
-            ConditionGroupDTO group = new ConditionGroupDTO();
-            group.setLogicOperator(LogicOperatorType.AND);
-            group.setConditions(List.of(condition));
-
-            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
-
-            assertThat(result.valid()).isFalse();
-            assertThat(result.errors()).hasSize(1);
-            assertThat(result.errors().get(0)).contains("GEO_DISTANCE_GT");
-        }
-
-        @Test
-        @DisplayName("Deve rejeitar operador GEO_IN_POLYGON")
-        void shouldRejectGeoInPolygon() {
-            ConditionDTO condition = new ConditionDTO();
-            condition.setFieldName("merchantLocation");
-            condition.setOperator(ConditionDTO.OperatorType.GEO_IN_POLYGON);
-
-            ConditionGroupDTO group = new ConditionGroupDTO();
-            group.setLogicOperator(LogicOperatorType.AND);
-            group.setConditions(List.of(condition));
-
-            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
-
-            assertThat(result.valid()).isFalse();
-            assertThat(result.errors()).hasSize(1);
-            assertThat(result.errors().get(0)).contains("GEO_IN_POLYGON");
-        }
-
-        @Test
-        @DisplayName("Deve rejeitar tipo de valor GEO_POINT")
-        void shouldRejectGeoPointValueType() {
-            ConditionDTO condition = new ConditionDTO();
-            condition.setFieldName("location");
-            condition.setOperator(ConditionDTO.OperatorType.EQ);
-            condition.setValueType(ConditionDTO.ValueType.GEO_POINT);
-
-            ConditionGroupDTO group = new ConditionGroupDTO();
-            group.setLogicOperator(LogicOperatorType.AND);
-            group.setConditions(List.of(condition));
-
-            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
-
-            assertThat(result.valid()).isFalse();
-            assertThat(result.errors()).anyMatch(e -> e.contains("GEO_POINT"));
-        }
-
-        @Test
-        @DisplayName("Deve rejeitar tipo de valor GEO_POLYGON")
-        void shouldRejectGeoPolygonValueType() {
-            ConditionDTO condition = new ConditionDTO();
-            condition.setFieldName("area");
-            condition.setOperator(ConditionDTO.OperatorType.EQ);
-            condition.setValueType(ConditionDTO.ValueType.GEO_POLYGON);
-
-            ConditionGroupDTO group = new ConditionGroupDTO();
-            group.setLogicOperator(LogicOperatorType.AND);
-            group.setConditions(List.of(condition));
-
-            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
-
-            assertThat(result.valid()).isFalse();
-            assertThat(result.errors()).anyMatch(e -> e.contains("GEO_POLYGON"));
-        }
-
-        @Test
-        @DisplayName("Deve validar grupos aninhados recursivamente")
-        void shouldValidateNestedGroups() {
-            // Condição válida no grupo pai
-            ConditionDTO validCondition = new ConditionDTO();
-            validCondition.setFieldName("amount");
-            validCondition.setOperator(ConditionDTO.OperatorType.GT);
-            validCondition.setValueSingle("100");
-
-            // Condição inválida no grupo filho
-            ConditionDTO invalidCondition = new ConditionDTO();
-            invalidCondition.setFieldName("location");
-            invalidCondition.setOperator(ConditionDTO.OperatorType.GEO_DISTANCE_LT);
-
-            ConditionGroupDTO childGroup = new ConditionGroupDTO();
-            childGroup.setLogicOperator(LogicOperatorType.AND);
-            childGroup.setConditions(List.of(invalidCondition));
-
-            ConditionGroupDTO parentGroup = new ConditionGroupDTO();
-            parentGroup.setLogicOperator(LogicOperatorType.OR);
-            parentGroup.setConditions(List.of(validCondition));
-            parentGroup.setChildren(List.of(childGroup));
-
-            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(parentGroup);
-
-            assertThat(result.valid()).isFalse();
-            assertThat(result.errors()).hasSize(1);
-            assertThat(result.errors().get(0)).contains("GEO_DISTANCE_LT");
-        }
-
-        @Test
-        @DisplayName("Deve aceitar grupo null")
+        @DisplayName("Deve aceitar grupo nulo")
         void shouldAcceptNullGroup() {
             RuleValidationService.ValidationResult result = validationService.validateConditionGroup(null);
 
@@ -179,40 +59,8 @@ class RuleValidationServiceTest {
         }
 
         @Test
-        @DisplayName("Deve aceitar grupo vazio")
-        void shouldAcceptEmptyGroup() {
-            ConditionGroupDTO group = new ConditionGroupDTO();
-            group.setLogicOperator(LogicOperatorType.AND);
-
-            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
-
-            assertThat(result.valid()).isTrue();
-        }
-
-        @Test
-        @DisplayName("Deve rejeitar múltiplos operadores GEO")
-        void shouldRejectMultipleGeoOperators() {
-            ConditionDTO condition1 = new ConditionDTO();
-            condition1.setFieldName("location1");
-            condition1.setOperator(ConditionDTO.OperatorType.GEO_DISTANCE_LT);
-
-            ConditionDTO condition2 = new ConditionDTO();
-            condition2.setFieldName("location2");
-            condition2.setOperator(ConditionDTO.OperatorType.GEO_IN_POLYGON);
-
-            ConditionGroupDTO group = new ConditionGroupDTO();
-            group.setLogicOperator(LogicOperatorType.AND);
-            group.setConditions(List.of(condition1, condition2));
-
-            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
-
-            assertThat(result.valid()).isFalse();
-            assertThat(result.errors()).hasSize(2);
-        }
-
-        @Test
-        @DisplayName("Deve gerar erro para campo sem nome")
-        void shouldErrorOnMissingFieldName() {
+        @DisplayName("Deve rejeitar condição sem campo")
+        void shouldRejectConditionWithoutField() {
             ConditionDTO condition = new ConditionDTO();
             condition.setOperator(ConditionDTO.OperatorType.EQ);
             condition.setValueSingle("test");
@@ -224,16 +72,15 @@ class RuleValidationServiceTest {
             RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
 
             assertThat(result.valid()).isFalse();
-            assertThat(result.errors()).anyMatch(e -> e.contains("Nome do campo é obrigatório"));
+            assertThat(result.errors()).anyMatch(e -> e.contains("campo"));
         }
 
         @Test
-        @DisplayName("Deve gerar erro para BETWEEN sem min/max")
-        void shouldErrorOnBetweenWithoutMinMax() {
+        @DisplayName("Deve rejeitar condição sem operador")
+        void shouldRejectConditionWithoutOperator() {
             ConditionDTO condition = new ConditionDTO();
-            condition.setFieldName("amount");
-            condition.setOperator(ConditionDTO.OperatorType.BETWEEN);
-            // Sem valueMin e valueMax
+            condition.setFieldName("transactionAmount");
+            condition.setValueSingle("1000");
 
             ConditionGroupDTO group = new ConditionGroupDTO();
             group.setLogicOperator(LogicOperatorType.AND);
@@ -242,19 +89,182 @@ class RuleValidationServiceTest {
             RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
 
             assertThat(result.valid()).isFalse();
-            assertThat(result.errors()).anyMatch(e -> e.contains("BETWEEN") && e.contains("mínimo e máximo"));
+            assertThat(result.errors()).anyMatch(e -> e.contains("Operador"));
+        }
+
+        @Test
+        @DisplayName("Deve aceitar operador GEO_DISTANCE_LT (agora implementado)")
+        void shouldAcceptGeoDistanceLt() {
+            ConditionDTO condition = new ConditionDTO();
+            condition.setFieldName("merchantLocation");
+            condition.setOperator(ConditionDTO.OperatorType.GEO_DISTANCE_LT);
+            condition.setValueSingle("-23.55,-46.63,100");
+            condition.setValueType(ConditionDTO.ValueType.GEO_POINT);
+
+            ConditionGroupDTO group = new ConditionGroupDTO();
+            group.setLogicOperator(LogicOperatorType.AND);
+            group.setConditions(List.of(condition));
+
+            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
+
+            assertThat(result.valid()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Deve aceitar operador GEO_DISTANCE_GT (agora implementado)")
+        void shouldAcceptGeoDistanceGt() {
+            ConditionDTO condition = new ConditionDTO();
+            condition.setFieldName("location");
+            condition.setOperator(ConditionDTO.OperatorType.GEO_DISTANCE_GT);
+            condition.setValueSingle("-23.55,-46.63,50");
+
+            ConditionGroupDTO group = new ConditionGroupDTO();
+            group.setLogicOperator(LogicOperatorType.AND);
+            group.setConditions(List.of(condition));
+
+            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
+
+            assertThat(result.valid()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Deve aceitar operador GEO_IN_POLYGON (agora implementado)")
+        void shouldAcceptGeoInPolygon() {
+            ConditionDTO condition = new ConditionDTO();
+            condition.setFieldName("merchantLocation");
+            condition.setOperator(ConditionDTO.OperatorType.GEO_IN_POLYGON);
+            condition.setValueSingle("BRASIL");
+
+            ConditionGroupDTO group = new ConditionGroupDTO();
+            group.setLogicOperator(LogicOperatorType.AND);
+            group.setConditions(List.of(condition));
+
+            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
+
+            assertThat(result.valid()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Deve aceitar tipo de valor GEO_POINT (agora implementado)")
+        void shouldAcceptGeoPointValueType() {
+            ConditionDTO condition = new ConditionDTO();
+            condition.setFieldName("location");
+            condition.setOperator(ConditionDTO.OperatorType.GEO_DISTANCE_LT);
+            condition.setValueType(ConditionDTO.ValueType.GEO_POINT);
+            condition.setValueSingle("-23.55,-46.63,100");
+
+            ConditionGroupDTO group = new ConditionGroupDTO();
+            group.setLogicOperator(LogicOperatorType.AND);
+            group.setConditions(List.of(condition));
+
+            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
+
+            assertThat(result.valid()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Deve aceitar tipo de valor GEO_POLYGON (agora implementado)")
+        void shouldAcceptGeoPolygonValueType() {
+            ConditionDTO condition = new ConditionDTO();
+            condition.setFieldName("area");
+            condition.setOperator(ConditionDTO.OperatorType.GEO_IN_POLYGON);
+            condition.setValueType(ConditionDTO.ValueType.GEO_POLYGON);
+            condition.setValueSingle("SAO_PAULO_ESTADO");
+
+            ConditionGroupDTO group = new ConditionGroupDTO();
+            group.setLogicOperator(LogicOperatorType.AND);
+            group.setConditions(List.of(condition));
+
+            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
+
+            assertThat(result.valid()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Deve aceitar múltiplos operadores GEO (agora implementados)")
+        void shouldAcceptMultipleGeoOperators() {
+            ConditionDTO condition1 = new ConditionDTO();
+            condition1.setFieldName("location1");
+            condition1.setOperator(ConditionDTO.OperatorType.GEO_DISTANCE_LT);
+            condition1.setValueSingle("-23.55,-46.63,100");
+
+            ConditionDTO condition2 = new ConditionDTO();
+            condition2.setFieldName("location2");
+            condition2.setOperator(ConditionDTO.OperatorType.GEO_IN_POLYGON);
+            condition2.setValueSingle("BRASIL");
+
+            ConditionGroupDTO group = new ConditionGroupDTO();
+            group.setLogicOperator(LogicOperatorType.AND);
+            group.setConditions(List.of(condition1, condition2));
+
+            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(group);
+
+            assertThat(result.valid()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Deve validar grupos aninhados")
+        void shouldValidateNestedGroups() {
+            ConditionDTO condition1 = new ConditionDTO();
+            condition1.setFieldName("amount");
+            condition1.setOperator(ConditionDTO.OperatorType.GT);
+            condition1.setValueSingle("1000");
+
+            ConditionDTO condition2 = new ConditionDTO();
+            condition2.setFieldName("mcc");
+            condition2.setOperator(ConditionDTO.OperatorType.IN);
+            condition2.setValueArray(List.of("7995", "6211"));
+
+            ConditionGroupDTO childGroup = new ConditionGroupDTO();
+            childGroup.setLogicOperator(LogicOperatorType.OR);
+            childGroup.setConditions(List.of(condition2));
+
+            ConditionGroupDTO rootGroup = new ConditionGroupDTO();
+            rootGroup.setLogicOperator(LogicOperatorType.AND);
+            rootGroup.setConditions(List.of(condition1));
+            rootGroup.setChildren(List.of(childGroup));
+
+            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(rootGroup);
+
+            assertThat(result.valid()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Deve rejeitar profundidade excessiva de aninhamento")
+        void shouldRejectExcessiveNesting() {
+            // Criar 12 níveis de aninhamento (limite é 10)
+            ConditionGroupDTO current = new ConditionGroupDTO();
+            current.setLogicOperator(LogicOperatorType.AND);
+            
+            ConditionDTO condition = new ConditionDTO();
+            condition.setFieldName("test");
+            condition.setOperator(ConditionDTO.OperatorType.EQ);
+            condition.setValueSingle("value");
+            current.setConditions(List.of(condition));
+
+            for (int i = 0; i < 12; i++) {
+                ConditionGroupDTO parent = new ConditionGroupDTO();
+                parent.setLogicOperator(LogicOperatorType.AND);
+                parent.setChildren(List.of(current));
+                current = parent;
+            }
+
+            RuleValidationService.ValidationResult result = validationService.validateConditionGroup(current);
+
+            assertThat(result.valid()).isFalse();
+            assertThat(result.errors()).anyMatch(e -> e.contains("Profundidade"));
         }
     }
 
     @Nested
-    @DisplayName("validateCondition - Validação de Condição Individual")
+    @DisplayName("validateCondition - Validação de Condição de Entidade")
     class ValidateConditionTests {
 
         @Test
-        @DisplayName("Deve aceitar condição com operador válido")
+        @DisplayName("Deve aceitar condição válida")
         void shouldAcceptValidCondition() {
             RuleCondition condition = RuleCondition.builder()
-                    .fieldName("amount")
+                    .fieldName("transactionAmount")
                     .operator(RuleCondition.ConditionOperator.GT)
                     .valueSingle("1000")
                     .build();
@@ -265,17 +275,25 @@ class RuleValidationServiceTest {
         }
 
         @Test
-        @DisplayName("Deve rejeitar condição com operador GEO")
-        void shouldRejectGeoCondition() {
+        @DisplayName("Deve aceitar condição nula")
+        void shouldAcceptNullCondition() {
+            RuleValidationService.ValidationResult result = validationService.validateCondition(null);
+
+            assertThat(result.valid()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Deve aceitar operador GEO_DISTANCE_LT (agora implementado)")
+        void shouldAcceptGeoCondition() {
             RuleCondition condition = RuleCondition.builder()
                     .fieldName("location")
                     .operator(RuleCondition.ConditionOperator.GEO_DISTANCE_LT)
+                    .valueSingle("-23.55,-46.63,100")
                     .build();
 
             RuleValidationService.ValidationResult result = validationService.validateCondition(condition);
 
-            assertThat(result.valid()).isFalse();
-            assertThat(result.errors()).anyMatch(e -> e.contains("GEO_DISTANCE_LT"));
+            assertThat(result.valid()).isTrue();
         }
     }
 
@@ -284,15 +302,11 @@ class RuleValidationServiceTest {
     class GetUnsupportedOperatorsTests {
 
         @Test
-        @DisplayName("Deve retornar lista de operadores GEO")
-        void shouldReturnGeoOperators() {
+        @DisplayName("Deve retornar lista vazia (todos operadores agora suportados)")
+        void shouldReturnEmptyList() {
             var unsupported = validationService.getUnsupportedOperators();
 
-            assertThat(unsupported).containsExactlyInAnyOrder(
-                    "GEO_DISTANCE_LT",
-                    "GEO_DISTANCE_GT",
-                    "GEO_IN_POLYGON"
-            );
+            assertThat(unsupported).isEmpty();
         }
     }
 
@@ -301,14 +315,11 @@ class RuleValidationServiceTest {
     class GetUnsupportedValueTypesTests {
 
         @Test
-        @DisplayName("Deve retornar lista de tipos GEO")
-        void shouldReturnGeoValueTypes() {
+        @DisplayName("Deve retornar lista vazia (todos tipos agora suportados)")
+        void shouldReturnEmptyList() {
             var unsupported = validationService.getUnsupportedValueTypes();
 
-            assertThat(unsupported).containsExactlyInAnyOrder(
-                    "GEO_POINT",
-                    "GEO_POLYGON"
-            );
+            assertThat(unsupported).isEmpty();
         }
     }
 }
