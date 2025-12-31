@@ -288,7 +288,7 @@ interface TemplateSelectorProps {
 export const TemplateSelector = memo(function TemplateSelector({
   onSelect,
 }: TemplateSelectorProps) {
-  const categories = [...new Set(TEMPLATES.map(t => t.category))];
+  const categories = Array.from(new Set(TEMPLATES.map(t => t.category)));
 
   return (
     <Dialog>
