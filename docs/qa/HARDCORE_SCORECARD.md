@@ -14,16 +14,16 @@ Cada domínio é avaliado de 0 a 10 com base em:
 | Domínio | Nota | Status | Evidência |
 |---------|------|--------|-----------|
 | 1. Arquitetura | 8/10 | ⚠️ | Clean arch, mas falta separação de concerns em alguns services |
-| 2. Backend Java/Spring | 8/10 | ⚠️ | Sólido, mas falta @Version para optimistic locking |
+| 2. Backend Java/Spring | 9/10 | ✅ | @Version implementado, anti-abuse limits OK |
 | 3. Frontend React | 7/10 | ⚠️ | RuleFormDialog incompleto (TODO), ComplexRuleBuilder OK |
 | 4. DBA Postgres | 8/10 | ⚠️ | Migrations OK, mas constraint CHECK comentada em V12 |
 | 5. QA/Testes | 7/10 | ⚠️ | 198 FE + ~100 BE, mas falta E2E Playwright |
-| 6. Motor de Regras | 9/10 | ✅ | 50 operadores, nesting, GEO, VELOCITY |
+| 6. Motor de Regras | 9/10 | ✅ | 50 operadores, nesting, GEO, VELOCITY, limites anti-abuso |
 | 7. Fraude/Tipologias | 8/10 | ⚠️ | Templates OK, mas falta regras extremas de exemplo |
-| 8. AppSec | 8/10 | ⚠️ | RBAC OK, ReDoS OK, mas falta rate limiting |
+| 8. AppSec | 9/10 | ✅ | RBAC OK, ReDoS OK, anti-abuse limits OK |
 | 9. SRE/Observability | 6/10 | ⚠️ | Logs OK, mas falta métricas/tracing estruturado |
 
-**Média Geral: 7.7/10** ⚠️
+**Média Geral: 7.9/10** ⚠️ (melhorou de 7.7)
 
 ---
 
@@ -110,8 +110,8 @@ cd ~/repos/RULEX/backend && mvn test -q
 ```sql
 -- V12__complex_rules_crud.sql
 -- Comentado por enquanto para não quebrar dados existentes
--- ALTER TABLE rule_condition_groups 
--- ADD CONSTRAINT chk_condition_groups_has_parent 
+-- ALTER TABLE rule_condition_groups
+-- ADD CONSTRAINT chk_condition_groups_has_parent
 -- CHECK (rule_version_id IS NOT NULL OR complex_rule_id IS NOT NULL);
 ```
 
@@ -246,9 +246,9 @@ management.endpoints.web.exposure.include=health,info,metrics
 
 ### P0 (Crítico)
 1. [ ] Implementar RuleFormDialog completo
-2. [ ] Adicionar @Version para optimistic locking
+2. [x] Adicionar @Version para optimistic locking ✅ (commit 2fcef9b)
 3. [ ] Descomentar constraint CHECK em V12 (com backfill)
-4. [ ] Adicionar limites anti-abuso (max nesting, max conditions)
+4. [x] Adicionar limites anti-abuso (max nesting, max conditions) ✅ (commit 88753c6)
 
 ### P1 (Importante)
 5. [ ] Criar E2E Playwright completo
