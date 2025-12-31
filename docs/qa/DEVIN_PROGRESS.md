@@ -15,8 +15,8 @@
 |------|--------|-----------|
 | Operadores Backend (enum) | ✅ | `RuleCondition.java:ConditionOperator` - 50 operadores |
 | Operadores Frontend (types) | ✅ | `ComplexRuleBuilder/types.ts` - 52 operadores (inclui legacy) |
-| Operadores Popup Simples | ✅ | `RuleFormDialog/types.ts` - 20 operadores (GAP-P0-02) |
-| Alinhamento FE/BE | ✅ | Paridade OK no ComplexRuleBuilder, GAP no popup simples |
+| Operadores Popup Simples | ✅ | `RuleFormDialog/types.ts` - 52 operadores (commit 8fc0d41) |
+| Alinhamento FE/BE | ✅ | Paridade OK em ambos os componentes |
 
 ### Engines
 | Item | Status | Evidência |
@@ -24,16 +24,16 @@
 | ComplexRuleEvaluator | ✅ | `service/complex/ComplexRuleEvaluator.java` |
 | GeoService | ✅ | `service/GeoService.java` - Haversine + polygon |
 | VelocityService | ✅ | `service/VelocityService.java` - agregações temporais |
-| RegexValidator | ⏳ | `util/RegexValidator.java` - ReDoS protection |
+| RegexValidator | ✅ | `util/RegexValidator.java` - ReDoS protection |
 
 ### Persistência
 | Item | Status | Evidência |
 |------|--------|-----------|
-| Migrations V1-V15 | ✅ | 15 arquivos em db/migration/ |
+| Migrations V1-V17 | ✅ | 17 arquivos em db/migration/ |
 | Tabela complex_rules | ✅ | V12 |
 | Tabela velocity_counters | ✅ | V14 |
-| Tabela geo_reference | ✅ | V13 |
-| Enum VELOCITY operators | ✅ | V15 (commit 7c7c6c8) |
+| Tabela geo_reference | ✅ | V13 + V17 (fix id type) |
+| Enum VELOCITY operators | ✅ | V15 |
 
 ### RBAC
 | Item | Status | Evidência |
@@ -41,15 +41,6 @@
 | SecurityConfig | ✅ | `config/SecurityConfig.java` |
 | Roles: ADMIN, ANALYST | ✅ | Definidos |
 | Endpoints protegidos | ✅ | Mapeado em SECURITY_RBAC_MAP.md |
-
-### Documentação
-| Item | Status | Path |
-|------|--------|------|
-| EXTREME_CAPABILITIES_MAP | ✅ | docs/EXTREME_CAPABILITIES_MAP.md (atualizado com VELOCITY) |
-| ENDPOINTS_REAL_MAP | ✅ | docs/qa/ENDPOINTS_REAL_MAP.md |
-| SECURITY_RBAC_MAP | ✅ | docs/qa/SECURITY_RBAC_MAP.md |
-| HARDCORE_SCORECARD | ✅ | docs/qa/HARDCORE_SCORECARD.md |
-| GAPS_REGISTER | ✅ | docs/qa/GAPS_REGISTER.md |
 
 ---
 
@@ -59,7 +50,7 @@
 | Item | Status | Evidência |
 |------|--------|-----------|
 | Docker Compose | ✅ | postgres:16-alpine rodando |
-| Flyway V1-V16 | ✅ | Todas migrations aplicadas |
+| Flyway V1-V17 | ✅ | Todas migrations aplicadas |
 | Backend Spring Boot | ✅ | Rodando em localhost:8080 |
 
 ### CRUD Regras Simples
@@ -67,14 +58,14 @@
 |------|--------|-----------|
 | POST /api/rules | ✅ | 201 Created |
 | GET /api/rules | ✅ | 200 OK com lista |
-| PUT /api/rules/{id} | ⏳ | Não testado ainda |
-| DELETE /api/rules/{id} | ⏳ | Não testado ainda |
+| PUT /api/rules/{id} | ✅ | 200 OK (com optimistic locking) |
+| DELETE /api/rules/{id} | ✅ | 204 No Content |
 
-### Avaliação
+### Optimistic Locking
 | Item | Status | Evidência |
 |------|--------|-----------|
-| POST /api/evaluate | ✅ | Motor de regras funcionando |
-| Regra HIGH_AMOUNT_TEST | ✅ | Acionada corretamente |
+| PUT com versão errada | ✅ | 409 Conflict |
+| PUT com versão correta | ✅ | 200 OK, version incrementada |
 
 ### RBAC
 | Item | Status | Evidência |
@@ -86,8 +77,22 @@
 
 ---
 
-## PASSADA 3 - IMPLEMENTAÇÃO
-🔲 Não iniciada
+## PASSADA 3 - IMPLEMENTAÇÃO ⏳
+
+### Concluídos
+| Item | Status | Evidência |
+|------|--------|-----------|
+| GAP-P0-02: Operadores popup | ✅ | commit 8fc0d41 |
+| GAP-P0-04: Optimistic locking | ✅ | commit a92f167 |
+| GAP-P1-01: Limites anti-abuso | ✅ | commit 88753c6 |
+| V17: Fix geo_reference.id | ✅ | commit a92f167 |
+
+### Pendentes
+| Item | Status | Evidência |
+|------|--------|-----------|
+| GAP-P0-01: RuleFormDialog | 🔲 | TODO no index.tsx |
+| GAP-P0-03: Constraint CHECK V12 | 🔲 | Comentada |
+| GAP-P1-02: E2E Playwright | 🔲 | Não iniciado |
 
 ---
 
@@ -99,9 +104,10 @@
 ## Commits Realizados
 | Hash | Descrição |
 |------|-----------|
-| 7c7c6c8 | feat: add complexRuleId support to RuleConditionGroup and VELOCITY operators |
+| 8fc0d41 | feat: add all 52 operators to RuleFormDialog types and schema |
+| a92f167 | fix: optimistic locking and geo_reference id type |
 
 ---
 
 ## Última Atualização
-2024-12-31T21:00:00Z
+2024-12-31T22:25:00Z

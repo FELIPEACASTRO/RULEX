@@ -177,8 +177,74 @@ POST /api/evaluate
 ```
 **Status:** ✅ RBAC funcionando
 
+---
+
+## 2024-12-31 22:20 - PASSADA 2: Integração (Continuação)
+
+### V17 Migration (Fix geo_reference.id type)
+```
+22:11:20.178 [main] INFO  o.f.core.internal.command.DbMigrate - Successfully applied 1 migration to schema "public", now at version v17 (execution time 00:00.024s)
+```
+**Status:** ✅ V17 aplicada com sucesso
+
+### CRUD Completo
+```bash
+# POST - Criar regra
+curl -X POST -u admin:rulex http://localhost:8080/api/rules -d '{"ruleName":"COMPLEX_GEO_TEST",...}'
+# HTTP 201 Created
+
+# GET - Listar regras
+curl -u admin:rulex http://localhost:8080/api/rules
+# HTTP 200 OK - 5 regras listadas
+
+# PUT - Atualizar regra (versão correta)
+curl -X PUT -u admin:rulex http://localhost:8080/api/rules/4 -d '{"version":0,...}'
+# HTTP 200 OK - version incrementada para 1
+
+# PUT - Atualizar regra (versão errada - optimistic locking)
+curl -X PUT -u admin:rulex http://localhost:8080/api/rules/1 -d '{"version":0,...}'
+# HTTP 409 Conflict - "Este registro foi modificado por outro usuário"
+
+# DELETE - Deletar regra
+curl -X DELETE -u admin:rulex http://localhost:8080/api/rules/6
+# HTTP 204 No Content
+```
+**Status:** ✅ CRUD completo com optimistic locking
+
+### RBAC Testado
+```bash
+# ANALYST tentando criar regra (deve falhar)
+curl -X POST -u analyst:rulex http://localhost:8080/api/rules -d '...'
+# HTTP 403 Forbidden
+
+# ANALYST lendo regras (deve funcionar)
+curl -u analyst:rulex http://localhost:8080/api/rules
+# HTTP 200 OK
+```
+**Status:** ✅ RBAC funcionando corretamente
+
+### Testes Automatizados
+```bash
+# Frontend (Vitest)
+cd ~/repos/RULEX && pnpm test --run
+# Test Files  12 passed (12)
+# Tests  198 passed (198)
+
+# Backend (JUnit)
+cd ~/repos/RULEX && mvn -f backend/pom.xml test
+# Tests run: 198, Failures: 0, Errors: 0, Skipped: 0
+# BUILD SUCCESS
+```
+**Status:** ✅ 396 testes passando (198 FE + 198 BE)
+
+### Commits Realizados
+| Hash | Descrição |
+|------|-----------|
+| 8fc0d41 | feat: add all 52 operators to RuleFormDialog types and schema |
+| a92f167 | fix: optimistic locking and geo_reference id type |
+
 ### Próximas Evidências
-- [ ] CRUD regras complexas
-- [ ] GEO operators
-- [ ] VELOCITY operators
+- [ ] CRUD regras complexas (ComplexRuleBuilder)
+- [ ] GEO operators (GEO_DISTANCE_*, GEO_IN_POLYGON)
+- [ ] VELOCITY operators (VELOCITY_COUNT_*, VELOCITY_SUM_*, etc)
 - [ ] E2E Playwright

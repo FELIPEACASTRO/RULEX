@@ -22,19 +22,16 @@
 
 ---
 
-### GAP-P0-02: Popup Simples Não Suporta Operadores Avançados
-**Descrição:** O popup de regras simples (Rules.tsx) só suporta 20 operadores, enquanto o backend suporta 50.
-**Impacto:** Usuários não conseguem criar regras com GEO, VELOCITY, FIELD_*, etc. via popup.
-**Evidência:**
-```typescript
-// client/src/components/RuleFormDialog/types.ts
-export const OPERATORS: OperatorOption[] = [
-  // Apenas 20 operadores básicos
-  // Faltam: GEO_*, VELOCITY_*, FIELD_*, DATE_*, TIME_*, ARRAY_*, MOD_*
-];
-```
-**Solução:** Evoluir popup para suportar todos os operadores OU integrar ComplexRuleBuilder.
-**Status:** ❌ Aberto
+### GAP-P0-02: Popup Simples Não Suporta Operadores Avançados ✅ FECHADO
+**Descrição:** O popup de regras simples (Rules.tsx) só suportava 20 operadores, enquanto o backend suporta 50.
+**Impacto:** Usuários não conseguiam criar regras com GEO, VELOCITY, FIELD_*, etc. via popup.
+**Solução:** Adicionados todos os 52 operadores ao RuleFormDialog/types.ts e schema.ts.
+**Status:** ✅ Fechado (commit 8fc0d41)
+**Implementação:**
+- Adicionados operadores: GEO_*, VELOCITY_*, FIELD_*, DATE_*, TIME_*, ARRAY_*, MOD_*
+- Adicionado OPERATORS_BY_TYPE para filtragem por tipo de campo
+- Adicionado FIELD_REF_OPERATORS para operadores de referência a campo
+- Mantidos operadores legacy para compatibilidade
 
 ---
 
@@ -188,20 +185,20 @@ ls e2e/
 
 | Prioridade | Total | Abertos | Fechados |
 |------------|-------|---------|----------|
-| P0 | 4 | 3 | 1 |
+| P0 | 4 | 2 | 2 |
 | P1 | 7 | 6 | 1 |
 | P2 | 5 | 5 | 0 |
-| **Total** | **16** | **14** | **2** |
+| **Total** | **16** | **13** | **3** |
 
 ---
 
 ## Próximos Passos
 
-1. **Passada 2**: Subir stack e validar integração
-2. **Passada 3**: Implementar correções P0
-3. **Passada 4**: Criar test suite extrema
+1. ✅ **Passada 2**: Stack validada (CRUD + RBAC + Optimistic Locking)
+2. ⏳ **Passada 3**: Implementar GAP-P0-01 (RuleFormDialog) e GAP-P0-03 (constraint CHECK)
+3. 🔲 **Passada 4**: Criar test suite extrema
 
 ---
 
 ## Última Atualização
-2024-12-31T21:20:00Z
+2024-12-31T22:30:00Z
