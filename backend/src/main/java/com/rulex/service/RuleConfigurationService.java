@@ -105,6 +105,18 @@ public class RuleConfigurationService {
             .findById(id)
             .orElseThrow(() -> new NotFoundException("Regra não encontrada"));
 
+    // Optimistic locking: verificar se a versão do DTO corresponde à versão atual
+    if (dto.getVersion() != null && !dto.getVersion().equals(rule.getVersion())) {
+      throw new org.springframework.orm.ObjectOptimisticLockingFailureException(
+          "RuleConfiguration",
+          id,
+          new IllegalStateException(
+              "Esta regra foi modificada por outro usuário. Versão atual: "
+                  + rule.getVersion()
+                  + ", versão enviada: "
+                  + dto.getVersion()));
+    }
+
     String previous = serializeRule(rule);
 
     validateConditionFields(dto.getConditions());
@@ -118,6 +130,7 @@ public class RuleConfigurationService {
     rule.setParameters(dto.getParameters());
     rule.setConditionsJson(writeConditionsJson(dto.getConditions()));
     rule.setLogicOperator(parseLogicOperator(dto.getLogicOperator()));
+    // Incrementar versão manualmente (além do @Version do JPA)
     rule.setVersion(rule.getVersion() + 1);
 
     rule = ruleConfigRepository.save(rule);

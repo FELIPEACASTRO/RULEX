@@ -1,179 +1,166 @@
-# AGENTS.md - Guia para Agentes de IA no RULEX
+# AGENTS.md - RULEX Repository Agent Guide
 
-## 1. Comandos Reais do Repositório
+## Overview
+RULEX is a fraud detection rules engine with a React frontend and Spring Boot backend.
 
-### 1.1 Frontend (React/Vite)
-```bash
-# Instalar dependências
-cd ~/repos/RULEX && pnpm install
-
-# Type check (lint)
-cd ~/repos/RULEX && pnpm check
-
-# Testes unitários
-cd ~/repos/RULEX && pnpm test
-
-# Testes com coverage
-cd ~/repos/RULEX && pnpm test:coverage
-
-# Build
-cd ~/repos/RULEX && pnpm build
-
-# Dev server
-cd ~/repos/RULEX && pnpm dev
-
-# E2E (requer Docker)
-cd ~/repos/RULEX && pnpm e2e
-```
-
-### 1.2 Backend (Java/Spring Boot)
-```bash
-# Instalar dependências
-cd ~/repos/RULEX/backend && mvn dependency:resolve
-
-# Compilar
-cd ~/repos/RULEX/backend && mvn compile
-
-# Testes
-cd ~/repos/RULEX/backend && mvn test
-
-# Build
-cd ~/repos/RULEX/backend && mvn package -DskipTests
-
-# Lint (Spotless)
-cd ~/repos/RULEX/backend && mvn spotless:check
-
-# Formatar código
-cd ~/repos/RULEX/backend && mvn spotless:apply
-```
-
-### 1.3 Docker/Ambiente Completo
-```bash
-# Subir ambiente
-cd ~/repos/RULEX && cp .env.example .env && docker compose up -d --build
-
-# Derrubar ambiente
-cd ~/repos/RULEX && docker compose down -v
-
-# Logs
-cd ~/repos/RULEX && docker compose logs -f backend
-```
-
-### 1.4 Validação Completa
-```bash
-# Script de validação (se existir)
-cd ~/repos/RULEX && ./scripts/validate.sh
-
-# Validação manual
-cd ~/repos/RULEX && pnpm check && pnpm test && cd backend && mvn test
-```
-
----
-
-## 2. Convenções
-
-### 2.1 Commits
-- Formato: `type(scope): description`
-- Types: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`
-- Exemplos:
-  - `feat(geo): implement GEO_DISTANCE_LT operator`
-  - `fix(validation): handle null values in BETWEEN operator`
-  - `docs: update EXTREME_CAPABILITIES_MAP`
-
-### 2.2 Branches
-- Feature: `feat/description`
-- Fix: `fix/description`
-- Docs: `docs/description`
-
-### 2.3 Code Style
-- **Frontend**: Prettier + ESLint (via `pnpm format`)
-- **Backend**: Spotless (via `mvn spotless:apply`)
-
----
-
-## 3. Política de Testes
-
-### 3.1 Regra de Ouro
-**NÃO fazer merge/commit sem todos os testes passando.**
-
-### 3.2 Cobertura Mínima
-- Backend: 80%+ em services críticos
-- Frontend: 70%+ em componentes de formulário
-
-### 3.3 Tipos de Teste
-- **Unit**: Lógica isolada (operadores, validadores)
-- **Integration**: API + DB
-- **E2E**: Fluxos completos via Playwright
-
----
-
-## 4. Política de Documentação
-
-### 4.1 Arquivos Obrigatórios
-- `/docs/EXTREME_CAPABILITIES_MAP.md` - Capacidades reais
-- `/docs/RULES_SCHEMA_AND_FIELDS.md` - Schema de regras
-- `/DEVIN_RUNBOOK.md` - Plano de execução
-- `/DEVIN_GAPS.md` - Lista de gaps
-- `/DEVIN_COMMAND_LOG.md` - Log de comandos
-
-### 4.2 Regra
-Toda mudança significativa deve atualizar a documentação correspondente.
-
----
-
-## 5. Estrutura do Projeto
-
+## Repository Structure
 ```
 RULEX/
-├── backend/                    # Java/Spring Boot
-│   ├── src/main/java/com/rulex/
-│   │   ├── controller/         # REST Controllers
-│   │   ├── service/            # Business Logic
-│   │   ├── entity/             # JPA Entities
-│   │   ├── repository/         # Data Access
-│   │   └── dto/                # Data Transfer Objects
-│   └── src/main/resources/
-│       └── db/migration/       # Flyway migrations
-├── client/                     # React/Vite
-│   └── src/
-│       ├── pages/              # Page components
-│       ├── components/         # Reusable components
-│       └── lib/                # Utilities
-├── docs/                       # Documentation
-├── e2e/                        # Playwright tests
-└── scripts/                    # Utility scripts
+├── client/           # React 19 + Vite frontend
+├── backend/          # Spring Boot 3.x backend
+├── docs/             # Documentation
+│   └── qa/           # QA artifacts and audit logs
+├── e2e/              # Playwright E2E tests
+├── openapi/          # OpenAPI specifications
+└── scripts/          # Utility scripts
 ```
 
----
+## Commands
 
-## 6. Endpoints Principais
+### Setup
+```bash
+# Install frontend dependencies
+cd ~/repos/RULEX && pnpm install --frozen-lockfile
 
-### 6.1 Regras Simples
-- `GET /api/rules` - Listar
-- `POST /api/rules` - Criar
-- `PUT /api/rules/{id}` - Atualizar
-- `DELETE /api/rules/{id}` - Deletar
+# Install backend dependencies
+cd ~/repos/RULEX && mvn -q -f backend/pom.xml dependency:resolve
+```
 
-### 6.2 Regras Complexas
-- `GET /api/v1/complex-rules` - Listar
-- `POST /api/v1/complex-rules` - Criar
-- `PUT /api/v1/complex-rules/{id}` - Atualizar
-- `DELETE /api/v1/complex-rules/{id}` - Deletar
-- `POST /api/v1/complex-rules/validate` - Validar
+### Development
+```bash
+# Start full stack (Docker)
+cd ~/repos/RULEX && docker compose up -d --build
 
-### 6.3 Avaliação
-- `POST /api/evaluate` - Avaliar transação
-- `POST /api/transactions/analyze` - Analisar transação
+# Start frontend only (dev mode)
+cd ~/repos/RULEX && pnpm dev
 
----
+# Start backend only
+cd ~/repos/RULEX/backend && mvn spring-boot:run
+```
 
-## 7. Restrições Críticas
+### Testing
+```bash
+# Frontend tests (Vitest)
+cd ~/repos/RULEX && pnpm test --run
 
-### 7.1 Payload Imutável
-**NUNCA alterar TransactionRequest.** Features derivadas devem ser calculadas internamente.
+# Backend tests (JUnit)
+cd ~/repos/RULEX && mvn -f backend/pom.xml test
 
-### 7.2 Git Limpo
-**SEMPRE manter git status clean.** Fazer commit de todas as mudanças.
+# E2E tests (Playwright)
+cd ~/repos/RULEX && pnpm exec playwright test
+```
 
-### 7.3 Testes Passando
-**NUNCA deixar testes falhando.** Corrigir antes de prosseguir.
+### Linting
+```bash
+# Frontend lint
+cd ~/repos/RULEX && pnpm check
+
+# Backend lint (Spotless)
+cd ~/repos/RULEX && mvn -f backend/pom.xml spotless:check
+
+# Fix backend formatting
+cd ~/repos/RULEX && mvn -f backend/pom.xml spotless:apply
+```
+
+### Build
+```bash
+# Frontend build
+cd ~/repos/RULEX && pnpm build
+
+# Backend build
+cd ~/repos/RULEX && mvn -f backend/pom.xml package -DskipTests
+```
+
+## Agent Rules
+
+### Git Hygiene
+1. **ALWAYS** keep git status clean before finishing work
+2. **NEVER** leave uncommitted changes that affect functionality
+3. **ALWAYS** run tests before committing
+4. Commit messages follow conventional commits format
+
+### Code Changes
+1. **NEVER** change payload/API contracts without explicit approval
+2. **ALWAYS** update tests when changing functionality
+3. **ALWAYS** update documentation when changing behavior
+4. Use existing patterns - don't invent new architectures
+
+### Testing Requirements
+1. Frontend changes require Vitest tests
+2. Backend changes require JUnit tests
+3. API changes require integration tests
+4. Critical flows require E2E tests
+
+### Documentation
+1. Update DEVIN_PROGRESS.md after completing tasks
+2. Update DEVIN_EVIDENCE_LOG.md with test outputs
+3. Update GAPS_REGISTER.md when closing gaps
+
+## Key Files
+
+### Frontend
+- `client/src/lib/javaApi.ts` - API client
+- `client/src/components/RuleFormDialog/` - Rule popup
+- `client/src/components/ComplexRuleBuilder/` - Advanced rule builder
+- `client/src/pages/Rules.tsx` - Rules page
+
+### Backend
+- `backend/src/main/java/com/rulex/controller/` - REST controllers
+- `backend/src/main/java/com/rulex/service/` - Business logic
+- `backend/src/main/java/com/rulex/entity/` - JPA entities
+- `backend/src/main/resources/db/migration/` - Flyway migrations
+
+### Configuration
+- `docker-compose.yml` - Docker stack
+- `backend/src/main/resources/application.properties` - Backend config
+- `vite.config.ts` - Frontend config
+
+## Environment Variables
+```bash
+# Database
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=rulex
+POSTGRES_USER=rulex
+POSTGRES_PASSWORD=rulex
+
+# Backend
+SPRING_PROFILES_ACTIVE=dev
+SERVER_PORT=8080
+
+# Frontend
+VITE_API_URL=http://localhost:8080
+```
+
+## Credentials (Dev)
+- Admin: `admin` / `admin123`
+- Analyst: `analyst` / `analyst123`
+
+## Common Issues
+
+### Flyway Migration Fails
+```bash
+# Check migration status
+cd ~/repos/RULEX/backend && mvn flyway:info
+
+# Repair if needed
+cd ~/repos/RULEX/backend && mvn flyway:repair
+```
+
+### Port Already in Use
+```bash
+# Kill process on port 8080
+lsof -ti:8080 | xargs kill -9
+
+# Kill process on port 5173
+lsof -ti:5173 | xargs kill -9
+```
+
+### Docker Issues
+```bash
+# Full reset
+cd ~/repos/RULEX && docker compose down -v && docker compose up -d --build
+```
+
+## Last Updated
+2024-12-31T22:10:00Z
