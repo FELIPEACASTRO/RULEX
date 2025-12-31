@@ -25,11 +25,20 @@ public class ComplexRuleService {
   private final RuleActionRepository actionRepository;
   private final RuleTemplateRepository templateRepository;
   private final ComplexRuleMapper mapper;
+  private final RuleValidationService validationService;
 
   /** Salva a estrutura completa de condições de uma regra */
   @Transactional
   public ConditionGroupDTO saveConditionGroup(UUID ruleVersionId, ConditionGroupDTO dto) {
     log.info("Salvando grupo de condições para ruleVersionId: {}", ruleVersionId);
+
+    // Validar regra antes de persistir
+    RuleValidationService.ValidationResult validation = validationService.validateConditionGroup(dto);
+    if (!validation.valid()) {
+      String errorMsg = String.join("; ", validation.errors());
+      log.error("Validação de regra falhou: {}", errorMsg);
+      throw new IllegalArgumentException("Regra inválida: " + errorMsg);
+    }
 
     // Deletar grupos existentes
     conditionGroupRepository.deleteByRuleVersionId(ruleVersionId);
