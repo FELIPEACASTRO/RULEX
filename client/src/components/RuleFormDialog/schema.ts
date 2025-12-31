@@ -12,15 +12,28 @@ import { validateRegex, getRegexValidationError } from '@/lib/validators/regexVa
 // ============================================
 
 const conditionOperators = [
-  // Básicos (NEQ alinhado com backend)
+  // Básicos
   'EQ', 'NEQ', 'GT', 'LT', 'GTE', 'LTE',
   // Listas
   'IN', 'NOT_IN', 'BETWEEN', 'NOT_BETWEEN',
-  // Strings (REGEX alinhado com backend)
+  // Strings
   'CONTAINS', 'NOT_CONTAINS', 'STARTS_WITH', 'ENDS_WITH', 'REGEX', 'NOT_REGEX',
-  // Nulos (NOT_NULL alinhado com backend)
+  // Nulos/Booleanos
   'IS_NULL', 'NOT_NULL', 'IS_TRUE', 'IS_FALSE',
-  // Legado (mantido para compatibilidade)
+  // Comparação entre campos
+  'FIELD_EQ', 'FIELD_NEQ', 'FIELD_GT', 'FIELD_GTE', 'FIELD_LT', 'FIELD_LTE',
+  // Data/Hora
+  'DATE_BEFORE', 'DATE_AFTER', 'DATE_BETWEEN', 'TIME_BEFORE', 'TIME_AFTER', 'TIME_BETWEEN',
+  // Array
+  'ARRAY_CONTAINS', 'ARRAY_NOT_CONTAINS', 'ARRAY_SIZE_EQ', 'ARRAY_SIZE_GT', 'ARRAY_SIZE_LT',
+  // Matemáticos
+  'MOD_EQ', 'MOD_NEQ',
+  // Geolocalização
+  'GEO_DISTANCE_LT', 'GEO_DISTANCE_GT', 'GEO_IN_POLYGON',
+  // Velocity
+  'VELOCITY_COUNT_GT', 'VELOCITY_COUNT_LT', 'VELOCITY_SUM_GT', 'VELOCITY_SUM_LT',
+  'VELOCITY_AVG_GT', 'VELOCITY_AVG_LT', 'VELOCITY_DISTINCT_GT', 'VELOCITY_DISTINCT_LT',
+  // Legacy
   'NE', 'MATCHES_REGEX', 'IS_NOT_NULL',
   '==', '!=', '>', '<', '>=', '<=',
 ] as const;
@@ -379,6 +392,8 @@ export function getPlaceholderForOperator(operator: string): string {
       return 'Ex: valor1,valor2,valor3 ou [1,2,3]';
     case 'BETWEEN':
     case 'NOT_BETWEEN':
+    case 'DATE_BETWEEN':
+    case 'TIME_BETWEEN':
       return 'Ex: 10,100 ou 10..100';
     case 'REGEX':
     case 'NOT_REGEX':
@@ -386,6 +401,8 @@ export function getPlaceholderForOperator(operator: string): string {
       return 'Ex: ^[A-Z]+$ (expressão regular)';
     case 'CONTAINS':
     case 'NOT_CONTAINS':
+    case 'ARRAY_CONTAINS':
+    case 'ARRAY_NOT_CONTAINS':
       return 'Ex: texto a buscar';
     case 'STARTS_WITH':
       return 'Ex: prefixo';
@@ -397,6 +414,41 @@ export function getPlaceholderForOperator(operator: string): string {
     case 'IS_TRUE':
     case 'IS_FALSE':
       return '(não aplicável)';
+    case 'FIELD_EQ':
+    case 'FIELD_NEQ':
+    case 'FIELD_GT':
+    case 'FIELD_GTE':
+    case 'FIELD_LT':
+    case 'FIELD_LTE':
+      return 'Ex: outroNomeDeCampo';
+    case 'DATE_BEFORE':
+    case 'DATE_AFTER':
+      return 'Ex: 2024-12-31';
+    case 'TIME_BEFORE':
+    case 'TIME_AFTER':
+      return 'Ex: 23:59:59';
+    case 'ARRAY_SIZE_EQ':
+    case 'ARRAY_SIZE_GT':
+    case 'ARRAY_SIZE_LT':
+      return 'Ex: 5';
+    case 'MOD_EQ':
+    case 'MOD_NEQ':
+      return 'Ex: 100,0 (divisor,resto)';
+    case 'GEO_DISTANCE_LT':
+    case 'GEO_DISTANCE_GT':
+      return 'Ex: -23.55,-46.63,100 (lat,lon,km)';
+    case 'GEO_IN_POLYGON':
+      return 'Ex: BRASIL ou SAO_PAULO';
+    case 'VELOCITY_COUNT_GT':
+    case 'VELOCITY_COUNT_LT':
+    case 'VELOCITY_SUM_GT':
+    case 'VELOCITY_SUM_LT':
+    case 'VELOCITY_AVG_GT':
+    case 'VELOCITY_AVG_LT':
+      return 'Ex: PAN,60,5 (keyType,minutes,threshold)';
+    case 'VELOCITY_DISTINCT_GT':
+    case 'VELOCITY_DISTINCT_LT':
+      return 'Ex: PAN,1440,MERCHANTS,3';
     default:
       return 'Ex: 100';
   }
