@@ -319,6 +319,10 @@ export function validateValueByOperator(
       if (betweenParts.length !== 2) {
         return 'Use o formato: valor1,valor2 ou valor1..valor2';
       }
+      // P0-GAP-01: Validar que ambos os valores não estão vazios
+      if (betweenParts.some(p => !p.trim())) {
+        return 'Ambos os valores são obrigatórios (ex: 10,100)';
+      }
       if (fieldType === 'number') {
         if (betweenParts.some(p => isNaN(Number(p.trim())))) {
           return 'Ambos os valores devem ser números';
