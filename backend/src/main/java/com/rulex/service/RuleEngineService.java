@@ -7,6 +7,7 @@ import com.rulex.dto.RuleConditionDTO;
 import com.rulex.dto.RuleHitDTO;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
+import com.rulex.service.DerivedContext;
 import com.rulex.dto.TriggeredRuleDTO;
 import com.rulex.entity.RuleConfiguration;
 import com.rulex.entity.Transaction;
@@ -448,6 +449,13 @@ public class RuleEngineService {
   private RuleEvaluationResult evaluateRules(Transaction transaction, TransactionRequest request) {
     RuleEvaluationResult result = new RuleEvaluationResult();
     List<RuleConfiguration> enabledRules = ruleConfigRepository.findByEnabled(true);
+
+    // V3.2: Derivar tipos ricos do payload sem alterar o payload original
+    DerivedContext derivedContext = DerivedContext.from(request);
+    log.debug("DerivedContext criado: transactionTs={}, bin={}, maskedPan={}",
+        derivedContext.getTransactionTimestamp(),
+        derivedContext.getBin(),
+        derivedContext.getMaskedPan());
 
     int totalScore = 0;
     List<TriggeredRuleDTO> triggeredRules = new ArrayList<>();
