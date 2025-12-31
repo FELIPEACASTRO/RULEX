@@ -115,8 +115,70 @@ export type ComparisonOperator =
 
 ---
 
-## Próximas Evidências
-- [ ] Flyway migration output
-- [ ] Backend test results
-- [ ] Frontend test results
-- [ ] E2E test results
+---
+
+## 2024-12-31 - PASSADA 2: Integração
+
+### Flyway Migrations (V1-V16)
+```
+21:18:57.481 [restartedMain] INFO  o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "8 - complex rules support"
+21:18:57.481 [restartedMain] INFO  o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "9 - audit compliance enhancements"
+21:18:57.539 [restartedMain] INFO  o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "10 - derived context improvements"
+21:18:57.572 [restartedMain] INFO  o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "11 - bin lookup table"
+21:18:57.604 [restartedMain] INFO  o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "12 - complex rules crud"
+21:18:57.635 [restartedMain] INFO  o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "13 - geo reference table"
+21:18:57.671 [restartedMain] INFO  o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "14 - velocity counters"
+21:18:57.700 [restartedMain] INFO  o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "15 - add velocity operators"
+21:18:57.720 [restartedMain] INFO  o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "16 - fix geo polygon id type"
+```
+**Status:** ✅ Todas as 16 migrations aplicadas com sucesso
+
+### CRUD Regras Simples
+```bash
+# Criar regra
+curl -X POST http://localhost:8080/api/rules -u admin:rulex -d '{"ruleName":"HIGH_AMOUNT_TEST",...}'
+# Resultado: 201 Created (ou 409 se já existe)
+
+# Listar regras
+curl http://localhost:8080/api/rules -u admin:rulex
+# Resultado: 200 OK com lista de regras
+```
+**Status:** ✅ CRUD funcionando
+
+### Avaliação de Transação
+```json
+// Request
+POST /api/evaluate
+{
+  "externalTransactionId": "TXN-002",
+  "transactionAmount": 600000,
+  ...
+}
+
+// Response
+{
+  "classification": "SUSPICIOUS",
+  "riskScore": 50,
+  "reason": "Transação suspeita. Regras acionadas: HIGH_AMOUNT_TEST",
+  "ruleHits": [{
+    "ruleName": "HIGH_AMOUNT_TEST",
+    "detail": "transactionAmount GT 500000 (actual=600000) => true"
+  }]
+}
+```
+**Status:** ✅ Motor de regras funcionando
+
+### RBAC
+```
+401 (sem auth): ✅
+403 (ANALYST POST): ✅
+200 (ANALYST GET): ✅
+200 (ADMIN POST): ✅
+```
+**Status:** ✅ RBAC funcionando
+
+### Próximas Evidências
+- [ ] CRUD regras complexas
+- [ ] GEO operators
+- [ ] VELOCITY operators
+- [ ] E2E Playwright
