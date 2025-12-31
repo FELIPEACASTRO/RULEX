@@ -100,6 +100,8 @@ public class SecurityConfig {
                     .hasAnyRole("ANALYST", "ADMIN")
                     .requestMatchers(HttpMethod.GET, "/field-dictionary/**")
                     .hasAnyRole("ANALYST", "ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/complex-rules/**")
+                    .hasAnyRole("ANALYST", "ADMIN")
 
                     // V31 rules tools: validate/lint for analysts; simulate admin-only
                     .requestMatchers(HttpMethod.POST, "/rules/validate")
@@ -113,6 +115,8 @@ public class SecurityConfig {
                     .requestMatchers("/homolog/**")
                     .hasRole("ADMIN")
                     .requestMatchers("/rules/**")
+                    .hasRole("ADMIN")
+                    .requestMatchers("/complex-rules/**")
                     .hasRole("ADMIN")
                     .anyRequest()
                     .authenticated())

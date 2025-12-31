@@ -31,4 +31,9 @@ public interface RuleActionRepository extends JpaRepository<RuleAction, UUID> {
 
   /** Deleta todas as ações de uma versão de regra */
   void deleteByRuleVersionId(UUID ruleVersionId);
+
+  /** Alias para findByRuleVersionIdOrderByPositionAsc */
+  default List<RuleAction> findByRuleVersionIdOrderByExecutionOrder(UUID ruleVersionId) {
+    return findByRuleVersionIdOrderByPositionAsc(ruleVersionId);
+  }
 }

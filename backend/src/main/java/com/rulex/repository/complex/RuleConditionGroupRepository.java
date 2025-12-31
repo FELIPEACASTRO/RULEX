@@ -48,4 +48,14 @@ public interface RuleConditionGroupRepository extends JpaRepository<RuleConditio
 
   /** Deleta todos os grupos de uma versão de regra */
   void deleteByRuleVersionId(UUID ruleVersionId);
+
+  /** Busca todos os grupos de uma versão de regra (alias) */
+  default List<RuleConditionGroup> findByRuleVersionId(UUID ruleVersionId) {
+    return findByRuleVersionIdOrderByPositionAsc(ruleVersionId);
+  }
+
+  /** Busca o grupo raiz de uma versão de regra (alias) */
+  default Optional<RuleConditionGroup> findRootByRuleVersionId(UUID ruleVersionId) {
+    return findByRuleVersionIdAndParentGroupIdIsNull(ruleVersionId);
+  }
 }

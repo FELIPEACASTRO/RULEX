@@ -124,6 +124,11 @@ public class ComplexRuleMapper {
         .build();
   }
 
+  /** Converte RuleActionDTO para entidade (sem position) */
+  public RuleAction toEntity(RuleActionDTO dto, java.util.UUID ruleVersionId) {
+    return toEntity(dto, ruleVersionId, 0);
+  }
+
   // ========== Conversão de Entidade para DTO ==========
 
   /** Converte entidade RuleConditionGroup para DTO */
