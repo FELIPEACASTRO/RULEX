@@ -45,8 +45,8 @@ export const OPERATORS: OperatorOption[] = [
 ```sql
 -- V12__complex_rules_crud.sql
 -- Comentado por enquanto para não quebrar dados existentes
--- ALTER TABLE rule_condition_groups 
--- ADD CONSTRAINT chk_condition_groups_has_parent 
+-- ALTER TABLE rule_condition_groups
+-- ADD CONSTRAINT chk_condition_groups_has_parent
 -- CHECK (rule_version_id IS NOT NULL OR complex_rule_id IS NOT NULL);
 ```
 **Solução:** Criar migration de backfill + ativar constraint.
@@ -54,31 +54,29 @@ export const OPERATORS: OperatorOption[] = [
 
 ---
 
-### GAP-P0-04: Falta Optimistic Locking
+### GAP-P0-04: Falta Optimistic Locking ✅ FECHADO
 **Descrição:** RuleConfiguration não tem @Version para evitar lost updates.
 **Impacto:** Edições concorrentes podem sobrescrever dados silenciosamente.
-**Evidência:**
-```java
-// RuleConfiguration.java
-// Falta: @Version private Long version;
-```
 **Solução:** Adicionar @Version e tratar 409 no frontend.
-**Status:** ❌ Aberto
+**Status:** ✅ Fechado (commit 2fcef9b)
+**Implementação:**
+- Adicionado @Version ao campo version em RuleConfiguration.java
+- Adicionado handler para ObjectOptimisticLockingFailureException em GlobalExceptionHandler.java
 
 ---
 
 ## P1 - Importante
 
-### GAP-P1-01: Falta Limites Anti-Abuso
+### GAP-P1-01: Falta Limites Anti-Abuso ✅ FECHADO
 **Descrição:** Não há limites para nesting, condições por grupo, tamanho de listas, etc.
 **Impacto:** Regras monstruosas podem causar DoS ou performance degradada.
-**Evidência:** Nenhuma validação de limite encontrada em ComplexRuleService.
-**Solução:** Implementar guardrails FE+BE:
-- Max nesting depth: 10
-- Max conditions per group: 50
-- Max list size (IN/NOT_IN): 1000
-- Max regex length: 500
-**Status:** ❌ Aberto
+**Status:** ✅ Fechado (commit 88753c6)
+**Implementação em RuleValidationService.java:**
+- MAX_NESTING_DEPTH: 10 níveis
+- MAX_CONDITIONS_PER_GROUP: 50 condições
+- MAX_TOTAL_CONDITIONS: 200 condições
+- MAX_LIST_SIZE: 1000 itens para IN/NOT_IN
+- MAX_REGEX_LENGTH: 500 caracteres
 
 ---
 
@@ -190,10 +188,10 @@ ls e2e/
 
 | Prioridade | Total | Abertos | Fechados |
 |------------|-------|---------|----------|
-| P0 | 4 | 4 | 0 |
-| P1 | 7 | 7 | 0 |
+| P0 | 4 | 3 | 1 |
+| P1 | 7 | 6 | 1 |
 | P2 | 5 | 5 | 0 |
-| **Total** | **16** | **16** | **0** |
+| **Total** | **16** | **14** | **2** |
 
 ---
 
