@@ -446,7 +446,7 @@ components:
         secondFactorAuthCode: { type: string }
         cryptogramValid: { type: string }
         cvv2Response: { type: string }
-        cvv2Present: { type: integer }
+        cvv2Present: { type: string }
         pinVerifyCode: { type: string }
         cvvVerifyCode: { type: string }
         cvrofflinePinVerificationPerformed: { type: integer }

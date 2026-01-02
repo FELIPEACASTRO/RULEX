@@ -1,0 +1,211 @@
+# Prometheus Alert Rules for RULEX Fraud Detection System
+# Deploy to Prometheus/Alertmanager configuration
+
+groups:
+  - name: rulex-application
+    interval: 30s
+    rules:
+      # High error rate on transaction analysis
+      - alert: HighTransactionErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{uri=~"/api/transactions/analyze.*",status=~"5.."}[5m]))
+            /
+            sum(rate(http_server_requests_seconds_count{uri=~"/api/transactions/analyze.*"}[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: fraud-detection
+        annotations:
+          summary: "High error rate on transaction analysis"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      # Slow transaction processing
+      - alert: SlowTransactionProcessing
+        expr: |
+          histogram_quantile(0.95, 
+            rate(http_server_requests_seconds_bucket{uri=~"/api/transactions/analyze.*"}[5m])
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+          team: fraud-detection
+        annotations:
+          summary: "Transaction processing is slow"
+          description: "95th percentile latency is {{ $value | humanizeDuration }}"
+
+      # Rule engine health
+      - alert: RuleEngineUnhealthy
+        expr: up{job="rulex"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: fraud-detection
+        annotations:
+          summary: "RULEX application is down"
+          description: "RULEX instance {{ $labels.instance }} is not responding"
+
+  - name: rulex-database
+    interval: 30s
+    rules:
+      # HikariCP connection pool exhaustion
+      - alert: ConnectionPoolExhausted
+        expr: |
+          hikaricp_connections_active{pool="RulexHikariPool"} 
+          >= 
+          hikaricp_connections_max{pool="RulexHikariPool"} * 0.9
+        for: 5m
+        labels:
+          severity: warning
+          team: fraud-detection
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "Active connections: {{ $value }} (90% of max)"
+
+      # HikariCP connection acquisition timeout
+      - alert: ConnectionAcquisitionSlow
+        expr: |
+          rate(hikaricp_connections_timeout_total{pool="RulexHikariPool"}[5m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+          team: fraud-detection
+        annotations:
+          summary: "Database connection timeouts detected"
+          description: "Connection acquisition is timing out"
+
+      # Database query latency
+      - alert: SlowDatabaseQueries
+        expr: |
+          histogram_quantile(0.95,
+            rate(spring_data_repository_invocations_seconds_bucket[5m])
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          team: fraud-detection
+        annotations:
+          summary: "Database queries are slow"
+          description: "95th percentile query latency is {{ $value | humanizeDuration }}"
+
+  - name: rulex-security
+    interval: 30s
+    rules:
+      # Rate limiting triggered frequently
+      - alert: HighRateLimitingActivity
+        expr: |
+          sum(rate(http_server_requests_seconds_count{status="429"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: fraud-detection
+        annotations:
+          summary: "High rate limiting activity"
+          description: "{{ $value }} requests/sec being rate limited"
+
+      # Authentication failures spike
+      - alert: AuthenticationFailureSpike
+        expr: |
+          sum(rate(http_server_requests_seconds_count{status="401"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: fraud-detection
+        annotations:
+          summary: "High authentication failure rate"
+          description: "{{ $value }} failed auth requests/sec"
+
+      # Forbidden access attempts
+      - alert: ForbiddenAccessAttempts
+        expr: |
+          sum(rate(http_server_requests_seconds_count{status="403"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: fraud-detection
+        annotations:
+          summary: "High forbidden access attempts"
+          description: "{{ $value }} forbidden requests/sec"
+
+  - name: rulex-jvm
+    interval: 30s
+    rules:
+      # JVM heap memory usage
+      - alert: HighHeapMemoryUsage
+        expr: |
+          jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: fraud-detection
+        annotations:
+          summary: "High JVM heap memory usage"
+          description: "Heap usage is {{ $value | humanizePercentage }}"
+
+      # JVM garbage collection overhead
+      - alert: HighGCOverhead
+        expr: |
+          rate(jvm_gc_pause_seconds_sum[5m]) / 300 > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          team: fraud-detection
+        annotations:
+          summary: "High GC overhead"
+          description: "GC is consuming {{ $value | humanizePercentage }} of time"
+
+      # Virtual threads blocked (if using virtual threads)
+      - alert: VirtualThreadsBlocked
+        expr: |
+          jvm_threads_states_threads{state="blocked"} > 50
+        for: 5m
+        labels:
+          severity: warning
+          team: fraud-detection
+        annotations:
+          summary: "Many threads in blocked state"
+          description: "{{ $value }} threads are blocked"
+
+  - name: rulex-business
+    interval: 60s
+    rules:
+      # High fraud detection rate (unusual activity)
+      - alert: UnusualFraudDetectionRate
+        expr: |
+          (
+            sum(rate(rulex_transactions_classified_total{classification="FRAUD"}[15m]))
+            /
+            sum(rate(rulex_transactions_classified_total[15m]))
+          ) > 0.10
+        for: 15m
+        labels:
+          severity: warning
+          team: fraud-detection
+        annotations:
+          summary: "Unusually high fraud detection rate"
+          description: "{{ $value | humanizePercentage }} of transactions classified as fraud"
+
+      # No transactions being processed
+      - alert: NoTransactionsProcessed
+        expr: |
+          sum(rate(http_server_requests_seconds_count{uri=~"/api/transactions/analyze.*"}[5m])) == 0
+        for: 10m
+        labels:
+          severity: warning
+          team: fraud-detection
+        annotations:
+          summary: "No transactions being processed"
+          description: "No transaction analysis requests in the last 10 minutes"
+
+      # Rule evaluation errors
+      - alert: RuleEvaluationErrors
+        expr: |
+          sum(rate(rulex_rule_evaluation_errors_total[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          team: fraud-detection
+        annotations:
+          summary: "Rule evaluation errors detected"
+          description: "{{ $value }} rule evaluation errors per second"

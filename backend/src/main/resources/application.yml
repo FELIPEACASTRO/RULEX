@@ -11,6 +11,21 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
+    # HikariCP Connection Pool Configuration
+    hikari:
+      pool-name: RulexHikariPool
+      minimum-idle: ${HIKARI_MIN_IDLE:5}
+      maximum-pool-size: ${HIKARI_MAX_POOL_SIZE:20}
+      idle-timeout: ${HIKARI_IDLE_TIMEOUT:300000}
+      max-lifetime: ${HIKARI_MAX_LIFETIME:1800000}
+      connection-timeout: ${HIKARI_CONNECTION_TIMEOUT:30000}
+      leak-detection-threshold: ${HIKARI_LEAK_DETECTION:60000}
+      # Validation query for PostgreSQL
+      connection-test-query: SELECT 1
+      # Auto-commit disabled for transaction management
+      auto-commit: false
+      # Register MBeans for JMX monitoring
+      register-mbeans: true
 
   jpa:
     hibernate:
@@ -86,3 +101,8 @@ rulex:
     analyst:
       username: ${RULEX_ANALYST_USERNAME:}
       password: ${RULEX_ANALYST_PASSWORD:}
+  # Rate limiting configuration (Bucket4j token bucket)
+  rate-limit:
+    enabled: ${RULEX_RATE_LIMIT_ENABLED:true}
+    requests-per-minute: ${RULEX_RATE_LIMIT_RPM:100}
+    burst-capacity: ${RULEX_RATE_LIMIT_BURST:20}

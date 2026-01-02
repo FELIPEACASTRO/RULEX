@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /** V3.1 AST validator with safety limits (depth/nodes/IN items/regex heuristics). */
@@ -15,6 +16,22 @@ public class AstValidator {
   public static final int DEFAULT_MAX_REGEX_LENGTH = 128;
 
   private static final Set<String> GROUP_OPS = Set.of("AND", "OR", "NOT");
+
+  /**
+   * Operator aliases for compatibility between different rule formats. Maps non-canonical operator
+   * names to their canonical equivalents. E.g., "NEQ" -> "NE" (ConditionDTO uses NEQ, AstValidator
+   * uses NE)
+   */
+  private static final Map<String, String> OPERATOR_ALIASES =
+      Map.of(
+          "NEQ", "NE", // ConditionDTO.OperatorType.NEQ -> canonical NE
+          "NOT_EQ", "NE", // Alternative alias
+          "EQUALS", "EQ", // Verbose alias
+          "NOT_EQUALS", "NE", // Verbose alias
+          "REGEX", "MATCHES_REGEX", // ConditionDTO uses REGEX
+          "NOT_REGEX", "NOT_MATCHES_REGEX" // Consistency alias
+          );
+
   private static final Set<String> OPERATORS =
       Set.of(
           "EQ",
@@ -32,6 +49,7 @@ public class AstValidator {
           "STARTS_WITH",
           "ENDS_WITH",
           "MATCHES_REGEX",
+          "NOT_MATCHES_REGEX",
           "IS_NULL",
           "IS_NOT_NULL",
           "IS_TRUE",
@@ -40,6 +58,20 @@ public class AstValidator {
           "AFTER",
           "ON",
           "NOT_ON");
+
+  /**
+   * Normalizes an operator to its canonical form. Handles aliases like NEQ -> NE.
+   *
+   * @param operator the operator string (may be an alias)
+   * @return the canonical operator name, or the original if not an alias
+   */
+  public static String normalizeOperator(String operator) {
+    if (operator == null) {
+      return null;
+    }
+    String upper = operator.toUpperCase(Locale.ROOT);
+    return OPERATOR_ALIASES.getOrDefault(upper, upper);
+  }
 
   private static final Set<String> FUNC_ALLOWLIST =
       Set.of(
@@ -151,8 +183,10 @@ public class AstValidator {
     }
 
     String operator = text(node.get("operator"));
-    if (operator == null || !OPERATORS.contains(operator.toUpperCase(Locale.ROOT))) {
-      errors.add(new AstValidationError(path + ".operator", "operator inválido"));
+    // Normalize operator to handle aliases (e.g., NEQ -> NE, REGEX -> MATCHES_REGEX)
+    String normalizedOperator = normalizeOperator(operator);
+    if (normalizedOperator == null || !OPERATORS.contains(normalizedOperator)) {
+      errors.add(new AstValidationError(path + ".operator", "operator inválido: " + operator));
     }
 
     JsonNode right = node.get("right");
@@ -192,8 +226,8 @@ public class AstValidator {
 
     validatePrimitive(right, path + ".right", errors);
 
-    // Regex safety heuristic
-    if (operator != null && operator.equalsIgnoreCase("MATCHES_REGEX")) {
+    // Regex safety heuristic (use normalized operator to handle REGEX alias)
+    if (normalizedOperator != null && normalizedOperator.equals("MATCHES_REGEX")) {
       String pattern = right.isTextual() ? right.asText() : null;
       if (pattern == null) {
         errors.add(new AstValidationError(path + ".right", "Regex pattern deve ser string"));

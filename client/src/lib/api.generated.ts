@@ -191,7 +191,7 @@ export interface components {
             secondFactorAuthCode?: string;
             cryptogramValid?: string;
             cvv2Response?: string;
-            cvv2Present?: number;
+            cvv2Present?: string;
             pinVerifyCode?: string;
             cvvVerifyCode?: string;
             cvrofflinePinVerificationPerformed?: number;
