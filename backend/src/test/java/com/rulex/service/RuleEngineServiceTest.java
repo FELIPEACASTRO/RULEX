@@ -52,6 +52,8 @@ class RuleEngineServiceTest {
 
   private final EnrichmentService enrichmentService = Mockito.mock(EnrichmentService.class);
 
+  private final RuleOrderingService ruleOrderingService = Mockito.mock(RuleOrderingService.class);
+
   private final RuleEngineService service =
       new RuleEngineService(
           transactionRepository,
@@ -63,7 +65,8 @@ class RuleEngineServiceTest {
           payloadHashService,
           rawStoreService,
           ruleExecutionLogService,
-          enrichmentService);
+        enrichmentService,
+        ruleOrderingService);
 
   @Test
   void returnsApproved_whenNoEnabledRules() {
