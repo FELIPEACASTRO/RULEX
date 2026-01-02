@@ -22,27 +22,34 @@ const BASIC_AUTH_RAW = import.meta.env.VITE_API_BASIC_AUTH as string | undefined
 // TYPES
 // ========================================
 
+/**
+ * Transaction request DTO.
+ * Required fields are marked as non-optional per OpenAPI spec.
+ * Optional fields use the '?' modifier.
+ */
 export interface TransactionRequest {
-  externalTransactionId?: string;
-  customerIdFromHeader?: string;
-  customerAcctNumber?: number;
-  pan?: string;
-  transactionAmount?: number;
-  transactionDate?: number; // YYYYMMDD
-  transactionTime?: number; // HHMMSS
-  transactionCurrencyCode?: number;
-  mcc?: number;
-  consumerAuthenticationScore?: number;
-  externalScore3?: number;
-  cavvResult?: number;
-  eciIndicator?: number;
-  atcCard?: number;
-  atcHost?: number;
-  tokenAssuranceLevel?: number;
-  availableCredit?: number;
-  cardCashBalance?: number;
-  cardDelinquentAmount?: number;
+  // === REQUIRED FIELDS (per OpenAPI AnalyzeTransactionRequest) ===
+  externalTransactionId: string;
+  customerIdFromHeader: string;
+  customerAcctNumber: number;
+  pan: string;
+  transactionAmount: number;
+  transactionDate: number; // YYYYMMDD
+  transactionTime: number; // HHMMSS
+  transactionCurrencyCode: number;
+  mcc: number;
+  consumerAuthenticationScore: number;
+  externalScore3: number;
+  cavvResult: number;
+  eciIndicator: number;
+  atcCard: number;
+  atcHost: number;
+  tokenAssuranceLevel: number;
+  availableCredit: number;
+  cardCashBalance: number;
+  cardDelinquentAmount: number;
 
+  // === OPTIONAL FIELDS ===
   // extras usados por regras/filtros
   merchantId?: string;
   merchantName?: string;
@@ -70,6 +77,12 @@ export interface TransactionRequest {
   cardMediaType?: string;
   transactionCurrencyConversionRate?: number;
 }
+
+/**
+ * Partial transaction request for forms and simulators.
+ * All fields are optional to allow incremental form filling.
+ */
+export type TransactionRequestPartial = Partial<TransactionRequest>;
 
 export interface TriggeredRule {
   name: string;

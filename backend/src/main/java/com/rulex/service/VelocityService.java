@@ -186,8 +186,11 @@ public class VelocityService {
     /**
      * Registra uma transação no log de velocidade.
      * Deve ser chamado após o processamento da transação.
+     * 
+     * <p>Usa REPEATABLE_READ para evitar phantom reads durante
+     * verificação de duplicatas e inserção.
      */
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public void logTransaction(TransactionRequest request, String decision, Integer riskScore) {
         if (request == null || request.getExternalTransactionId() == null) {
             return;

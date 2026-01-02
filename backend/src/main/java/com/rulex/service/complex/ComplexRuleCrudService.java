@@ -4,22 +4,26 @@ import com.rulex.dto.complex.*;
 import com.rulex.entity.complex.*;
 import com.rulex.repository.complex.*;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Serviço para CRUD de regras complexas.
  * Gerencia a persistência completa de regras com grupos de condições aninhados.
+ * 
+ * <p>Usa SERIALIZABLE isolation para operações de escrita para garantir
+ * consistência em ambiente concorrente.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
+@Transactional(isolation = Isolation.READ_COMMITTED)
 public class ComplexRuleCrudService {
 
     private final ComplexRuleRepository complexRuleRepository;

@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/transactions/analyze-advanced": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Analyze a transaction using advanced hard rules */
+        post: operations["analyzeTransactionAdvanced"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/transactions": {
         parameters: {
             query?: never;
@@ -38,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/transactions/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export transactions (CSV/JSON) */
+        get: operations["exportTransactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/transactions/{id}": {
         parameters: {
             query?: never;
@@ -47,6 +81,23 @@ export interface paths {
         };
         /** Get transaction by internal id */
         get: operations["getTransaction"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transactions/external/{externalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get transaction by external id */
+        get: operations["getTransactionByExternalId"];
         put?: never;
         post?: never;
         delete?: never;
@@ -126,6 +177,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/audit/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export audit logs (CSV/JSON) */
+        get: operations["exportAuditLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/metrics": {
         parameters: {
             query?: never;
@@ -135,6 +203,57 @@ export interface paths {
         };
         /** Get system metrics */
         get: operations["getMetrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/metrics/mcc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get metrics grouped by MCC */
+        get: operations["getMetricsByMcc"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/metrics/merchant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get metrics grouped by merchant */
+        get: operations["getMetricsByMerchant"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/metrics/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get metrics timeline */
+        get: operations["getMetricsTimeline"];
         put?: never;
         post?: never;
         delete?: never;
@@ -262,7 +381,20 @@ export interface components {
             detail?: string;
         };
         AnalyzeTransactionResponse: {
+            /**
+             * Format: int64
+             * @description ID interno (DB). Opcional.
+             */
+            id?: number;
             transactionId: string;
+            customerIdFromHeader?: string;
+            merchantId?: string;
+            merchantName?: string;
+            transactionAmount?: number;
+            /** @description YYYYMMDD */
+            transactionDate?: number;
+            /** @description HHMMSS */
+            transactionTime?: number;
             /** @enum {string} */
             classification: "APPROVED" | "SUSPICIOUS" | "FRAUD";
             riskScore: number;
@@ -277,8 +409,19 @@ export interface components {
         };
         RuleCondition: {
             field: string;
-            /** @enum {string} */
-            operator: "==" | "!=" | ">" | "<" | ">=" | "<=" | "IN" | "NOT_IN" | "CONTAINS" | "NOT_CONTAINS";
+            /**
+             * @description Comparison operators. Basic: EQ, NEQ, GT, GTE, LT, LTE.
+             *     Lists: IN, NOT_IN. Strings: CONTAINS, NOT_CONTAINS, STARTS_WITH, ENDS_WITH, REGEX.
+             *     Nulls: IS_NULL, NOT_NULL. Range: BETWEEN, NOT_BETWEEN.
+             *     Field comparison: FIELD_EQ, FIELD_NEQ, FIELD_GT, FIELD_GTE, FIELD_LT, FIELD_LTE.
+             *     Date/Time: DATE_BEFORE, DATE_AFTER, DATE_BETWEEN, TIME_BEFORE, TIME_AFTER, TIME_BETWEEN.
+             *     Geolocation: GEO_DISTANCE_LT, GEO_DISTANCE_GT, GEO_IN_POLYGON.
+             *     Velocity: VELOCITY_COUNT_GT, VELOCITY_COUNT_LT, VELOCITY_SUM_GT, VELOCITY_SUM_LT,
+             *               VELOCITY_AVG_GT, VELOCITY_AVG_LT, VELOCITY_DISTINCT_GT, VELOCITY_DISTINCT_LT.
+             *     Legacy aliases accepted: '==', '!=', '>', '<', '>=', '<=', NE, MATCHES_REGEX, IS_NOT_NULL.
+             * @enum {string}
+             */
+            operator: "EQ" | "NEQ" | "GT" | "GTE" | "LT" | "LTE" | "IN" | "NOT_IN" | "CONTAINS" | "NOT_CONTAINS" | "STARTS_WITH" | "ENDS_WITH" | "REGEX" | "NOT_REGEX" | "IS_NULL" | "NOT_NULL" | "IS_TRUE" | "IS_FALSE" | "BETWEEN" | "NOT_BETWEEN" | "FIELD_EQ" | "FIELD_NEQ" | "FIELD_GT" | "FIELD_GTE" | "FIELD_LT" | "FIELD_LTE" | "DATE_BEFORE" | "DATE_AFTER" | "DATE_BETWEEN" | "TIME_BEFORE" | "TIME_AFTER" | "TIME_BETWEEN" | "ARRAY_CONTAINS" | "ARRAY_NOT_CONTAINS" | "ARRAY_SIZE_EQ" | "ARRAY_SIZE_GT" | "ARRAY_SIZE_LT" | "MOD_EQ" | "MOD_NEQ" | "GEO_DISTANCE_LT" | "GEO_DISTANCE_GT" | "GEO_IN_POLYGON" | "VELOCITY_COUNT_GT" | "VELOCITY_COUNT_LT" | "VELOCITY_SUM_GT" | "VELOCITY_SUM_LT" | "VELOCITY_AVG_GT" | "VELOCITY_AVG_LT" | "VELOCITY_DISTINCT_GT" | "VELOCITY_DISTINCT_LT";
             value: string;
         };
         Rule: {
@@ -289,9 +432,11 @@ export interface components {
             /** @enum {string} */
             ruleType: "SECURITY" | "CONTEXT" | "VELOCITY" | "ANOMALY";
             weight: number;
+            /** @description Risk score threshold for rule triggering */
+            threshold: number;
             enabled: boolean;
             /** @enum {string} */
-            classification: "APPROVED" | "SUSPICIOUS" | "FRAUD";
+            classification: "APPROVED" | "SUSPICIOUS" | "FRAUD" | "UNKNOWN";
             conditions: components["schemas"]["RuleCondition"][];
             /** @enum {string} */
             logicOperator: "AND" | "OR";
@@ -389,11 +534,36 @@ export interface operations {
             };
         };
     };
+    analyzeTransactionAdvanced: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnalyzeTransactionRequest"];
+            };
+        };
+        responses: {
+            /** @description Analysis result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyzeTransactionResponse"];
+                };
+            };
+        };
+    };
     listTransactions: {
         parameters: {
             query?: {
                 customerId?: string;
                 merchantId?: string;
+                classification?: "APPROVED" | "SUSPICIOUS" | "FRAUD";
                 mcc?: number;
                 minAmount?: number;
                 maxAmount?: number;
@@ -419,12 +589,66 @@ export interface operations {
             };
         };
     };
+    exportTransactions: {
+        parameters: {
+            query?: {
+                format?: "csv" | "json";
+                customerId?: string;
+                merchantId?: string;
+                classification?: "APPROVED" | "SUSPICIOUS" | "FRAUD";
+                mcc?: number;
+                minAmount?: number;
+                maxAmount?: number;
+                startDate?: string;
+                endDate?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Export file or JSON array */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                    "application/json": components["schemas"]["AnalyzeTransactionResponse"][];
+                };
+            };
+        };
+    };
     getTransaction: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Transaction */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyzeTransactionResponse"];
+                };
+            };
+        };
+    };
+    getTransactionByExternalId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                externalId: string;
             };
             cookie?: never;
         };
@@ -605,6 +829,34 @@ export interface operations {
             };
         };
     };
+    exportAuditLogs: {
+        parameters: {
+            query?: {
+                format?: "csv" | "json";
+                actionType?: string;
+                result?: string;
+                startDate?: string;
+                endDate?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Export file or JSON array */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                    "application/json": components["schemas"]["AuditLog"][];
+                };
+            };
+        };
+    };
     getMetrics: {
         parameters: {
             query?: {
@@ -623,6 +875,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Metrics"];
+                };
+            };
+        };
+    };
+    getMetricsByMcc: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Metrics by MCC */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getMetricsByMerchant: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Metrics by merchant */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getMetricsTimeline: {
+        parameters: {
+            query?: {
+                granularity?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Metrics timeline */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };

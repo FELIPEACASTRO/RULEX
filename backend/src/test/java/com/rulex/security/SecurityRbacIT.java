@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -112,6 +113,7 @@ class SecurityRbacTest {
                 .contextPath("/api")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"enabled\":true}")
+                .with(csrf())
                 .with(httpBasic("analyst", "analystpw")))
         .andExpect(status().isForbidden());
   }
@@ -138,6 +140,7 @@ class SecurityRbacTest {
                 .contextPath("/api")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"enabled\":true}")
+                .with(csrf())
                 .with(httpBasic("admin", "adminpw")))
         .andExpect(status().isOk());
   }
