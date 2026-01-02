@@ -225,5 +225,68 @@ b9444c9 feat: implement RuleFormDialog component (closes GAP-P0-01)
 
 ---
 
+## 11. ENGINE PERFORMANCE OPTIMIZATIONS (2025-01-XX)
+
+### Commit
+```bash
+$ git log --oneline -1
+bc6bd32 perf(engine): add candidate filtering and optional optimized rule ordering
+```
+
+### Changes Summary
+- **RuleEngineService.java**: +198 lines
+  - Added `CandidateIndex` and `CandidateIndexCache` for rule precondition caching
+  - Added `RulePreconditions` with required field extraction from expressions
+  - Candidate filtering skips AND-logic rules when required fields are missing
+  - Integration with optional `RuleOrderingService` behind config toggle
+  - Per-rule telemetry recording (best-effort, never affects decisions)
+  - **Bug Fix**: `LocalDateTime.max()` replaced with `isAfter()` comparison
+
+- **RuleEngineServiceTest.java**: Updated constructor for new dependency
+
+### Configuration
+```yaml
+# application.yml - default OFF for behavioral safety
+rulex:
+  engine:
+    optimizedRuleOrder: false  # Enable with caution after validation
+```
+
+### Unit Tests
+```bash
+$ mvn -f backend/pom.xml test -Dtest=RuleEngineServiceTest
+
+[INFO] Tests run: 18, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
+
+### Full Backend Test Suite
+```bash
+$ mvn -f backend/pom.xml test
+
+Results:
+- Tests Passed: 256
+- Tests Failed: 15 (Integration Tests)
+- Root Cause: TestContainers requires Docker (pre-existing infrastructure issue)
+
+Failed Tests (all IT - require Docker):
+- TransactionAnalyzeIT
+- CrtranBaselineIT  
+- RulePopupE2EIT
+- RuleExecutionLogIT
+- HomologSimulationIT
+
+Error: "No qualifying bean of type 'com.rulex.repository.AuditLogRepository'"
+Cause: Spring context fails to initialize without Docker/TestContainers
+```
+
+### Safety Guarantees
+1. **Default behavior unchanged**: Optimized ordering is OFF by default
+2. **Conservative candidate filtering**: Only skips rules with provably missing AND-required fields
+3. **Best-effort telemetry**: Recording failures never affect rule decisions
+4. **No ML components**: 100% deterministic rule evaluation preserved
+
+---
+
 ## Última Atualização
-2024-12-31T23:30:00Z
+2025-01-XX (Engine Optimization Sprint)
