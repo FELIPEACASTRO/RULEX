@@ -940,13 +940,30 @@ describe('Cobertura de Operadores', () => {
     expect(total).toBeGreaterThanOrEqual(52);
   });
 
+  // Função auxiliar para obter valor de teste apropriado para cada operador
+  const getTestValue = (op: string): string => {
+    if (op.includes('NULL') || op.includes('TRUE') || op.includes('FALSE')) return '';
+    if (op === 'BETWEEN' || op === 'NOT_BETWEEN') return '10,100';
+    if (op === 'DATE_BETWEEN') return '2024-01-01,2024-12-31';
+    if (op === 'TIME_BETWEEN') return '08:00:00,18:00:00';
+    if (op === 'DATE_BEFORE' || op === 'DATE_AFTER') return '2024-12-31';
+    if (op === 'TIME_BEFORE' || op === 'TIME_AFTER') return '23:59:59';
+    if (op === 'MOD_EQ' || op === 'MOD_NEQ') return '100,0';
+    if (op === 'GEO_DISTANCE_LT' || op === 'GEO_DISTANCE_GT') return '-23.55,-46.63,100';
+    if (op === 'GEO_IN_POLYGON') return 'BRASIL';
+    if (op === 'VELOCITY_DISTINCT_GT' || op === 'VELOCITY_DISTINCT_LT') return 'PAN,1440,MERCHANTS,3';
+    if (op.startsWith('VELOCITY_')) return 'PAN,60,5';
+    if (op === 'REGEX' || op === 'NOT_REGEX' || op === 'MATCHES_REGEX') return '[A-Z]+';
+    return 'testValue';
+  };
+
   // Teste dinâmico para garantir que todos os operadores são aceitos pelo schema
   allOperators.forEach(operator => {
     it(`operador ${operator} deve ser aceito pelo schema`, () => {
       const result = conditionSchema.safeParse({
         field: 'testField',
         operator: operator,
-        value: operator.includes('NULL') || operator.includes('TRUE') || operator.includes('FALSE') ? '' : 'testValue',
+        value: getTestValue(operator),
       });
       // Se falhar, mostrar detalhes
       if (!result.success) {
