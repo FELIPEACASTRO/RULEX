@@ -1,6 +1,6 @@
 /**
  * ComplexRuleBuilder - Construtor visual de regras complexas
- * 
+ *
  * Features:
  * - Interface drag-and-drop intuitiva
  * - Grupos aninhados (até 10 níveis)
@@ -8,7 +8,7 @@
  * - Preview em tempo real
  * - Templates pré-definidos
  * - Validação completa
- * 
+ *
  * @version 1.0.0
  */
 
@@ -129,14 +129,17 @@ export function ComplexRuleBuilder({
 
     // Validate conditions recursively
     const validateGroup = (group: ConditionGroup, path: string): void => {
-      group.conditions.forEach((condition, index) => {
+      const conditions = group.conditions || [];
+      const children = group.children || [];
+
+      conditions.forEach((condition, index) => {
         if (!condition.fieldName.trim()) {
           newErrors[`${path}.conditions[${index}].fieldName`] = 'Campo é obrigatório';
         }
         // Add more condition validations as needed
       });
 
-      group.children.forEach((child, index) => {
+      children.forEach((child, index) => {
         validateGroup(child, `${path}.children[${index}]`);
       });
     };
@@ -145,7 +148,9 @@ export function ComplexRuleBuilder({
 
     // Check if rule has at least one condition
     const countConditions = (group: ConditionGroup): number => {
-      return group.conditions.length + group.children.reduce((sum, child) => sum + countConditions(child), 0);
+      const conditions = group.conditions || [];
+      const children = group.children || [];
+      return conditions.length + children.reduce((sum, child) => sum + countConditions(child), 0);
     };
 
     if (countConditions(rule.rootConditionGroup) === 0) {
@@ -178,9 +183,11 @@ export function ComplexRuleBuilder({
   // Count total conditions and groups
   const stats = useMemo(() => {
     const countItems = (group: ConditionGroup): { conditions: number; groups: number; depth: number } => {
-      const childStats = group.children.map(countItems);
+      const children = group.children || [];
+      const conditions = group.conditions || [];
+      const childStats = children.map(countItems);
       return {
-        conditions: group.conditions.length + childStats.reduce((sum, s) => sum + s.conditions, 0),
+        conditions: conditions.length + childStats.reduce((sum, s) => sum + s.conditions, 0),
         groups: 1 + childStats.reduce((sum, s) => sum + s.groups, 0),
         depth: 1 + Math.max(0, ...childStats.map(s => s.depth)),
       };
@@ -202,7 +209,7 @@ export function ComplexRuleBuilder({
               {initialRule ? 'Editar Regra Complexa' : 'Nova Regra Complexa'}
             </h1>
           </div>
-          
+
           {isDirty && (
             <Badge variant="outline" className="text-amber-500 border-amber-500">
               <AlertTriangle className="h-3 w-3 mr-1" />
