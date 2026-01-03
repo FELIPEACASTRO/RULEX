@@ -88,6 +88,10 @@ export const ConditionGroupCard = memo(function ConditionGroupCard({
 
   const logicOperatorInfo = LOGIC_OPERATORS.find(op => op.value === group.logicOperator);
 
+  // Ensure conditions and children are always arrays
+  const conditions = group.conditions || [];
+  const children = group.children || [];
+
   // Handlers
   const handleLogicOperatorChange = useCallback((value: string) => {
     onChange({ ...group, logicOperator: value as LogicOperator });
@@ -96,41 +100,41 @@ export const ConditionGroupCard = memo(function ConditionGroupCard({
   const handleAddCondition = useCallback(() => {
     onChange({
       ...group,
-      conditions: [...group.conditions, createEmptyCondition()],
+      conditions: [...conditions, createEmptyCondition()],
     });
   }, [group, onChange]);
 
   const handleAddGroup = useCallback(() => {
     onChange({
       ...group,
-      children: [...group.children, createEmptyGroup('AND')],
+      children: [...children, createEmptyGroup('AND')],
     });
-  }, [group, onChange]);
+  }, [group, onChange, children]);
 
   const handleConditionChange = useCallback((index: number, condition: Condition) => {
-    const newConditions = [...group.conditions];
+    const newConditions = [...conditions];
     newConditions[index] = condition;
     onChange({ ...group, conditions: newConditions });
-  }, [group, onChange]);
+  }, [group, onChange, conditions]);
 
   const handleConditionDelete = useCallback((index: number) => {
-    const newConditions = group.conditions.filter((_, i) => i !== index);
+    const newConditions = conditions.filter((_, i) => i !== index);
     onChange({ ...group, conditions: newConditions });
-  }, [group, onChange]);
+  }, [group, onChange, conditions]);
 
   const handleChildGroupChange = useCallback((index: number, childGroup: ConditionGroup) => {
-    const newChildren = [...group.children];
+    const newChildren = [...children];
     newChildren[index] = childGroup;
     onChange({ ...group, children: newChildren });
-  }, [group, onChange]);
+  }, [group, onChange, children]);
 
   const handleChildGroupDelete = useCallback((index: number) => {
-    const newChildren = group.children.filter((_, i) => i !== index);
+    const newChildren = children.filter((_, i) => i !== index);
     onChange({ ...group, children: newChildren });
-  }, [group, onChange]);
+  }, [group, onChange, children]);
 
   const handleChildGroupDuplicate = useCallback((index: number) => {
-    const childToDuplicate = group.children[index];
+    const childToDuplicate = children[index];
     const duplicated: ConditionGroup = {
       ...JSON.parse(JSON.stringify(childToDuplicate)),
       id: crypto.randomUUID(),
@@ -139,15 +143,15 @@ export const ConditionGroupCard = memo(function ConditionGroupCard({
     const regenerateIds = (g: ConditionGroup): ConditionGroup => ({
       ...g,
       id: crypto.randomUUID(),
-      conditions: g.conditions.map(c => ({ ...c, id: crypto.randomUUID() })),
-      children: g.children.map(regenerateIds),
+      conditions: (g.conditions || []).map(c => ({ ...c, id: crypto.randomUUID() })),
+      children: (g.children || []).map(regenerateIds),
     });
-    const newChildren = [...group.children];
+    const newChildren = [...children];
     newChildren.splice(index + 1, 0, regenerateIds(duplicated));
     onChange({ ...group, children: newChildren });
-  }, [group, onChange]);
+  }, [group, onChange, children]);
 
-  const totalItems = group.conditions.length + group.children.length;
+  const totalItems = conditions.length + children.length;
 
   return (
     <div
@@ -307,10 +311,10 @@ export const ConditionGroupCard = memo(function ConditionGroupCard({
             )}
 
             {/* Conditions */}
-            {group.conditions.map((condition, index) => (
+            {conditions.map((condition, index) => (
               <div key={condition.id} className="relative">
                 {/* Logic Operator Connector */}
-                {(index > 0 || group.children.length > 0) && (
+                {(index > 0 || children.length > 0) && (
                   <div className="absolute -top-1 left-4 flex items-center">
                     <Badge
                       className={`${logicOperatorInfo?.color || 'bg-gray-500'} text-white text-[10px] px-1.5 py-0`}
@@ -329,10 +333,10 @@ export const ConditionGroupCard = memo(function ConditionGroupCard({
             ))}
 
             {/* Child Groups */}
-            {group.children.map((childGroup, index) => (
+            {children.map((childGroup, index) => (
               <div key={childGroup.id} className="relative">
                 {/* Logic Operator Connector */}
-                {(group.conditions.length > 0 || index > 0) && (
+                {(conditions.length > 0 || index > 0) && (
                   <div className="absolute -top-1 left-4 flex items-center z-10">
                     <Badge
                       className={`${logicOperatorInfo?.color || 'bg-gray-500'} text-white text-[10px] px-1.5 py-0`}

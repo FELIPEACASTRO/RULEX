@@ -12,7 +12,7 @@
  * @version 1.0.0
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,10 +46,30 @@ import {
   ConditionGroup,
   Condition,
   createEmptyRule,
+  createEmptyGroup,
 } from './types';
 
 // Re-export types
 export * from './types';
+
+// Helper to ensure rule has valid structure
+const normalizeRule = (rule: ComplexRule | undefined): ComplexRule => {
+  if (!rule) return createEmptyRule();
+
+  const normalizeGroup = (group: ConditionGroup | undefined | null): ConditionGroup => {
+    if (!group) return createEmptyGroup('AND');
+    return {
+      ...group,
+      conditions: group.conditions || [],
+      children: (group.children || []).map(normalizeGroup),
+    };
+  };
+
+  return {
+    ...rule,
+    rootConditionGroup: normalizeGroup(rule.rootConditionGroup),
+  };
+};
 
 interface ComplexRuleBuilderProps {
   initialRule?: ComplexRule;
@@ -66,12 +86,19 @@ export function ComplexRuleBuilder({
   fieldOptions = [],
   isLoading = false,
 }: ComplexRuleBuilderProps) {
-  const [rule, setRule] = useState<ComplexRule>(initialRule || createEmptyRule());
+  const [rule, setRule] = useState<ComplexRule>(() => normalizeRule(initialRule));
   const [isDirty, setIsDirty] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+
+  // Update rule when initialRule changes (e.g., when viewing a different rule)
+  useEffect(() => {
+    setRule(normalizeRule(initialRule));
+    setIsDirty(false);
+    setErrors({});
+  }, [initialRule]);
 
   // Update rule and mark as dirty
   const updateRule = useCallback((updates: Partial<ComplexRule>) => {
@@ -87,7 +114,7 @@ export function ComplexRuleBuilder({
 
   // Handle template selection
   const handleTemplateSelect = useCallback((templateRule: ComplexRule) => {
-    setRule(templateRule);
+    setRule(normalizeRule(templateRule));
     setIsDirty(true);
     setErrors({});
     toast.success('Template aplicado! Personalize conforme necessário.');
@@ -95,7 +122,7 @@ export function ComplexRuleBuilder({
 
   // Reset to initial or empty
   const handleReset = useCallback(() => {
-    setRule(initialRule || createEmptyRule());
+    setRule(normalizeRule(initialRule));
     setIsDirty(false);
     setErrors({});
     setShowResetConfirm(false);
@@ -128,7 +155,9 @@ export function ComplexRuleBuilder({
     }
 
     // Validate conditions recursively
-    const validateGroup = (group: ConditionGroup, path: string): void => {
+    const validateGroup = (group: ConditionGroup | undefined | null, path: string): void => {
+      if (!group) return;
+
       const conditions = group.conditions || [];
       const children = group.children || [];
 
@@ -144,10 +173,13 @@ export function ComplexRuleBuilder({
       });
     };
 
-    validateGroup(rule.rootConditionGroup, 'root');
+    if (rule.rootConditionGroup) {
+      validateGroup(rule.rootConditionGroup, 'root');
+    }
 
     // Check if rule has at least one condition
-    const countConditions = (group: ConditionGroup): number => {
+    const countConditions = (group: ConditionGroup | undefined | null): number => {
+      if (!group) return 0;
       const conditions = group.conditions || [];
       const children = group.children || [];
       return conditions.length + children.reduce((sum, child) => sum + countConditions(child), 0);
@@ -182,7 +214,10 @@ export function ComplexRuleBuilder({
 
   // Count total conditions and groups
   const stats = useMemo(() => {
-    const countItems = (group: ConditionGroup): { conditions: number; groups: number; depth: number } => {
+    const countItems = (group: ConditionGroup | undefined | null): { conditions: number; groups: number; depth: number } => {
+      if (!group) {
+        return { conditions: 0, groups: 0, depth: 0 };
+      }
       const children = group.children || [];
       const conditions = group.conditions || [];
       const childStats = children.map(countItems);

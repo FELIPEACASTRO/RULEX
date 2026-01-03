@@ -26,11 +26,13 @@ interface RulePreviewProps {
 export const RulePreview = memo(function RulePreview({ rule }: RulePreviewProps) {
   // Generate natural language description
   const naturalLanguage = useMemo(() => {
+    if (!rule.rootConditionGroup) return null;
     return generateNaturalLanguage(rule.rootConditionGroup);
   }, [rule.rootConditionGroup]);
 
   // Generate pseudo-code
   const pseudoCode = useMemo(() => {
+    if (!rule.rootConditionGroup) return '';
     return generatePseudoCode(rule.rootConditionGroup, 0);
   }, [rule.rootConditionGroup]);
 
@@ -164,9 +166,12 @@ function generateNaturalLanguage(group: ConditionGroup, depth: number = 0): Reac
   const items: React.ReactNode[] = [];
 
   // Add conditions
-  group.conditions.forEach((condition, index) => {
+  const conditions = group.conditions || [];
+  const children = group.children || [];
+
+  conditions.forEach((condition, index) => {
     if (condition.enabled === false) return;
-    
+
     const conditionText = formatCondition(condition);
     items.push(
       <div key={`cond-${condition.id}`} className="py-1">
@@ -177,9 +182,9 @@ function generateNaturalLanguage(group: ConditionGroup, depth: number = 0): Reac
   });
 
   // Add child groups
-  group.children.forEach((child, index) => {
+  children.forEach((child, index) => {
     if (child.enabled === false) return;
-    
+
     items.push(
       <div key={`group-${child.id}`} className="py-1 pl-4 border-l-2 border-muted-foreground/30 my-2">
         <span className="text-muted-foreground text-xs uppercase mb-1 block">
@@ -216,7 +221,7 @@ function formatCondition(condition: Condition): string {
   const opLabel = opInfo?.label || condition.operator;
 
   let valueStr = '';
-  
+
   if (opInfo?.requiresFieldRef && condition.valueFieldRef) {
     valueStr = `[${condition.valueFieldRef}]`;
   } else if (opInfo?.requiresSecondValue) {
@@ -238,29 +243,31 @@ function formatCondition(condition: Condition): string {
 function generatePseudoCode(group: ConditionGroup, indent: number): string {
   const spaces = '  '.repeat(indent + 1);
   const logicOp = group.logicOperator;
+  const conditions = group.conditions || [];
+  const children = group.children || [];
 
   const lines: string[] = [];
 
   // Add conditions
-  group.conditions.forEach((condition, index) => {
+  conditions.forEach((condition, index) => {
     if (condition.enabled === false) {
       lines.push(`${spaces}// DESABILITADO: ${formatConditionCode(condition)}`);
       return;
     }
-    
-    const prefix = index > 0 || group.children.length > 0 ? `${logicOp} ` : '';
+
+    const prefix = index > 0 || children.length > 0 ? `${logicOp} ` : '';
     const negate = condition.negate ? 'NOT ' : '';
     lines.push(`${spaces}${prefix}${negate}${formatConditionCode(condition)}`);
   });
 
   // Add child groups
-  group.children.forEach((child, index) => {
+  children.forEach((child, index) => {
     if (child.enabled === false) {
       lines.push(`${spaces}// DESABILITADO: grupo ${child.logicOperator}`);
       return;
     }
-    
-    const prefix = group.conditions.length > 0 || index > 0 ? `${logicOp} ` : '';
+
+    const prefix = conditions.length > 0 || index > 0 ? `${logicOp} ` : '';
     lines.push(`${spaces}${prefix}(`);
     lines.push(generatePseudoCode(child, indent + 1));
     lines.push(`${spaces})`);
@@ -272,9 +279,9 @@ function generatePseudoCode(group: ConditionGroup, indent: number): string {
 // Helper: Format condition as code
 function formatConditionCode(condition: Condition): string {
   const opInfo = COMPARISON_OPERATORS.find(op => op.value === condition.operator);
-  
+
   let valueStr = '';
-  
+
   if (opInfo?.requiresFieldRef && condition.valueFieldRef) {
     valueStr = condition.valueFieldRef;
   } else if (opInfo?.requiresSecondValue) {
