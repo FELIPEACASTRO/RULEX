@@ -20,28 +20,28 @@ import org.springframework.stereotype.Service;
 
 /**
  * High-performance velocity service using in-memory sliding windows.
- * 
+ *
  * <p>This implementation uses a hybrid approach:
  * <ul>
  *   <li>In-memory HyperLogLog-like counting for real-time velocity</li>
  *   <li>Sliding window algorithm with bucketed counters</li>
  *   <li>Periodic sync to database for persistence</li>
  * </ul>
- * 
+ *
  * <p>Performance characteristics:
  * <ul>
  *   <li>Read latency: O(1) - sub-microsecond</li>
  *   <li>Write latency: O(1) - sub-microsecond</li>
  *   <li>Memory: ~100 bytes per unique key per window</li>
  * </ul>
- * 
+ *
  * <p>For production with multiple instances, replace with Redis implementation:
  * <ul>
  *   <li>Redis Sorted Sets for time-windowed counting</li>
  *   <li>Redis HyperLogLog for distinct counts</li>
  *   <li>Redis Streams for event sourcing</li>
  * </ul>
- * 
+ *
  * @see VelocityService for database-backed fallback
  */
 @Service
@@ -51,13 +51,13 @@ public class RedisVelocityService {
 
     private final VelocityService velocityService;
 
-    // Sliding window buckets: key -> window -> bucket[] 
+    // Sliding window buckets: key -> window -> bucket[]
     // Each bucket represents 1 minute of data
     private final Map<String, SlidingWindowCounter> velocityCounters = new ConcurrentHashMap<>();
-    
+
     // Distinct count approximation using HyperLogLog-like structure
     private final Map<String, HyperLogLogCounter> distinctCounters = new ConcurrentHashMap<>();
-    
+
     // Sum accumulators for amount tracking
     private final Map<String, SlidingWindowSum> sumCounters = new ConcurrentHashMap<>();
 
@@ -134,7 +134,7 @@ public class RedisVelocityService {
 
     /**
      * Gets velocity statistics with sub-millisecond latency.
-     * 
+     *
      * @param request Transaction request
      * @param keyType Type of key (PAN, CUSTOMER_ID, etc.)
      * @param window Time window
@@ -142,7 +142,7 @@ public class RedisVelocityService {
      */
     public VelocityStats getStats(TransactionRequest request, KeyType keyType, TimeWindow window) {
         long startNanos = System.nanoTime();
-        
+
         if (request == null) {
             return VelocityStats.empty();
         }
@@ -153,36 +153,36 @@ public class RedisVelocityService {
         }
 
         String cacheKey = buildCacheKey(keyType, keyValue);
-        
+
         // Get count from sliding window
         SlidingWindowCounter counter = velocityCounters.get(cacheKey);
         long count = counter != null ? counter.getCount(window.getMinutes()) : 0;
-        
+
         // Get sum from sliding window
         SlidingWindowSum sumCounter = sumCounters.get(cacheKey);
         BigDecimal sum = sumCounter != null ? sumCounter.getSum(window.getMinutes()) : BigDecimal.ZERO;
-        
+
         // Get distinct counts
         String distinctMerchantKey = cacheKey + ":merchants";
         String distinctMccKey = cacheKey + ":mccs";
         String distinctCountryKey = cacheKey + ":countries";
         String distinctDeviceKey = cacheKey + ":devices";
-        
+
         HyperLogLogCounter merchantHll = distinctCounters.get(distinctMerchantKey);
         HyperLogLogCounter mccHll = distinctCounters.get(distinctMccKey);
         HyperLogLogCounter countryHll = distinctCounters.get(distinctCountryKey);
         HyperLogLogCounter deviceHll = distinctCounters.get(distinctDeviceKey);
-        
+
         long distinctMerchants = merchantHll != null ? merchantHll.estimate() : 0;
         long distinctMccs = mccHll != null ? mccHll.estimate() : 0;
         long distinctCountries = countryHll != null ? countryHll.estimate() : 0;
         long distinctDevices = deviceHll != null ? deviceHll.estimate() : 0;
-        
+
         // Calculate average
         BigDecimal avg = count > 0 ? sum.divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
-        
+
         long latencyMicros = (System.nanoTime() - startNanos) / 1000;
-        
+
         return VelocityStats.builder()
                 .transactionCount(count)
                 .totalAmount(sum)
@@ -199,7 +199,7 @@ public class RedisVelocityService {
     /**
      * Records a transaction for velocity tracking.
      * Call this AFTER the transaction is processed.
-     * 
+     *
      * @param request Transaction request
      */
     public void recordTransaction(TransactionRequest request) {
@@ -208,8 +208,8 @@ public class RedisVelocityService {
         }
 
         Instant now = Instant.now();
-        BigDecimal amount = request.getTransactionAmount() != null 
-                ? request.getTransactionAmount() 
+        BigDecimal amount = request.getTransactionAmount() != null
+                ? request.getTransactionAmount()
                 : BigDecimal.ZERO;
 
         // Record for PAN
@@ -261,11 +261,11 @@ public class RedisVelocityService {
         // Record count
         velocityCounters.computeIfAbsent(cacheKey, k -> new SlidingWindowCounter())
                 .increment(timestamp);
-        
+
         // Record sum
         sumCounters.computeIfAbsent(cacheKey, k -> new SlidingWindowSum())
                 .add(timestamp, amount);
-        
+
         // Record distinct values
         if (request.getMerchantId() != null) {
             distinctCounters.computeIfAbsent(cacheKey + ":merchants", k -> new HyperLogLogCounter())
@@ -320,12 +320,12 @@ public class RedisVelocityService {
     public void cleanup() {
         if (velocityCounters.size() > CLEANUP_THRESHOLD) {
             log.info("Velocity cache cleanup: {} entries before", velocityCounters.size());
-            
+
             Instant cutoff = Instant.now().minus(Duration.ofDays(7));
             velocityCounters.entrySet().removeIf(e -> e.getValue().isExpired(cutoff));
             sumCounters.entrySet().removeIf(e -> e.getValue().isExpired(cutoff));
             distinctCounters.entrySet().removeIf(e -> e.getValue().isExpired(cutoff));
-            
+
             log.info("Velocity cache cleanup: {} entries after", velocityCounters.size());
         }
     }
@@ -344,7 +344,7 @@ public class RedisVelocityService {
             long bucketKey = timestamp.toEpochMilli() / (BUCKET_SIZE_MINUTES * 60_000);
             buckets.computeIfAbsent(bucketKey, k -> new LongAdder()).increment();
             lastAccessTime = System.currentTimeMillis();
-            
+
             // Cleanup old buckets
             if (buckets.size() > MAX_BUCKETS) {
                 long cutoff = bucketKey - MAX_BUCKETS;
@@ -356,7 +356,7 @@ public class RedisVelocityService {
             long now = System.currentTimeMillis();
             long currentBucket = now / (BUCKET_SIZE_MINUTES * 60_000);
             long startBucket = currentBucket - (windowMinutes / BUCKET_SIZE_MINUTES);
-            
+
             long count = 0;
             for (long bucket = startBucket; bucket <= currentBucket; bucket++) {
                 LongAdder adder = buckets.get(bucket);
@@ -385,7 +385,7 @@ public class RedisVelocityService {
             long bucketKey = timestamp.toEpochMilli() / (BUCKET_SIZE_MINUTES * 60_000);
             buckets.merge(bucketKey, amount, BigDecimal::add);
             lastAccessTime = System.currentTimeMillis();
-            
+
             // Cleanup old buckets
             if (buckets.size() > MAX_BUCKETS) {
                 long cutoff = bucketKey - MAX_BUCKETS;
@@ -397,7 +397,7 @@ public class RedisVelocityService {
             long now = System.currentTimeMillis();
             long currentBucket = now / (BUCKET_SIZE_MINUTES * 60_000);
             long startBucket = currentBucket - (windowMinutes / BUCKET_SIZE_MINUTES);
-            
+
             BigDecimal sum = BigDecimal.ZERO;
             for (long bucket = startBucket; bucket <= currentBucket; bucket++) {
                 BigDecimal bucketSum = buckets.get(bucket);
@@ -418,7 +418,7 @@ public class RedisVelocityService {
     /**
      * Simplified HyperLogLog-like counter for distinct value estimation.
      * Uses a probabilistic approach with configurable precision.
-     * 
+     *
      * For production, use Redis HyperLogLog or Google's HyperLogLogPlusPlus.
      */
     private static class HyperLogLogCounter {
@@ -432,20 +432,20 @@ public class RedisVelocityService {
 
         void add(String value) {
             if (value == null) return;
-            
+
             lastAccessTime = System.currentTimeMillis();
-            
+
             // For small counts, use exact counting
             if (exactCount.get() < EXACT_THRESHOLD) {
                 exactCount.incrementAndGet();
             }
-            
+
             // HyperLogLog update
             int hash = murmurHash3(value);
             int registerIndex = hash >>> (32 - REGISTER_BITS);
             int remainingBits = hash << REGISTER_BITS | (1 << (REGISTER_BITS - 1));
             int leadingZeros = Integer.numberOfLeadingZeros(remainingBits) + 1;
-            
+
             synchronized (registers) {
                 if (leadingZeros > registers[registerIndex]) {
                     registers[registerIndex] = (byte) leadingZeros;
@@ -458,26 +458,26 @@ public class RedisVelocityService {
             if (exactCount.get() < EXACT_THRESHOLD) {
                 return exactCount.get();
             }
-            
+
             // HyperLogLog estimation
             double sum = 0;
             int zeros = 0;
-            
+
             synchronized (registers) {
                 for (byte register : registers) {
                     sum += Math.pow(2, -register);
                     if (register == 0) zeros++;
                 }
             }
-            
+
             double alpha = 0.7213 / (1 + 1.079 / NUM_REGISTERS);
             double estimate = alpha * NUM_REGISTERS * NUM_REGISTERS / sum;
-            
+
             // Small range correction
             if (estimate <= 2.5 * NUM_REGISTERS && zeros > 0) {
                 estimate = NUM_REGISTERS * Math.log((double) NUM_REGISTERS / zeros);
             }
-            
+
             return Math.round(estimate);
         }
 
@@ -486,14 +486,15 @@ public class RedisVelocityService {
         }
 
         // MurmurHash3 32-bit implementation
+        @SuppressWarnings("fallthrough")
         private static int murmurHash3(String value) {
             byte[] data = value.getBytes(StandardCharsets.UTF_8);
             int h = 0x9747b28c;
             int len = data.length;
             int i = 0;
-            
+
             while (len >= 4) {
-                int k = (data[i] & 0xff) | ((data[i + 1] & 0xff) << 8) 
+                int k = (data[i] & 0xff) | ((data[i + 1] & 0xff) << 8)
                       | ((data[i + 2] & 0xff) << 16) | ((data[i + 3] & 0xff) << 24);
                 k *= 0xcc9e2d51;
                 k = Integer.rotateLeft(k, 15);
@@ -504,25 +505,28 @@ public class RedisVelocityService {
                 i += 4;
                 len -= 4;
             }
-            
+
             int k = 0;
             switch (len) {
-                case 3: k ^= (data[i + 2] & 0xff) << 16;
-                case 2: k ^= (data[i + 1] & 0xff) << 8;
+                case 3: k ^= (data[i + 2] & 0xff) << 16; // fall through
+                case 2: k ^= (data[i + 1] & 0xff) << 8;  // fall through
                 case 1: k ^= (data[i] & 0xff);
                         k *= 0xcc9e2d51;
                         k = Integer.rotateLeft(k, 15);
                         k *= 0x1b873593;
                         h ^= k;
+                        break;
+                default:
+                        break;
             }
-            
+
             h ^= data.length;
             h ^= h >>> 16;
             h *= 0x85ebca6b;
             h ^= h >>> 13;
             h *= 0xc2b2ae35;
             h ^= h >>> 16;
-            
+
             return h;
         }
     }
