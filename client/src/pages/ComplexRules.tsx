@@ -1,6 +1,6 @@
 /**
  * ComplexRules - Página para gerenciamento de regras complexas
- * 
+ *
  * Features:
  * - Listagem de regras complexas
  * - Criação/edição com ComplexRuleBuilder
@@ -86,7 +86,7 @@ type ViewMode = 'list' | 'create' | 'edit' | 'view';
 
 export default function ComplexRules() {
   const queryClient = useQueryClient();
-  
+
   // State
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedRule, setSelectedRule] = useState<ComplexRuleDTO | null>(null);
