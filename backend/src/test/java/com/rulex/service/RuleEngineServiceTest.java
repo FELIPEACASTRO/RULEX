@@ -54,6 +54,13 @@ class RuleEngineServiceTest {
 
   private final RuleOrderingService ruleOrderingService = Mockito.mock(RuleOrderingService.class);
 
+  private final BloomFilterService bloomFilterService = Mockito.mock(BloomFilterService.class);
+  private final ShadowModeService shadowModeService = Mockito.mock(ShadowModeService.class);
+  private final ImpossibleTravelService impossibleTravelService =
+      Mockito.mock(ImpossibleTravelService.class);
+  private final GeoService geoService = Mockito.mock(GeoService.class);
+  private final RedisVelocityService redisVelocityService = Mockito.mock(RedisVelocityService.class);
+
   private final RuleEngineService service =
       new RuleEngineService(
           transactionRepository,
@@ -65,8 +72,13 @@ class RuleEngineServiceTest {
           payloadHashService,
           rawStoreService,
           ruleExecutionLogService,
-        enrichmentService,
-        ruleOrderingService);
+          enrichmentService,
+          ruleOrderingService,
+          bloomFilterService,
+          shadowModeService,
+          impossibleTravelService,
+          geoService,
+          redisVelocityService);
 
   @Test
   void returnsApproved_whenNoEnabledRules() {

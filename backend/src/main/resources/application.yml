@@ -84,12 +84,41 @@ management:
         http.server.requests: true
       percentiles:
         http.server.requests: 0.5, 0.95, 0.99
+  # OpenTelemetry Tracing
+  tracing:
+    sampling:
+      probability: ${OTEL_SAMPLING_PROBABILITY:1.0}
+    propagation:
+      type: w3c
+
+# OpenTelemetry Configuration
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318}
+      protocol: ${OTEL_EXPORTER_OTLP_PROTOCOL:http/protobuf}
+  resource:
+    attributes:
+      service.name: ${spring.application.name}
+      service.version: 1.0.0
+      deployment.environment: ${SPRING_PROFILES_ACTIVE:dev}
 
 # RULEX Configuration
 rulex:
   rules:
     enabled: true
     cache-enabled: true
+  engine:
+    optimizedRuleOrder: false
+    bloomFilter:
+      enabled: true
+    shadowMode:
+      enabled: true
+    impossibleTravel:
+      enabled: false
+    velocity:
+      redis:
+        enabled: false
   audit:
     enabled: true
     log-all-decisions: true

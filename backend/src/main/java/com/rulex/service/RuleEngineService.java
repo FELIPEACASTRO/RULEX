@@ -17,6 +17,7 @@ import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
 import com.rulex.util.PanMaskingUtil;
+import com.rulex.util.PanHashUtil;
 import com.rulex.v31.execlog.ExecutionEventType;
 import com.rulex.v31.execlog.RuleExecutionLogService;
 import java.beans.PropertyDescriptor;
@@ -58,6 +59,13 @@ public class RuleEngineService {
   private final EnrichmentService enrichmentService;
   private final RuleOrderingService ruleOrderingService;
 
+  // V4.0: advanced hard-rule services (opt-in via config)
+  private final BloomFilterService bloomFilterService;
+  private final ShadowModeService shadowModeService;
+  private final ImpossibleTravelService impossibleTravelService;
+  private final GeoService geoService;
+  private final RedisVelocityService redisVelocityService;
+
   /**
    * When enabled, rules are evaluated in an optimized (cheap-first / hit-rate) order.
    *
@@ -66,6 +74,18 @@ public class RuleEngineService {
    */
   @Value("${rulex.engine.optimizedRuleOrder:false}")
   private boolean optimizedRuleOrder;
+
+  @Value("${rulex.engine.bloomFilter.enabled:true}")
+  private boolean bloomFilterEnabled;
+
+  @Value("${rulex.engine.shadowMode.enabled:true}")
+  private boolean shadowModeEnabled;
+
+  @Value("${rulex.engine.impossibleTravel.enabled:false}")
+  private boolean impossibleTravelEnabled;
+
+  @Value("${rulex.engine.velocity.redis.enabled:false}")
+  private boolean redisVelocityEnabled;
 
   private volatile CandidateIndexCache candidateIndexCache;
 
@@ -173,6 +193,15 @@ public class RuleEngineService {
       decision.setExternalTransactionId(transaction.getExternalTransactionId());
       decision.setPayloadRawHash(payloadHash);
       decisionRepository.save(decision);
+
+      // V4.0: record transaction into high-performance velocity trackers (best-effort)
+      if (redisVelocityEnabled) {
+        try {
+          redisVelocityService.recordTransaction(request);
+        } catch (Exception ignored) {
+          // best-effort; never break fraud decisions
+        }
+      }
 
       safeLogEvaluate(
           ExecutionEventType.EVALUATE,
@@ -294,6 +323,15 @@ public class RuleEngineService {
       decision.setExternalTransactionId(transaction.getExternalTransactionId());
       decision.setPayloadRawHash(payloadHash);
       decisionRepository.save(decision);
+
+      // V4.0: record transaction into high-performance velocity trackers (best-effort)
+      if (redisVelocityEnabled) {
+        try {
+          redisVelocityService.recordTransaction(request);
+        } catch (Exception ignored) {
+          // best-effort; never break fraud decisions
+        }
+      }
 
       safeLogEvaluate(
           ExecutionEventType.EVALUATE,
@@ -482,7 +520,44 @@ public class RuleEngineService {
     TransactionDecision.TransactionClassification maxByRule =
         TransactionDecision.TransactionClassification.APPROVED;
 
+    // V4.0: cheap deterministic pre-checks (short-circuit on FRAUD)
+    TransactionDecision.TransactionClassification preClassification =
+      runPreChecks(request, derivedContext, triggeredRules, scoreDetails);
+    maxByRule = maxSeverity(maxByRule, preClassification);
+    if (maxByRule == TransactionDecision.TransactionClassification.FRAUD) {
+      result.setRiskScore(100);
+      result.setTriggeredRules(triggeredRules);
+      result.setScoreDetails(scoreDetails);
+      result.setClassification(maxByRule);
+      result.setReason(generateReason(maxByRule, triggeredRules));
+      return result;
+    }
+
+    // V4.0: separate decision rules from shadow rules
+    List<RuleConfiguration> decisionRules = new ArrayList<>();
+    List<RuleConfiguration> shadowRules = new ArrayList<>();
     for (RuleConfiguration rule : enabledRules) {
+      if (!shadowModeEnabled || rule.getShadowMode() == null) {
+        decisionRules.add(rule);
+        continue;
+      }
+
+      switch (rule.getShadowMode()) {
+        case DISABLED -> decisionRules.add(rule);
+        case SHADOW -> shadowRules.add(rule);
+        case CANARY -> {
+          int pct = rule.getCanaryPercentage() != null ? rule.getCanaryPercentage() : 0;
+          String stableKey = request.getExternalTransactionId() + ":" + rule.getRuleName();
+          if (isInCanary(stableKey, pct)) {
+            decisionRules.add(rule);
+          } else {
+            shadowRules.add(rule);
+          }
+        }
+      }
+    }
+
+    for (RuleConfiguration rule : decisionRules) {
       RulePreconditions pre = index.byRuleName.get(rule.getRuleName());
       if (pre != null && pre.canSkipWithMissingFields && !hasAllRequiredFields(request, pre)) {
         // Maintain parity with existing scoreDetails shape.
@@ -546,7 +621,194 @@ public class RuleEngineService {
     result.setClassification(maxByRule);
     result.setReason(generateReason(maxByRule, triggeredRules));
 
+    // V4.0: evaluate SHADOW/CANARY-not-selected rules asynchronously (never impacts decision)
+    if (shadowModeEnabled && !shadowRules.isEmpty()) {
+      String actualDecision = maxByRule.name();
+      ShadowModeService.RuleEvaluator evaluator =
+          (rule, tx) -> {
+            RuleMatch rm = evaluateRuleGeneric(transaction, request, rule);
+            if (!rm.triggered) {
+              return ShadowModeService.RuleEvaluationResult.notTriggered();
+            }
+            int score = clampScore(rule.getWeight());
+            String action =
+                rule.getClassification() == TransactionDecision.TransactionClassification.FRAUD
+                    ? "BLOCK"
+                    : (rule.getClassification() == TransactionDecision.TransactionClassification.SUSPICIOUS
+                        ? "FLAG"
+                        : "ALLOW");
+            return ShadowModeService.RuleEvaluationResult.triggered(score, action, rm.detail);
+          };
+
+      for (RuleConfiguration shadowRule : shadowRules) {
+        shadowModeService.executeShadow(shadowRule, request, evaluator, actualDecision);
+      }
+    }
+
     return result;
+  }
+
+  private boolean isInCanary(String stableKey, int percentage) {
+    if (percentage <= 0) return false;
+    if (percentage >= 100) return true;
+    int bucket = Math.floorMod(stableKey.hashCode(), 100);
+    return bucket < percentage;
+  }
+
+  private TransactionDecision.TransactionClassification runPreChecks(
+      TransactionRequest request,
+      DerivedContext derivedContext,
+      List<TriggeredRuleDTO> triggeredRules,
+      Map<String, Object> scoreDetails) {
+    TransactionDecision.TransactionClassification max =
+        TransactionDecision.TransactionClassification.APPROVED;
+
+    if (bloomFilterEnabled) {
+      try {
+        if (request.getPan() != null && !request.getPan().isBlank()) {
+          var r =
+              bloomFilterService.isBlacklisted(
+                  com.rulex.entity.RuleList.EntityType.PAN, request.getPan());
+          if (r.inList()) {
+            triggeredRules.add(
+                TriggeredRuleDTO.builder()
+                    .name("BLOCKLIST_PAN")
+                    .weight(100)
+                    .contribution(100)
+                    .detail("PAN encontrado em blacklist")
+                    .build());
+            scoreDetails.put("BLOCKLIST_PAN", Map.of("triggered", true, "source", r.source()));
+            return TransactionDecision.TransactionClassification.FRAUD;
+          }
+        }
+
+        if (request.getMerchantId() != null && !request.getMerchantId().isBlank()) {
+          var r =
+              bloomFilterService.isBlacklisted(
+                  com.rulex.entity.RuleList.EntityType.MERCHANT_ID, request.getMerchantId());
+          if (r.inList()) {
+            triggeredRules.add(
+                TriggeredRuleDTO.builder()
+                    .name("BLOCKLIST_MERCHANT")
+                    .weight(100)
+                    .contribution(100)
+                    .detail("MerchantId encontrado em blacklist")
+                    .build());
+            scoreDetails.put(
+                "BLOCKLIST_MERCHANT", Map.of("triggered", true, "source", r.source()));
+            return TransactionDecision.TransactionClassification.FRAUD;
+          }
+        }
+
+        if (request.getCustomerIdFromHeader() != null
+            && !request.getCustomerIdFromHeader().isBlank()) {
+          var r =
+              bloomFilterService.isBlacklisted(
+                  com.rulex.entity.RuleList.EntityType.CUSTOMER_ID,
+                  request.getCustomerIdFromHeader());
+          if (r.inList()) {
+            triggeredRules.add(
+                TriggeredRuleDTO.builder()
+                    .name("BLOCKLIST_CUSTOMER")
+                    .weight(100)
+                    .contribution(100)
+                    .detail("CustomerId encontrado em blacklist")
+                    .build());
+            scoreDetails.put(
+                "BLOCKLIST_CUSTOMER", Map.of("triggered", true, "source", r.source()));
+            return TransactionDecision.TransactionClassification.FRAUD;
+          }
+        }
+
+        // Use terminalId as a proxy for device id if present.
+        if (request.getTerminalId() != null && !request.getTerminalId().isBlank()) {
+          var r =
+              bloomFilterService.isBlacklisted(
+                  com.rulex.entity.RuleList.EntityType.DEVICE_ID, request.getTerminalId());
+          if (r.inList()) {
+            triggeredRules.add(
+                TriggeredRuleDTO.builder()
+                    .name("BLOCKLIST_DEVICE")
+                    .weight(100)
+                    .contribution(100)
+                    .detail("DeviceId (terminalId) encontrado em blacklist")
+                    .build());
+            scoreDetails.put("BLOCKLIST_DEVICE", Map.of("triggered", true, "source", r.source()));
+            return TransactionDecision.TransactionClassification.FRAUD;
+          }
+        }
+      } catch (Exception ignored) {
+        // best-effort
+      }
+    }
+
+    if (impossibleTravelEnabled
+        && request.getPan() != null
+        && !request.getPan().isBlank()
+        && derivedContext.getTransactionTimestamp() != null) {
+      try {
+        GeoService.GeoCoordinates coords = geoService.deriveCoordinates(request);
+        if (coords != null && coords.isFound()) {
+          String panHash = PanHashUtil.sha256Hex(request.getPan());
+          boolean cardPresent = "Y".equals(request.getCustomerPresent());
+
+          var analysis =
+              impossibleTravelService.analyzeTravel(
+                  panHash,
+                  coords.getLatitude(),
+                  coords.getLongitude(),
+                  request.getMerchantCity(),
+                  derivedContext.getNormalizedCountryCode(),
+                  derivedContext.getTransactionTimestamp().toLocalDateTime(),
+                  request.getExternalTransactionId(),
+                  cardPresent);
+
+          if (analysis.riskLevel() == ImpossibleTravelService.TravelRisk.IMPOSSIBLE) {
+            triggeredRules.add(
+                TriggeredRuleDTO.builder()
+                    .name("IMPOSSIBLE_TRAVEL")
+                    .weight(100)
+                    .contribution(100)
+                    .detail(
+                        String.format(
+                            "Viagem impossível: %.0fkm em %.0fmin (%.0f km/h)",
+                            analysis.distanceKm(),
+                            analysis.elapsedMinutes(),
+                            analysis.speedKmh()))
+                    .build());
+            scoreDetails.put(
+                "IMPOSSIBLE_TRAVEL",
+                Map.of(
+                    "triggered",
+                    true,
+                    "distanceKm",
+                    analysis.distanceKm(),
+                    "speedKmh",
+                    analysis.speedKmh(),
+                    "elapsedMinutes",
+                    analysis.elapsedMinutes()));
+            return TransactionDecision.TransactionClassification.FRAUD;
+          }
+
+          if (analysis.riskLevel() == ImpossibleTravelService.TravelRisk.HIGH) {
+            triggeredRules.add(
+                TriggeredRuleDTO.builder()
+                    .name("SUSPICIOUS_TRAVEL")
+                    .weight(60)
+                    .contribution(60)
+                    .detail(String.format("Viagem suspeita: %.0f km/h", analysis.speedKmh()))
+                    .build());
+            scoreDetails.put(
+                "SUSPICIOUS_TRAVEL", Map.of("triggered", true, "speedKmh", analysis.speedKmh()));
+            max = maxSeverity(max, TransactionDecision.TransactionClassification.SUSPICIOUS);
+          }
+        }
+      } catch (Exception ignored) {
+        // best-effort
+      }
+    }
+
+    return max;
   }
 
   /** Avalia uma regra específica contra a transação. */
