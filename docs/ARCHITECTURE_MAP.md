@@ -1,120 +1,288 @@
-# ARCHITECTURE_MAP (FASE 0)
+# RULEX - Mapa de Arquitetura Completo
 
-Este documento descreve a arquitetura e os fluxos principais do RULEX **com evidência do repositório**. Qualquer afirmação sem evidência é marcada como **VALIDAR**.
+**Versão:** 1.0.0  
+**Data:** 2025-01-03  
+**Tipo:** Motor de Regras Duras (Hard Rules) para Prevenção a Fraudes
 
-## 1) Visão geral
+---
 
-- Backend: Spring Boot (context-path `/api`).
-- Frontend: React/Vite (não detalhado aqui — foco FASE 0 backend + contratos).
-- Persistência: PostgreSQL + Flyway.
-- Dois paradigmas de regras coexistem:
-  - **Regras “simples”**: tabela `rule_configurations` com `conditions_json` (engine em `RuleEngineService`).
-  - **Regras “complexas”**: grupos aninhados + condições + ações (migrations V8/V12/V18).
+## 1. Visão Geral da Solução
 
-**EVIDÊNCIA**
-- Context-path `/api`: [backend/src/main/resources/application.yml](../backend/src/main/resources/application.yml#L41-L44)
-- `rule_configurations` schema: [backend/src/main/resources/db/migration/V2__core_schema.sql](../backend/src/main/resources/db/migration/V2__core_schema.sql#L84-L140)
-- Complex rules schema/enums: [backend/src/main/resources/db/migration/V8__complex_rules_support.sql](../backend/src/main/resources/db/migration/V8__complex_rules_support.sql#L1-L120)
-- Complex rules CRUD table: [backend/src/main/resources/db/migration/V12__complex_rules_crud.sql](../backend/src/main/resources/db/migration/V12__complex_rules_crud.sql#L1-L60)
+O RULEX é um **motor de regras determinísticas** para detecção de fraude em transações de cartão de crédito. **NÃO é um sistema de Machine Learning** - todas as decisões são baseadas em regras explícitas, configuráveis e auditáveis.
 
-## 2) Segurança e acesso (RBAC)
+### 1.1 Stack Tecnológico
 
-- Feature-flag: `rulex.security.enabled`.
-- Quando `enabled=false`: permite tudo e desliga CSRF.
-- Quando `enabled=true`:
-  - Auth HTTP Basic.
-  - CSRF via cookie `XSRF-TOKEN`, mas com **exceção de CSRF** para endpoints públicos de análise.
-  - Regras de autorização:
-    - POST público: `/transactions/analyze`, `/transactions/analyze-advanced`, `/evaluate`.
-    - GET `/transactions/**`, `/rules/**`, `/audit/**`, `/metrics/**`, `/field-dictionary/**`, `/complex-rules/**`: `ANALYST` ou `ADMIN`.
-    - Mutations (e.g. `/rules/**`, `/complex-rules/**`, `/homolog/**`): `ADMIN`.
+| Camada | Tecnologia | Versão |
+|--------|------------|--------|
+| Backend | Java + Spring Boot | 21 / 3.5.9 |
+| Frontend | React + TypeScript + Vite | 18.x / 5.x |
+| Banco de Dados | PostgreSQL | 16.x |
+| Migrations | Flyway | 11.20.0 |
+| Testes | JUnit 5 + Testcontainers + Playwright | - |
+| Containerização | Docker Compose | - |
 
-**EVIDÊNCIA**
-- Config e regras de auth/CSRF: [backend/src/main/java/com/rulex/config/SecurityConfig.java](../backend/src/main/java/com/rulex/config/SecurityConfig.java#L18-L134)
-- Propriedades `rulex.security.*`: [backend/src/main/java/com/rulex/config/RulexSecurityProperties.java](../backend/src/main/java/com/rulex/config/RulexSecurityProperties.java#L1-L10)
-- Defaults em config: [backend/src/main/resources/application.yml](../backend/src/main/resources/application.yml#L86-L103)
+### 1.2 Estrutura de Diretórios
 
-## 3) Fluxo de análise “simples” (POST /transactions/analyze)
+```
+RULEX/
+├── backend/                    # API Java Spring Boot
+│   ├── src/main/java/com/rulex/
+│   │   ├── api/               # DTOs de API
+│   │   ├── config/            # Configurações Spring
+│   │   ├── controller/        # REST Controllers
+│   │   │   ├── complex/       # Regras complexas
+│   │   │   └── homolog/       # Endpoints de homologação
+│   │   ├── dto/               # Data Transfer Objects
+│   │   │   ├── complex/       # DTOs de regras complexas
+│   │   │   └── homolog/       # DTOs de homologação
+│   │   ├── entity/            # Entidades JPA
+│   │   │   ├── complex/       # Entidades de regras complexas
+│   │   │   └── homolog/       # Entidades de homologação
+│   │   ├── homolog/           # Módulo de homologação (Hexagonal)
+│   │   │   ├── adapter/       # Adapters (implementações)
+│   │   │   ├── application/   # Application Services
+│   │   │   ├── config/        # Configurações
+│   │   │   ├── port/          # Ports (interfaces)
+│   │   │   └── usecase/       # Use Cases
+│   │   ├── repository/        # Repositórios JPA
+│   │   ├── service/           # Serviços de negócio
+│   │   │   └── complex/       # Serviços de regras complexas
+│   │   ├── util/              # Utilitários
+│   │   └── v31/               # Motor V3.1 (AST + Field Dictionary)
+│   │       ├── ast/           # Avaliador AST
+│   │       ├── execlog/       # Log de execução
+│   │       ├── field/         # Dicionário de campos
+│   │       └── rules/         # Regras V3.1
+│   └── src/main/resources/
+│       └── db/migration/      # Migrations Flyway (V1-V22)
+├── client/                    # Frontend React
+│   └── src/
+│       ├── components/        # Componentes React
+│       │   ├── ComplexRuleBuilder/  # Builder de regras complexas
+│       │   └── ui/            # Componentes UI (shadcn)
+│       ├── pages/             # Páginas da aplicação
+│       ├── lib/               # Utilitários e API client
+│       └── hooks/             # React Hooks
+├── e2e/                       # Testes E2E (Playwright)
+├── docs/                      # Documentação
+│   ├── qa/                    # Documentação de QA
+│   ├── rules/                 # Documentação de regras
+│   └── benchmark_research/    # Pesquisa de benchmarks
+└── docker-compose.yml         # Orquestração de containers
+```
 
-**Objetivo:** receber `TransactionRequest`, capturar bytes crus do HTTP body, persistir payload raw (para idempotência/anti-tamper), executar regras simples e retornar decisão.
+---
 
-1. Entrada: `POST /api/transactions/analyze`.
-2. Captura de bytes crus: lê atributo `RawPayloadCaptureFilter.RAW_BYTES_ATTR` do request.
-3. Engine:
-   - Calcula hash SHA-256 dos bytes crus.
-   - Anti-tamper: se já existir `externalTransactionId` com hash diferente, retorna **FRAUD**.
-   - Idempotência: se já existir com mesmo hash, retorna decisão anterior.
-   - Caso novo: persiste raw store e `transactions`, avalia regras, salva decisão.
+## 2. Arquitetura do Motor de Regras
 
-**EVIDÊNCIA**
-- Endpoint e captura raw bytes: [backend/src/main/java/com/rulex/controller/TransactionController.java](../backend/src/main/java/com/rulex/controller/TransactionController.java#L32-L49)
-- Engine: hash + raw store + idempotência + anti-tamper: [backend/src/main/java/com/rulex/service/RuleEngineService.java](../backend/src/main/java/com/rulex/service/RuleEngineService.java#L88-L170)
+### 2.1 Tipos de Regras
 
-## 4) Endpoint “evaluate raw” (POST /evaluate)
+O RULEX suporta **dois tipos de regras**:
 
-**Objetivo:** avaliar uma requisição “raw” e retornar decisão final + hits/popups agregados.
+#### 2.1.1 Regras Simples (`rule_configurations`)
+- Armazenadas na tabela `rule_configurations`
+- Condições em JSON (`conditions_json`)
+- Operador lógico único (AND/OR)
+- Ideal para regras diretas e rápidas
 
-1. Entrada: `POST /api/evaluate`.
-2. Lê `rawBody` e bytes crus capturados por `RawPayloadCaptureFilter`.
-3. Delegação para `ruleEngineService.evaluateRaw(rawBody, rawBytes, contentType)`.
+#### 2.1.2 Regras Complexas (`complex_rules` + `rule_condition_groups` + `rule_conditions`)
+- Estrutura hierárquica com grupos aninhados
+- Suporta até 10 níveis de profundidade
+- Operadores lógicos avançados (AND, OR, NOT, XOR, NAND, NOR)
+- Suporta 50+ operadores de comparação
+- Ideal para regras sofisticadas
 
-**EVIDÊNCIA**
-- Controller: [backend/src/main/java/com/rulex/controller/EvaluateController.java](../backend/src/main/java/com/rulex/controller/EvaluateController.java#L1-L31)
+### 2.2 Fluxo de Avaliação
 
-## 5) Regras simples: separação Decision vs Shadow/Canary + pre-checks
+```
+┌─────────────────┐
+│  TransactionRequest  │
+│  (Payload JSON)      │
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────────────────────────────────────────┐
+│                    RULE ENGINE                           │
+│  ┌─────────────────┐    ┌─────────────────────────────┐ │
+│  │ RuleEngineService│    │ ComplexRuleExecutionService │ │
+│  │ (Regras Simples) │    │ (Regras Complexas)          │ │
+│  └────────┬────────┘    └────────────┬────────────────┘ │
+│           │                          │                   │
+│           ▼                          ▼                   │
+│  ┌─────────────────────────────────────────────────────┐│
+│  │              ComplexRuleEvaluator                   ││
+│  │  - Avalia grupos de condições recursivamente        ││
+│  │  - Aplica operadores lógicos                        ││
+│  │  - Executa operadores de comparação                 ││
+│  └─────────────────────────────────────────────────────┘│
+│           │                                              │
+│           ▼                                              │
+│  ┌─────────────────┐  ┌─────────────────┐               │
+│  │  VelocityService │  │   GeoService    │               │
+│  │  (Agregações)    │  │  (Geolocalização)│              │
+│  └─────────────────┘  └─────────────────┘               │
+└─────────────────────────────────────────────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────────────────────────┐
+│                      DECISÃO                             │
+│  - APROVADO (APPROVED)                                   │
+│  - SUSPEITA_DE_FRAUDE (SUSPICIOUS)                       │
+│  - FRAUDE (FRAUD)                                        │
+│  + Risk Score (0-100)                                    │
+│  + Regras disparadas                                     │
+│  + Explicação detalhada                                  │
+└─────────────────────────────────────────────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────────────────────────┐
+│                   PERSISTÊNCIA                           │
+│  - decision_log (decisões)                               │
+│  - audit_log (auditoria)                                 │
+│  - rule_execution_details (detalhes de execução)         │
+│  - velocity_transaction_log (log para agregações)        │
+└─────────────────────────────────────────────────────────┘
+```
 
-- Pre-checks determinísticos (curto-circuito): bloom-filter blacklist em PAN/Merchant/Customer/Device (terminalId).
-- Shadow mode:
-  - `shadowModeEnabled` flag.
-  - Regras podem ser `DISABLED` (normal), `SHADOW` (avaliar async) ou `CANARY` (percentual selecionado; resto vira shadow).
-  - Regras shadow/canary (não selecionadas) são avaliadas **assíncronas** e não alteram decisão.
+### 2.3 Componentes Principais
 
-**EVIDÊNCIA**
-- Pipeline: pre-checks + separação decision/shadow + async: [backend/src/main/java/com/rulex/service/RuleEngineService.java](../backend/src/main/java/com/rulex/service/RuleEngineService.java#L480-L705)
+| Componente | Responsabilidade |
+|------------|------------------|
+| `ComplexRuleEvaluator` | Avalia grupos de condições aninhados |
+| `VelocityService` | Calcula agregações temporais (COUNT, SUM, AVG) |
+| `GeoService` | Operações geográficas (distância, polígonos) |
+| `AstEvaluator` | Avaliador AST para regras V3.1 |
+| `RuleValidationService` | Valida regras antes de salvar |
+| `AuditService` | Registra todas as ações para compliance |
 
-## 6) CRUD e governança (regras simples)
+---
 
-- CRUD básico: `/api/rules` (listar, obter, criar, atualizar, deletar, toggle, enabled list, history).
-- Workflow “4 olhos” (aprovação): `/api/rules/approvals/*`.
+## 3. Endpoints da API
 
-**EVIDÊNCIA**
-- CRUD: [backend/src/main/java/com/rulex/controller/RuleController.java](../backend/src/main/java/com/rulex/controller/RuleController.java#L1-L120)
-- Aprovações: [backend/src/main/java/com/rulex/controller/RuleApprovalController.java](../backend/src/main/java/com/rulex/controller/RuleApprovalController.java#L1-L140)
+### 3.1 Regras Simples
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/api/rules` | Lista todas as regras |
+| POST | `/api/rules` | Cria nova regra |
+| PUT | `/api/rules/{id}` | Atualiza regra |
+| DELETE | `/api/rules/{id}` | Remove regra |
+| POST | `/api/rules/{id}/toggle` | Ativa/desativa regra |
 
-## 7) Export/Import (v1)
+### 3.2 Regras Complexas
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/api/v1/complex-rules` | Lista regras complexas |
+| POST | `/api/v1/complex-rules` | Cria regra complexa |
+| PUT | `/api/v1/complex-rules/{id}` | Atualiza regra |
+| DELETE | `/api/v1/complex-rules/{id}` | Remove regra |
+| POST | `/api/v1/complex-rules/validate` | Valida sem salvar |
+| POST | `/api/v1/complex-rules/{id}/duplicate` | Duplica regra |
 
-- Existe um controller com `@RequestMapping("/api/v1/rules/export-import")`.
-- Atenção: como o app tem context-path `/api`, o path final fica `/api/api/v1/rules/export-import/...` **a menos** que exista alguma configuração especial (NÃO ENCONTREI EVIDÊNCIA de override).
+### 3.3 Avaliação de Transações
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| POST | `/api/evaluate` | Avalia transação |
+| POST | `/api/transactions/analyze` | Analisa transação |
+| POST | `/api/homolog/simulations/run` | Executa simulação |
 
-**EVIDÊNCIA**
-- Context-path: [backend/src/main/resources/application.yml](../backend/src/main/resources/application.yml#L41-L44)
-- Controller: [backend/src/main/java/com/rulex/controller/RuleExportImportController.java](../backend/src/main/java/com/rulex/controller/RuleExportImportController.java#L1-L30)
+### 3.4 Homologação (Versionamento)
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| POST | `/api/homolog/rules` | Cria regra + versão DRAFT |
+| POST | `/api/homolog/rules/versions/{id}/publish` | Publica versão |
+| POST | `/api/homolog/rules/{id}/rollback/{version}` | Rollback |
+| POST | `/api/homolog/rulesets` | Cria ruleset |
+| POST | `/api/homolog/rulesets/activate` | Ativa ruleset |
 
-## 8) Observabilidade: auditoria e métricas
+---
 
-- Auditoria (consulta e export): `/api/audit`, `/api/audit/export`, `/api/audit/transaction/{transactionId}`.
-- Métricas gerais: `/api/metrics`, `/api/metrics/mcc`, `/api/metrics/merchant`, `/api/metrics/timeline`.
-- Métricas de regras + feedback FP/TP: `/api/rules/metrics/*`.
+## 4. Modelo de Dados (Resumo)
 
-**EVIDÊNCIA**
-- AuditController: [backend/src/main/java/com/rulex/controller/AuditController.java](../backend/src/main/java/com/rulex/controller/AuditController.java#L1-L130)
-- MetricsController: [backend/src/main/java/com/rulex/controller/MetricsController.java](../backend/src/main/java/com/rulex/controller/MetricsController.java#L1-L70)
-- RuleMetricsController: [backend/src/main/java/com/rulex/controller/RuleMetricsController.java](../backend/src/main/java/com/rulex/controller/RuleMetricsController.java#L1-L120)
+### 4.1 Tabelas Principais
 
-## 9) Logs de execução (append-only)
+| Tabela | Descrição |
+|--------|-----------|
+| `rule_configurations` | Regras simples |
+| `complex_rules` | Regras complexas (header) |
+| `rule_condition_groups` | Grupos de condições (aninhados) |
+| `rule_conditions` | Condições individuais |
+| `rules` | Regras versionadas (header) |
+| `rule_versions` | Versões de regras |
+| `rule_sets` | Conjuntos de regras |
+| `rule_set_versions` | Versões de conjuntos |
+| `active_rule_set` | Conjunto ativo (singleton) |
 
-- Existe `rule_execution_log` (Flyway V6) para registrar eventos `EVALUATE|SIMULATE|ANTI_TAMPER`.
-- Implementação best-effort: ignora violação de índice (dedupe).
+### 4.2 Tabelas de Suporte
 
-**EVIDÊNCIA**
-- Schema: [backend/src/main/resources/db/migration/V6__v31_exec_log_field_dictionary.sql](../backend/src/main/resources/db/migration/V6__v31_exec_log_field_dictionary.sql#L52-L120)
-- Service: [backend/src/main/java/com/rulex/v31/execlog/RuleExecutionLogService.java](../backend/src/main/java/com/rulex/v31/execlog/RuleExecutionLogService.java#L1-L120)
+| Tabela | Descrição |
+|--------|-----------|
+| `velocity_counters` | Contadores pré-computados |
+| `velocity_transaction_log` | Log para agregações |
+| `geo_reference` | Referências geográficas |
+| `geo_polygon` | Polígonos geográficos |
+| `bin_lookup` | Lookup de BINs |
+| `mcc_categories` | Categorias MCC |
 
-## 10) Nuances / inconsistências observadas (para FASE 0)
+### 4.3 Tabelas de Auditoria
 
-1) Shadow mode “legado” em tabela `rules` (V20) vs shadow mode operacional em `rule_configurations` (engine usa `RuleConfiguration.getShadowMode()`).
-- Isso sugere evolução de schema/entidades (VALIDAR se `rules` ainda é usado em runtime).
+| Tabela | Descrição |
+|--------|-----------|
+| `decision_log` | Log de decisões |
+| `audit_log` | Log de auditoria |
+| `rule_execution_details` | Detalhes de execução |
+| `rule_configuration_history` | Histórico de alterações |
 
-**EVIDÊNCIA**
-- V20 altera tabela `rules`: [backend/src/main/resources/db/migration/V20__shadow_mode_and_device_fingerprinting.sql](../backend/src/main/resources/db/migration/V20__shadow_mode_and_device_fingerprinting.sql#L1-L20)
-- Engine usa `rule.getShadowMode()` em `RuleConfiguration`: [backend/src/main/java/com/rulex/service/RuleEngineService.java](../backend/src/main/java/com/rulex/service/RuleEngineService.java#L520-L610)
+---
+
+## 5. Decisões de Arquitetura
+
+### 5.1 Por que Regras Duras (não ML)?
+
+1. **Auditabilidade**: Cada decisão pode ser explicada deterministicamente
+2. **Compliance**: Reguladores exigem explicabilidade (LGPD, BACEN)
+3. **Controle**: Analistas podem ajustar regras em tempo real
+4. **Previsibilidade**: Comportamento consistente e testável
+5. **Performance**: Avaliação em milissegundos
+
+### 5.2 Arquitetura Hexagonal (Módulo Homolog)
+
+O módulo de homologação segue arquitetura hexagonal:
+- **Ports**: Interfaces que definem contratos
+- **Adapters**: Implementações concretas
+- **Use Cases**: Lógica de negócio pura
+- **Application Services**: Orquestração
+
+### 5.3 Versionamento de Regras
+
+- Cada regra tem múltiplas versões
+- Status: DRAFT → PUBLISHED → DEPRECATED
+- Rollback cria nova versão DRAFT
+- Apenas versões PUBLISHED podem ser ativadas
+
+---
+
+## 6. Integrações
+
+### 6.1 Internas
+- **PostgreSQL**: Persistência principal
+- **Flyway**: Migrations automáticas
+- **Testcontainers**: Testes de integração
+
+### 6.2 Observabilidade
+- **Micrometer + Prometheus**: Métricas
+- **OpenTelemetry**: Tracing distribuído
+- **Actuator**: Health checks
+
+### 6.3 Segurança
+- **Spring Security**: Autenticação HTTP Basic
+- **RBAC**: Roles (ADMIN, ANALYST)
+- **Bucket4j**: Rate limiting
+
+---
+
+## 7. Referências
+
+- [README.md](../README.md) - Visão geral do projeto
+- [EXTREME_CAPABILITIES_MAP.md](./EXTREME_CAPABILITIES_MAP.md) - Capacidades do motor
+- [RULES_SCHEMA_AND_FIELDS.md](./RULES_SCHEMA_AND_FIELDS.md) - Schema de regras
+- [Backend README](../backend/README.md) - Detalhes técnicos do backend
