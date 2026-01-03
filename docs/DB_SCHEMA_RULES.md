@@ -611,4 +611,5 @@ CREATE TABLE rule_templates (
 - **V14__velocity_counters.sql**: Sistema de velocity
 - **V15__add_velocity_operators.sql**: Operadores velocity
 - **V13__geo_reference_table.sql**: Geolocalização
-- **V22__fraud_detection_rules_seed.sql**: Seed de regras
+- **V22__fraud_detection_rules_seed.sql**: Seed de regras iniciais
+- **V23__web_research_fraud_rules.sql**: 14 regras de pesquisa web (Card Testing, Scams/APP, Mule, ATO, CNP, Velocity, ECI/3DS)

@@ -166,17 +166,20 @@ O RULEX suporta **dois tipos de regras**:
 | POST | `/api/rules` | Cria nova regra |
 | PUT | `/api/rules/{id}` | Atualiza regra |
 | DELETE | `/api/rules/{id}` | Remove regra |
-| POST | `/api/rules/{id}/toggle` | Ativa/desativa regra |
+| PATCH | `/api/rules/{id}/toggle` | Ativa/desativa regra |
+| GET | `/api/rules/enabled/{enabled}` | Lista regras por status |
 
 ### 3.2 Regras Complexas
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
-| GET | `/api/v1/complex-rules` | Lista regras complexas |
-| POST | `/api/v1/complex-rules` | Cria regra complexa |
-| PUT | `/api/v1/complex-rules/{id}` | Atualiza regra |
-| DELETE | `/api/v1/complex-rules/{id}` | Remove regra |
-| POST | `/api/v1/complex-rules/validate` | Valida sem salvar |
-| POST | `/api/v1/complex-rules/{id}/duplicate` | Duplica regra |
+| GET | `/api/complex-rules` | Lista regras complexas |
+| GET | `/api/complex-rules/{id}` | Busca regra por ID |
+| GET | `/api/complex-rules/key/{key}` | Busca regra por chave |
+| POST | `/api/complex-rules` | Cria regra complexa |
+| PUT | `/api/complex-rules/{id}` | Atualiza regra |
+| DELETE | `/api/complex-rules/{id}` | Remove regra |
+| POST | `/api/complex-rules/validate` | Valida sem salvar |
+| POST | `/api/complex-rules/{id}/duplicate` | Duplica regra |
 
 ### 3.3 Avaliação de Transações
 | Método | Endpoint | Descrição |
