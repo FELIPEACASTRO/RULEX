@@ -274,7 +274,7 @@ VALUES (
   80,
   80,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "threeDSecureStatus", "operator": "IN", "value": ["FAILED", "REJECTED", "UNAVAILABLE"]}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -288,7 +288,7 @@ VALUES (
   100,
   100,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "cardStatus", "operator": "EQ", "value": "BLOCKED"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -302,7 +302,7 @@ VALUES (
   100,
   100,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "cardStatus", "operator": "EQ", "value": "LOST"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -316,7 +316,7 @@ VALUES (
   100,
   100,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "cardStatus", "operator": "EQ", "value": "STOLEN"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -330,7 +330,7 @@ VALUES (
   100,
   100,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "cardExpired", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -344,7 +344,7 @@ VALUES (
   95,
   95,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "binValid", "operator": "EQ", "value": "false"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -358,7 +358,7 @@ VALUES (
   100,
   100,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "panInBlocklist", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -372,7 +372,7 @@ VALUES (
   100,
   100,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "cpfInBlocklist", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -386,7 +386,7 @@ VALUES (
   95,
   95,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "merchantInBlocklist", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -400,7 +400,7 @@ VALUES (
   85,
   85,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "ipInBlocklist", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -418,7 +418,7 @@ VALUES (
   90,
   90,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "transactionAmount", "operator": "GT", "value": "50000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -432,7 +432,7 @@ VALUES (
   95,
   95,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "transactionAmount", "operator": "GT", "value": "100000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -446,7 +446,7 @@ VALUES (
   60,
   60,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "transactionAmount", "operator": "LT", "value": "1"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -460,7 +460,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "transactionAmount", "operator": "EQ", "value": "1"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -474,7 +474,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "transactionAmount", "operator": "GT", "value": "5000"}, {"field": "transactionAmount", "operator": "MOD_EQ", "value": "1000,0"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -488,7 +488,7 @@ VALUES (
   75,
   75,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "transactionAmount", "operator": "BETWEEN", "value": "9000,9999"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -502,7 +502,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "transactionType", "operator": "EQ", "value": "CASH_WITHDRAWAL"}, {"field": "transactionAmount", "operator": "GT", "value": "5000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -516,7 +516,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "installments", "operator": "GT", "value": "1"}, {"field": "transactionAmount", "operator": "GT", "value": "10000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -530,7 +530,7 @@ VALUES (
   60,
   60,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "installments", "operator": "GT", "value": "12"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -544,7 +544,7 @@ VALUES (
   80,
   80,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "mcc", "operator": "IN", "value": ["5812", "5813", "5814"]}, {"field": "transactionAmount", "operator": "GT", "value": "5000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -562,7 +562,7 @@ VALUES (
   60,
   60,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "merchantCountryCode", "operator": "FIELD_NEQ", "value": "cardCountryCode"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -576,7 +576,7 @@ VALUES (
   100,
   100,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "merchantCountryCode", "operator": "IN", "value": ["PRK", "IRN", "SYR", "CUB", "RUS"]}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -590,7 +590,7 @@ VALUES (
   95,
   95,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "geoVelocityKmH", "operator": "GT", "value": "1000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -604,7 +604,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "ipCountryCode", "operator": "FIELD_NEQ", "value": "merchantCountryCode"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -618,7 +618,7 @@ VALUES (
   75,
   75,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "ipIsProxy", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -632,7 +632,7 @@ VALUES (
   55,
   55,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "inUsualGeoArea", "operator": "EQ", "value": "false"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -646,7 +646,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "merchantPostalCodeValid", "operator": "EQ", "value": "false"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -660,7 +660,7 @@ VALUES (
   60,
   60,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "regionFraudRisk", "operator": "EQ", "value": "HIGH"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -678,7 +678,7 @@ VALUES (
   85,
   85,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "velocity", "operator": "VELOCITY_COUNT_GT", "value": "PAN,5,3"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -692,7 +692,7 @@ VALUES (
   95,
   95,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "velocity", "operator": "VELOCITY_COUNT_GT", "value": "PAN,1,2"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -706,7 +706,7 @@ VALUES (
   80,
   80,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "velocity", "operator": "VELOCITY_SUM_GT", "value": "PAN,1440,50000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -720,7 +720,7 @@ VALUES (
   75,
   75,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "velocity", "operator": "VELOCITY_SUM_GT", "value": "PAN,10080,100000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -734,7 +734,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "velocity", "operator": "VELOCITY_DISTINCT_GT", "value": "PAN,60,MCC,5"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -748,7 +748,7 @@ VALUES (
   75,
   75,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "velocity", "operator": "VELOCITY_DISTINCT_GT", "value": "PAN,1440,CITY,3"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -762,7 +762,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "avgAmountRatio24h", "operator": "GT", "value": "5"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -776,7 +776,7 @@ VALUES (
   55,
   55,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "isFirstInternationalTransaction", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -790,7 +790,7 @@ VALUES (
   60,
   60,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "daysSinceLastTransaction", "operator": "GT", "value": "90"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -804,7 +804,7 @@ VALUES (
   85,
   85,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "cardTestingPattern", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -822,7 +822,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "mcc", "operator": "EQ", "value": "5944"}, {"field": "transactionAmount", "operator": "GT", "value": "10000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -836,7 +836,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "mcc", "operator": "EQ", "value": "5732"}, {"field": "transactionAmount", "operator": "GT", "value": "15000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -850,7 +850,7 @@ VALUES (
   75,
   75,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "mcc", "operator": "EQ", "value": "5815"}, {"field": "transactionAmount", "operator": "GT", "value": "1000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -864,7 +864,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "mcc", "operator": "EQ", "value": "6012"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -878,7 +878,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "mcc", "operator": "EQ", "value": "6211"}, {"field": "transactionAmount", "operator": "GT", "value": "5000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -892,7 +892,7 @@ VALUES (
   60,
   60,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "mcc", "operator": "EQ", "value": "7800"}, {"field": "transactionAmount", "operator": "GT", "value": "500"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -906,7 +906,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "mcc", "operator": "IN", "value": ["4812", "4814"]}, {"field": "transactionAmount", "operator": "GT", "value": "1000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -920,7 +920,7 @@ VALUES (
   60,
   60,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "mcc", "operator": "EQ", "value": "4511"}, {"field": "transactionAmount", "operator": "GT", "value": "20000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -934,7 +934,7 @@ VALUES (
   55,
   55,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "mcc", "operator": "EQ", "value": "7011"}, {"field": "transactionAmount", "operator": "GT", "value": "15000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -948,7 +948,7 @@ VALUES (
   60,
   60,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "mcc", "operator": "EQ", "value": "7512"}, {"field": "transactionAmount", "operator": "GT", "value": "10000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -966,7 +966,7 @@ VALUES (
   50,
   50,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "isHoliday", "operator": "EQ", "value": "true"}, {"field": "transactionAmount", "operator": "GT", "value": "5000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -980,7 +980,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "isWeekend", "operator": "EQ", "value": "true"}, {"field": "transactionTime", "operator": "TIME_BETWEEN", "value": "000000,060000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -994,7 +994,7 @@ VALUES (
   55,
   55,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "posEntryMode", "operator": "IN", "value": ["05", "07", "90"]}, {"field": "transactionTime", "operator": "NOT_BETWEEN", "value": "080000,220000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1008,7 +1008,7 @@ VALUES (
   90,
   90,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "transactionsInSameMinute", "operator": "GT", "value": "1"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1026,7 +1026,7 @@ VALUES (
   50,
   50,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "isNewDevice", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1040,7 +1040,7 @@ VALUES (
   75,
   75,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "isNewDevice", "operator": "EQ", "value": "true"}, {"field": "transactionAmount", "operator": "GT", "value": "5000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1054,7 +1054,7 @@ VALUES (
   80,
   80,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "distinctCardsOnDevice24h", "operator": "GT", "value": "3"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1068,7 +1068,7 @@ VALUES (
   90,
   90,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "isEmulator", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1082,7 +1082,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "isRooted", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1096,7 +1096,7 @@ VALUES (
   85,
   85,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "isOfficialApp", "operator": "EQ", "value": "false"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1110,7 +1110,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "browserSuspicious", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1124,7 +1124,7 @@ VALUES (
   60,
   60,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "userAgentConsistent", "operator": "EQ", "value": "false"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1142,7 +1142,7 @@ VALUES (
   55,
   55,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "posEntryMode", "operator": "EQ", "value": "81"}, {"field": "threeDSecureStatus", "operator": "IN", "value": ["NOT_ENROLLED", "UNAVAILABLE"]}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1156,7 +1156,7 @@ VALUES (
   80,
   80,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "posEntryMode", "operator": "EQ", "value": "81"}, {"field": "threeDSecureStatus", "operator": "NEQ", "value": "AUTHENTICATED"}, {"field": "transactionAmount", "operator": "GT", "value": "3000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1170,7 +1170,7 @@ VALUES (
   50,
   50,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "shippingAddressMatchesBilling", "operator": "EQ", "value": "false"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1184,7 +1184,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "shippingMethod", "operator": "EQ", "value": "EXPRESS"}, {"field": "transactionAmount", "operator": "GT", "value": "5000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1198,7 +1198,7 @@ VALUES (
   75,
   75,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "emailIsTemporary", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1212,7 +1212,7 @@ VALUES (
   60,
   60,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "emailAgeDays", "operator": "LT", "value": "30"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1226,7 +1226,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "phoneValid", "operator": "EQ", "value": "false"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1240,7 +1240,7 @@ VALUES (
   85,
   85,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "cpfNameMatch", "operator": "EQ", "value": "false"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1254,7 +1254,7 @@ VALUES (
   55,
   55,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "isFirstPurchaseAtMerchant", "operator": "EQ", "value": "true"}, {"field": "transactionAmount", "operator": "GT", "value": "2000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1268,7 +1268,7 @@ VALUES (
   75,
   75,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "paymentAttempts", "operator": "GT", "value": "3"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1287,7 +1287,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "amountStdDeviation", "operator": "GT", "value": "3"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1301,7 +1301,7 @@ VALUES (
   50,
   50,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "isUnusualMccCategory", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1315,7 +1315,7 @@ VALUES (
   45,
   45,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "isUnusualTimeOfDay", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1329,7 +1329,7 @@ VALUES (
   55,
   55,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "isUnusualLocation", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1343,7 +1343,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "frequencyRatio", "operator": "GT", "value": "3"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1357,7 +1357,7 @@ VALUES (
   75,
   75,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "behaviorChangeScore", "operator": "GT", "value": "70"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1375,7 +1375,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "transactionType", "operator": "EQ", "value": "PIX"}, {"field": "isFirstPixTransaction", "operator": "EQ", "value": "true"}, {"field": "transactionAmount", "operator": "GT", "value": "5000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1389,7 +1389,7 @@ VALUES (
   75,
   75,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "transactionType", "operator": "EQ", "value": "PIX"}, {"field": "pixKeyType", "operator": "EQ", "value": "EVP"}, {"field": "transactionAmount", "operator": "GT", "value": "3000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1403,7 +1403,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "transactionType", "operator": "EQ", "value": "PIX"}, {"field": "transactionTime", "operator": "NOT_BETWEEN", "value": "060000,200000"}, {"field": "transactionAmount", "operator": "GT", "value": "2000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1417,7 +1417,7 @@ VALUES (
   85,
   85,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "transactionType", "operator": "EQ", "value": "PIX"}, {"field": "velocity", "operator": "VELOCITY_DISTINCT_GT", "value": "PAYER,60,PAYEE,5"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1431,7 +1431,7 @@ VALUES (
   90,
   90,
   true,
-  'FRAUDE',
+  'FRAUD',
   '[{"field": "transactionType", "operator": "EQ", "value": "PIX"}, {"field": "payeeInMedList", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1445,7 +1445,7 @@ VALUES (
   80,
   80,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "transactionType", "operator": "EQ", "value": "PIX"}, {"field": "sameAmountPixCount1h", "operator": "GT", "value": "3"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1463,7 +1463,7 @@ VALUES (
   85,
   85,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "minutesSinceLastCredit", "operator": "LT", "value": "30"}, {"field": "transactionType", "operator": "IN", "value": ["WITHDRAWAL", "TRANSFER", "PIX"]}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1477,7 +1477,7 @@ VALUES (
   80,
   80,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "accountAgeDays", "operator": "LT", "value": "30"}, {"field": "totalVolume30d", "operator": "GT", "value": "50000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1491,7 +1491,7 @@ VALUES (
   75,
   75,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "distinctPayersLast24h", "operator": "GT", "value": "10"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1505,7 +1505,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "zeroBalanceCount30d", "operator": "GT", "value": "5"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1523,7 +1523,7 @@ VALUES (
   75,
   75,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "hoursSincePasswordChange", "operator": "LT", "value": "24"}, {"field": "transactionAmount", "operator": "GT", "value": "1000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1537,7 +1537,7 @@ VALUES (
   80,
   80,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "hoursSinceEmailChange", "operator": "LT", "value": "48"}, {"field": "transactionAmount", "operator": "GT", "value": "1000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1551,7 +1551,7 @@ VALUES (
   80,
   80,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "hoursSincePhoneChange", "operator": "LT", "value": "48"}, {"field": "transactionAmount", "operator": "GT", "value": "1000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1565,7 +1565,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "isNewBeneficiary", "operator": "EQ", "value": "true"}, {"field": "transactionAmount", "operator": "GT", "value": "5000"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1579,7 +1579,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "minutesSinceNewDeviceLogin", "operator": "LT", "value": "60"}, {"field": "transactionAmount", "operator": "GT", "value": "500"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1593,7 +1593,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "failedLoginAttempts24h", "operator": "GT", "value": "3"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1611,7 +1611,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "merchantChargebackRate", "operator": "GT", "value": "2"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1625,7 +1625,7 @@ VALUES (
   55,
   55,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "merchantAgeDays", "operator": "LT", "value": "30"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1639,7 +1639,7 @@ VALUES (
   65,
   65,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "merchantSalesRatio", "operator": "GT", "value": "5"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1653,7 +1653,7 @@ VALUES (
   80,
   80,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "terminalSuspicious", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1671,7 +1671,7 @@ VALUES (
   75,
   75,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "posEntryMode", "operator": "EQ", "value": "80"}, {"field": "cardHasChip", "operator": "EQ", "value": "true"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1685,7 +1685,7 @@ VALUES (
   60,
   60,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "posEntryMode", "operator": "IN", "value": ["07", "91"]}, {"field": "transactionAmount", "operator": "GT", "value": "200"}, {"field": "pinVerified", "operator": "EQ", "value": "false"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1699,7 +1699,7 @@ VALUES (
   70,
   70,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "posEntryMode", "operator": "IN", "value": ["07", "91"]}, {"field": "velocity", "operator": "VELOCITY_COUNT_GT", "value": "PAN,60,5"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
@@ -1713,7 +1713,7 @@ VALUES (
   55,
   55,
   true,
-  'SUSPEITA_DE_FRAUDE',
+  'SUSPICIOUS',
   '[{"field": "posEntryMode", "operator": "IN", "value": ["05", "07", "90", "91"]}, {"field": "merchantCountryCode", "operator": "FIELD_NEQ", "value": "cardholderCountryCode"}]',
   'AND'
 ) ON CONFLICT (rule_name) DO NOTHING;
