@@ -59,7 +59,8 @@ class RuleEngineServiceTest {
   private final ImpossibleTravelService impossibleTravelService =
       Mockito.mock(ImpossibleTravelService.class);
   private final GeoService geoService = Mockito.mock(GeoService.class);
-  private final RedisVelocityService redisVelocityService = Mockito.mock(RedisVelocityService.class);
+  private final RedisVelocityService redisVelocityService =
+      Mockito.mock(RedisVelocityService.class);
 
   private final RuleEngineService service =
       new RuleEngineService(

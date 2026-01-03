@@ -9,17 +9,19 @@ import org.springframework.context.annotation.Configuration;
  * OpenTelemetry configuration for distributed tracing.
  *
  * <p>This configuration enables:
+ *
  * <ul>
- *   <li>Automatic HTTP request tracing via Micrometer</li>
- *   <li>@Observed annotation support for custom spans</li>
- *   <li>W3C trace context propagation</li>
- *   <li>OTLP export to observability backends (Jaeger, Tempo, etc.)</li>
+ *   <li>Automatic HTTP request tracing via Micrometer
+ *   <li>@Observed annotation support for custom spans
+ *   <li>W3C trace context propagation
+ *   <li>OTLP export to observability backends (Jaeger, Tempo, etc.)
  * </ul>
  *
  * <p>Environment variables:
+ *
  * <ul>
- *   <li>OTEL_EXPORTER_OTLP_ENDPOINT: OTLP collector endpoint (default: http://localhost:4318)</li>
- *   <li>OTEL_SAMPLING_PROBABILITY: Sampling rate 0.0-1.0 (default: 1.0)</li>
+ *   <li>OTEL_EXPORTER_OTLP_ENDPOINT: OTLP collector endpoint (default: http://localhost:4318)
+ *   <li>OTEL_SAMPLING_PROBABILITY: Sampling rate 0.0-1.0 (default: 1.0)
  * </ul>
  *
  * @see <a href="https://opentelemetry.io/">OpenTelemetry</a>
@@ -31,6 +33,7 @@ public class OpenTelemetryConfig {
    * Enables the @Observed annotation for creating custom spans.
    *
    * <p>Usage example:
+   *
    * <pre>
    * {@literal @}Observed(name = "process-transaction", contextualName = "processTransaction")
    * public TransactionResult processTransaction(Transaction tx) {

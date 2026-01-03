@@ -74,16 +74,16 @@ public class RuleConfiguration {
   @Enumerated(EnumType.STRING)
   private LogicOperator logicOperator;
 
-  /** Shadow mode: DISABLED (active), SHADOW (evaluate but don't act), CANARY (percentage rollout) */
+  /**
+   * Shadow mode: DISABLED (active), SHADOW (evaluate but don't act), CANARY (percentage rollout)
+   */
   @Column(length = 20)
   @Enumerated(EnumType.STRING)
   @Builder.Default
   private ShadowMode shadowMode = ShadowMode.DISABLED;
 
   /** Percentage of traffic to evaluate when in CANARY mode (0-100) */
-  @Column
-  @Builder.Default
-  private Integer canaryPercentage = 0;
+  @Column @Builder.Default private Integer canaryPercentage = 0;
 
   /** Versão da configuração (usado para optimistic locking) */
   @Version

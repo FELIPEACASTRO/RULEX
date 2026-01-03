@@ -50,8 +50,8 @@ public class PayloadHashService {
   }
 
   /**
-   * Creates a canonical ObjectMapper using the non-deprecated JsonMapper.builder() API.
-   * Uses double-checked locking for thread-safe lazy initialization.
+   * Creates a canonical ObjectMapper using the non-deprecated JsonMapper.builder() API. Uses
+   * double-checked locking for thread-safe lazy initialization.
    */
   private ObjectMapper canonicalMapper() {
     ObjectMapper result = cachedCanonicalMapper;
@@ -59,12 +59,13 @@ public class PayloadHashService {
       synchronized (this) {
         result = cachedCanonicalMapper;
         if (result == null) {
-          result = JsonMapper.builder()
-              .serializationInclusion(JsonInclude.Include.NON_NULL)
-              .disable(SerializationFeature.INDENT_OUTPUT)
-              .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-              .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-              .build();
+          result =
+              JsonMapper.builder()
+                  .serializationInclusion(JsonInclude.Include.NON_NULL)
+                  .disable(SerializationFeature.INDENT_OUTPUT)
+                  .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+                  .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                  .build();
           cachedCanonicalMapper = result;
         }
       }

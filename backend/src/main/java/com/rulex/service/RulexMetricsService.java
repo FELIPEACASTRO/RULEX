@@ -86,7 +86,9 @@ public class RulexMetricsService {
         .tag("status", "inactive")
         .register(meterRegistry);
 
-    Gauge.builder(METRIC_PREFIX + "fraud_blocked_amount_total", () -> fraudBlockedAmountCents.get() / 100.0)
+    Gauge.builder(
+            METRIC_PREFIX + "fraud_blocked_amount_total",
+            () -> fraudBlockedAmountCents.get() / 100.0)
         .description("Total amount blocked due to fraud in BRL")
         .tag("application", "rulex-api")
         .register(meterRegistry);

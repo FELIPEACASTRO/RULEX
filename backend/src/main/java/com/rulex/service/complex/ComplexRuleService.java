@@ -33,7 +33,8 @@ public class ComplexRuleService {
     log.info("Salvando grupo de condições para ruleVersionId: {}", ruleVersionId);
 
     // Validar regra antes de persistir
-    RuleValidationService.ValidationResult validation = validationService.validateConditionGroup(dto);
+    RuleValidationService.ValidationResult validation =
+        validationService.validateConditionGroup(dto);
     if (!validation.valid()) {
       String errorMsg = String.join("; ", validation.errors());
       log.error("Validação de regra falhou: {}", errorMsg);

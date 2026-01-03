@@ -7,7 +7,6 @@ import com.rulex.dto.RuleConditionDTO;
 import com.rulex.dto.RuleHitDTO;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
-import com.rulex.service.DerivedContext;
 import com.rulex.dto.TriggeredRuleDTO;
 import com.rulex.entity.RuleConfiguration;
 import com.rulex.entity.Transaction;
@@ -16,8 +15,8 @@ import com.rulex.entity.TransactionRawStore;
 import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
-import com.rulex.util.PanMaskingUtil;
 import com.rulex.util.PanHashUtil;
+import com.rulex.util.PanMaskingUtil;
 import com.rulex.v31.execlog.ExecutionEventType;
 import com.rulex.v31.execlog.RuleExecutionLogService;
 import java.beans.PropertyDescriptor;
@@ -509,7 +508,8 @@ public class RuleEngineService {
 
     // V3.2: Derivar tipos ricos do payload sem alterar o payload original
     DerivedContext derivedContext = DerivedContext.from(request);
-    log.debug("DerivedContext criado: transactionTs={}, bin={}, maskedPan={}",
+    log.debug(
+        "DerivedContext criado: transactionTs={}, bin={}, maskedPan={}",
         derivedContext.getTransactionTimestamp(),
         derivedContext.getBin(),
         derivedContext.getMaskedPan());
@@ -522,7 +522,7 @@ public class RuleEngineService {
 
     // V4.0: cheap deterministic pre-checks (short-circuit on FRAUD)
     TransactionDecision.TransactionClassification preClassification =
-      runPreChecks(request, derivedContext, triggeredRules, scoreDetails);
+        runPreChecks(request, derivedContext, triggeredRules, scoreDetails);
     maxByRule = maxSeverity(maxByRule, preClassification);
     if (maxByRule == TransactionDecision.TransactionClassification.FRAUD) {
       result.setRiskScore(100);
@@ -634,7 +634,8 @@ public class RuleEngineService {
             String action =
                 rule.getClassification() == TransactionDecision.TransactionClassification.FRAUD
                     ? "BLOCK"
-                    : (rule.getClassification() == TransactionDecision.TransactionClassification.SUSPICIOUS
+                    : (rule.getClassification()
+                            == TransactionDecision.TransactionClassification.SUSPICIOUS
                         ? "FLAG"
                         : "ALLOW");
             return ShadowModeService.RuleEvaluationResult.triggered(score, action, rm.detail);
@@ -694,8 +695,7 @@ public class RuleEngineService {
                     .contribution(100)
                     .detail("MerchantId encontrado em blacklist")
                     .build());
-            scoreDetails.put(
-                "BLOCKLIST_MERCHANT", Map.of("triggered", true, "source", r.source()));
+            scoreDetails.put("BLOCKLIST_MERCHANT", Map.of("triggered", true, "source", r.source()));
             return TransactionDecision.TransactionClassification.FRAUD;
           }
         }
@@ -714,8 +714,7 @@ public class RuleEngineService {
                     .contribution(100)
                     .detail("CustomerId encontrado em blacklist")
                     .build());
-            scoreDetails.put(
-                "BLOCKLIST_CUSTOMER", Map.of("triggered", true, "source", r.source()));
+            scoreDetails.put("BLOCKLIST_CUSTOMER", Map.of("triggered", true, "source", r.source()));
             return TransactionDecision.TransactionClassification.FRAUD;
           }
         }
@@ -772,9 +771,7 @@ public class RuleEngineService {
                     .detail(
                         String.format(
                             "Viagem impossível: %.0fkm em %.0fmin (%.0f km/h)",
-                            analysis.distanceKm(),
-                            analysis.elapsedMinutes(),
-                            analysis.speedKmh()))
+                            analysis.distanceKm(), analysis.elapsedMinutes(), analysis.speedKmh()))
                     .build());
             scoreDetails.put(
                 "IMPOSSIBLE_TRAVEL",
@@ -1568,7 +1565,9 @@ public class RuleEngineService {
       }
 
       RuleConfiguration.LogicOperator op =
-          rule.getLogicOperator() != null ? rule.getLogicOperator() : RuleConfiguration.LogicOperator.AND;
+          rule.getLogicOperator() != null
+              ? rule.getLogicOperator()
+              : RuleConfiguration.LogicOperator.AND;
 
       Set<String> required = new HashSet<>();
       boolean hasIsNull = false;
@@ -1608,7 +1607,8 @@ public class RuleEngineService {
       return Set.of(unary.group(2));
     }
 
-    java.util.regex.Matcher absExpr = java.util.regex.Pattern.compile("^ABS\\((.+)\\)$").matcher(raw);
+    java.util.regex.Matcher absExpr =
+        java.util.regex.Pattern.compile("^ABS\\((.+)\\)$").matcher(raw);
     if (absExpr.matches()) {
       return extractDepsFromNumericExpr(absExpr.group(1));
     }
@@ -1621,7 +1621,8 @@ public class RuleEngineService {
     }
 
     java.util.regex.Matcher coalesce =
-        java.util.regex.Pattern.compile("^COALESCE\\(([A-Za-z0-9_]+)\\s*,\\s*(.+)\\)$").matcher(raw);
+        java.util.regex.Pattern.compile("^COALESCE\\(([A-Za-z0-9_]+)\\s*,\\s*(.+)\\)$")
+            .matcher(raw);
     if (coalesce.matches()) {
       return Set.of(coalesce.group(1));
     }

@@ -91,7 +91,11 @@ public class RateLimitingFilter extends OncePerRequestFilter {
   private Bucket createNewBucket(String key) {
     // Token bucket with configurable rate limit using the builder API
     return Bucket.builder()
-        .addLimit(limit -> limit.capacity(requestsPerMinute).refillGreedy(requestsPerMinute, Duration.ofMinutes(1)))
+        .addLimit(
+            limit ->
+                limit
+                    .capacity(requestsPerMinute)
+                    .refillGreedy(requestsPerMinute, Duration.ofMinutes(1)))
         .build();
   }
 

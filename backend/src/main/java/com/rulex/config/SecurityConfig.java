@@ -84,17 +84,16 @@ public class SecurityConfig {
     // Set the name of the attribute to use for the CSRF token
     requestHandler.setCsrfRequestAttributeName("_csrf");
 
-    http.csrf(csrf -> csrf
-        .csrfTokenRepository(csrfTokenRepository)
-        .csrfTokenRequestHandler(requestHandler)
-        // Ignore CSRF for public analyze endpoints (stateless transaction analysis)
-        .ignoringRequestMatchers(
-            "/transactions/analyze",
-            "/transactions/analyze-advanced",
-            "/evaluate",
-            "/actuator/**"
-        )
-    );
+    http.csrf(
+        csrf ->
+            csrf.csrfTokenRepository(csrfTokenRepository)
+                .csrfTokenRequestHandler(requestHandler)
+                // Ignore CSRF for public analyze endpoints (stateless transaction analysis)
+                .ignoringRequestMatchers(
+                    "/transactions/analyze",
+                    "/transactions/analyze-advanced",
+                    "/evaluate",
+                    "/actuator/**"));
 
     http.authorizeHttpRequests(
             auth ->

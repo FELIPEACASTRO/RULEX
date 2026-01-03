@@ -103,6 +103,7 @@ public class AstValidatorTest {
             }
             """);
     var r = v.validate(root);
-    assertTrue(r.isValid(), "REGEX should be accepted as alias for MATCHES_REGEX: " + r.getErrors());
+    assertTrue(
+        r.isValid(), "REGEX should be accepted as alias for MATCHES_REGEX: " + r.getErrors());
   }
 }

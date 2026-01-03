@@ -9,22 +9,16 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 /**
  * Configuração de execução assíncrona para operações I/O-bound.
  *
- * <p>Define pools de threads otimizados para:
- * - Operações de enriquecimento (BIN lookup, MCC lookup)
- * - Operações de geolocalização
- * - Operações de auditoria
+ * <p>Define pools de threads otimizados para: - Operações de enriquecimento (BIN lookup, MCC
+ * lookup) - Operações de geolocalização - Operações de auditoria
  *
- * <p>Com virtual threads habilitadas no Spring Boot 3.x, o executor
- * padrão já utiliza virtual threads. Esta configuração fornece
- * executores nomeados para melhor observabilidade.
+ * <p>Com virtual threads habilitadas no Spring Boot 3.x, o executor padrão já utiliza virtual
+ * threads. Esta configuração fornece executores nomeados para melhor observabilidade.
  */
 @Configuration
 public class AsyncConfig implements AsyncConfigurer {
 
-  /**
-   * Executor padrão para operações assíncronas.
-   * Usado quando @Async não especifica um executor.
-   */
+  /** Executor padrão para operações assíncronas. Usado quando @Async não especifica um executor. */
   @Override
   @Bean("taskExecutor")
   public Executor getAsyncExecutor() {
@@ -39,10 +33,7 @@ public class AsyncConfig implements AsyncConfigurer {
     return executor;
   }
 
-  /**
-   * Executor dedicado para operações de enriquecimento.
-   * BIN lookup, MCC lookup, etc.
-   */
+  /** Executor dedicado para operações de enriquecimento. BIN lookup, MCC lookup, etc. */
   @Bean("enrichmentExecutor")
   public Executor enrichmentExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -57,8 +48,8 @@ public class AsyncConfig implements AsyncConfigurer {
   }
 
   /**
-   * Executor dedicado para operações de geolocalização.
-   * Cálculos de distância, verificação de polígonos, etc.
+   * Executor dedicado para operações de geolocalização. Cálculos de distância, verificação de
+   * polígonos, etc.
    */
   @Bean("geoExecutor")
   public Executor geoExecutor() {
@@ -73,10 +64,7 @@ public class AsyncConfig implements AsyncConfigurer {
     return executor;
   }
 
-  /**
-   * Executor dedicado para operações de auditoria.
-   * Logging assíncrono de eventos de auditoria.
-   */
+  /** Executor dedicado para operações de auditoria. Logging assíncrono de eventos de auditoria. */
   @Bean("auditExecutor")
   public Executor auditExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

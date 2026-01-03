@@ -25,8 +25,7 @@ public interface AccessLogRepository extends JpaRepository<AccessLog, Long> {
   Page<AccessLog> findBySourceIp(String sourceIp, Pageable pageable);
 
   /** Find access logs within a time range */
-  Page<AccessLog> findByTimestampBetween(
-      LocalDateTime start, LocalDateTime end, Pageable pageable);
+  Page<AccessLog> findByTimestampBetween(LocalDateTime start, LocalDateTime end, Pageable pageable);
 
   /** Find failed login attempts for a username within a time window */
   @Query(

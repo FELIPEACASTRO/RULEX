@@ -48,8 +48,7 @@ public class AccessLog {
   private String requestUri;
 
   /** HTTP response status code */
-  @Column
-  private Integer responseStatus;
+  @Column private Integer responseStatus;
 
   /** Source IP address */
   @Column(name = "source_ip", length = 45)

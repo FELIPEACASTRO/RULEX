@@ -72,11 +72,12 @@ class VelocityServiceTest {
     @Test
     @DisplayName("Deve retornar stats vazias para PAN null")
     void shouldReturnEmptyStatsForNullPan() {
-      TransactionRequest request = TransactionRequest.builder()
-          .externalTransactionId("TXN-001")
-          .customerIdFromHeader("CUST-001")
-          .pan(null)
-          .build();
+      TransactionRequest request =
+          TransactionRequest.builder()
+              .externalTransactionId("TXN-001")
+              .customerIdFromHeader("CUST-001")
+              .pan(null)
+              .build();
 
       VelocityStats stats = velocityService.getStats(request, KeyType.PAN, TimeWindow.HOUR_1);
 
@@ -87,11 +88,12 @@ class VelocityServiceTest {
     @Test
     @DisplayName("Deve retornar stats vazias para PAN vazio")
     void shouldReturnEmptyStatsForBlankPan() {
-      TransactionRequest request = TransactionRequest.builder()
-          .externalTransactionId("TXN-001")
-          .customerIdFromHeader("CUST-001")
-          .pan("  ")
-          .build();
+      TransactionRequest request =
+          TransactionRequest.builder()
+              .externalTransactionId("TXN-001")
+              .customerIdFromHeader("CUST-001")
+              .pan("  ")
+              .build();
 
       VelocityStats stats = velocityService.getStats(request, KeyType.PAN, TimeWindow.HOUR_1);
 
@@ -111,11 +113,13 @@ class VelocityServiceTest {
           .thenReturn(BigDecimal.valueOf(500.00));
       when(logRepository.avgAmountByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(BigDecimal.valueOf(100.00));
-      when(logRepository.countDistinctMerchantsByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctMerchantsByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(3L);
       when(logRepository.countDistinctMccsByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(2L);
-      when(logRepository.countDistinctCountriesByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctCountriesByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(1L);
       when(logRepository.countFraudByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
@@ -146,11 +150,13 @@ class VelocityServiceTest {
           .thenReturn(BigDecimal.valueOf(500.00));
       when(logRepository.avgAmountByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(BigDecimal.valueOf(100.00));
-      when(logRepository.countDistinctMerchantsByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctMerchantsByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(3L);
       when(logRepository.countDistinctMccsByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(2L);
-      when(logRepository.countDistinctCountriesByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctCountriesByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(1L);
       when(logRepository.countFraudByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
@@ -177,7 +183,8 @@ class VelocityServiceTest {
       when(logRepository.sumAmountByCustomerIdSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(BigDecimal.valueOf(1000.00));
 
-      VelocityStats stats = velocityService.getStats(request, KeyType.CUSTOMER_ID, TimeWindow.HOUR_1);
+      VelocityStats stats =
+          velocityService.getStats(request, KeyType.CUSTOMER_ID, TimeWindow.HOUR_1);
 
       assertThat(stats).isNotNull();
       assertThat(stats.getTransactionCount()).isEqualTo(10);
@@ -201,17 +208,20 @@ class VelocityServiceTest {
           .thenReturn(BigDecimal.ZERO);
       when(logRepository.avgAmountByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(BigDecimal.ZERO);
-      when(logRepository.countDistinctMerchantsByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctMerchantsByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countDistinctMccsByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
-      when(logRepository.countDistinctCountriesByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctCountriesByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countFraudByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
 
-      BigDecimal count = velocityService.getAggregation(
-          request, KeyType.PAN, TimeWindow.HOUR_1, AggregationType.COUNT);
+      BigDecimal count =
+          velocityService.getAggregation(
+              request, KeyType.PAN, TimeWindow.HOUR_1, AggregationType.COUNT);
 
       assertThat(count).isEqualByComparingTo(BigDecimal.valueOf(7));
     }
@@ -227,17 +237,20 @@ class VelocityServiceTest {
           .thenReturn(BigDecimal.valueOf(750.50));
       when(logRepository.avgAmountByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(BigDecimal.valueOf(250.17));
-      when(logRepository.countDistinctMerchantsByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctMerchantsByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countDistinctMccsByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
-      when(logRepository.countDistinctCountriesByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctCountriesByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countFraudByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
 
-      BigDecimal sum = velocityService.getAggregation(
-          request, KeyType.PAN, TimeWindow.HOUR_6, AggregationType.SUM);
+      BigDecimal sum =
+          velocityService.getAggregation(
+              request, KeyType.PAN, TimeWindow.HOUR_6, AggregationType.SUM);
 
       assertThat(sum).isEqualByComparingTo(BigDecimal.valueOf(750.50));
     }
@@ -253,17 +266,20 @@ class VelocityServiceTest {
           .thenReturn(BigDecimal.ZERO);
       when(logRepository.avgAmountByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(BigDecimal.ZERO);
-      when(logRepository.countDistinctMerchantsByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctMerchantsByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(4L);
       when(logRepository.countDistinctMccsByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
-      when(logRepository.countDistinctCountriesByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctCountriesByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countFraudByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
 
-      BigDecimal distinctMerchants = velocityService.getAggregation(
-          request, KeyType.PAN, TimeWindow.HOUR_24, AggregationType.DISTINCT_MERCHANTS);
+      BigDecimal distinctMerchants =
+          velocityService.getAggregation(
+              request, KeyType.PAN, TimeWindow.HOUR_24, AggregationType.DISTINCT_MERCHANTS);
 
       assertThat(distinctMerchants).isEqualByComparingTo(BigDecimal.valueOf(4));
     }
@@ -284,10 +300,11 @@ class VelocityServiceTest {
     @Test
     @DisplayName("Não deve logar transação sem externalTransactionId")
     void shouldNotLogTransactionWithoutExternalId() {
-      TransactionRequest request = TransactionRequest.builder()
-          .customerIdFromHeader("CUST-001")
-          .pan("4111111111111111")
-          .build();
+      TransactionRequest request =
+          TransactionRequest.builder()
+              .customerIdFromHeader("CUST-001")
+              .pan("4111111111111111")
+              .build();
 
       velocityService.logTransaction(request, "APPROVED", 0);
 
@@ -312,12 +329,11 @@ class VelocityServiceTest {
     void shouldLogNewTransactionCorrectly() {
       TransactionRequest request = createValidRequest();
 
-      when(logRepository.findByExternalTransactionId("TXN-001"))
-          .thenReturn(Optional.empty());
+      when(logRepository.findByExternalTransactionId("TXN-001")).thenReturn(Optional.empty());
 
       velocityService.logTransaction(request, "SUSPICIOUS", 75);
 
-      ArgumentCaptor<VelocityTransactionLog> captor = 
+      ArgumentCaptor<VelocityTransactionLog> captor =
           ArgumentCaptor.forClass(VelocityTransactionLog.class);
       verify(logRepository).save(captor.capture());
 
@@ -350,11 +366,13 @@ class VelocityServiceTest {
           .thenReturn(BigDecimal.ZERO);
       when(logRepository.avgAmountByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(BigDecimal.ZERO);
-      when(logRepository.countDistinctMerchantsByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctMerchantsByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countDistinctMccsByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
-      when(logRepository.countDistinctCountriesByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctCountriesByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countFraudByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
@@ -375,11 +393,13 @@ class VelocityServiceTest {
           .thenReturn(BigDecimal.valueOf(2500.00));
       when(logRepository.avgAmountByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(BigDecimal.valueOf(500.00));
-      when(logRepository.countDistinctMerchantsByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctMerchantsByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countDistinctMccsByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
-      when(logRepository.countDistinctCountriesByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctCountriesByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countFraudByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
@@ -400,11 +420,13 @@ class VelocityServiceTest {
           .thenReturn(BigDecimal.ZERO);
       when(logRepository.avgAmountByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(BigDecimal.ZERO);
-      when(logRepository.countDistinctMerchantsByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctMerchantsByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countDistinctMccsByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
-      when(logRepository.countDistinctCountriesByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctCountriesByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countFraudByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
@@ -425,11 +447,13 @@ class VelocityServiceTest {
           .thenReturn(BigDecimal.ZERO);
       when(logRepository.avgAmountByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(BigDecimal.ZERO);
-      when(logRepository.countDistinctMerchantsByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctMerchantsByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countDistinctMccsByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
-      when(logRepository.countDistinctCountriesByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctCountriesByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countFraudByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
@@ -456,11 +480,13 @@ class VelocityServiceTest {
           .thenReturn(BigDecimal.ZERO);
       when(logRepository.avgAmountByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(BigDecimal.ZERO);
-      when(logRepository.countDistinctMerchantsByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctMerchantsByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countDistinctMccsByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
-      when(logRepository.countDistinctCountriesByPanHashSince(anyString(), any(OffsetDateTime.class)))
+      when(logRepository.countDistinctCountriesByPanHashSince(
+              anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);
       when(logRepository.countFraudByPanHashSince(anyString(), any(OffsetDateTime.class)))
           .thenReturn(0L);

@@ -539,8 +539,8 @@ public class ComplexRuleEvaluator {
   // ========== Métodos de Geolocalização ==========
 
   /**
-   * Avalia GEO_DISTANCE_LT: distância menor que threshold.
-   * Formato do valor: "lat,lon,distanceKm" (ex: "-23.55,-46.63,100")
+   * Avalia GEO_DISTANCE_LT: distância menor que threshold. Formato do valor: "lat,lon,distanceKm"
+   * (ex: "-23.55,-46.63,100")
    */
   private boolean evaluateGeoDistanceLt(RuleCondition condition, EvaluationContext context) {
     if (context.getTransactionRequest() == null) {
@@ -559,8 +559,9 @@ public class ComplexRuleEvaluator {
       double targetLon = Double.parseDouble(parts[1].trim());
       double thresholdKm = Double.parseDouble(parts[2].trim());
 
-      GeoService.GeoResult result = geoService.evaluateDistanceLessThan(
-          context.getTransactionRequest(), targetLat, targetLon, thresholdKm);
+      GeoService.GeoResult result =
+          geoService.evaluateDistanceLessThan(
+              context.getTransactionRequest(), targetLat, targetLon, thresholdKm);
 
       if (!result.isSuccess()) {
         log.warn("GEO_DISTANCE_LT falhou: {}", result.getErrorMessage());
@@ -575,8 +576,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * Avalia GEO_DISTANCE_GT: distância maior que threshold.
-   * Formato do valor: "lat,lon,distanceKm" (ex: "-23.55,-46.63,100")
+   * Avalia GEO_DISTANCE_GT: distância maior que threshold. Formato do valor: "lat,lon,distanceKm"
+   * (ex: "-23.55,-46.63,100")
    */
   private boolean evaluateGeoDistanceGt(RuleCondition condition, EvaluationContext context) {
     if (context.getTransactionRequest() == null) {
@@ -595,8 +596,9 @@ public class ComplexRuleEvaluator {
       double targetLon = Double.parseDouble(parts[1].trim());
       double thresholdKm = Double.parseDouble(parts[2].trim());
 
-      GeoService.GeoResult result = geoService.evaluateDistanceGreaterThan(
-          context.getTransactionRequest(), targetLat, targetLon, thresholdKm);
+      GeoService.GeoResult result =
+          geoService.evaluateDistanceGreaterThan(
+              context.getTransactionRequest(), targetLat, targetLon, thresholdKm);
 
       if (!result.isSuccess()) {
         log.warn("GEO_DISTANCE_GT falhou: {}", result.getErrorMessage());
@@ -611,8 +613,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * Avalia GEO_IN_POLYGON: ponto dentro de polígono.
-   * Formato do valor: nome do polígono (ex: "BRASIL", "SAO_PAULO_ESTADO")
+   * Avalia GEO_IN_POLYGON: ponto dentro de polígono. Formato do valor: nome do polígono (ex:
+   * "BRASIL", "SAO_PAULO_ESTADO")
    */
   private boolean evaluateGeoInPolygon(RuleCondition condition, EvaluationContext context) {
     if (context.getTransactionRequest() == null) {
@@ -627,8 +629,8 @@ public class ComplexRuleEvaluator {
         return false;
       }
 
-      GeoService.GeoResult result = geoService.evaluateInPolygon(
-          context.getTransactionRequest(), polygonName.trim());
+      GeoService.GeoResult result =
+          geoService.evaluateInPolygon(context.getTransactionRequest(), polygonName.trim());
 
       if (!result.isSuccess()) {
         log.warn("GEO_IN_POLYGON falhou: {}", result.getErrorMessage());
@@ -645,10 +647,11 @@ public class ComplexRuleEvaluator {
   // ========== Métodos de Velocity ==========
 
   /**
-   * Avalia VELOCITY_COUNT: contagem de transações em janela temporal.
-   * Formato do valor: "keyType,windowMinutes,threshold" (ex: "PAN,60,5")
+   * Avalia VELOCITY_COUNT: contagem de transações em janela temporal. Formato do valor:
+   * "keyType,windowMinutes,threshold" (ex: "PAN,60,5")
    */
-  private boolean evaluateVelocityCount(RuleCondition condition, EvaluationContext context, boolean greaterThan) {
+  private boolean evaluateVelocityCount(
+      RuleCondition condition, EvaluationContext context, boolean greaterThan) {
     if (context.getTransactionRequest() == null) {
       log.warn("TransactionRequest não disponível para VELOCITY_COUNT");
       return false;
@@ -661,12 +664,13 @@ public class ComplexRuleEvaluator {
         return false;
       }
 
-      VelocityService.KeyType keyType = VelocityService.KeyType.valueOf(parts[0].trim().toUpperCase());
+      VelocityService.KeyType keyType =
+          VelocityService.KeyType.valueOf(parts[0].trim().toUpperCase());
       VelocityService.TimeWindow window = parseTimeWindow(Integer.parseInt(parts[1].trim()));
       long threshold = Long.parseLong(parts[2].trim());
 
-      VelocityService.VelocityStats stats = velocityService.getStats(
-          context.getTransactionRequest(), keyType, window);
+      VelocityService.VelocityStats stats =
+          velocityService.getStats(context.getTransactionRequest(), keyType, window);
 
       return greaterThan
           ? stats.getTransactionCount() > threshold
@@ -678,10 +682,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * Avalia VELOCITY_SUM: soma de valores em janela temporal.
-   * Formato do valor: "keyType,windowMinutes,threshold" (ex: "PAN,1440,10000")
+   * Avalia VELOCITY_SUM: soma de valores em janela temporal. Formato do valor:
+   * "keyType,windowMinutes,threshold" (ex: "PAN,1440,10000")
    */
-  private boolean evaluateVelocitySum(RuleCondition condition, EvaluationContext context, boolean greaterThan) {
+  private boolean evaluateVelocitySum(
+      RuleCondition condition, EvaluationContext context, boolean greaterThan) {
     if (context.getTransactionRequest() == null) {
       log.warn("TransactionRequest não disponível para VELOCITY_SUM");
       return false;
@@ -694,12 +699,13 @@ public class ComplexRuleEvaluator {
         return false;
       }
 
-      VelocityService.KeyType keyType = VelocityService.KeyType.valueOf(parts[0].trim().toUpperCase());
+      VelocityService.KeyType keyType =
+          VelocityService.KeyType.valueOf(parts[0].trim().toUpperCase());
       VelocityService.TimeWindow window = parseTimeWindow(Integer.parseInt(parts[1].trim()));
       BigDecimal threshold = new BigDecimal(parts[2].trim());
 
-      VelocityService.VelocityStats stats = velocityService.getStats(
-          context.getTransactionRequest(), keyType, window);
+      VelocityService.VelocityStats stats =
+          velocityService.getStats(context.getTransactionRequest(), keyType, window);
 
       return greaterThan
           ? stats.getTotalAmount().compareTo(threshold) > 0
@@ -711,10 +717,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * Avalia VELOCITY_AVG: média de valores em janela temporal.
-   * Formato do valor: "keyType,windowMinutes,threshold" (ex: "PAN,1440,500")
+   * Avalia VELOCITY_AVG: média de valores em janela temporal. Formato do valor:
+   * "keyType,windowMinutes,threshold" (ex: "PAN,1440,500")
    */
-  private boolean evaluateVelocityAvg(RuleCondition condition, EvaluationContext context, boolean greaterThan) {
+  private boolean evaluateVelocityAvg(
+      RuleCondition condition, EvaluationContext context, boolean greaterThan) {
     if (context.getTransactionRequest() == null) {
       log.warn("TransactionRequest não disponível para VELOCITY_AVG");
       return false;
@@ -727,12 +734,13 @@ public class ComplexRuleEvaluator {
         return false;
       }
 
-      VelocityService.KeyType keyType = VelocityService.KeyType.valueOf(parts[0].trim().toUpperCase());
+      VelocityService.KeyType keyType =
+          VelocityService.KeyType.valueOf(parts[0].trim().toUpperCase());
       VelocityService.TimeWindow window = parseTimeWindow(Integer.parseInt(parts[1].trim()));
       BigDecimal threshold = new BigDecimal(parts[2].trim());
 
-      VelocityService.VelocityStats stats = velocityService.getStats(
-          context.getTransactionRequest(), keyType, window);
+      VelocityService.VelocityStats stats =
+          velocityService.getStats(context.getTransactionRequest(), keyType, window);
 
       return greaterThan
           ? stats.getAvgAmount().compareTo(threshold) > 0
@@ -744,10 +752,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * Avalia VELOCITY_DISTINCT: contagem de valores distintos em janela temporal.
-   * Formato do valor: "keyType,windowMinutes,distinctType,threshold" (ex: "PAN,1440,MERCHANTS,3")
+   * Avalia VELOCITY_DISTINCT: contagem de valores distintos em janela temporal. Formato do valor:
+   * "keyType,windowMinutes,distinctType,threshold" (ex: "PAN,1440,MERCHANTS,3")
    */
-  private boolean evaluateVelocityDistinct(RuleCondition condition, EvaluationContext context, boolean greaterThan) {
+  private boolean evaluateVelocityDistinct(
+      RuleCondition condition, EvaluationContext context, boolean greaterThan) {
     if (context.getTransactionRequest() == null) {
       log.warn("TransactionRequest não disponível para VELOCITY_DISTINCT");
       return false;
@@ -756,24 +765,27 @@ public class ComplexRuleEvaluator {
     try {
       String[] parts = condition.getValueSingle().split(",");
       if (parts.length < 4) {
-        log.warn("Formato inválido para VELOCITY_DISTINCT. Esperado: keyType,windowMinutes,distinctType,threshold");
+        log.warn(
+            "Formato inválido para VELOCITY_DISTINCT. Esperado: keyType,windowMinutes,distinctType,threshold");
         return false;
       }
 
-      VelocityService.KeyType keyType = VelocityService.KeyType.valueOf(parts[0].trim().toUpperCase());
+      VelocityService.KeyType keyType =
+          VelocityService.KeyType.valueOf(parts[0].trim().toUpperCase());
       VelocityService.TimeWindow window = parseTimeWindow(Integer.parseInt(parts[1].trim()));
       String distinctType = parts[2].trim().toUpperCase();
       long threshold = Long.parseLong(parts[3].trim());
 
-      VelocityService.VelocityStats stats = velocityService.getStats(
-          context.getTransactionRequest(), keyType, window);
+      VelocityService.VelocityStats stats =
+          velocityService.getStats(context.getTransactionRequest(), keyType, window);
 
-      long distinctCount = switch (distinctType) {
-        case "MERCHANTS" -> stats.getDistinctMerchants();
-        case "MCCS" -> stats.getDistinctMccs();
-        case "COUNTRIES" -> stats.getDistinctCountries();
-        default -> 0;
-      };
+      long distinctCount =
+          switch (distinctType) {
+            case "MERCHANTS" -> stats.getDistinctMerchants();
+            case "MCCS" -> stats.getDistinctMccs();
+            case "COUNTRIES" -> stats.getDistinctCountries();
+            default -> 0;
+          };
 
       return greaterThan ? distinctCount > threshold : distinctCount < threshold;
     } catch (Exception e) {
@@ -782,9 +794,7 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * Converte minutos para TimeWindow mais próxima.
-   */
+  /** Converte minutos para TimeWindow mais próxima. */
   private VelocityService.TimeWindow parseTimeWindow(int minutes) {
     if (minutes <= 5) return VelocityService.TimeWindow.MINUTE_5;
     if (minutes <= 15) return VelocityService.TimeWindow.MINUTE_15;
