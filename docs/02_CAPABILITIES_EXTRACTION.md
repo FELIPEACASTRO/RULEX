@@ -1,10 +1,15 @@
 # RULEX - Extração de Capacidades Determinísticas
 
-**Versão:** 1.0.0  
-**Data:** 2025-01-03  
+**Versão:** 1.0.0
+**Data:** 2025-01-03
 **Status:** FASE 1 - EM PROGRESSO
 
 ---
+
+## Atualizações (2025-01-03 19:45)
+- Atualização com capacidades extraídas da navegação web
+- Adição de novas tipologias: Scams, Mules, ATO, Card Testing
+- Mapeamento de regras HAWK:AI e Verafin
 
 ## Atualizações (2025-01-03 19:00)
 - Criação inicial do documento
@@ -16,7 +21,7 @@
 
 Extrair capacidades de detecção de fraude de produtos de mercado e **traduzir para controles determinísticos** compatíveis com o RULEX.
 
-**Regra Absoluta**: 
+**Regra Absoluta**:
 - ❌ NÃO usar ML/AI
 - ✅ APENAS controles determinísticos (if/else, thresholds, velocity, listas, regex)
 
@@ -111,7 +116,7 @@ Extrair capacidades de detecção de fraude de produtos de mercado e **traduzir 
 
 ### 4.1 FICO Falcon
 - **Foco**: Velocity, behavioral patterns, card testing
-- **Controles Determinísticos**: 
+- **Controles Determinísticos**:
   - Frequency limits
   - Amount thresholds
   - Geographic rules
@@ -146,9 +151,92 @@ Extrair capacidades de detecção de fraude de produtos de mercado e **traduzir 
   - BIN-based rules
   - Velocity limits
 
+### 4.6 HAWK:AI (Navegado)
+- **Foco**: Transaction fraud, multi-rail support
+- **Controles Determinísticos**:
+  - Real-time detection (150ms)
+  - **Self-serve rule management** (similar ao RULEX)
+  - Round amount rules (structuring)
+  - ATM fraud rules
+  - Merchant fraud rules
+  - Sandbox testing
+  - Payment interdiction (block/hold/release)
+
+### 4.7 Verafin (Navegado)
+- **Foco**: Cross-channel fraud, consortium data
+- **Controles Determinísticos**:
+  - Cross-channel analysis
+  - Consortium data profiling
+  - Deposit fraud patterns
+  - Check fraud detection
+  - Wire fraud rules
+  - ACH fraud rules
+  - ATO indicators
+
+### 4.8 Kount (Navegado)
+- **Foco**: E-commerce fraud, card testing
+- **Controles Determinísticos**:
+  - Risk score calculation
+  - Policy/threshold evaluation
+  - Accept/Block/Challenge decisions
+  - Card testing detection
+
+### 4.9 Sift (Navegado)
+- **Foco**: Fintech fraud, CNP
+- **Controles Determinísticos**:
+  - CNP fraud detection
+  - Account takeover indicators
+  - Chargeback fraud patterns
+  - Payment fraud rules
+  - Policy abuse detection
+
+### 4.10 BioCatch (Navegado)
+- **Foco**: Behavioral, ATO, Mules
+- **Controles Determinísticos**:
+  - ATO detection patterns
+  - Mule account indicators
+  - Social engineering scam patterns
+  - **GAP**: Behavioral biometrics requer session data
+
 ---
 
-## 5. Gaps Identificados (PAYLOAD_IMUTAVEL)
+## 5. Novas Tipologias Identificadas (Web Research)
+
+### 5.1 Scams & Social Engineering
+| Tipologia | Indicadores Determinísticos | Implementável |
+|-----------|----------------------------|---------------|
+| APP Scam (Authorized Push Payment) | Novo beneficiário + valor alto + horário atípico | ✅ Parcial |
+| Romance Scam | Múltiplas transferências para mesmo destino | ⚠️ Requer histórico |
+| Investment Scam | MCC específico + valor alto + recorrência | ✅ Sim |
+| Impersonation | Alteração súbita de padrão | ⚠️ Requer velocity |
+
+### 5.2 Mule Account Indicators
+| Indicador | Controle RULEX | Implementável |
+|-----------|----------------|---------------|
+| Rapid fund movement | VELOCITY_SUM_GT em janela curta | ✅ Sim |
+| Multiple incoming + single outgoing | Velocity de entrada vs saída | ⚠️ Parcial |
+| New account + high volume | Idade da conta + velocity | ⚠️ Requer campo |
+| Round amounts | MOD_EQ | ✅ Sim |
+
+### 5.3 Account Takeover (ATO)
+| Indicador | Controle RULEX | Implementável |
+|-----------|----------------|---------------|
+| Device change | deviceId diferente | ❌ GAP |
+| Location change | merchantCountryCode/City diferente | ✅ Sim |
+| Time pattern change | transactionTime fora do padrão | ✅ Sim |
+| Multiple failed auth | consumerAuthenticationScore baixo | ✅ Sim |
+
+### 5.4 Card Testing / BIN Attack
+| Indicador | Controle RULEX | Implementável |
+|-----------|----------------|---------------|
+| High frequency, low value | VELOCITY_COUNT_GT + transactionAmount LT | ✅ Sim |
+| Sequential card numbers | Regex no PAN | ⚠️ Parcial |
+| Same merchant, multiple cards | VELOCITY por merchantId | ✅ Sim |
+| Declined followed by approved | Histórico de decisões | ⚠️ Parcial |
+
+---
+
+## 6. Gaps Identificados (PAYLOAD_IMUTAVEL)
 
 Capacidades que **NÃO PODEM** ser implementadas devido a campos ausentes:
 
