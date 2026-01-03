@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "created_at": "2025-01-03T20:00:00Z",
   "last_updated": "2025-01-03T20:00:00Z",
-  "branch": "feature/credit-rules-research-implementation",
+  "branch": "cursor/rulex-project-review-1c58",
   
   "scope": {
     "objective": "Pesquisar 22 URLs de datasets de crédito e transfer learning, criar 80+ regras duras, implementar no motor existente",
