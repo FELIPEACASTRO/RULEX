@@ -95,12 +95,7 @@ export function ComplexRuleBuilder({
 
   // Update rule when initialRule changes (e.g., when viewing a different rule)
   useEffect(() => {
-    console.log('ComplexRuleBuilder - initialRule:', initialRule);
-    console.log('ComplexRuleBuilder - rootConditionGroup:', initialRule?.rootConditionGroup);
-    const normalized = normalizeRule(initialRule);
-    console.log('ComplexRuleBuilder - normalized:', normalized);
-    console.log('ComplexRuleBuilder - normalized.rootConditionGroup:', normalized.rootConditionGroup);
-    setRule(normalized);
+    setRule(normalizeRule(initialRule));
     setIsDirty(false);
     setErrors({});
   }, [initialRule]);

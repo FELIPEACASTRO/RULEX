@@ -10,15 +10,31 @@ import org.springframework.stereotype.Component;
 @Component
 public class ComplexRuleMapper {
 
-  /** Converte ConditionGroupDTO para entidade */
+  /** Converte ConditionGroupDTO para entidade (para rule_versions) */
   public RuleConditionGroup toEntity(
       ConditionGroupDTO dto, java.util.UUID ruleVersionId, java.util.UUID parentGroupId) {
+    return toEntityInternal(dto, ruleVersionId, null, parentGroupId);
+  }
+
+  /** Converte ConditionGroupDTO para entidade (para complex_rules) */
+  public RuleConditionGroup toEntityForComplexRule(
+      ConditionGroupDTO dto, java.util.UUID complexRuleId, java.util.UUID parentGroupId) {
+    return toEntityInternal(dto, null, complexRuleId, parentGroupId);
+  }
+
+  /** Método interno para criar entidade com ruleVersionId ou complexRuleId */
+  private RuleConditionGroup toEntityInternal(
+      ConditionGroupDTO dto,
+      java.util.UUID ruleVersionId,
+      java.util.UUID complexRuleId,
+      java.util.UUID parentGroupId) {
     if (dto == null) return null;
 
     RuleConditionGroup group =
         RuleConditionGroup.builder()
             .id(dto.getId())
             .ruleVersionId(ruleVersionId)
+            .complexRuleId(complexRuleId)
             .parentGroupId(parentGroupId)
             .logicOperator(mapLogicOperator(dto.getLogicOperator()))
             .name(dto.getName())
@@ -46,7 +62,7 @@ public class ComplexRuleMapper {
         if (childDto.getPosition() == null) {
           childDto.setPosition(i);
         }
-        RuleConditionGroup child = toEntity(childDto, ruleVersionId, group.getId());
+        RuleConditionGroup child = toEntityInternal(childDto, ruleVersionId, complexRuleId, group.getId());
         group.getChildren().add(child);
       }
     }

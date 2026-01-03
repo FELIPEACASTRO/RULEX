@@ -263,9 +263,9 @@ public class ComplexRuleCrudService {
             .updatedAt(entity.getUpdatedAt())
             .build();
 
-    // Carregar grupo de condições
+    // Carregar grupo de condições (usando complex_rule_id, não rule_version_id)
     conditionGroupRepository
-        .findRootByRuleVersionId(entity.getId())
+        .findRootByComplexRuleId(entity.getId())
         .ifPresent(group -> dto.setRootConditionGroup(mapper.toDTO(group)));
 
     // Carregar expressões
@@ -323,8 +323,8 @@ public class ComplexRuleCrudService {
     }
   }
 
-  private void saveConditionGroup(UUID ruleVersionId, ConditionGroupDTO dto) {
-    RuleConditionGroup entity = mapper.toEntity(dto, ruleVersionId, null);
+  private void saveConditionGroup(UUID complexRuleId, ConditionGroupDTO dto) {
+    RuleConditionGroup entity = mapper.toEntityForComplexRule(dto, complexRuleId, null);
     RuleConditionGroup savedGroup = conditionGroupRepository.save(entity);
 
     // Salvar condições
@@ -341,13 +341,13 @@ public class ComplexRuleCrudService {
     var subGroups = dto.getSubGroups() != null ? dto.getSubGroups() : dto.getChildren();
     if (subGroups != null) {
       for (var subGroupDto : subGroups) {
-        saveSubGroup(ruleVersionId, savedGroup.getId(), subGroupDto);
+        saveSubGroup(complexRuleId, savedGroup.getId(), subGroupDto);
       }
     }
   }
 
-  private void saveSubGroup(UUID ruleVersionId, UUID parentId, ConditionGroupDTO dto) {
-    RuleConditionGroup entity = mapper.toEntity(dto, ruleVersionId, parentId);
+  private void saveSubGroup(UUID complexRuleId, UUID parentId, ConditionGroupDTO dto) {
+    RuleConditionGroup entity = mapper.toEntityForComplexRule(dto, complexRuleId, parentId);
     RuleConditionGroup savedGroup = conditionGroupRepository.save(entity);
 
     // Salvar condições
@@ -364,19 +364,19 @@ public class ComplexRuleCrudService {
     var subGroups = dto.getSubGroups() != null ? dto.getSubGroups() : dto.getChildren();
     if (subGroups != null) {
       for (var subGroupDto : subGroups) {
-        saveSubGroup(ruleVersionId, savedGroup.getId(), subGroupDto);
+        saveSubGroup(complexRuleId, savedGroup.getId(), subGroupDto);
       }
     }
   }
 
-  private void deleteConditionGroups(UUID ruleVersionId) {
+  private void deleteConditionGroups(UUID complexRuleId) {
     // Primeiro deletar condições
-    var groups = conditionGroupRepository.findByRuleVersionId(ruleVersionId);
+    var groups = conditionGroupRepository.findByComplexRuleId(complexRuleId);
     for (var group : groups) {
       conditionRepository.deleteByGroupId(group.getId());
     }
     // Depois deletar grupos
-    conditionGroupRepository.deleteByRuleVersionId(ruleVersionId);
+    conditionGroupRepository.deleteByComplexRuleId(complexRuleId);
   }
 
   private void saveExpressions(UUID ruleVersionId, List<ExpressionDTO> expressions) {
