@@ -456,7 +456,8 @@ export async function getMetricsByMerchant(
 // ========================================
 
 export async function listRules(): Promise<RuleConfiguration[]> {
-  const response = await apiRequest<any>("/api/rules");
+  // Buscar todas as regras com paginação grande para garantir que todas sejam retornadas
+  const response = await apiRequest<any>("/api/rules?page=0&size=1000");
   if (Array.isArray(response)) return response;
   if (response && Array.isArray(response.content)) return response.content;
   return [];
