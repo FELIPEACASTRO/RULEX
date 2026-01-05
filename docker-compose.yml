@@ -43,6 +43,9 @@ services:
       RULEX_ADMIN_PASSWORD: ${RULEX_ADMIN_PASSWORD:-rulex}
       RULEX_ANALYST_USERNAME: ${RULEX_ANALYST_USERNAME:-analyst}
       RULEX_ANALYST_PASSWORD: ${RULEX_ANALYST_PASSWORD:-rulex}
+      # Rate limiting (disable for load testing with RULEX_RATE_LIMIT_ENABLED=false)
+      RULEX_RATE_LIMIT_ENABLED: ${RULEX_RATE_LIMIT_ENABLED:-true}
+      RULEX_RATE_LIMIT_RPM: ${RULEX_RATE_LIMIT_RPM:-100}
       # Flyway is on by default; keep startup resilient.
     ports:
       - "8080:8080"

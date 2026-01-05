@@ -1,135 +1,162 @@
 # Performance Report — RULEX Engine
 
-## Hotspots Identificados (com Evidência)
+## SLO (Service Level Objectives)
 
-### 1. Avaliação de Condições — O(N × M)
+| Métrica | Target | Status |
+|---------|--------|--------|
+| TPS | >= 1000 | ❌ NÃO ATINGIDO (max ~84 TPS) |
+| p95 Latência | <= 200ms | ⚠️ Parcial (OK até 10 VUs) |
+| p99 Latência | <= 500ms | ✅ OK |
+| Taxa de Erro | < 1% | ⚠️ Parcial (OK até 10 VUs) |
+
+## Baseline Medido (2026-01-05)
+
+### Ambiente de Teste
+- **Máquina**: Docker local (8 vCPUs, 32GB RAM)
+- **Backend**: Spring Boot 3.5.9, Java 21
+- **Banco**: PostgreSQL 16-alpine (HikariCP pool=20)
+- **Cache**: Redis 7-alpine
+- **Ferramenta**: k6 v1.5.0
+
+### Resultados por Carga
+
+| VUs | TPS | p50 | p95 | p99 | Erro % | Status |
+|-----|-----|-----|-----|-----|--------|--------|
+| 5 | 47 | 92ms | 109ms | 126ms | 0% | ✅ OK |
+| 10 | 77 | 109ms | 170ms | 198ms | 0.98% | ✅ OK |
+| 20 | 84 | 201ms | 356ms | 385ms | 53% | ❌ FAIL |
+| 50 | ~10 | 5s | 5s | 5s | 100% | ❌ FAIL |
+
+### Gargalos Identificados
+
+#### 1. Pool de Conexões HikariCP (P0 - CRÍTICO)
 
 **Evidência:**
-- Arquivo: `backend/src/main/java/com/rulex/service/RuleEngineService.java`
-- Método: `analyzeTransaction()` → `evaluateRulesAgainstTransaction()`
-- Linhas: ~500-700
+```
+java.sql.SQLTransientConnectionException: RulexHikariPool - Connection is not available, 
+request timed out after 30000ms (total=20, active=20, idle=0, waiting=312)
+```
 
 **Problema:**
-Para cada transação, todas as regras habilitadas são avaliadas:
-```
-N transações × M regras = O(N × M) avaliações
-```
+- Pool configurado com apenas 20 conexões
+- Com 50 VUs, 312 requisições ficam esperando
+- Timeout de 30s causa falha em cascata
 
-**Mitigação Existente:**
-- `RuleOrderingService` (linha 61): ordena regras por hit-rate para short-circuit
-- `CandidateIndexCache` (linha 1673): cache de regras candidatas
-- `BloomFilterService`: filtro probabilístico para descartar regras rapidamente
-
-**Complexidade Atual:**
-- Melhor caso: O(N × 1) — primeira regra dispara FRAUD
-- Pior caso: O(N × M) — todas as regras são avaliadas
-- Caso médio: O(N × M/2) — com short-circuit
-
-### 2. Switch/Case de Operadores — O(K)
-
-**Evidência:**
-- Arquivo: `backend/src/main/java/com/rulex/service/RuleEngineService.java`
-- Método: `evaluateCondition()` — linhas 1677-1850
-- 93 ocorrências de switch/case
-
-**Problema:**
-Switch/case com ~30 operadores = O(K) onde K = número de operadores.
-Em Java, switch com String usa hashCode + equals, então é O(1) amortizado.
-
-**Recomendação:**
-Manter switch (já é O(1) amortizado) ou migrar para Map<String, Operator> para melhor extensibilidade.
-
-### 3. Velocity Queries — O(1) com Redis
-
-**Evidência:**
-- Arquivo: `backend/src/main/java/com/rulex/service/RedisVelocityCacheService.java`
-- Métodos: `getCount()`, `getSum()` — linhas 141, 165
-
-**Complexidade:**
-- Redis GET: O(1)
-- Redis INCR: O(1)
-
-**Problema Potencial:**
-Operações não atômicas (linhas 289-294):
-```java
-redisTemplate.opsForValue().increment(countKey);
-// ...
-redisTemplate.opsForValue().increment(sumKey, amountCents);
+**Solução Proposta:**
+```yaml
+# application.yml
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 100
+      minimum-idle: 20
+      connection-timeout: 5000
+      idle-timeout: 300000
 ```
 
-**Recomendação:**
-Usar MULTI/EXEC ou Lua script para atomicidade.
+**Impacto Esperado:**
+- Suportar até 100 conexões simultâneas
+- Reduzir timeouts significativamente
 
-### 4. Parsing de Expressões — O(L)
-
-**Evidência:**
-- Arquivo: `backend/src/main/java/com/rulex/service/RuleEngineService.java`
-- Método: `readComputedLeftValue()` — linhas 1851-1906
-- Método: `evalNumericExpression()` — linhas 1950-1967
-
-**Complexidade:**
-- Parsing de campo: O(L) onde L = comprimento da expressão
-- Parsing repetido para cada avaliação
-
-**Recomendação:**
-Pré-compilar expressões em cache (AST) para evitar re-parsing.
-
-### 5. Regex Matching — O(L × P)
+#### 2. Múltiplas Queries por Transação (P1)
 
 **Evidência:**
-- Arquivo: `backend/src/main/java/com/rulex/service/RuleEngineService.java`
-- Método: `matchesRegex()` — linha 1786
-- Usa `RegexValidator.safeFind()` com proteção ReDoS
+- Cada transação executa: INSERT transaction + INSERT decision + INSERT audit
+- 3 roundtrips ao banco por requisição
 
-**Complexidade:**
-- Regex simples: O(L) onde L = tamanho do input
-- Regex com backtracking: O(2^L) — mitigado por timeout
+**Solução Proposta:**
+- Batch inserts para audit logs
+- Async audit logging (não bloquear resposta)
+- Considerar COPY para bulk inserts
 
-**Mitigação Existente:**
-- `RegexValidator` com timeout para prevenir ReDoS
+#### 3. Avaliação de Regras (P1)
 
-## Métricas de Performance
+**Evidência:**
+- `RuleEngineService.java` com 2205 linhas
+- Avaliação sequencial de todas as regras habilitadas
 
-### Endpoints Críticos
+**Solução Proposta:**
+- Cache de regras em memória (já existe parcialmente)
+- Short-circuit em AND/OR
+- Ordenar regras por seletividade
 
-| Endpoint | Complexidade | Latência Esperada |
-|----------|--------------|-------------------|
-| POST /api/evaluate | O(M) | < 50ms (p99) |
-| POST /api/transactions/analyze | O(M) | < 100ms (p99) |
-| GET /api/rules | O(1) | < 10ms (p99) |
+#### 4. Serialização JSON (P2)
 
-### Recomendações de Monitoramento
+**Evidência:**
+- Payload de ~1KB por requisição
+- Serialização/deserialização em cada request
 
-1. **Métricas por Regra:**
-   - Tempo de avaliação por regra
-   - Taxa de disparo (hit-rate)
-   - Número de condições avaliadas
+**Solução Proposta:**
+- Considerar compressão gzip para payloads grandes
+- Validar apenas campos necessários
 
-2. **Métricas Globais:**
-   - Latência p50/p95/p99 do endpoint /evaluate
-   - Throughput (transações/segundo)
-   - Cache hit-rate (Redis, BloomFilter)
+## Plano de Otimização
 
-## Otimizações Futuras
+### Fase 1: Pool de Conexões (P0)
+1. Aumentar `maximum-pool-size` para 100
+2. Ajustar `connection-timeout` para 5s
+3. Monitorar métricas do HikariCP
 
-### Curto Prazo (P0)
-1. Pré-compilar expressões de campo
-2. Atomicidade em Redis (Lua script)
+### Fase 2: Async Audit (P1)
+1. Mover audit logging para thread separada
+2. Usar batch inserts para audit_logs
+3. Não bloquear resposta da transação
 
-### Médio Prazo (P1)
-1. Indexação de regras por tipo de transação
-2. Cache de resultados de condições invariantes
+### Fase 3: Cache de Regras (P1)
+1. Pré-carregar regras habilitadas no startup
+2. Invalidar cache apenas quando regra é alterada
+3. Usar cache local (não Redis) para regras
 
-### Longo Prazo (P2)
-1. Avaliação paralela de regras independentes
-2. Compilação JIT de regras frequentes
+### Fase 4: Otimização de Queries (P2)
+1. Analisar EXPLAIN ANALYZE das queries principais
+2. Adicionar índices se necessário
+3. Considerar read replicas para queries de leitura
 
-## Validação
+## Comandos de Teste
 
 ```bash
-# Executar testes de performance (se existirem)
-cd ~/repos/RULEX && mvn -f backend/pom.xml test -Dtest=*Perf*
+# Instalar k6
+sudo apt-get install k6
 
-# Verificar métricas do Actuator
-curl http://localhost:8080/actuator/metrics/http.server.requests
+# Subir infraestrutura (sem rate limit)
+cd ~/repos/RULEX
+RULEX_RATE_LIMIT_ENABLED=false docker compose up -d
+
+# Smoke test (5 VUs)
+k6 run --vus 5 --duration 30s perf/load-test.js
+
+# Load test (50 VUs)
+k6 run --vus 50 --duration 60s perf/load-test.js
+
+# Stress test (100 VUs)
+k6 run --vus 100 --duration 120s perf/load-test.js
 ```
+
+## Métricas de Monitoramento
+
+### Actuator Endpoints
+- `/actuator/health` - Health check
+- `/actuator/metrics/hikaricp.connections` - Pool de conexões
+- `/actuator/metrics/http.server.requests` - Latência HTTP
+- `/actuator/prometheus` - Métricas Prometheus
+
+### Alertas Recomendados
+- HikariCP active connections > 80% do pool
+- p95 latência > 200ms
+- Taxa de erro > 1%
+- TPS < 500 (50% do target)
+
+## Conclusão
+
+**Status Atual**: O sistema NÃO atinge o SLO de 1000 TPS.
+
+**Capacidade Atual**: ~77 TPS com p95 < 200ms (10 VUs)
+
+**Para atingir 1000 TPS**, é necessário:
+1. ✅ Desabilitar rate limiting (feito para testes)
+2. ⏳ Aumentar pool de conexões (P0)
+3. ⏳ Implementar async audit (P1)
+4. ⏳ Otimizar cache de regras (P1)
+5. ⏳ Escalar horizontalmente (múltiplas instâncias)
+
+**Estimativa**: Com as otimizações P0 e P1, espera-se atingir ~300-500 TPS. Para 1000 TPS, será necessário escalar horizontalmente com load balancer.
