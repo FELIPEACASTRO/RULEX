@@ -144,7 +144,7 @@ jobs:
 
       - name: Wait for backend health
         run: |
-          set -euo pipefail
+          set -uo pipefail
 
           HEALTH_URL="http://localhost:8080/api/actuator/health"
           TIMEOUT_SECS="180"
@@ -153,37 +153,33 @@ jobs:
           START_TS="$(date +%s)"
 
           while true; do
-            if curl -fsS "${HEALTH_URL}" >/dev/null; then
+            # Try health check (ignore errors during startup)
+            if curl -fsS "${HEALTH_URL}" >/dev/null 2>&1; then
               echo "Backend is ready"
               exit 0
             fi
 
-            # Fail-fast: se o backend nem aparece no compose ps, ele não está em execução.
-            # Usa grep com padrão que captura tanto "backend" quanto "rulex-backend-1"
-            if ! docker compose ps | grep -qi "backend"; then
-              echo "Backend service is not present in 'docker compose ps' output."
+            # Check if container crashed (exited)
+            BACKEND_STATUS=$(docker compose ps backend --format "{{.Status}}" 2>/dev/null || echo "unknown")
+            if echo "${BACKEND_STATUS}" | grep -qi "exited"; then
+              echo "Backend container has exited unexpectedly."
               docker compose ps
               docker compose logs --no-color --tail=300 backend postgres || true
               exit 1
             fi
 
-            # Fail-fast: se o backend entrou em Exit/Restarting, não adianta esperar timeout.
-            if docker compose ps backend | grep -Eqi "(exit|exited|restarting)"; then
-              echo "Backend container is not running cleanly (exit/restarting)."
-              docker compose ps
-              docker compose logs --no-color --tail=300 backend postgres || true
-              exit 1
-            fi
-
+            # Check timeout
             NOW_TS="$(date +%s)"
-            if [ "$((NOW_TS - START_TS))" -ge "${TIMEOUT_SECS}" ]; then
+            ELAPSED=$((NOW_TS - START_TS))
+            if [ "${ELAPSED}" -ge "${TIMEOUT_SECS}" ]; then
               echo "Backend did not become ready in time (${TIMEOUT_SECS}s)."
               docker compose ps
               docker compose logs --no-color --tail=300 backend postgres || true
               exit 1
             fi
 
-            sleep 2
+            echo "Waiting for backend... (${ELAPSED}s elapsed)"
+            sleep 5
           done
 
       - name: Run e2e tests
