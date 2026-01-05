@@ -2,6 +2,7 @@ package com.rulex.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rulex.api.NotFoundException;
+import com.rulex.config.CacheConfig;
 import com.rulex.dto.RuleConditionDTO;
 import com.rulex.dto.RuleConfigurationDTO;
 import com.rulex.dto.TransactionRequest;
@@ -17,12 +18,19 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Serviço para gerenciamento de configurações de regras. */
+/**
+ * Serviço para gerenciamento de configurações de regras.
+ *
+ * <p>IMPORTANTE: Operações de CRUD invalidam automaticamente os caches de regras para garantir
+ * consistência. Ver {@link CacheConfig} para detalhes dos caches.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -51,7 +59,13 @@ public class RuleConfigurationService {
     return convertToDTO(rule);
   }
 
-  /** Cria uma nova regra. */
+  /** Cria uma nova regra. Invalida caches de regras habilitadas. */
+  @Caching(
+      evict = {
+        @CacheEvict(value = CacheConfig.CACHE_ENABLED_RULES, allEntries = true),
+        @CacheEvict(value = CacheConfig.CACHE_ADVANCED_RULES, allEntries = true),
+        @CacheEvict(value = CacheConfig.CACHE_RULE_ORDER, allEntries = true)
+      })
   public RuleConfigurationDTO createRule(RuleConfigurationDTO dto) {
     // Verificar se já existe uma regra com este nome
     if (ruleConfigRepository.findByRuleName(dto.getRuleName()).isPresent()) {
@@ -98,7 +112,13 @@ public class RuleConfigurationService {
     return convertToDTO(rule);
   }
 
-  /** Atualiza uma regra existente. */
+  /** Atualiza uma regra existente. Invalida caches de regras habilitadas. */
+  @Caching(
+      evict = {
+        @CacheEvict(value = CacheConfig.CACHE_ENABLED_RULES, allEntries = true),
+        @CacheEvict(value = CacheConfig.CACHE_ADVANCED_RULES, allEntries = true),
+        @CacheEvict(value = CacheConfig.CACHE_RULE_ORDER, allEntries = true)
+      })
   public RuleConfigurationDTO updateRule(Long id, RuleConfigurationDTO dto) {
     RuleConfiguration rule =
         ruleConfigRepository
@@ -168,7 +188,13 @@ public class RuleConfigurationService {
     return convertToDTO(rule);
   }
 
-  /** Deleta uma regra. */
+  /** Deleta uma regra. Invalida caches de regras habilitadas. */
+  @Caching(
+      evict = {
+        @CacheEvict(value = CacheConfig.CACHE_ENABLED_RULES, allEntries = true),
+        @CacheEvict(value = CacheConfig.CACHE_ADVANCED_RULES, allEntries = true),
+        @CacheEvict(value = CacheConfig.CACHE_RULE_ORDER, allEntries = true)
+      })
   public void deleteRule(Long id) {
     RuleConfiguration rule =
         ruleConfigRepository

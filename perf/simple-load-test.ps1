@@ -2,6 +2,7 @@
 $numRequests = 30
 $baseUrl = "http://localhost:8080"
 
+# Payload completo com todos os campos obrigatórios
 $payload = @{
     externalTransactionId = "TXN-{0}"
     customerIdFromHeader = "CUST-123"
@@ -10,6 +11,20 @@ $payload = @{
     merchantId = "MERCH-456"
     transactionCurrencyCode = 986
     transactionType = "PURCHASE"
+    transactionAmount = 150.75
+    transactionDate = 20260105
+    transactionTime = 201700
+    mcc = 5411
+    consumerAuthenticationScore = "05"
+    externalScore3 = 50
+    cavvResult = "2"
+    eciIndicator = "05"
+    atcCard = 1
+    atcHost = 1
+    tokenAssuranceLevel = "00"
+    availableCredit = 5000.00
+    cardCashBalance = 0.00
+    cardDelinquentAmount = 0.00
 } | ConvertTo-Json -Compress
 
 $headers = @{
