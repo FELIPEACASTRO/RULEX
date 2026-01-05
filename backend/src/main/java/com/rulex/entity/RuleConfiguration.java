@@ -75,6 +75,16 @@ public class RuleConfiguration {
   private LogicOperator logicOperator;
 
   /**
+   * Marca se a regra pertence ao ruleset "advanced" (usado pelo endpoint /analyze-advanced).
+   *
+   * <p>Requisito: todas as regras devem estar no banco (inclusive a definição do conjunto de regras
+   * avançadas), evitando listas hardcoded no código.
+   */
+  @Column(nullable = false)
+  @Builder.Default
+  private Boolean advanced = false;
+
+  /**
    * Shadow mode: DISABLED (active), SHADOW (evaluate but don't act), CANARY (percentage rollout)
    */
   @Column(length = 20)
@@ -108,6 +118,9 @@ public class RuleConfiguration {
     // version é gerenciado automaticamente pelo @Version do JPA
     if (logicOperator == null) {
       logicOperator = LogicOperator.AND;
+    }
+    if (advanced == null) {
+      advanced = false;
     }
   }
 

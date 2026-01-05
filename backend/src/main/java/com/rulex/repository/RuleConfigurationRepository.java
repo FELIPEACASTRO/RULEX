@@ -17,6 +17,8 @@ public interface RuleConfigurationRepository extends JpaRepository<RuleConfigura
 
   List<RuleConfiguration> findByEnabled(Boolean enabled);
 
+  List<RuleConfiguration> findByEnabledAndAdvanced(Boolean enabled, Boolean advanced);
+
   List<RuleConfiguration> findByRuleType(RuleConfiguration.RuleType ruleType);
 
   List<RuleConfiguration> findByEnabledAndRuleType(

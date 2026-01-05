@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 /**
@@ -40,37 +41,8 @@ public class DatabaseRuleExecutorService {
   private final ObjectMapper objectMapper;
   private final Clock clock;
 
-  // Lista das 28 regras que foram migradas do AdvancedRuleEngineService
-  private static final Set<String> ADVANCED_RULE_NAMES =
-      Set.of(
-          "EMV_SECURITY_CHECK",
-          "TERMINAL_VERIFICATION_FAILED",
-          "EXPIRED_CARD",
-          "SUSPICIOUS_TRANSACTION_TYPE",
-          "UNUSUAL_CARD_MEDIA",
-          "SUSPICIOUS_TERMINAL",
-          "ECOMMERCE_NO_AVS",
-          "POS_SECURITY_MISSING",
-          "CARD_CAPTURE_FRAUD",
-          "PIN_CVV_LIMIT_EXCEEDED",
-          "OFFLINE_PIN_FAILED",
-          "MISSING_CVV2_HIGH_RISK",
-          "CUSTOM_INDICATOR_FRAUD",
-          "PROCESSING_LAG_ANOMALY",
-          "TIMEZONE_NORMALIZED_CHECK",
-          "DUPLICATE_TRANSACTION",
-          "SUSPICIOUS_MERCHANT_POSTAL",
-          "SUSPICIOUS_TOKEN",
-          "UNEXPECTED_CURRENCY",
-          "ANOMALOUS_CONVERSION_RATE",
-          "INCOHERENT_AUTH_SEQUENCE",
-          "INCOHERENT_CONTEXT",
-          "CONTRADICTORY_AUTHORIZATION",
-          "SUSPICIOUS_ACQUIRER",
-          "ACQUIRER_COUNTRY_MISMATCH",
-          "COMBINED_SCORE_CHECK",
-          "VELOCITY_CHECK_CONSOLIDATED",
-          "CUSTOM_INDICATORS_COMPREHENSIVE");
+  // As regras avançadas (do endpoint /analyze-advanced) são definidas no banco de dados
+  // via flag RuleConfiguration.advanced, evitando listas hardcoded no código.
 
   public enum RuleResult {
     APPROVED,
@@ -130,8 +102,7 @@ public class DatabaseRuleExecutorService {
   /** Obtém todas as regras avançadas habilitadas do banco de dados. */
   @Cacheable(value = "advancedRules", key = "'enabled'")
   public List<RuleConfiguration> getEnabledAdvancedRules() {
-    List<RuleConfiguration> allEnabled = ruleConfigRepository.findByEnabled(true);
-    return allEnabled.stream().filter(r -> ADVANCED_RULE_NAMES.contains(r.getRuleName())).toList();
+    return ruleConfigRepository.findByEnabledAndAdvanced(true, true);
   }
 
   /** Avalia uma regra específica contra uma transação. */
@@ -325,14 +296,25 @@ public class DatabaseRuleExecutorService {
       return null;
     }
 
+    String normalizedFieldName = normalizeFieldName(Objects.requireNonNull(fieldName));
+    return getFieldValueNonNull(transaction, normalizedFieldName);
+  }
+
+  private @NonNull String normalizeFieldName(@NonNull String fieldName) {
+    String normalized = fieldName;
+
     // Remove prefixo JSON path se presente
-    if (fieldName.startsWith("$.")) {
-      fieldName = fieldName.substring(2);
+    if (normalized.startsWith("$.")) {
+      normalized = normalized.substring(2);
     }
-    if (fieldName.startsWith("transaction.")) {
-      fieldName = fieldName.substring(12);
+    if (normalized.startsWith("transaction.")) {
+      normalized = normalized.substring(12);
     }
 
+    return Objects.requireNonNull(normalized);
+  }
+
+  private Object getFieldValueNonNull(TransactionRequest transaction, @NonNull String fieldName) {
     try {
       PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(TransactionRequest.class, fieldName);
       if (pd != null && pd.getReadMethod() != null) {
