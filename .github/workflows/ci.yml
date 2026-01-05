@@ -159,7 +159,8 @@ jobs:
             fi
 
             # Fail-fast: se o backend nem aparece no compose ps, ele não está em execução.
-            if ! docker compose ps | grep -Eqi "(^|[[:space:]])backend([[:space:]]|$)"; then
+            # Usa grep com padrão que captura tanto "backend" quanto "rulex-backend-1"
+            if ! docker compose ps | grep -qi "backend"; then
               echo "Backend service is not present in 'docker compose ps' output."
               docker compose ps
               docker compose logs --no-color --tail=300 backend postgres || true
