@@ -219,18 +219,18 @@ public class DatabaseRuleExecutorService {
   private RuleResult evaluateByRuleType(RuleConfiguration rule, TransactionRequest transaction) {
     String ruleName = rule.getRuleName();
 
+    // Regras de duplicação (verificar primeiro, antes de velocidade)
+    if (ruleName.contains("DUPLICATE")) {
+      return evaluateDuplicateRule(rule, transaction);
+    }
+
     // Regras de velocidade
     if ("VELOCITY".equals(rule.getRuleType().name()) || ruleName.contains("VELOCITY")) {
       return evaluateVelocityRule(rule, transaction);
     }
 
-    // Regras de duplicação
-    if (ruleName.contains("DUPLICATE")) {
-      return evaluateDuplicateRule(rule, transaction);
-    }
-
     // Regras baseadas em threshold simples
-    if (rule.getThreshold() != null) {
+    if (rule.getThreshold() != null && rule.getThreshold() > 0) {
       return evaluateThresholdRule(rule, transaction);
     }
 
