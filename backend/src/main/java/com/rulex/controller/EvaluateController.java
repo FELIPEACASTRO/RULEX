@@ -27,15 +27,14 @@ public class EvaluateController {
   private final ObjectMapper objectMapper;
 
   /**
-   * Avalia uma transação usando o DTO validado.
-   * Este é o endpoint preferido para novas integrações.
+   * Avalia uma transação usando o DTO validado. Este é o endpoint preferido para novas integrações.
    */
   @PostMapping
   public ResponseEntity<EvaluateResponse> evaluate(
       @Valid @RequestBody EvaluateRequestDTO request, HttpServletRequest httpRequest) {
     byte[] rawBytes = (byte[]) httpRequest.getAttribute(RawPayloadCaptureFilter.RAW_BYTES_ATTR);
     String contentType = httpRequest.getContentType();
-    
+
     // Converte o payload do DTO para JSON string para compatibilidade com o serviço existente
     String rawBody;
     try {
@@ -44,13 +43,13 @@ public class EvaluateController {
       log.error("Erro ao serializar payload: {}", e.getMessage());
       return ResponseEntity.badRequest().build();
     }
-    
+
     return ResponseEntity.ok(ruleEngineService.evaluateRaw(rawBody, rawBytes, contentType));
   }
 
   /**
-   * Endpoint legado que aceita raw JSON.
-   * Mantido para compatibilidade com integrações existentes.
+   * Endpoint legado que aceita raw JSON. Mantido para compatibilidade com integrações existentes.
+   *
    * @deprecated Use o endpoint principal com EvaluateRequestDTO
    */
   @Deprecated
@@ -61,13 +60,13 @@ public class EvaluateController {
       log.warn("Requisição de avaliação com body vazio");
       return ResponseEntity.badRequest().build();
     }
-    
+
     // Validação básica de tamanho para prevenir DoS
     if (rawBody.length() > 1_000_000) { // 1MB max
       log.warn("Payload muito grande: {} bytes", rawBody.length());
       return ResponseEntity.badRequest().build();
     }
-    
+
     byte[] rawBytes = (byte[]) httpRequest.getAttribute(RawPayloadCaptureFilter.RAW_BYTES_ATTR);
     String contentType = httpRequest.getContentType();
     return ResponseEntity.ok(ruleEngineService.evaluateRaw(rawBody, rawBytes, contentType));

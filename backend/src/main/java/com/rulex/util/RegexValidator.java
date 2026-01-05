@@ -379,8 +379,8 @@ public final class RegexValidator {
   // ========== MÉTODOS DE CONVENIÊNCIA PARA MIGRAÇÃO ==========
 
   /**
-   * Executa um match seguro com timeout. Retorna false em caso de timeout ou erro.
-   * Use este método como substituto direto de String.matches() ou Pattern.matches().
+   * Executa um match seguro com timeout. Retorna false em caso de timeout ou erro. Use este método
+   * como substituto direto de String.matches() ou Pattern.matches().
    *
    * @param pattern O pattern regex como string
    * @param input O input a testar
@@ -410,8 +410,8 @@ public final class RegexValidator {
   }
 
   /**
-   * Executa um find seguro com timeout. Retorna false em caso de timeout ou erro.
-   * Use este método como substituto de Matcher.find().
+   * Executa um find seguro com timeout. Retorna false em caso de timeout ou erro. Use este método
+   * como substituto de Matcher.find().
    *
    * @param pattern O pattern regex como string
    * @param input O input a testar
@@ -452,8 +452,8 @@ public final class RegexValidator {
   }
 
   /**
-   * Verifica se um pattern é seguro para uso (validação estática apenas).
-   * Útil para validar patterns antes de armazená-los no banco de dados.
+   * Verifica se um pattern é seguro para uso (validação estática apenas). Útil para validar
+   * patterns antes de armazená-los no banco de dados.
    *
    * @param pattern O pattern a verificar
    * @return true se o pattern é considerado seguro
@@ -463,8 +463,8 @@ public final class RegexValidator {
   }
 
   /**
-   * Verifica se uma string corresponde a um pattern simples e seguro.
-   * Para patterns simples como [A-Za-z0-9_]+ que são conhecidos como seguros.
+   * Verifica se uma string corresponde a um pattern simples e seguro. Para patterns simples como
+   * [A-Za-z0-9_]+ que são conhecidos como seguros.
    *
    * @param input O input a testar
    * @param safePattern Um pattern que é conhecido como seguro (sem quantificadores aninhados)

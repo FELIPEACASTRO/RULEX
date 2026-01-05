@@ -98,7 +98,8 @@ public class SecurityConfig {
     http.authorizeHttpRequests(
             auth ->
                 auth
-                    // Health probes (K8s / Container Apps / HML ops) - only health endpoints are public
+                    // Health probes (K8s / Container Apps / HML ops) - only health endpoints are
+                    // public
                     .requestMatchers("/actuator/health/**")
                     .permitAll()
 

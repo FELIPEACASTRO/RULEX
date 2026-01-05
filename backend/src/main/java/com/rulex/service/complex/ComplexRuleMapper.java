@@ -62,7 +62,8 @@ public class ComplexRuleMapper {
         if (childDto.getPosition() == null) {
           childDto.setPosition(i);
         }
-        RuleConditionGroup child = toEntityInternal(childDto, ruleVersionId, complexRuleId, group.getId());
+        RuleConditionGroup child =
+            toEntityInternal(childDto, ruleVersionId, complexRuleId, group.getId());
         group.getChildren().add(child);
       }
     }
