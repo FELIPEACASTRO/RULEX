@@ -6,6 +6,7 @@ import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleExecutionDetail;
 import com.rulex.service.GeoService;
 import com.rulex.service.VelocityService;
+import com.rulex.service.VelocityServiceFacade;
 import com.rulex.util.RegexValidator;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -31,6 +32,7 @@ public class ComplexRuleEvaluator {
 
   private final GeoService geoService;
   private final VelocityService velocityService;
+  private final VelocityServiceFacade velocityServiceFacade;
 
   /** Resultado da avaliação de uma regra */
   @Data
@@ -669,8 +671,9 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindow(Integer.parseInt(parts[1].trim()));
       long threshold = Long.parseLong(parts[2].trim());
 
+      // GAP-FIX #2: Usar facade que escolhe entre cache e banco
       VelocityService.VelocityStats stats =
-          velocityService.getStats(context.getTransactionRequest(), keyType, window);
+          velocityServiceFacade.getStats(context.getTransactionRequest(), keyType, window);
 
       return greaterThan
           ? stats.getTransactionCount() > threshold
@@ -704,8 +707,9 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindow(Integer.parseInt(parts[1].trim()));
       BigDecimal threshold = new BigDecimal(parts[2].trim());
 
+      // GAP-FIX #2: Usar facade que escolhe entre cache e banco
       VelocityService.VelocityStats stats =
-          velocityService.getStats(context.getTransactionRequest(), keyType, window);
+          velocityServiceFacade.getStats(context.getTransactionRequest(), keyType, window);
 
       return greaterThan
           ? stats.getTotalAmount().compareTo(threshold) > 0
@@ -739,8 +743,9 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindow(Integer.parseInt(parts[1].trim()));
       BigDecimal threshold = new BigDecimal(parts[2].trim());
 
+      // GAP-FIX #2: Usar facade que escolhe entre cache e banco
       VelocityService.VelocityStats stats =
-          velocityService.getStats(context.getTransactionRequest(), keyType, window);
+          velocityServiceFacade.getStats(context.getTransactionRequest(), keyType, window);
 
       return greaterThan
           ? stats.getAvgAmount().compareTo(threshold) > 0
@@ -776,8 +781,9 @@ public class ComplexRuleEvaluator {
       String distinctType = parts[2].trim().toUpperCase();
       long threshold = Long.parseLong(parts[3].trim());
 
+      // GAP-FIX #2: Usar facade que escolhe entre cache e banco
       VelocityService.VelocityStats stats =
-          velocityService.getStats(context.getTransactionRequest(), keyType, window);
+          velocityServiceFacade.getStats(context.getTransactionRequest(), keyType, window);
 
       long distinctCount =
           switch (distinctType) {
