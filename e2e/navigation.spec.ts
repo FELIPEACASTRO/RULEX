@@ -19,7 +19,7 @@ test.describe("Navigation", () => {
     // Navigate to each main section
     const sections = [
       { button: "Transações", url: /transactions/ },
-      { button: /Regras/i, url: /rules/ },
+      { button: "Regras Simples", url: /rules/ },
       { button: /Auditoria|Audit/i, url: /audit/ },
     ];
 
