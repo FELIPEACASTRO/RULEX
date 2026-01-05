@@ -1,15 +1,12 @@
 package com.rulex.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.RuleConfiguration;
 import com.rulex.entity.TransactionDecision.TransactionClassification;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +20,7 @@ import org.junit.jupiter.api.Test;
  * <p>GAP-FIX #3: Cobertura de testes para classes críticas.
  *
  * <p>O ShadowModeService permite testar regras em produção sem afetar decisões reais:
+ *
  * <ul>
  *   <li>Regras SHADOW são avaliadas mas não afetam a decisão final
  *   <li>Estatísticas rastreiam o que TERIA acontecido vs o que ACONTECEU
@@ -119,8 +117,7 @@ class ShadowModeServiceTest {
       RuleConfiguration shadowRule = createShadowRule("SHADOW_STATS_RULE");
 
       ShadowModeService.RuleEvaluator evaluator =
-          (rule, tx) ->
-              ShadowModeService.RuleEvaluationResult.triggered(50, "FLAG", "Test rule");
+          (rule, tx) -> ShadowModeService.RuleEvaluationResult.triggered(50, "FLAG", "Test rule");
 
       // Executar múltiplas vezes
       for (int i = 0; i < 5; i++) {
@@ -294,7 +291,8 @@ class ShadowModeServiceTest {
                 assertThat(assessment.ruleId()).isEqualTo(shadowRule.getId());
                 // Com poucos dados, não deve estar pronto
                 assertThat(assessment.isReady()).isFalse();
-                assertThat(assessment.concerns()).contains("Insufficient data: 10 evaluations (recommend 10000)");
+                assertThat(assessment.concerns())
+                    .contains("Insufficient data: 10 evaluations (recommend 10000)");
               });
     }
   }
@@ -311,7 +309,8 @@ class ShadowModeServiceTest {
       RuleConfiguration shadowRule = createShadowRule("FRAUD_MARK_RULE");
 
       ShadowModeService.RuleEvaluator evaluator =
-          (rule, tx) -> ShadowModeService.RuleEvaluationResult.triggered(80, "BLOCK", "Fraud detected");
+          (rule, tx) ->
+              ShadowModeService.RuleEvaluationResult.triggered(80, "BLOCK", "Fraud detected");
 
       shadowModeService.executeShadow(shadowRule, request, evaluator, "APPROVED");
 
@@ -415,7 +414,8 @@ class ShadowModeServiceTest {
       RuleConfiguration shadowRule = createShadowRule("REVIEW_ACTION_RULE");
 
       ShadowModeService.RuleEvaluator evaluator =
-          (rule, tx) -> ShadowModeService.RuleEvaluationResult.triggered(50, "REVIEW", "Needs review");
+          (rule, tx) ->
+              ShadowModeService.RuleEvaluationResult.triggered(50, "REVIEW", "Needs review");
 
       shadowModeService.executeShadow(shadowRule, request, evaluator, "APPROVED");
 

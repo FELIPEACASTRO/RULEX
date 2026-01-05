@@ -1,8 +1,6 @@
 package com.rulex.service.complex;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.complex.RuleCondition;
@@ -130,7 +128,8 @@ class ComplexRuleEvaluatorTest {
     @Test
     @DisplayName("CONTAINS deve verificar substring")
     void containsOperator_shouldCheckSubstring() {
-      RuleCondition condition = createCondition("merchantName", ConditionOperator.CONTAINS, "FRAUD");
+      RuleCondition condition =
+          createCondition("merchantName", ConditionOperator.CONTAINS, "FRAUD");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
       ComplexRuleEvaluator.EvaluationContext context =
           createContext(Map.of("merchantName", "SUSPECTED FRAUD MERCHANT"));
@@ -143,7 +142,8 @@ class ComplexRuleEvaluatorTest {
     @Test
     @DisplayName("NOT_CONTAINS deve verificar ausência de substring")
     void notContainsOperator_shouldCheckAbsenceOfSubstring() {
-      RuleCondition condition = createCondition("merchantName", ConditionOperator.NOT_CONTAINS, "FRAUD");
+      RuleCondition condition =
+          createCondition("merchantName", ConditionOperator.NOT_CONTAINS, "FRAUD");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
       ComplexRuleEvaluator.EvaluationContext context =
           createContext(Map.of("merchantName", "LEGITIMATE MERCHANT"));
@@ -200,7 +200,8 @@ class ComplexRuleEvaluatorTest {
     @Test
     @DisplayName("IN deve verificar se valor está na lista")
     void inOperator_shouldCheckValueInList() {
-      RuleCondition condition = createConditionWithArray("mcc", ConditionOperator.IN, List.of("5411", "7995", "5812"));
+      RuleCondition condition =
+          createConditionWithArray("mcc", ConditionOperator.IN, List.of("5411", "7995", "5812"));
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
       ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 7995));
 
@@ -212,7 +213,9 @@ class ComplexRuleEvaluatorTest {
     @Test
     @DisplayName("NOT_IN deve verificar se valor não está na lista")
     void notInOperator_shouldCheckValueNotInList() {
-      RuleCondition condition = createConditionWithArray("mcc", ConditionOperator.NOT_IN, List.of("5411", "7995", "5812"));
+      RuleCondition condition =
+          createConditionWithArray(
+              "mcc", ConditionOperator.NOT_IN, List.of("5411", "7995", "5812"));
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
       ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 1234));
 
@@ -290,7 +293,8 @@ class ComplexRuleEvaluatorTest {
     @DisplayName("OR deve exigir pelo menos uma condição verdadeira")
     void orOperator_shouldRequireAtLeastOneConditionTrue() {
       RuleCondition condition1 = createCondition("mcc", ConditionOperator.EQ, "7995");
-      RuleCondition condition2 = createCondition("transactionAmount", ConditionOperator.GT, "10000");
+      RuleCondition condition2 =
+          createCondition("transactionAmount", ConditionOperator.GT, "10000");
       RuleConditionGroup group = createGroup(GroupLogicOperator.OR, condition1, condition2);
 
       ComplexRuleEvaluator.EvaluationContext context =
@@ -305,7 +309,8 @@ class ComplexRuleEvaluatorTest {
     @DisplayName("OR deve falhar se todas as condições forem falsas")
     void orOperator_shouldFailIfAllConditionsFalse() {
       RuleCondition condition1 = createCondition("mcc", ConditionOperator.EQ, "7995");
-      RuleCondition condition2 = createCondition("transactionAmount", ConditionOperator.GT, "10000");
+      RuleCondition condition2 =
+          createCondition("transactionAmount", ConditionOperator.GT, "10000");
       RuleConditionGroup group = createGroup(GroupLogicOperator.OR, condition1, condition2);
 
       ComplexRuleEvaluator.EvaluationContext context =
@@ -320,7 +325,8 @@ class ComplexRuleEvaluatorTest {
     @DisplayName("XOR deve exigir exatamente uma condição verdadeira")
     void xorOperator_shouldRequireExactlyOneConditionTrue() {
       RuleCondition condition1 = createCondition("mcc", ConditionOperator.EQ, "5411");
-      RuleCondition condition2 = createCondition("transactionAmount", ConditionOperator.GT, "10000");
+      RuleCondition condition2 =
+          createCondition("transactionAmount", ConditionOperator.GT, "10000");
       RuleConditionGroup group = createGroup(GroupLogicOperator.XOR, condition1, condition2);
 
       ComplexRuleEvaluator.EvaluationContext context =
@@ -424,7 +430,8 @@ class ComplexRuleEvaluatorTest {
     @Test
     @DisplayName("BETWEEN deve verificar valor no intervalo")
     void betweenOperator_shouldCheckValueInRange() {
-      RuleCondition condition = createConditionWithRange("transactionAmount", ConditionOperator.BETWEEN, "100", "1000");
+      RuleCondition condition =
+          createConditionWithRange("transactionAmount", ConditionOperator.BETWEEN, "100", "1000");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
       ComplexRuleEvaluator.EvaluationContext context =
           createContext(Map.of("transactionAmount", new BigDecimal("500")));
@@ -437,7 +444,9 @@ class ComplexRuleEvaluatorTest {
     @Test
     @DisplayName("NOT_BETWEEN deve verificar valor fora do intervalo")
     void notBetweenOperator_shouldCheckValueOutOfRange() {
-      RuleCondition condition = createConditionWithRange("transactionAmount", ConditionOperator.NOT_BETWEEN, "100", "1000");
+      RuleCondition condition =
+          createConditionWithRange(
+              "transactionAmount", ConditionOperator.NOT_BETWEEN, "100", "1000");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
       ComplexRuleEvaluator.EvaluationContext context =
           createContext(Map.of("transactionAmount", new BigDecimal("1500")));
@@ -518,7 +527,8 @@ class ComplexRuleEvaluatorTest {
     return condition;
   }
 
-  private RuleCondition createConditionWithArray(String field, ConditionOperator operator, List<String> values) {
+  private RuleCondition createConditionWithArray(
+      String field, ConditionOperator operator, List<String> values) {
     RuleCondition condition = new RuleCondition();
     condition.setFieldName(field);
     condition.setOperator(operator);
@@ -527,7 +537,8 @@ class ComplexRuleEvaluatorTest {
     return condition;
   }
 
-  private RuleCondition createConditionWithRange(String field, ConditionOperator operator, String min, String max) {
+  private RuleCondition createConditionWithRange(
+      String field, ConditionOperator operator, String min, String max) {
     RuleCondition condition = new RuleCondition();
     condition.setFieldName(field);
     condition.setOperator(operator);
@@ -537,7 +548,8 @@ class ComplexRuleEvaluatorTest {
     return condition;
   }
 
-  private RuleConditionGroup createGroup(GroupLogicOperator logicOperator, RuleCondition... conditions) {
+  private RuleConditionGroup createGroup(
+      GroupLogicOperator logicOperator, RuleCondition... conditions) {
     RuleConditionGroup group = new RuleConditionGroup();
     group.setLogicOperator(logicOperator);
     group.setConditions(List.of(conditions));

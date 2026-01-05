@@ -1,7 +1,6 @@
 package com.rulex.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -32,6 +31,7 @@ import org.mockito.Mockito;
  * <p>GAP-FIX #3: Cobertura de testes para classes críticas.
  *
  * <p>O RuleExportImportService permite:
+ *
  * <ul>
  *   <li>Exportar regras em formato JSON ou YAML
  *   <li>Importar regras de arquivos JSON ou YAML
@@ -119,29 +119,28 @@ class RuleExportImportServiceTest {
     @DisplayName("Deve exportar regras do sistema de homologação")
     void shouldExportHomologRules() {
       UUID ruleId = UUID.randomUUID();
-      RuleEntity homologRule = RuleEntity.builder()
-          .id(ruleId)
-          .key("HOMOLOG_RULE")
-          .title("Homolog Rule Title")
-          .build();
+      RuleEntity homologRule =
+          RuleEntity.builder().id(ruleId).key("HOMOLOG_RULE").title("Homolog Rule Title").build();
 
-      RuleVersionEntity version = RuleVersionEntity.builder()
-          .id(UUID.randomUUID())
-          .ruleId(ruleId)
-          .version(1)
-          .status(RuleStatus.PUBLISHED)
-          .priority(10)
-          .severity(50)
-          .decision(DecisionOutcome.SUSPEITA_DE_FRAUDE)
-          .reasonTemplate("Test reason")
-          .logic(LogicOperator.AND)
-          .conditionsJson("[{\"field\":\"mcc\",\"operator\":\"==\",\"value\":\"5411\"}]")
-          .enabled(true)
-          .build();
+      RuleVersionEntity version =
+          RuleVersionEntity.builder()
+              .id(UUID.randomUUID())
+              .ruleId(ruleId)
+              .version(1)
+              .status(RuleStatus.PUBLISHED)
+              .priority(10)
+              .severity(50)
+              .decision(DecisionOutcome.SUSPEITA_DE_FRAUDE)
+              .reasonTemplate("Test reason")
+              .logic(LogicOperator.AND)
+              .conditionsJson("[{\"field\":\"mcc\",\"operator\":\"==\",\"value\":\"5411\"}]")
+              .enabled(true)
+              .build();
 
       when(ruleConfigRepository.findAll()).thenReturn(List.of());
       when(ruleRepository.findAll()).thenReturn(List.of(homologRule));
-      when(ruleVersionRepository.findByRuleIdOrderByVersionDesc(ruleId)).thenReturn(List.of(version));
+      when(ruleVersionRepository.findByRuleIdOrderByVersionDesc(ruleId))
+          .thenReturn(List.of(version));
 
       RuleExportDTO export = exportImportService.exportAllRules("JSON", "test-user");
 
@@ -189,11 +188,12 @@ class RuleExportImportServiceTest {
     @DisplayName("Deve importar regras de JSON")
     void shouldImportRulesFromJson() throws JsonProcessingException {
       String json = createSampleJson();
-      ImportOptions options = ImportOptions.builder()
-          .overwriteExisting(false)
-          .dryRun(false)
-          .importDisabled(true)
-          .build();
+      ImportOptions options =
+          ImportOptions.builder()
+              .overwriteExisting(false)
+              .dryRun(false)
+              .importDisabled(true)
+              .build();
 
       when(ruleConfigRepository.findByRuleName(any())).thenReturn(Optional.empty());
       when(ruleRepository.findByKey(any())).thenReturn(Optional.empty());
@@ -209,13 +209,12 @@ class RuleExportImportServiceTest {
     @DisplayName("Deve pular regras existentes quando overwrite é false")
     void shouldSkipExistingRulesWhenOverwriteIsFalse() throws JsonProcessingException {
       String json = createSampleJson();
-      ImportOptions options = ImportOptions.builder()
-          .overwriteExisting(false)
-          .dryRun(false)
-          .build();
+      ImportOptions options =
+          ImportOptions.builder().overwriteExisting(false).dryRun(false).build();
 
       // Regra já existe
-      when(ruleConfigRepository.findByRuleName("TEST_RULE")).thenReturn(Optional.of(createSimpleRule("TEST_RULE")));
+      when(ruleConfigRepository.findByRuleName("TEST_RULE"))
+          .thenReturn(Optional.of(createSimpleRule("TEST_RULE")));
 
       ImportResult result = exportImportService.importFromJson(json, options, "test-user");
 
@@ -226,10 +225,7 @@ class RuleExportImportServiceTest {
     @DisplayName("Deve sobrescrever regras existentes quando overwrite é true")
     void shouldOverwriteExistingRulesWhenOverwriteIsTrue() throws JsonProcessingException {
       String json = createSampleJson();
-      ImportOptions options = ImportOptions.builder()
-          .overwriteExisting(true)
-          .dryRun(false)
-          .build();
+      ImportOptions options = ImportOptions.builder().overwriteExisting(true).dryRun(false).build();
 
       RuleConfiguration existingRule = createSimpleRule("TEST_RULE");
       when(ruleConfigRepository.findByRuleName("TEST_RULE")).thenReturn(Optional.of(existingRule));
@@ -245,10 +241,7 @@ class RuleExportImportServiceTest {
     @DisplayName("Deve executar dry run sem persistir")
     void shouldExecuteDryRunWithoutPersisting() throws JsonProcessingException {
       String json = createSampleJson();
-      ImportOptions options = ImportOptions.builder()
-          .overwriteExisting(false)
-          .dryRun(true)
-          .build();
+      ImportOptions options = ImportOptions.builder().overwriteExisting(false).dryRun(true).build();
 
       when(ruleConfigRepository.findByRuleName(any())).thenReturn(Optional.empty());
       when(ruleRepository.findByKey(any())).thenReturn(Optional.empty());
@@ -264,11 +257,12 @@ class RuleExportImportServiceTest {
     @DisplayName("Deve aplicar prefixo às chaves")
     void shouldApplyPrefixToKeys() throws JsonProcessingException {
       String json = createSampleJson();
-      ImportOptions options = ImportOptions.builder()
-          .overwriteExisting(false)
-          .dryRun(false)
-          .keyPrefix("PREFIX_")
-          .build();
+      ImportOptions options =
+          ImportOptions.builder()
+              .overwriteExisting(false)
+              .dryRun(false)
+              .keyPrefix("PREFIX_")
+              .build();
 
       when(ruleConfigRepository.findByRuleName(any())).thenReturn(Optional.empty());
       when(ruleRepository.findByKey(any())).thenReturn(Optional.empty());
@@ -283,11 +277,12 @@ class RuleExportImportServiceTest {
     @DisplayName("Deve aplicar sufixo às chaves")
     void shouldApplySuffixToKeys() throws JsonProcessingException {
       String json = createSampleJson();
-      ImportOptions options = ImportOptions.builder()
-          .overwriteExisting(false)
-          .dryRun(false)
-          .keySuffix("_SUFFIX")
-          .build();
+      ImportOptions options =
+          ImportOptions.builder()
+              .overwriteExisting(false)
+              .dryRun(false)
+              .keySuffix("_SUFFIX")
+              .build();
 
       when(ruleConfigRepository.findByRuleName(any())).thenReturn(Optional.empty());
       when(ruleRepository.findByKey(any())).thenReturn(Optional.empty());
@@ -306,18 +301,22 @@ class RuleExportImportServiceTest {
     @Test
     @DisplayName("Deve validar regra sem chave")
     void shouldValidateRuleWithoutKey() {
-      RuleData ruleData = RuleData.builder()
-          .key(null)
-          .title("Test Rule")
-          .ruleType(RuleType.SIMPLE)
-          .simpleConfig(SimpleRuleConfig.builder()
-              .conditions(List.of(SimpleCondition.builder()
-                  .field("mcc")
-                  .operator("==")
-                  .value("5411")
-                  .build()))
-              .build())
-          .build();
+      RuleData ruleData =
+          RuleData.builder()
+              .key(null)
+              .title("Test Rule")
+              .ruleType(RuleType.SIMPLE)
+              .simpleConfig(
+                  SimpleRuleConfig.builder()
+                      .conditions(
+                          List.of(
+                              SimpleCondition.builder()
+                                  .field("mcc")
+                                  .operator("==")
+                                  .value("5411")
+                                  .build()))
+                      .build())
+              .build();
 
       List<ImportError> errors = exportImportService.validateRuleData(ruleData);
 
@@ -328,18 +327,22 @@ class RuleExportImportServiceTest {
     @Test
     @DisplayName("Deve validar regra sem título")
     void shouldValidateRuleWithoutTitle() {
-      RuleData ruleData = RuleData.builder()
-          .key("TEST_RULE")
-          .title(null)
-          .ruleType(RuleType.SIMPLE)
-          .simpleConfig(SimpleRuleConfig.builder()
-              .conditions(List.of(SimpleCondition.builder()
-                  .field("mcc")
-                  .operator("==")
-                  .value("5411")
-                  .build()))
-              .build())
-          .build();
+      RuleData ruleData =
+          RuleData.builder()
+              .key("TEST_RULE")
+              .title(null)
+              .ruleType(RuleType.SIMPLE)
+              .simpleConfig(
+                  SimpleRuleConfig.builder()
+                      .conditions(
+                          List.of(
+                              SimpleCondition.builder()
+                                  .field("mcc")
+                                  .operator("==")
+                                  .value("5411")
+                                  .build()))
+                      .build())
+              .build();
 
       List<ImportError> errors = exportImportService.validateRuleData(ruleData);
 
@@ -350,14 +353,13 @@ class RuleExportImportServiceTest {
     @Test
     @DisplayName("Deve validar regra simples sem condições")
     void shouldValidateSimpleRuleWithoutConditions() {
-      RuleData ruleData = RuleData.builder()
-          .key("TEST_RULE")
-          .title("Test Rule")
-          .ruleType(RuleType.SIMPLE)
-          .simpleConfig(SimpleRuleConfig.builder()
-              .conditions(List.of())
-              .build())
-          .build();
+      RuleData ruleData =
+          RuleData.builder()
+              .key("TEST_RULE")
+              .title("Test Rule")
+              .ruleType(RuleType.SIMPLE)
+              .simpleConfig(SimpleRuleConfig.builder().conditions(List.of()).build())
+              .build();
 
       List<ImportError> errors = exportImportService.validateRuleData(ruleData);
 
@@ -368,14 +370,13 @@ class RuleExportImportServiceTest {
     @Test
     @DisplayName("Deve validar regra complexa sem grupo raiz")
     void shouldValidateComplexRuleWithoutRootGroup() {
-      RuleData ruleData = RuleData.builder()
-          .key("TEST_RULE")
-          .title("Test Rule")
-          .ruleType(RuleType.COMPLEX)
-          .complexConfig(ComplexRuleConfig.builder()
-              .rootConditionGroup(null)
-              .build())
-          .build();
+      RuleData ruleData =
+          RuleData.builder()
+              .key("TEST_RULE")
+              .title("Test Rule")
+              .ruleType(RuleType.COMPLEX)
+              .complexConfig(ComplexRuleConfig.builder().rootConditionGroup(null).build())
+              .build();
 
       List<ImportError> errors = exportImportService.validateRuleData(ruleData);
 
@@ -386,18 +387,22 @@ class RuleExportImportServiceTest {
     @Test
     @DisplayName("Deve passar validação para regra válida")
     void shouldPassValidationForValidRule() {
-      RuleData ruleData = RuleData.builder()
-          .key("VALID_RULE")
-          .title("Valid Rule")
-          .ruleType(RuleType.SIMPLE)
-          .simpleConfig(SimpleRuleConfig.builder()
-              .conditions(List.of(SimpleCondition.builder()
-                  .field("mcc")
-                  .operator("==")
-                  .value("5411")
-                  .build()))
-              .build())
-          .build();
+      RuleData ruleData =
+          RuleData.builder()
+              .key("VALID_RULE")
+              .title("Valid Rule")
+              .ruleType(RuleType.SIMPLE)
+              .simpleConfig(
+                  SimpleRuleConfig.builder()
+                      .conditions(
+                          List.of(
+                              SimpleCondition.builder()
+                                  .field("mcc")
+                                  .operator("==")
+                                  .value("5411")
+                                  .build()))
+                      .build())
+              .build();
 
       List<ImportError> errors = exportImportService.validateRuleData(ruleData);
 
@@ -441,7 +446,8 @@ class RuleExportImportServiceTest {
     @Test
     @DisplayName("Deve incluir erros de validação")
     void shouldIncludeValidationErrors() throws JsonProcessingException {
-      String invalidJson = """
+      String invalidJson =
+          """
           {
             "metadata": {
               "version": "1.0",
@@ -511,36 +517,42 @@ class RuleExportImportServiceTest {
 
   private RuleExportDTO createSampleExport() {
     return RuleExportDTO.builder()
-        .metadata(ExportMetadata.builder()
-            .version("1.0")
-            .exportedAt(OffsetDateTime.now())
-            .exportedBy("test-user")
-            .description("Test export")
-            .totalRules(1)
-            .sourceSystem("RULEX")
-            .build())
-        .rules(List.of(RuleData.builder()
-            .key("TEST_RULE")
-            .title("Test Rule")
-            .description("Test description")
-            .version(1)
-            .status("PUBLISHED")
-            .priority(10)
-            .severity(50)
-            .decision("SUSPICIOUS")
-            .enabled(true)
-            .ruleType(RuleType.SIMPLE)
-            .simpleConfig(SimpleRuleConfig.builder()
-                .logicOperator("AND")
-                .conditions(List.of(SimpleCondition.builder()
-                    .field("mcc")
-                    .operator("==")
-                    .value("5411")
-                    .build()))
-                .weight(50)
-                .classification("SUSPICIOUS")
+        .metadata(
+            ExportMetadata.builder()
+                .version("1.0")
+                .exportedAt(OffsetDateTime.now())
+                .exportedBy("test-user")
+                .description("Test export")
+                .totalRules(1)
+                .sourceSystem("RULEX")
                 .build())
-            .build()))
+        .rules(
+            List.of(
+                RuleData.builder()
+                    .key("TEST_RULE")
+                    .title("Test Rule")
+                    .description("Test description")
+                    .version(1)
+                    .status("PUBLISHED")
+                    .priority(10)
+                    .severity(50)
+                    .decision("SUSPICIOUS")
+                    .enabled(true)
+                    .ruleType(RuleType.SIMPLE)
+                    .simpleConfig(
+                        SimpleRuleConfig.builder()
+                            .logicOperator("AND")
+                            .conditions(
+                                List.of(
+                                    SimpleCondition.builder()
+                                        .field("mcc")
+                                        .operator("==")
+                                        .value("5411")
+                                        .build()))
+                            .weight(50)
+                            .classification("SUSPICIOUS")
+                            .build())
+                    .build()))
         .build();
   }
 

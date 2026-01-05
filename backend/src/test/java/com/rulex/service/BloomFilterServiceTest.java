@@ -21,6 +21,7 @@ import org.mockito.Mockito;
  * <p>GAP-FIX #3: Cobertura de testes para classes críticas.
  *
  * <p>O BloomFilterService é uma estrutura de dados probabilística que fornece:
+ *
  * <ul>
  *   <li>Lookup O(1) independente do tamanho da lista
  *   <li>Sem falsos negativos
@@ -353,7 +354,8 @@ class BloomFilterServiceTest {
     @Test
     @DisplayName("Deve tratar valor nulo graciosamente")
     void shouldHandleNullValueGracefully() {
-      BloomFilterService.CheckResult result = bloomFilterService.isBlacklisted(EntityType.PAN, null);
+      BloomFilterService.CheckResult result =
+          bloomFilterService.isBlacklisted(EntityType.PAN, null);
 
       assertThat(result.inList()).isFalse();
       assertThat(result.fromBloomFilter()).isTrue();
@@ -371,7 +373,8 @@ class BloomFilterServiceTest {
     @Test
     @DisplayName("Deve tratar valor em branco graciosamente")
     void shouldHandleBlankValueGracefully() {
-      BloomFilterService.CheckResult result = bloomFilterService.isBlacklisted(EntityType.PAN, "   ");
+      BloomFilterService.CheckResult result =
+          bloomFilterService.isBlacklisted(EntityType.PAN, "   ");
 
       assertThat(result.inList()).isFalse();
       assertThat(result.fromBloomFilter()).isTrue();

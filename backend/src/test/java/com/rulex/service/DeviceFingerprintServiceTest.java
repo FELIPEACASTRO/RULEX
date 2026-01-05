@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
  * <p>GAP-FIX #3: Cobertura de testes para classes críticas.
  *
  * <p>O DeviceFingerprintService cria identificadores únicos para dispositivos baseados em:
+ *
  * <ul>
  *   <li>Sinais de hardware: resolução de tela, plataforma, memória, cores de CPU
  *   <li>Sinais de software: user agent, idioma, timezone
@@ -87,7 +88,8 @@ class DeviceFingerprintServiceTest {
       assertThat(result.isDeviceFarm()).isTrue();
       assertThat(result.cardsOnDevice()).isGreaterThanOrEqualTo(5);
       assertThat(result.riskLevel()).isEqualTo(DeviceFingerprintService.RiskLevel.CRITICAL);
-      assertThat(result.riskFactors().stream().anyMatch(f -> f.contains("DEVICE_FARMING"))).isTrue();
+      assertThat(result.riskFactors().stream().anyMatch(f -> f.contains("DEVICE_FARMING")))
+          .isTrue();
     }
 
     @Test
@@ -113,7 +115,8 @@ class DeviceFingerprintServiceTest {
           fingerprintService.analyzeFingerprint(panHash, newFingerprint);
 
       assertThat(result.devicesForCard()).isGreaterThanOrEqualTo(4);
-      assertThat(result.riskFactors().stream().anyMatch(f -> f.contains("MULTIPLE_DEVICES"))).isTrue();
+      assertThat(result.riskFactors().stream().anyMatch(f -> f.contains("MULTIPLE_DEVICES")))
+          .isTrue();
     }
 
     @Test
@@ -166,7 +169,8 @@ class DeviceFingerprintServiceTest {
           fingerprintService.analyzeFingerprint(panHash, genericFingerprint);
 
       // O fingerprint genérico deve ser detectado como spoofing ou ter fatores de risco
-      assertThat(result.riskFactors()).anyMatch(f -> f.contains("FINGERPRINT_BLOCKED") || f.contains("NEW_DEVICE"));
+      assertThat(result.riskFactors())
+          .anyMatch(f -> f.contains("FINGERPRINT_BLOCKED") || f.contains("NEW_DEVICE"));
     }
 
     @Test
@@ -186,7 +190,8 @@ class DeviceFingerprintServiceTest {
       DeviceFingerprintService.FingerprintAnalysis result =
           fingerprintService.analyzeFingerprint(panHash, fingerprint2);
 
-      assertThat(result.riskFactors().stream().anyMatch(f -> f.contains("PLATFORM_SPOOFING"))).isTrue();
+      assertThat(result.riskFactors().stream().anyMatch(f -> f.contains("PLATFORM_SPOOFING")))
+          .isTrue();
     }
 
     @Test
@@ -206,7 +211,8 @@ class DeviceFingerprintServiceTest {
       DeviceFingerprintService.FingerprintAnalysis result =
           fingerprintService.analyzeFingerprint(panHash, fingerprint2);
 
-      assertThat(result.riskFactors().stream().anyMatch(f -> f.contains("MEMORY_INCONSISTENCY"))).isTrue();
+      assertThat(result.riskFactors().stream().anyMatch(f -> f.contains("MEMORY_INCONSISTENCY")))
+          .isTrue();
     }
   }
 
@@ -372,7 +378,8 @@ class DeviceFingerprintServiceTest {
     @DisplayName("Deve processar fingerprint com todos os campos")
     void shouldProcessFingerprintWithAllFields() {
       Map<String, Object> fullFingerprint = new HashMap<>();
-      fullFingerprint.put("userAgent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0");
+      fullFingerprint.put(
+          "userAgent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0");
       fullFingerprint.put("screenResolution", "1920x1080");
       fullFingerprint.put("platform", "Win32");
       fullFingerprint.put("language", "pt-BR");
