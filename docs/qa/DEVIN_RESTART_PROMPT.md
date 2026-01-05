@@ -35,8 +35,8 @@ docker exec rulex-postgres-1 psql -U postgres -d rulex_db -c "SELECT version, de
 
 # Testar RBAC
 curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/rules  # 401
-curl -s -o /dev/null -w "%{http_code}" -u analyst:rulex http://localhost:8080/api/rules  # 200
-curl -s -o /dev/null -w "%{http_code}" -u analyst:rulex -X POST http://localhost:8080/api/rules  # 403
+curl -s -o /dev/null -w "%{http_code}" -u <ANALYST_USER>:<ANALYST_PASS> http://localhost:8080/api/rules  # 200
+curl -s -o /dev/null -w "%{http_code}" -u <ANALYST_USER>:<ANALYST_PASS> -X POST http://localhost:8080/api/rules  # 403
 ```
 
 ## Arquivos Importantes

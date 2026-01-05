@@ -33,7 +33,7 @@ O Hibernate 6.x não estava fazendo cast automático de String para JSONB e de E
 
 #### Como Reproduzir
 ```bash
-curl -X POST -u admin:rulex http://localhost:8080/api/homolog/rules \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/homolog/rules \
   -H "Content-Type: application/json" \
   -d '{"key":"TEST","title":"Test",...}'
 ```

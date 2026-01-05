@@ -29,7 +29,7 @@
 
 ### Request
 ```bash
-curl -X POST -u admin:rulex http://localhost:8080/api/homolog/rules \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/homolog/rules \
   -d '{
     "key": "MEGA_BASIC_001",
     "title": "Regra Básica - Valor Alto",

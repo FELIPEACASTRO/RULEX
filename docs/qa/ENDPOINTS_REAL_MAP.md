@@ -15,7 +15,7 @@
 Lista todas as regras com paginação.
 
 ```bash
-curl -u admin:rulex http://localhost:8080/api/rules
+curl -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/rules
 ```
 
 **Response:** `Page<RuleConfiguration>`
@@ -24,14 +24,14 @@ curl -u admin:rulex http://localhost:8080/api/rules
 Busca regra por ID.
 
 ```bash
-curl -u admin:rulex http://localhost:8080/api/rules/1
+curl -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/rules/1
 ```
 
 ### POST /api/rules
 Cria nova regra. **Requer ADMIN.**
 
 ```bash
-curl -u admin:rulex -X POST \
+curl -u <ADMIN_USER>:<ADMIN_PASS> -X POST \
   -H "Content-Type: application/json" \
   -d '{
     "ruleName": "HIGH_AMOUNT",
@@ -47,7 +47,7 @@ curl -u admin:rulex -X POST \
 Atualiza regra existente. **Requer ADMIN + version para optimistic locking.**
 
 ```bash
-curl -u admin:rulex -X PUT \
+curl -u <ADMIN_USER>:<ADMIN_PASS> -X PUT \
   -H "Content-Type: application/json" \
   -d '{
     "ruleName": "HIGH_AMOUNT_UPDATED",
@@ -64,7 +64,7 @@ curl -u admin:rulex -X PUT \
 Deleta regra. **Requer ADMIN.**
 
 ```bash
-curl -u admin:rulex -X DELETE http://localhost:8080/api/rules/1
+curl -u <ADMIN_USER>:<ADMIN_PASS> -X DELETE http://localhost:8080/api/rules/1
 ```
 
 ---
@@ -75,7 +75,7 @@ curl -u admin:rulex -X DELETE http://localhost:8080/api/rules/1
 Lista regras complexas.
 
 ```bash
-curl -u admin:rulex http://localhost:8080/api/complex-rules
+curl -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/complex-rules
 ```
 
 ### GET /api/complex-rules/{id}
@@ -204,7 +204,7 @@ Timeline de métricas.
 Lista campos disponíveis. **Requer ANALYST ou ADMIN.**
 
 ```bash
-curl -u analyst:rulex "http://localhost:8080/api/field-dictionary?workflow=BRZLCREDIT&recordType=CRTRAN25&portfolio=*"
+curl -u <ANALYST_USER>:<ANALYST_PASS> "http://localhost:8080/api/field-dictionary?workflow=BRZLCREDIT&recordType=CRTRAN25&portfolio=*"
 ```
 
 ---

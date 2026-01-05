@@ -69,15 +69,15 @@ $ curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/rules
 401
 
 # 200 ANALYST GET
-$ curl -s -o /dev/null -w "%{http_code}" -u analyst:rulex http://localhost:8080/api/rules
+$ curl -s -o /dev/null -w "%{http_code}" -u <ANALYST_USER>:<ANALYST_PASS> http://localhost:8080/api/rules
 200
 
 # 403 ANALYST POST
-$ curl -s -o /dev/null -w "%{http_code}" -u analyst:rulex -X POST -H "Content-Type: application/json" -d '{"ruleName":"TEST"}' http://localhost:8080/api/rules
+$ curl -s -o /dev/null -w "%{http_code}" -u <ANALYST_USER>:<ANALYST_PASS> -X POST -H "Content-Type: application/json" -d '{"ruleName":"TEST"}' http://localhost:8080/api/rules
 403
 
 # ADMIN pode criar
-$ curl -s -o /dev/null -w "%{http_code}" -u admin:rulex -X POST -H "Content-Type: application/json" -d '{"ruleName":"RBAC_TEST","ruleType":"SECURITY","classification":"SUSPICIOUS","logicOperator":"AND","conditions":[]}' http://localhost:8080/api/rules
+$ curl -s -o /dev/null -w "%{http_code}" -u <ADMIN_USER>:<ADMIN_PASS> -X POST -H "Content-Type: application/json" -d '{"ruleName":"RBAC_TEST","ruleType":"SECURITY","classification":"SUSPICIOUS","logicOperator":"AND","conditions":[]}' http://localhost:8080/api/rules
 400  # 400 porque faltam campos obrigatórios, mas passou auth
 ```
 
@@ -127,10 +127,10 @@ $ mvn -f backend/pom.xml test
 ## 7. API RULES LIST
 
 ```bash
-$ curl -s -u admin:rulex http://localhost:8080/api/rules | jq '.content | length'
+$ curl -s -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/rules | jq '.content | length'
 5
 
-$ curl -s -u admin:rulex http://localhost:8080/api/rules | jq '.content[0]'
+$ curl -s -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/rules | jq '.content[0]'
 {
   "id": 2,
   "ruleName": "ADMIN_TEST",
