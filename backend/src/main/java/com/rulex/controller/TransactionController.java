@@ -47,7 +47,7 @@ public class TransactionController {
   public ResponseEntity<TransactionResponse> analyzeTransaction(
       @Valid @RequestBody TransactionRequest request, HttpServletRequest httpRequest) {
 
-    log.info("Analisando transação: {}", request.getExternalTransactionId());
+    log.debug("Analisando transação: {}", request.getExternalTransactionId());
 
     byte[] rawBytes = (byte[]) httpRequest.getAttribute(RawPayloadCaptureFilter.RAW_BYTES_ATTR);
     String contentType = httpRequest.getContentType();
@@ -73,7 +73,7 @@ public class TransactionController {
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size) {
 
-    log.info(
+  log.debug(
         "Listando transações com filtros: customerId={}, merchantId={}, page={}, size={}",
         customerId,
         merchantId,
