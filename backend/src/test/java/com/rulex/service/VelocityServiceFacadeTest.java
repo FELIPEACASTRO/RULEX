@@ -33,7 +33,8 @@ class VelocityServiceFacadeTest {
   void setUp() {
     velocityService = Mockito.mock(VelocityService.class);
     redisVelocityService = Mockito.mock(RedisVelocityService.class);
-    facade = new VelocityServiceFacade(velocityService, redisVelocityService);
+    // RedisVelocityCacheService é opcional (null quando Redis não está disponível)
+    facade = new VelocityServiceFacade(velocityService, redisVelocityService, null);
   }
 
   private void setRedisEnabled(boolean enabled) throws Exception {
@@ -112,7 +113,7 @@ class VelocityServiceFacadeTest {
 
       assertThat(result.getTransactionCount()).isEqualTo(10);
       assertThat(result.getTotalAmount()).isEqualByComparingTo("500.00");
-      assertThat(result.getSource()).isEqualTo("REDIS_CACHE");
+      assertThat(result.getSource()).isEqualTo("MEMORY_CACHE");
       verify(redisVelocityService).getStats(any(), any(), any());
       verify(velocityService, never()).getStats(any(), any(), any());
     }
@@ -140,9 +141,10 @@ class VelocityServiceFacadeTest {
     }
 
     @Test
-    @DisplayName("Deve retornar status REDIS_CACHE_ENABLED")
-    void shouldReturnRedisCacheEnabledStatus() {
-      assertThat(facade.getCacheStatus()).isEqualTo("REDIS_CACHE_ENABLED");
+    @DisplayName("Deve retornar status MEMORY_CACHE_ENABLED quando Redis real não disponível")
+    void shouldReturnMemoryCacheEnabledStatus() {
+      // Sem RedisVelocityCacheService, usa cache em memória
+      assertThat(facade.getCacheStatus()).isEqualTo("MEMORY_CACHE_ENABLED");
     }
 
     @Test

@@ -15,6 +15,18 @@ services:
     volumes:
       - rulex_pgdata:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - rulex_redis:/data
+
   backend:
     build:
       context: ./backend
@@ -24,6 +36,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rulex_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       RULEX_SECURITY_ENABLED: ${RULEX_SECURITY_ENABLED:-true}
       RULEX_ADMIN_USERNAME: ${RULEX_ADMIN_USERNAME:-admin}
       RULEX_ADMIN_PASSWORD: ${RULEX_ADMIN_PASSWORD:-rulex}
@@ -34,6 +48,8 @@ services:
       - "8080:8080"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   web:
@@ -50,3 +66,4 @@ services:
 
 volumes:
   rulex_pgdata:
+  rulex_redis:

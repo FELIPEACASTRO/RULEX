@@ -2,39 +2,47 @@ package com.rulex.service;
 
 import com.rulex.dto.TransactionRequest;
 import java.math.BigDecimal;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
- * Facade para serviços de velocidade que escolhe automaticamente entre cache em memória (Redis) e
- * banco de dados.
+ * Facade para serviços de velocidade que escolhe automaticamente entre cache Redis real, cache em
+ * memória ou banco de dados.
  *
  * <p>GAP-FIX #2: Resolve o gargalo de performance do VelocityService que executava queries de
  * agregação pesadas (COUNT, SUM, AVG, COUNT DISTINCT) diretamente no PostgreSQL para cada
  * transação.
  *
- * <p>Quando habilitado, usa o RedisVelocityService que implementa:
+ * <p>Hierarquia de fallback:
  *
- * <ul>
- *   <li>Sliding windows com buckets de 1 minuto
- *   <li>HyperLogLog para contagem de valores distintos
- *   <li>Cache em memória com latência sub-milissegundo
- * </ul>
- *
- * <p>Quando desabilitado, faz fallback para o VelocityService original (queries no banco).
+ * <ol>
+ *   <li>RedisVelocityCacheService (Redis real) - quando disponível
+ *   <li>RedisVelocityService (cache em memória) - fallback
+ *   <li>VelocityService (banco de dados) - último recurso
+ * </ol>
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class VelocityServiceFacade {
 
   private final VelocityService velocityService;
   private final RedisVelocityService redisVelocityService;
+  private final RedisVelocityCacheService redisVelocityCacheService;
 
   @Value("${rulex.engine.velocity.redis.enabled:false}")
   private boolean redisEnabled;
+
+  @Autowired
+  public VelocityServiceFacade(
+      VelocityService velocityService,
+      RedisVelocityService redisVelocityService,
+      @Autowired(required = false) RedisVelocityCacheService redisVelocityCacheService) {
+    this.velocityService = velocityService;
+    this.redisVelocityService = redisVelocityService;
+    this.redisVelocityCacheService = redisVelocityCacheService;
+  }
 
   /**
    * Obtém estatísticas de velocidade usando o serviço apropriado.
@@ -50,15 +58,24 @@ public class VelocityServiceFacade {
       VelocityService.TimeWindow window) {
 
     if (redisEnabled) {
+      // Tentar usar Redis real primeiro
+      if (redisVelocityCacheService != null) {
+        try {
+          return getStatsFromRedisCacheService(request, keyType, window);
+        } catch (Exception e) {
+          log.warn("Erro ao usar RedisVelocityCacheService: {}", e.getMessage());
+          // Fallback para cache em memória
+        }
+      }
+
+      // Fallback para cache em memória
       try {
-        // Converter tipos entre os dois serviços
         RedisVelocityService.KeyType redisKeyType = convertKeyType(keyType);
         RedisVelocityService.TimeWindow redisWindow = convertTimeWindow(window);
 
         RedisVelocityService.VelocityStats redisStats =
             redisVelocityService.getStats(request, redisKeyType, redisWindow);
 
-        // Converter resultado de volta para o formato do VelocityService
         return VelocityService.VelocityStats.builder()
             .transactionCount(redisStats.getTransactionCount())
             .totalAmount(redisStats.getTotalAmount())
@@ -67,17 +84,42 @@ public class VelocityServiceFacade {
             .distinctMccs(redisStats.getDistinctMccs())
             .distinctCountries(redisStats.getDistinctCountries())
             .found(redisStats.getTransactionCount() > 0)
-            .source("REDIS_CACHE")
+            .source("MEMORY_CACHE")
             .build();
       } catch (Exception e) {
         log.warn(
             "Erro ao usar RedisVelocityService, fazendo fallback para banco: {}", e.getMessage());
-        // Fallback para banco em caso de erro
-        return velocityService.getStats(request, keyType, window);
       }
     }
 
     return velocityService.getStats(request, keyType, window);
+  }
+
+  private VelocityService.VelocityStats getStatsFromRedisCacheService(
+      TransactionRequest request,
+      VelocityService.KeyType keyType,
+      VelocityService.TimeWindow window) {
+
+    RedisVelocityCacheService.KeyType cacheKeyType = convertToCacheKeyType(keyType);
+    RedisVelocityCacheService.TimeWindow cacheWindow = convertToCacheTimeWindow(window);
+
+    long count = redisVelocityCacheService.getTransactionCount(request, cacheKeyType, cacheWindow);
+    BigDecimal total = redisVelocityCacheService.getTotalAmount(request, cacheKeyType, cacheWindow);
+    BigDecimal avg = redisVelocityCacheService.getAverageAmount(request, cacheKeyType, cacheWindow);
+    long distinctMerchants = redisVelocityCacheService.getDistinctMerchants(request, cacheKeyType);
+    long distinctMccs = redisVelocityCacheService.getDistinctMccs(request, cacheKeyType);
+    long distinctCountries = redisVelocityCacheService.getDistinctCountries(request, cacheKeyType);
+
+    return VelocityService.VelocityStats.builder()
+        .transactionCount(count)
+        .totalAmount(total)
+        .avgAmount(avg)
+        .distinctMerchants(distinctMerchants)
+        .distinctMccs(distinctMccs)
+        .distinctCountries(distinctCountries)
+        .found(count > 0)
+        .source("REDIS_REAL")
+        .build();
   }
 
   /** Obtém um valor específico de agregação. */
@@ -105,6 +147,16 @@ public class VelocityServiceFacade {
   /** Registra uma transação para tracking de velocidade. */
   public void recordTransaction(TransactionRequest request, String decision, Integer riskScore) {
     if (redisEnabled) {
+      // Registrar no Redis real se disponível
+      if (redisVelocityCacheService != null) {
+        try {
+          redisVelocityCacheService.recordTransaction(request);
+        } catch (Exception e) {
+          log.warn("Erro ao registrar no RedisVelocityCacheService: {}", e.getMessage());
+        }
+      }
+
+      // Também registrar no cache em memória
       try {
         redisVelocityService.recordTransaction(request);
       } catch (Exception e) {
@@ -123,7 +175,10 @@ public class VelocityServiceFacade {
   /** Retorna estatísticas do cache. */
   public String getCacheStatus() {
     if (redisEnabled) {
-      return "REDIS_CACHE_ENABLED";
+      if (redisVelocityCacheService != null) {
+        return "REDIS_REAL_ENABLED";
+      }
+      return "MEMORY_CACHE_ENABLED";
     }
     return "DATABASE_ONLY";
   }
@@ -196,6 +251,31 @@ public class VelocityServiceFacade {
       case HOUR_24 -> RedisVelocityService.TimeWindow.HOUR_24;
       case DAY_7 -> RedisVelocityService.TimeWindow.DAY_7;
       case DAY_30 -> RedisVelocityService.TimeWindow.DAY_7; // Fallback para 7 dias
+    };
+  }
+
+  // ========== Conversores para RedisVelocityCacheService ==========
+
+  private RedisVelocityCacheService.KeyType convertToCacheKeyType(VelocityService.KeyType keyType) {
+    return switch (keyType) {
+      case PAN -> RedisVelocityCacheService.KeyType.PAN;
+      case CUSTOMER_ID -> RedisVelocityCacheService.KeyType.CUSTOMER_ID;
+      case MERCHANT_ID -> RedisVelocityCacheService.KeyType.MERCHANT_ID;
+    };
+  }
+
+  private RedisVelocityCacheService.TimeWindow convertToCacheTimeWindow(
+      VelocityService.TimeWindow window) {
+    return switch (window) {
+      case MINUTE_5 -> RedisVelocityCacheService.TimeWindow.MINUTE_5;
+      case MINUTE_15 -> RedisVelocityCacheService.TimeWindow.MINUTE_15;
+      case MINUTE_30 -> RedisVelocityCacheService.TimeWindow.MINUTE_30;
+      case HOUR_1 -> RedisVelocityCacheService.TimeWindow.HOUR_1;
+      case HOUR_6 -> RedisVelocityCacheService.TimeWindow.HOUR_6;
+      case HOUR_12 -> RedisVelocityCacheService.TimeWindow.HOUR_12;
+      case HOUR_24 -> RedisVelocityCacheService.TimeWindow.HOUR_24;
+      case DAY_7 -> RedisVelocityCacheService.TimeWindow.HOUR_24; // Fallback
+      case DAY_30 -> RedisVelocityCacheService.TimeWindow.HOUR_24; // Fallback
     };
   }
 }
