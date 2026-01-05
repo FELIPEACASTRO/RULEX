@@ -11,12 +11,12 @@ test.describe("Rules Management", () => {
   });
 
   test("navigates to rules page", async ({ page }) => {
-    await page.getByRole("button", { name: /Regras/i }).click();
+    await page.getByRole("button", { name: "Regras Simples" }).click();
     await expect(page).toHaveURL(/rules/);
   });
 
   test("displays rules list", async ({ page }) => {
-    await page.getByRole("button", { name: /Regras/i }).click();
+    await page.getByRole("button", { name: "Regras Simples" }).click();
     await page.waitForLoadState("networkidle");
     // Should have a table or list of rules
     const rulesContainer = page.locator('table, [class*="list"], [class*="grid"]').first();
@@ -24,9 +24,9 @@ test.describe("Rules Management", () => {
   });
 
   test("can open create rule dialog", async ({ page }) => {
-    await page.getByRole("button", { name: /Regras/i }).click();
+    await page.getByRole("button", { name: "Regras Simples" }).click();
     await page.waitForLoadState("networkidle");
-    
+
     // Look for add/create button
     const addButton = page.getByRole("button", { name: /Nova|Criar|Add|New/i });
     if (await addButton.isVisible()) {
@@ -38,9 +38,9 @@ test.describe("Rules Management", () => {
   });
 
   test("rules have toggle switch for enable/disable", async ({ page }) => {
-    await page.getByRole("button", { name: /Regras/i }).click();
+    await page.getByRole("button", { name: "Regras Simples" }).click();
     await page.waitForLoadState("networkidle");
-    
+
     // Look for toggle switches
     const toggles = page.locator('[role="switch"], input[type="checkbox"]');
     const count = await toggles.count();

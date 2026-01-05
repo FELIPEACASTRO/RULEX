@@ -103,7 +103,7 @@ RULEX_ANALYST_PASSWORD: rulex
 
 # Frontend
 VITE_API_PROXY_TARGET: http://backend:8080
-VITE_API_BASIC_AUTH: admin:rulex
+VITE_API_BASIC_AUTH: <ADMIN_USER>:<ADMIN_PASS>
 ```
 
 ---

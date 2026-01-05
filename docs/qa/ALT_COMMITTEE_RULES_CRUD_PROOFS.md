@@ -24,7 +24,7 @@
 
 ### Request
 ```bash
-curl -X POST -u admin:rulex http://localhost:8080/api/homolog/rules \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/homolog/rules \
   -H "Content-Type: application/json" \
   -H "X-Actor-Email: admin@rulex.local" \
   -d '{
@@ -73,7 +73,7 @@ SELECT * FROM rule_versions WHERE id = '5a67ba6b-fdce-4a94-9f17-ca9bd189f12c';
 
 ### Request
 ```bash
-curl -X POST -u admin:rulex http://localhost:8080/api/homolog/rules \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/homolog/rules \
   -H "Content-Type: application/json" \
   -d '{
     "key": "RULE_COMPLEX_001",
@@ -111,7 +111,7 @@ curl -X POST -u admin:rulex http://localhost:8080/api/homolog/rules \
 
 ### Request
 ```bash
-curl -X POST -u admin:rulex \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> \
   "http://localhost:8080/api/homolog/rules/versions/5a67ba6b-fdce-4a94-9f17-ca9bd189f12c/publish" \
   -H "X-Actor-Email: admin@rulex.local"
 ```
@@ -136,7 +136,7 @@ SELECT status FROM rule_versions WHERE id = '5a67ba6b-fdce-4a94-9f17-ca9bd189f12
 
 ### Request
 ```bash
-curl -X POST -u admin:rulex \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> \
   "http://localhost:8080/api/homolog/rules/502ae66a-06ae-4f0e-bb22-e80cb0995a1a/rollback/1" \
   -H "X-Actor-Email: admin@rulex.local"
 ```
@@ -163,7 +163,7 @@ curl -X POST -u admin:rulex \
 
 ### Request - Valor ALTO (deve disparar)
 ```bash
-curl -X POST -u admin:rulex http://localhost:8080/api/homolog/simulations/run \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/homolog/simulations/run \
   -H "Content-Type: application/json" \
   -d '{
     "payload": {
@@ -226,7 +226,7 @@ curl -X POST -u admin:rulex http://localhost:8080/api/homolog/simulations/run \
 
 ### Request
 ```bash
-curl -X POST -u admin:rulex http://localhost:8080/api/homolog/rulesets \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/homolog/rulesets \
   -H "Content-Type: application/json" \
   -d '{
     "key": "RULESET_AUDIT_001",
@@ -254,7 +254,7 @@ curl -X POST -u admin:rulex http://localhost:8080/api/homolog/rulesets \
 
 ### Request - Publish
 ```bash
-curl -X POST -u admin:rulex \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> \
   "http://localhost:8080/api/homolog/rulesets/versions/0ee7fbbf-e4d4-433c-bb91-35195c38ef16/publish"
 ```
 
@@ -265,7 +265,7 @@ curl -X POST -u admin:rulex \
 
 ### Request - Activate
 ```bash
-curl -X POST -u admin:rulex http://localhost:8080/api/homolog/rulesets/activate \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/homolog/rulesets/activate \
   -H "Content-Type: application/json" \
   -d '{"ruleSetVersionId": "0ee7fbbf-e4d4-433c-bb91-35195c38ef16"}'
 ```

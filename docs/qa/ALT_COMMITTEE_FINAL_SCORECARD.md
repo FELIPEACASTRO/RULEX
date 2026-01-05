@@ -94,7 +94,7 @@ docker compose up -d --build
 
 ### 7. Backup/DR ✅
 ```bash
-curl -s -u admin:rulex \
+curl -s -u <ADMIN_USER>:<ADMIN_PASS> \
   "http://localhost:8080/api/api/v1/rules/export-import/export?format=yaml"
 # Resultado: 4 regras exportadas com metadados completos
 ```

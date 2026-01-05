@@ -1,0 +1,27 @@
+# Gitleaks configuration for RULEX
+# https://github.com/gitleaks/gitleaks
+
+title = "RULEX Gitleaks Config"
+
+# Allow specific paths that contain example/documentation credentials
+[allowlist]
+  description = "Allowlist for false positives"
+  
+  # Rule name fields in documentation (not actual API keys)
+  regexTarget = "match"
+  regexes = [
+    '''\"key\":\s*\"VELOCITY_[A-Z0-9_]+\"''',
+    '''\"key\":\s*\"[A-Z][A-Z0-9_]+_RULE\"''',
+  ]
+  
+  # Paths that may contain example credentials in documentation
+  paths = [
+    '''docs/rules/.*\.md$''',
+  ]
+
+# Extend default rules to ignore specific fingerprints (false positives)
+[[rules]]
+  id = "generic-api-key-allowlist"
+  description = "Allowlist for rule key names that look like API keys"
+  regex = '''\"key\":\s*\"(VELOCITY_BURST_5MIN|VELOCITY_SUM_24H)\"'''
+  allowlist = { regexes = ['''.*'''] }

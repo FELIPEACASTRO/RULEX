@@ -25,7 +25,7 @@
 
 ### Request
 ```bash
-curl -X POST -u admin:rulex http://localhost:8080/api/homolog/rules \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/homolog/rules \
   -H "Content-Type: application/json" \
   -H "X-Actor-Email: admin@rulex.local" \
   -d '{
@@ -62,7 +62,7 @@ curl -X POST -u admin:rulex http://localhost:8080/api/homolog/rules \
 
 ### Request
 ```bash
-curl -X POST -u admin:rulex \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> \
   "http://localhost:8080/api/homolog/rules/versions/5b0edc12-60c6-4e3d-85ec-d09fccf106d8/publish"
 ```
 
@@ -80,7 +80,7 @@ curl -X POST -u admin:rulex \
 
 ### Request
 ```bash
-curl -X POST -u admin:rulex http://localhost:8080/api/homolog/rulesets \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/homolog/rulesets \
   -H "Content-Type: application/json" \
   -d '{
     "key": "AUDIT_RULESET_001",
@@ -117,7 +117,7 @@ curl -X POST -u admin:rulex http://localhost:8080/api/homolog/rulesets \
 
 ### Request
 ```bash
-curl -X POST -u admin:rulex http://localhost:8080/api/homolog/rulesets/activate \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/homolog/rulesets/activate \
   -d '{"ruleSetVersionId": "e95590f5-8bc0-427e-9108-7525638f263d"}'
 ```
 
@@ -132,7 +132,7 @@ HTTP 200 OK
 
 ### Request
 ```bash
-curl -X POST -u admin:rulex http://localhost:8080/api/homolog/simulations/run \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> http://localhost:8080/api/homolog/simulations/run \
   -d '{
     "payload": {
       "externalTransactionId": "TXN-AUDIT-001",
@@ -170,7 +170,7 @@ curl -X POST -u admin:rulex http://localhost:8080/api/homolog/simulations/run \
 
 ### Request
 ```bash
-curl -X POST -u admin:rulex \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> \
   "http://localhost:8080/api/homolog/rules/7ca5636f-5f29-4b73-b183-d97991bcb48f/rollback/1"
 ```
 

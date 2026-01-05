@@ -105,14 +105,14 @@ $ curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/rules
 
 ### Teste 2: 200 ANALYST GET
 ```bash
-$ curl -s -o /dev/null -w "%{http_code}" -u analyst:rulex http://localhost:8080/api/rules
+$ curl -s -o /dev/null -w "%{http_code}" -u <ANALYST_USER>:<ANALYST_PASS> http://localhost:8080/api/rules
 200
 ```
 ✅ **PASSOU**
 
 ### Teste 3: 403 ANALYST POST
 ```bash
-$ curl -s -o /dev/null -w "%{http_code}" -u analyst:rulex -X POST \
+$ curl -s -o /dev/null -w "%{http_code}" -u <ANALYST_USER>:<ANALYST_PASS> -X POST \
   -H "Content-Type: application/json" \
   -d '{"ruleName":"TEST"}' \
   http://localhost:8080/api/rules
@@ -122,7 +122,7 @@ $ curl -s -o /dev/null -w "%{http_code}" -u analyst:rulex -X POST \
 
 ### Teste 4: 201 ADMIN POST
 ```bash
-$ curl -s -o /dev/null -w "%{http_code}" -u admin:rulex -X POST \
+$ curl -s -o /dev/null -w "%{http_code}" -u <ADMIN_USER>:<ADMIN_PASS> -X POST \
   -H "Content-Type: application/json" \
   -d '{"ruleName":"RBAC_TEST","ruleType":"SECURITY","classification":"SUSPICIOUS","logicOperator":"AND","conditions":[]}' \
   http://localhost:8080/api/rules

@@ -195,7 +195,7 @@ $ pnpm test --run && mvn test
 ```bash
 $ curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/rules
 401  # Sem auth
-$ curl -s -o /dev/null -w "%{http_code}" -u analyst:rulex -X POST http://localhost:8080/api/rules
+$ curl -s -o /dev/null -w "%{http_code}" -u <ANALYST_USER>:<ANALYST_PASS> -X POST http://localhost:8080/api/rules
 403  # ANALYST não pode criar
 ```
 

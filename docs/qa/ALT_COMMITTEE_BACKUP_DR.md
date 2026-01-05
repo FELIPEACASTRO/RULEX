@@ -23,7 +23,7 @@
 
 #### Comando
 ```bash
-curl -s -u admin:rulex \
+curl -s -u <ADMIN_USER>:<ADMIN_PASS> \
   "http://localhost:8080/api/api/v1/rules/export-import/export?format=yaml" \
   > rulex_backup.yaml
 ```
@@ -141,7 +141,7 @@ Cada regra contém:
 
 ### 5.2 Comando de Import
 ```bash
-curl -X POST -u admin:rulex \
+curl -X POST -u <ADMIN_USER>:<ADMIN_PASS> \
   "http://localhost:8080/api/api/v1/rules/export-import/import" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@rulex_backup.yaml"
