@@ -73,7 +73,18 @@ class SecurityRbacTest {
 
   @Test
   void actuatorHealth_isPublicBySecurityMatcher() throws Exception {
-    mockMvc.perform(get("/api/actuator/health").contextPath("/api")).andExpect(status().isOk());
+    // Health endpoint should be publicly accessible (no 401/403)
+    // It may return 503 if dependencies are down, but that's OK for security test
+    mockMvc
+        .perform(get("/api/actuator/health").contextPath("/api"))
+        .andExpect(
+            result -> {
+              int status = result.getResponse().getStatus();
+              // Accept 200 (healthy) or 503 (unhealthy but accessible)
+              if (status != 200 && status != 503) {
+                throw new AssertionError("Expected status 200 or 503 but was " + status);
+              }
+            });
   }
 
   @Test
