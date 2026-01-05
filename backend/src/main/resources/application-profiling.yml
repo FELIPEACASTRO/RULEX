@@ -1,0 +1,44 @@
+# Profile para análise de performance e identificação de bottlenecks
+# Uso: SPRING_PROFILES_ACTIVE=profiling mvn spring-boot:run
+
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        # Habilitar estatísticas para identificar queries lentas
+        generate_statistics: true
+        # Log de queries
+        jdbc:
+          batch_size: 0  # Desabilitar batch para ver cada query
+        order_inserts: false
+        order_updates: false
+
+logging:
+  level:
+    # SQL queries com parâmetros
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    # Estatísticas de performance do Hibernate
+    org.hibernate.stat: DEBUG
+    # HikariCP pool monitoring
+    com.zaxxer.hikari: DEBUG
+    # Lettuce (Redis) monitoring
+    io.lettuce.core: DEBUG
+    # Spring transactions
+    org.springframework.transaction: DEBUG
+    org.springframework.orm.jpa: DEBUG
+    # Application logs
+    com.rulex: DEBUG
+
+rulex:
+  # Desabilitar features para isolar bottleneck
+  audit:
+    enabled: true  # Manter habilitado para ver impacto
+    log-all-decisions: true
+  rate-limit:
+    enabled: false  # Desabilitar rate limiting durante profiling
+  rawPayloadCapture:
+    enabled: false  # Desabilitar capture de payload

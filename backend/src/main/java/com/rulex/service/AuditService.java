@@ -13,14 +13,18 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-/** Serviço de auditoria que registra todas as ações para compliance. */
+/**
+ * Serviço de auditoria que registra todas as ações para compliance.
+ *
+ * <p>IMPORTANTE: Todos os métodos são assíncronos (@Async) para não bloquear o processamento de
+ * transações. Utiliza pool dedicado "auditExecutor" (2-4 threads, queue=200).
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 @SuppressWarnings("null")
 public class AuditService {
 
@@ -29,6 +33,7 @@ public class AuditService {
   private final Clock clock;
 
   /** Registra o processamento de uma transação. */
+  @Async("auditExecutor")
   public void logTransactionProcessed(
       Transaction transaction, TransactionDecision decision, RuleEvaluationResult result) {
     try {
@@ -79,6 +84,7 @@ public class AuditService {
   }
 
   /** Registra um erro no processamento. */
+  @Async("auditExecutor")
   public void logError(String transactionId, Exception exception) {
     try {
       AuditLog auditLog =
@@ -97,6 +103,7 @@ public class AuditService {
   }
 
   /** Registra a criação de uma regra. */
+  @Async("auditExecutor")
   public void logRuleCreated(String ruleName, String performedBy) {
     try {
       AuditLog auditLog =
@@ -115,6 +122,7 @@ public class AuditService {
   }
 
   /** Registra a atualização de uma regra. */
+  @Async("auditExecutor")
   public void logRuleUpdated(String ruleName, Map<String, Object> changes, String performedBy) {
     try {
       AuditLog auditLog =
@@ -134,6 +142,7 @@ public class AuditService {
   }
 
   /** Registra a deleção de uma regra. */
+  @Async("auditExecutor")
   public void logRuleDeleted(String ruleName, String performedBy) {
     try {
       AuditLog auditLog =
@@ -152,6 +161,7 @@ public class AuditService {
   }
 
   /** Registra a execução de uma regra específica (motor avançado). */
+  @Async("auditExecutor")
   public void logRule(String ruleName, TransactionRequest transaction, String outcome) {
     try {
       Map<String, Object> details = new HashMap<>();
@@ -179,6 +189,7 @@ public class AuditService {
   /**
    * V3.1: append-only audit for anti-tamper (externalTransactionId reused with different raw hash).
    */
+  @Async("auditExecutor")
   public void logTamperAttempt(String externalTransactionId, String oldHash, String newHash) {
     try {
       Map<String, Object> details = new HashMap<>();
