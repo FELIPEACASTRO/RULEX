@@ -17,6 +17,7 @@ import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
 import com.rulex.util.PanHashUtil;
 import com.rulex.util.PanMaskingUtil;
+import com.rulex.util.RegexValidator;
 import com.rulex.v31.execlog.ExecutionEventType;
 import com.rulex.v31.execlog.RuleExecutionLogService;
 import java.beans.PropertyDescriptor;
@@ -1783,11 +1784,8 @@ public class RuleEngineService {
   }
 
   private boolean matchesRegex(String left, String rawRegex) {
-    try {
-      return java.util.regex.Pattern.compile(rawRegex).matcher(left).find();
-    } catch (Exception e) {
-      return false;
-    }
+    // Usa RegexValidator para proteção contra ReDoS
+    return RegexValidator.safeFind(rawRegex, left);
   }
 
   private boolean inListNumberFlexible(BigDecimal left, String rawList) {

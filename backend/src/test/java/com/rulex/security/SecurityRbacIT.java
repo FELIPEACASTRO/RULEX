@@ -77,7 +77,19 @@ class SecurityRbacTest {
   }
 
   @Test
-  void evaluate_isPublic() throws Exception {
+  void evaluate_requiresAuth() throws Exception {
+    // Endpoint /evaluate agora requer autenticação (correção de segurança)
+    mockMvc
+        .perform(
+            post("/api/evaluate")
+                .contextPath("/api")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"payload\":{\"test\":\"value\"}}"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void evaluate_allowsAnalyst() throws Exception {
     when(ruleEngineService.evaluateRaw(any(), any(), any())).thenReturn(new EvaluateResponse());
 
     mockMvc
@@ -85,7 +97,22 @@ class SecurityRbacTest {
             post("/api/evaluate")
                 .contextPath("/api")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
+                .content("{\"payload\":{\"test\":\"value\"}}")
+                .with(httpBasic("analyst", "analystpw")))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void evaluate_allowsAdmin() throws Exception {
+    when(ruleEngineService.evaluateRaw(any(), any(), any())).thenReturn(new EvaluateResponse());
+
+    mockMvc
+        .perform(
+            post("/api/evaluate")
+                .contextPath("/api")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"payload\":{\"test\":\"value\"}}")
+                .with(httpBasic("admin", "adminpw")))
         .andExpect(status().isOk());
   }
 

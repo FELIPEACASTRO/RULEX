@@ -375,4 +375,110 @@ public final class RegexValidator {
       super(message);
     }
   }
+
+  // ========== MÉTODOS DE CONVENIÊNCIA PARA MIGRAÇÃO ==========
+
+  /**
+   * Executa um match seguro com timeout. Retorna false em caso de timeout ou erro.
+   * Use este método como substituto direto de String.matches() ou Pattern.matches().
+   *
+   * @param pattern O pattern regex como string
+   * @param input O input a testar
+   * @return true se match, false caso contrário (incluindo timeout/erro)
+   */
+  public static boolean safeMatches(String pattern, String input) {
+    if (pattern == null || input == null) {
+      return false;
+    }
+
+    ValidationResult validation = validate(pattern);
+    if (!validation.valid()) {
+      log.warn("Pattern inválido em safeMatches: {} - {}", pattern, validation.errorMessage());
+      return false;
+    }
+
+    try {
+      Pattern compiled = Pattern.compile(pattern);
+      return matchWithTimeout(compiled, input);
+    } catch (TimeoutException e) {
+      log.warn("Timeout em safeMatches para pattern: {}", pattern);
+      return false;
+    } catch (Exception e) {
+      log.error("Erro em safeMatches: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Executa um find seguro com timeout. Retorna false em caso de timeout ou erro.
+   * Use este método como substituto de Matcher.find().
+   *
+   * @param pattern O pattern regex como string
+   * @param input O input a testar
+   * @return true se encontrar match, false caso contrário
+   */
+  public static boolean safeFind(String pattern, String input) {
+    if (pattern == null || input == null) {
+      return false;
+    }
+
+    ValidationResult validation = validate(pattern);
+    if (!validation.valid()) {
+      log.warn("Pattern inválido em safeFind: {} - {}", pattern, validation.errorMessage());
+      return false;
+    }
+
+    // Truncar input se muito longo
+    String safeInput =
+        input.length() > MAX_INPUT_LENGTH ? input.substring(0, MAX_INPUT_LENGTH) : input;
+
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    try {
+      Pattern compiled = Pattern.compile(pattern);
+      Future<Boolean> future = executor.submit(() -> compiled.matcher(safeInput).find());
+      return future.get(REGEX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+    } catch (java.util.concurrent.TimeoutException e) {
+      log.warn("Timeout em safeFind para pattern: {}", pattern);
+      return false;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return false;
+    } catch (Exception e) {
+      log.error("Erro em safeFind: {}", e.getMessage());
+      return false;
+    } finally {
+      executor.shutdownNow();
+    }
+  }
+
+  /**
+   * Verifica se um pattern é seguro para uso (validação estática apenas).
+   * Útil para validar patterns antes de armazená-los no banco de dados.
+   *
+   * @param pattern O pattern a verificar
+   * @return true se o pattern é considerado seguro
+   */
+  public static boolean isPatternSafe(String pattern) {
+    return validate(pattern).valid();
+  }
+
+  /**
+   * Verifica se uma string corresponde a um pattern simples e seguro.
+   * Para patterns simples como [A-Za-z0-9_]+ que são conhecidos como seguros.
+   *
+   * @param input O input a testar
+   * @param safePattern Um pattern que é conhecido como seguro (sem quantificadores aninhados)
+   * @return true se match
+   */
+  public static boolean matchesSimplePattern(String input, String safePattern) {
+    if (input == null || safePattern == null) {
+      return false;
+    }
+    try {
+      return Pattern.matches(safePattern, input);
+    } catch (Exception e) {
+      log.error("Erro em matchesSimplePattern: {}", e.getMessage());
+      return false;
+    }
+  }
 }

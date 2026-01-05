@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
+import com.rulex.util.RegexValidator;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -297,7 +297,8 @@ public class RuleSimulationService {
       case "ENDS_WITH":
         return actualStr.endsWith(expected);
       case "MATCHES_REGEX":
-        return Pattern.matches(expected, actualStr);
+        // Usa RegexValidator para proteção contra ReDoS
+        return RegexValidator.safeMatches(expected, actualStr);
       case "BETWEEN":
         return isBetween(actual, expected);
       case "NOT_BETWEEN":

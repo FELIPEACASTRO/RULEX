@@ -88,7 +88,7 @@ public class SecurityConfig {
         csrf ->
             csrf.csrfTokenRepository(csrfTokenRepository)
                 .csrfTokenRequestHandler(requestHandler)
-                // Ignore CSRF for public analyze endpoints (stateless transaction analysis)
+                // Ignore CSRF for stateless API endpoints (they use Basic Auth)
                 .ignoringRequestMatchers(
                     "/transactions/analyze",
                     "/transactions/analyze-advanced",
@@ -98,17 +98,17 @@ public class SecurityConfig {
     http.authorizeHttpRequests(
             auth ->
                 auth
-                    // Public endpoints (kept open for demos / tests)
-                    .requestMatchers(HttpMethod.POST, "/transactions/analyze")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/transactions/analyze-advanced")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/evaluate")
-                    .permitAll()
-
-                    // Health probes (K8s / Container Apps / HML ops)
+                    // Health probes (K8s / Container Apps / HML ops) - only health endpoints are public
                     .requestMatchers("/actuator/health/**")
                     .permitAll()
+
+                    // Transaction analysis endpoints - require at least ANALYST role
+                    .requestMatchers(HttpMethod.POST, "/transactions/analyze")
+                    .hasAnyRole("ANALYST", "ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/transactions/analyze-advanced")
+                    .hasAnyRole("ANALYST", "ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/evaluate")
+                    .hasAnyRole("ANALYST", "ADMIN")
 
                     // Read-only access for analysts
                     .requestMatchers(HttpMethod.GET, "/transactions/**")

@@ -1,13 +1,13 @@
 package com.rulex.v31.ast;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.rulex.util.RegexValidator;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 /** Deterministic AST evaluator for V3.1 (safe subset of JSONPath: $.a.b.c). */
 public class AstEvaluator {
@@ -223,7 +223,8 @@ public class AstEvaluator {
       return false;
     }
     String pattern = String.valueOf(expected);
-    return Pattern.compile(pattern).matcher(s).find();
+    // Usa RegexValidator para proteção contra ReDoS
+    return RegexValidator.safeFind(pattern, s);
   }
 
   private int compare(Object a, Object b) {
@@ -265,7 +266,8 @@ public class AstEvaluator {
       return yyyymmddToDate(l.intValue());
     }
     String s = String.valueOf(v);
-    if (s.matches("\\d{8}")) {
+    // Pattern simples e seguro - não precisa de timeout
+    if (RegexValidator.matchesSimplePattern(s, "\\d{8}")) {
       return yyyymmddToDate(Integer.parseInt(s));
     }
     return null;
@@ -424,7 +426,8 @@ public class AstEvaluator {
       return null;
     }
     String s = String.valueOf(v).trim();
-    if (!s.matches("[+-]\\d{2}(\\.|:)\\d{2}")) {
+    // Pattern simples e seguro - não precisa de timeout
+    if (!RegexValidator.matchesSimplePattern(s, "[+-]\\d{2}(\\.|:)\\d{2}")) {
       return null;
     }
     return s.replace(':', '.');
