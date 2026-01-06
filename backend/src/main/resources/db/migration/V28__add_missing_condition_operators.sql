@@ -1,0 +1,92 @@
+-- ============================================================================
+-- Migration V28: Adicionar operadores faltantes ao enum condition_operator
+-- Data: 2026-01-06
+-- Objetivo: Sincronizar o enum do PostgreSQL com o enum Java ConditionOperator
+-- ============================================================================
+
+-- Agregações temporais avançadas (DSL expandida)
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'SUM_LAST_N_DAYS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'COUNT_LAST_N_HOURS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'AVG_LAST_N_DAYS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'MAX_AMOUNT_LAST_N_DAYS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'MIN_AMOUNT_LAST_N_DAYS';
+
+-- Operadores de lista (aliases)
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'IN_LIST';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'NOT_IN_LIST';
+
+-- Operadores de similaridade e validação
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'NAME_SIMILARITY_LT';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'NAME_SIMILARITY_GT';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'CHARGEBACK_RATE_GT';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'COUNT_DISTINCT_PANS_LAST_N_HOURS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'HAS_FAILED_3DS_LAST_N_MINUTES';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'COUNT_DISTINCT_ACCOUNTS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'DOMAIN_IN_LIST';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'IS_VOIP';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'ACCOUNT_AGE_LT_MINUTES';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'ACCOUNT_AGE_LT_DAYS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'EMAIL_DOMAIN_AGE_LT_DAYS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'PHONE_COUNTRY_MISMATCH';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'ADDRESS_MISMATCH';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'DEVICE_FINGERPRINT_MISMATCH';
+
+-- Operadores de padrão comportamental
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'IS_NEW_DEVICE';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'IS_NEW_LOCATION';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'IMPOSSIBLE_TRAVEL';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'VELOCITY_ANOMALY';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'AMOUNT_ANOMALY';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'TIME_ANOMALY';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'MCC_ANOMALY';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'MERCHANT_ANOMALY';
+
+-- Operadores de transferência
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'RECIPIENT_IS_NEW';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'RECIPIENT_IN_WATCHLIST';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'TRANSFER_VELOCITY_GT';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'TRANSFER_AMOUNT_GT';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'ROUND_AMOUNT';
+
+-- Operadores de bot detection
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'SESSION_DURATION_LT';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'CLICK_VELOCITY_GT';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'TYPING_SPEED_ANOMALY';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'MOUSE_MOVEMENT_ANOMALY';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'CAPTCHA_FAILED';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'USER_AGENT_SUSPICIOUS';
+
+-- Operadores de data/tempo avançados
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'LT_CURRENT_DATE';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'GT_CURRENT_DATE';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'NOT_IN_CUSTOMER_HISTORY';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'IN_CUSTOMER_HISTORY';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'NOT_IN_CUSTOMER_USUAL_HOURS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'IN_CUSTOMER_USUAL_HOURS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'IN_CUSTOMER_CHARGEBACK_MERCHANTS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'PERCENTAGE_OF_FIELD';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'HOUR_BETWEEN';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'DAY_OF_WEEK_IN';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'IS_WEEKEND';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'IS_HOLIDAY';
+
+-- Operadores de distância e tempo
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'DISTANCE_FROM_LAST_GT';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'TIME_SINCE_LAST_LT';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'COUNT_FAILURES_LAST_N_HOURS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'SUM_LAST_N_HOURS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'COUNT_DISTINCT_MERCHANTS_LAST_N_HOURS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'COUNT_DISTINCT_COUNTRIES_LAST_N_DAYS';
+
+-- Operadores de padrão
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'VELOCITY_SPIKE';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'AMOUNT_SPIKE';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'PATTERN_ESCALATION';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'PATTERN_ROUND_NUMBERS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'PATTERN_SPLIT_TRANSACTION';
+
+-- ============================================================================
+-- FIM DA MIGRATION V28
+-- ============================================================================
