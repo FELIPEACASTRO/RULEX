@@ -192,7 +192,18 @@ public class RuleCondition {
     AMOUNT_SPIKE,              // Spike de valor comparado com média
     PATTERN_ESCALATION,        // Padrão de escada (valores crescentes)
     PATTERN_ROUND_NUMBERS,     // Padrão de valores redondos
-    PATTERN_SPLIT_TRANSACTION  // Padrão de split de transação
+    PATTERN_SPLIT_TRANSACTION, // Padrão de split de transação
+
+    // Operadores críticos para regras de fraude avançadas
+    NOT_IN_HISTORICAL,         // Verificar se valor não está no histórico
+    NAME_SIMILARITY_LT,        // Similaridade de nome menor que threshold
+    GTE_PERCENT_OF_LAST_INCOMING, // Valor >= X% do último crédito recebido
+    DOMAIN_IN_LIST,            // Domínio do email está em lista
+    CHARGEBACK_RATE_GT,        // Taxa de chargeback do merchant maior que
+    ACCOUNT_AGE_LT_MINUTES,    // Idade da conta menor que N minutos
+    IS_VOIP,                   // Telefone é VoIP
+    COUNT_DISTINCT_PANS_LAST_N_HOURS, // PANs distintos nas últimas N horas
+    COUNT_DISTINCT_ACCOUNTS    // Contas distintas associadas ao campo
   }
 
   /** Tipos de valor suportados */

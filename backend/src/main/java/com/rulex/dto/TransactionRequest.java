@@ -347,4 +347,102 @@ public class TransactionRequest {
 
   @JsonProperty("clientIdFromHeader")
   private String clientIdFromHeader;
+
+  // =========================================================================
+  // CAMPOS ADICIONAIS PARA REGRAS DE FRAUDE AVANÇADAS
+  // =========================================================================
+
+  // --- Dados do Cliente/Beneficiário ---
+
+  /** País do cliente (código ISO 2 ou 3 letras) */
+  @JsonProperty("customerCountry")
+  private String customerCountry;
+
+  /** Email do cliente */
+  @JsonProperty("customerEmail")
+  private String customerEmail;
+
+  /** Telefone do cliente */
+  @JsonProperty("customerPhone")
+  private String customerPhone;
+
+  /** País do beneficiário em transferências (código ISO) */
+  @JsonProperty("beneficiaryCountry")
+  private String beneficiaryCountry;
+
+  /** ID do beneficiário em transferências */
+  @JsonProperty("beneficiaryId")
+  private String beneficiaryId;
+
+  /** Nome impresso no cartão */
+  @JsonProperty("cardholderName")
+  private String cardholderName;
+
+  /** Endereço de cobrança completo */
+  @JsonProperty("billingAddress")
+  private String billingAddress;
+
+  /** Renda declarada do cliente */
+  @JsonProperty("declaredIncome")
+  private BigDecimal declaredIncome;
+
+  // --- Dados de Dispositivo/Sessão ---
+
+  /** ID único do dispositivo (fingerprint) */
+  @JsonProperty("deviceId")
+  private String deviceId;
+
+  /** User Agent do navegador/app */
+  @JsonProperty("userAgent")
+  private String userAgent;
+
+  /** Score de reputação do IP (0-100, maior = melhor) */
+  @JsonProperty("ipReputationScore")
+  private Integer ipReputationScore;
+
+  // --- Dados de Autenticação/Verificação ---
+
+  /** Se MFA foi solicitado nesta transação */
+  @JsonProperty("mfaRequested")
+  private Boolean mfaRequested;
+
+  /** Se MFA foi completado com sucesso */
+  @JsonProperty("mfaCompleted")
+  private Boolean mfaCompleted;
+
+  /** Se passou na verificação de vivacidade (liveness check) */
+  @JsonProperty("livenessCheckPassed")
+  private Boolean livenessCheckPassed;
+
+  /** Score de verificação de identidade (0-100) */
+  @JsonProperty("identityVerificationScore")
+  private Integer identityVerificationScore;
+
+  /** Score de detecção de deepfake (0-100, maior = mais provável ser fake) */
+  @JsonProperty("deepfakeScore")
+  private Integer deepfakeScore;
+
+  /** Score de correspondência de nome (0-100) */
+  @JsonProperty("nameMatchScore")
+  private Integer nameMatchScore;
+
+  // --- Dados de Entrega ---
+
+  /** Método de envio (STANDARD, EXPRESS, OVERNIGHT, SAME_DAY, PICKUP) */
+  @JsonProperty("shippingMethod")
+  private String shippingMethod;
+
+  /** Nome do destinatário no endereço de entrega */
+  @JsonProperty("shippingName")
+  private String shippingName;
+
+  /** Endereço de entrega completo */
+  @JsonProperty("shippingAddress")
+  private String shippingAddress;
+
+  // --- Dados Derivados/Calculados ---
+
+  /** Diferença de idade entre dados (ex: idade do cartão vs idade da conta) */
+  @JsonProperty("ageDifference")
+  private Integer ageDifference;
 }

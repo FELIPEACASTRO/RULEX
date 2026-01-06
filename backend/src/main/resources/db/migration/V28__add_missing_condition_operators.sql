@@ -90,3 +90,14 @@ ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'PATTERN_SPLIT_TRANSACTION
 -- ============================================================================
 -- FIM DA MIGRATION V28
 -- ============================================================================
+
+-- Operadores adicionais faltantes
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'DECIMAL_PLACES_GT';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'EXPIRES_WITHIN_DAYS';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'GT_FIELD_MULTIPLIER';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'IS_FIRST';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'IS_NEW';
+
+-- Operadores críticos adicionais
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'NOT_IN_HISTORICAL';
+ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'GTE_PERCENT_OF_LAST_INCOMING';

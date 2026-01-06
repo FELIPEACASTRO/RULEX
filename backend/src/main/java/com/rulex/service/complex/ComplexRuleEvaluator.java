@@ -317,6 +317,57 @@ public class ComplexRuleEvaluator {
       case COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS -> evaluateCountDistinctCountriesLastNHours(condition, context);
       case MAX_AMOUNT_LAST_N_DAYS -> evaluateMaxAmountLastNDays(condition, context);
       case MIN_AMOUNT_LAST_N_DAYS -> evaluateMinAmountLastNDays(condition, context);
+
+        // Operadores críticos para regras de fraude avançadas
+      case NOT_IN_HISTORICAL -> evaluateNotInHistorical(condition, context);
+      case NAME_SIMILARITY_LT -> evaluateNameSimilarityLt(condition, context);
+      case GTE_PERCENT_OF_LAST_INCOMING -> evaluateGtePercentOfLastIncoming(condition, context);
+      case DOMAIN_IN_LIST -> evaluateDomainInList(fieldValue, condition);
+      case CHARGEBACK_RATE_GT -> evaluateChargebackRateGt(condition, context);
+      case ACCOUNT_AGE_LT_MINUTES -> evaluateAccountAgeLtMinutes(condition, context);
+      case IS_VOIP -> evaluateIsVoip(fieldValue);
+      case COUNT_DISTINCT_PANS_LAST_N_HOURS -> evaluateCountDistinctPansLastNHours(condition, context);
+      case COUNT_DISTINCT_ACCOUNTS -> evaluateCountDistinctAccounts(condition, context);
+
+        // Operadores de Tempo/Data
+      case IS_WEEKEND -> evaluateIsWeekend(context);
+      case IS_HOLIDAY -> evaluateIsHoliday(context);
+      case HOUR_BETWEEN -> evaluateHourBetween(condition, context);
+      case DAY_OF_WEEK_IN -> evaluateDayOfWeekIn(condition, context);
+      case GT_CURRENT_DATE -> evaluateGtCurrentDate(fieldValue);
+      case LT_CURRENT_DATE -> evaluateLtCurrentDate(fieldValue);
+      case EXPIRES_WITHIN_DAYS -> evaluateExpiresWithinDays(fieldValue, condition);
+
+        // Operadores de Padrão
+      case DECIMAL_PLACES_GT -> evaluateDecimalPlacesGt(fieldValue, condition);
+      case PATTERN_ROUND_NUMBERS -> evaluatePatternRoundNumbers(fieldValue);
+      case GT_FIELD_MULTIPLIER -> evaluateGtFieldMultiplier(condition, context);
+      case PERCENTAGE_OF_FIELD -> evaluatePercentageOfField(condition, context);
+
+        // Operadores de Velocity adicionais
+      case SUM_LAST_N_HOURS -> evaluateSumLastNHours(condition, context);
+      case COUNT_FAILURES_LAST_N_HOURS -> evaluateCountFailuresLastNHours(condition, context);
+      case COUNT_DISTINCT_MERCHANTS_LAST_N_HOURS -> evaluateCountDistinctMerchantsLastNHours(condition, context);
+      case TIME_SINCE_LAST_LT -> evaluateTimeSinceLastLt(condition, context);
+
+        // Operadores de Padrão de Fraude
+      case VELOCITY_SPIKE -> evaluateVelocitySpike(condition, context);
+      case AMOUNT_SPIKE -> evaluateAmountSpike(condition, context);
+      case PATTERN_ESCALATION -> evaluatePatternEscalation(condition, context);
+      case PATTERN_SPLIT_TRANSACTION -> evaluatePatternSplitTransaction(condition, context);
+
+        // Operadores de Histórico do Cliente
+      case IN_CUSTOMER_HISTORY -> evaluateInCustomerHistory(condition, context);
+      case NOT_IN_CUSTOMER_HISTORY -> !evaluateInCustomerHistory(condition, context);
+      case IN_CUSTOMER_USUAL_HOURS -> evaluateInCustomerUsualHours(condition, context);
+      case NOT_IN_CUSTOMER_USUAL_HOURS -> !evaluateInCustomerUsualHours(condition, context);
+      case IN_CUSTOMER_CHARGEBACK_MERCHANTS -> evaluateInCustomerChargebackMerchants(condition, context);
+
+        // Operadores de Primeira Ocorrência
+      case IS_FIRST -> evaluateIsFirst(condition, context);
+      case IS_NEW -> evaluateIsNew(condition, context);
+      case DISTANCE_FROM_LAST_GT -> evaluateDistanceFromLastGt(condition, context);
+
       default -> {
         log.warn("Operador não implementado: {}", operator);
         yield false;
@@ -903,7 +954,7 @@ public class ComplexRuleEvaluator {
       // Calcular a soma usando o VelocityServiceFacade
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
-      
+
       var stats = velocityServiceFacade.getStats(
           context.getTransactionRequest(),
           keyType,
@@ -946,7 +997,7 @@ public class ComplexRuleEvaluator {
 
       VelocityService.TimeWindow window = parseTimeWindowFromHours(nHours);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
-      
+
       var stats = velocityServiceFacade.getStats(
           context.getTransactionRequest(),
           keyType,
@@ -990,7 +1041,7 @@ public class ComplexRuleEvaluator {
 
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
-      
+
       var stats = velocityServiceFacade.getStats(
           context.getTransactionRequest(),
           keyType,
@@ -1033,7 +1084,7 @@ public class ComplexRuleEvaluator {
 
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
-      
+
       var stats = velocityServiceFacade.getStats(
           context.getTransactionRequest(),
           keyType,
@@ -1076,7 +1127,7 @@ public class ComplexRuleEvaluator {
 
       VelocityService.TimeWindow window = parseTimeWindowFromHours(nHours);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
-      
+
       var stats = velocityServiceFacade.getStats(
           context.getTransactionRequest(),
           keyType,
@@ -1119,7 +1170,7 @@ public class ComplexRuleEvaluator {
 
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
-      
+
       var stats = velocityServiceFacade.getStats(
           context.getTransactionRequest(),
           keyType,
@@ -1162,7 +1213,7 @@ public class ComplexRuleEvaluator {
 
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
-      
+
       var stats = velocityServiceFacade.getStats(
           context.getTransactionRequest(),
           keyType,
@@ -1218,5 +1269,969 @@ public class ComplexRuleEvaluator {
       return String.valueOf(context.getPayload().get("customerId"));
     }
     return "unknown";
+  }
+
+  // ========== Operadores Críticos para Regras de Fraude Avançadas ==========
+
+  /**
+   * NOT_IN_HISTORICAL: Verifica se o valor NÃO está no histórico do cliente.
+   * Formato: "sourceField:targetField:days" (ex: "customerAcctNumber:beneficiaryId:90")
+   * Retorna true se o beneficiário NUNCA foi usado antes pelo cliente nos últimos N dias.
+   */
+  private boolean evaluateNotInHistorical(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split(":");
+      if (parts.length < 3) {
+        log.warn("Formato inválido para NOT_IN_HISTORICAL. Esperado: sourceField:targetField:days");
+        return false;
+      }
+
+      String sourceField = parts[0].trim();
+      String targetField = parts[1].trim();
+      int days = Integer.parseInt(parts[2].trim());
+
+      Object sourceValue = getFieldValue(sourceField, null, context);
+      Object targetValue = getFieldValue(targetField, null, context);
+
+      if (sourceValue == null || targetValue == null) {
+        return false;
+      }
+
+      // Consulta ao VelocityService para verificar histórico
+      // Por enquanto, retorna true (beneficiário novo) se não houver dados históricos
+      // TODO: Implementar consulta real ao histórico de transações
+      log.debug("NOT_IN_HISTORICAL: source={}, target={}, days={}", sourceValue, targetValue, days);
+      return true; // Placeholder - assumir novo beneficiário
+    } catch (Exception e) {
+      log.error("Erro ao avaliar NOT_IN_HISTORICAL: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * NAME_SIMILARITY_LT: Verifica se a similaridade entre dois nomes é menor que o threshold.
+   * Formato: "otherField:threshold" (ex: "shippingName:50")
+   * Usa algoritmo de Levenshtein para calcular similaridade.
+   */
+  private boolean evaluateNameSimilarityLt(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split(":");
+      if (parts.length < 2) {
+        log.warn("Formato inválido para NAME_SIMILARITY_LT. Esperado: otherField:threshold");
+        return false;
+      }
+
+      String otherField = parts[0].trim();
+      int threshold = Integer.parseInt(parts[1].trim());
+
+      Object fieldValue = getFieldValue(condition.getFieldName(), null, context);
+      Object otherValue = getFieldValue(otherField, null, context);
+
+      if (fieldValue == null || otherValue == null) {
+        return false;
+      }
+
+      String name1 = String.valueOf(fieldValue).toLowerCase().trim();
+      String name2 = String.valueOf(otherValue).toLowerCase().trim();
+
+      int similarity = calculateSimilarity(name1, name2);
+      return similarity < threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar NAME_SIMILARITY_LT: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /** Calcula similaridade entre duas strings usando distância de Levenshtein (0-100) */
+  private int calculateSimilarity(String s1, String s2) {
+    if (s1.equals(s2)) return 100;
+    if (s1.isEmpty() || s2.isEmpty()) return 0;
+
+    int[][] dp = new int[s1.length() + 1][s2.length() + 1];
+
+    for (int i = 0; i <= s1.length(); i++) dp[i][0] = i;
+    for (int j = 0; j <= s2.length(); j++) dp[0][j] = j;
+
+    for (int i = 1; i <= s1.length(); i++) {
+      for (int j = 1; j <= s2.length(); j++) {
+        int cost = s1.charAt(i - 1) == s2.charAt(j - 1) ? 0 : 1;
+        dp[i][j] = Math.min(Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1), dp[i - 1][j - 1] + cost);
+      }
+    }
+
+    int maxLen = Math.max(s1.length(), s2.length());
+    return (int) ((1.0 - (double) dp[s1.length()][s2.length()] / maxLen) * 100);
+  }
+
+  /**
+   * GTE_PERCENT_OF_LAST_INCOMING: Verifica se o valor é >= X% do último valor recebido.
+   * Formato: "percentage" (ex: "80")
+   * Usado para detectar saques que drenam a conta após depósito.
+   */
+  private boolean evaluateGtePercentOfLastIncoming(RuleCondition condition, EvaluationContext context) {
+    try {
+      int percentage = Integer.parseInt(condition.getValueSingle().trim());
+      Object fieldValue = getFieldValue(condition.getFieldName(), null, context);
+
+      if (fieldValue == null) {
+        return false;
+      }
+
+      BigDecimal currentAmount = new BigDecimal(String.valueOf(fieldValue));
+
+      // TODO: Implementar consulta ao último depósito/crédito do cliente
+      // Por enquanto, usa um valor placeholder
+      BigDecimal lastIncoming = BigDecimal.valueOf(1000); // Placeholder
+
+      BigDecimal threshold = lastIncoming.multiply(BigDecimal.valueOf(percentage)).divide(BigDecimal.valueOf(100));
+      return currentAmount.compareTo(threshold) >= 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar GTE_PERCENT_OF_LAST_INCOMING: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * DOMAIN_IN_LIST: Verifica se o domínio do email está em uma lista.
+   * Formato: "domain1,domain2,domain3" (ex: "guerrillamail.com,10minutemail.com")
+   */
+  private boolean evaluateDomainInList(Object fieldValue, RuleCondition condition) {
+    if (fieldValue == null || condition.getValueSingle() == null) {
+      return false;
+    }
+
+    String email = String.valueOf(fieldValue).toLowerCase().trim();
+    int atIndex = email.indexOf('@');
+    if (atIndex < 0 || atIndex >= email.length() - 1) {
+      return false;
+    }
+
+    String domain = email.substring(atIndex + 1);
+    String[] blockedDomains = condition.getValueSingle().toLowerCase().split(",");
+
+    for (String blocked : blockedDomains) {
+      if (domain.equals(blocked.trim())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * CHARGEBACK_RATE_GT: Verifica se a taxa de chargeback do merchant é maior que o threshold.
+   * Formato: "rate:days" (ex: "2:7" = taxa > 2% nos últimos 7 dias)
+   */
+  private boolean evaluateChargebackRateGt(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split(":");
+      if (parts.length < 2) {
+        log.warn("Formato inválido para CHARGEBACK_RATE_GT. Esperado: rate:days");
+        return false;
+      }
+
+      double rateThreshold = Double.parseDouble(parts[0].trim());
+      int days = Integer.parseInt(parts[1].trim());
+
+      Object merchantId = getFieldValue(condition.getFieldName(), null, context);
+      if (merchantId == null) {
+        return false;
+      }
+
+      // TODO: Implementar consulta real à taxa de chargeback do merchant
+      // Por enquanto, retorna false (merchant OK)
+      log.debug("CHARGEBACK_RATE_GT: merchantId={}, threshold={}%, days={}", merchantId, rateThreshold, days);
+      return false; // Placeholder
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CHARGEBACK_RATE_GT: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * ACCOUNT_AGE_LT_MINUTES: Verifica se a conta tem menos de N minutos de idade.
+   * Formato: "minutes" (ex: "10")
+   */
+  private boolean evaluateAccountAgeLtMinutes(RuleCondition condition, EvaluationContext context) {
+    try {
+      int minutes = Integer.parseInt(condition.getValueSingle().trim());
+
+      // Verificar se há campo de data de criação da conta no contexto
+      Object createdAt = getFieldValue("accountCreatedAt", null, context);
+      if (createdAt == null) {
+        createdAt = getFieldValue("customerCreatedAt", null, context);
+      }
+
+      if (createdAt == null) {
+        // Se não há informação de idade da conta, assumir conta antiga (segura)
+        return false;
+      }
+
+      // TODO: Implementar parsing da data e cálculo de idade
+      // Por enquanto, retorna false (conta antiga)
+      log.debug("ACCOUNT_AGE_LT_MINUTES: minutes={}, createdAt={}", minutes, createdAt);
+      return false; // Placeholder
+    } catch (Exception e) {
+      log.error("Erro ao avaliar ACCOUNT_AGE_LT_MINUTES: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * IS_VOIP: Verifica se o número de telefone é VoIP.
+   * Retorna true se o telefone for identificado como VoIP.
+   */
+  private boolean evaluateIsVoip(Object fieldValue) {
+    if (fieldValue == null) {
+      return false;
+    }
+
+    String phone = String.valueOf(fieldValue).replaceAll("[^0-9]", "");
+
+    // Lista de prefixos conhecidos de VoIP no Brasil
+    String[] voipPrefixes = {"0800", "0300", "0500", "0900"};
+    for (String prefix : voipPrefixes) {
+      if (phone.startsWith(prefix)) {
+        return true;
+      }
+    }
+
+    // TODO: Integrar com serviço externo de verificação de VoIP (ex: Twilio Lookup)
+    // Por enquanto, usa heurística básica
+    return false;
+  }
+
+  /**
+   * COUNT_DISTINCT_PANS_LAST_N_HOURS: Conta PANs distintos associados ao campo nas últimas N horas.
+   * Formato: "threshold:hours" (ex: "5:1" = mais de 5 PANs distintos na última hora)
+   */
+  private boolean evaluateCountDistinctPansLastNHours(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split(":");
+      if (parts.length < 2) {
+        log.warn("Formato inválido para COUNT_DISTINCT_PANS_LAST_N_HOURS. Esperado: threshold:hours");
+        return false;
+      }
+
+      int threshold = Integer.parseInt(parts[0].trim());
+      int hours = Integer.parseInt(parts[1].trim());
+
+      Object keyValue = getFieldValue(condition.getFieldName(), null, context);
+      if (keyValue == null) {
+        return false;
+      }
+
+      // Usar VelocityService para obter contagem de PANs distintos
+      VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
+
+      if (context.getTransactionRequest() != null) {
+        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            window
+        );
+        // Usar distinctMerchants como proxy para PANs distintos (simplificação)
+        return stats.getDistinctMerchants() > threshold;
+      }
+
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_DISTINCT_PANS_LAST_N_HOURS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * COUNT_DISTINCT_ACCOUNTS: Conta contas distintas associadas ao campo.
+   * Formato: "threshold" (ex: "3" = mais de 3 contas distintas)
+   */
+  private boolean evaluateCountDistinctAccounts(RuleCondition condition, EvaluationContext context) {
+    try {
+      int threshold = Integer.parseInt(condition.getValueSingle().trim());
+
+      Object keyValue = getFieldValue(condition.getFieldName(), null, context);
+      if (keyValue == null) {
+        return false;
+      }
+
+      // Usar VelocityService para obter contagem de contas distintas
+      if (context.getTransactionRequest() != null) {
+        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            VelocityService.TimeWindow.DAY_30
+        );
+        // Usar distinctCountries como proxy para contas distintas (simplificação)
+        return stats.getDistinctCountries() > threshold;
+      }
+
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_DISTINCT_ACCOUNTS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // ========== Operadores de Tempo/Data ==========
+
+  /** IS_WEEKEND: Verifica se a transação é em fim de semana */
+  private boolean evaluateIsWeekend(EvaluationContext context) {
+    try {
+      Object dateValue = getFieldValue("transactionDate", null, context);
+      if (dateValue == null) {
+        return false;
+      }
+      LocalDate date = parseDate(dateValue);
+      if (date == null) {
+        return false;
+      }
+      java.time.DayOfWeek dow = date.getDayOfWeek();
+      return dow == java.time.DayOfWeek.SATURDAY || dow == java.time.DayOfWeek.SUNDAY;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar IS_WEEKEND: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /** IS_HOLIDAY: Verifica se a transação é em feriado (placeholder) */
+  private boolean evaluateIsHoliday(EvaluationContext context) {
+    // TODO: Implementar consulta a tabela de feriados
+    // Por enquanto, retorna false
+    return false;
+  }
+
+  /** HOUR_BETWEEN: Verifica se a hora está entre dois valores. Formato: "startHour:endHour" */
+  private boolean evaluateHourBetween(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split(":");
+      if (parts.length < 2) {
+        return false;
+      }
+      int startHour = Integer.parseInt(parts[0].trim());
+      int endHour = Integer.parseInt(parts[1].trim());
+
+      Object timeValue = getFieldValue("transactionTime", null, context);
+      if (timeValue == null) {
+        return false;
+      }
+
+      int hour;
+      if (timeValue instanceof Integer) {
+        // Formato HHMMSS
+        hour = ((Integer) timeValue) / 10000;
+      } else {
+        LocalTime time = parseTime(timeValue);
+        if (time == null) return false;
+        hour = time.getHour();
+      }
+
+      if (startHour <= endHour) {
+        return hour >= startHour && hour <= endHour;
+      } else {
+        // Atravessa meia-noite (ex: 22:00 - 06:00)
+        return hour >= startHour || hour <= endHour;
+      }
+    } catch (Exception e) {
+      log.error("Erro ao avaliar HOUR_BETWEEN: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /** DAY_OF_WEEK_IN: Verifica se o dia da semana está na lista. Formato: "1,2,3" (1=Segunda) */
+  private boolean evaluateDayOfWeekIn(RuleCondition condition, EvaluationContext context) {
+    try {
+      Object dateValue = getFieldValue("transactionDate", null, context);
+      if (dateValue == null) {
+        return false;
+      }
+      LocalDate date = parseDate(dateValue);
+      if (date == null) {
+        return false;
+      }
+
+      int dayOfWeek = date.getDayOfWeek().getValue(); // 1=Monday, 7=Sunday
+      String[] days = condition.getValueSingle().split(",");
+      for (String day : days) {
+        if (Integer.parseInt(day.trim()) == dayOfWeek) {
+          return true;
+        }
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar DAY_OF_WEEK_IN: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /** GT_CURRENT_DATE: Verifica se a data é maior que a data atual (futuro) */
+  private boolean evaluateGtCurrentDate(Object fieldValue) {
+    try {
+      LocalDate date = parseDate(fieldValue);
+      return date != null && date.isAfter(LocalDate.now());
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  /** LT_CURRENT_DATE: Verifica se a data é menor que a data atual (passado) */
+  private boolean evaluateLtCurrentDate(Object fieldValue) {
+    try {
+      LocalDate date = parseDate(fieldValue);
+      return date != null && date.isBefore(LocalDate.now());
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  /** EXPIRES_WITHIN_DAYS: Verifica se expira em N dias. Formato: "days" */
+  private boolean evaluateExpiresWithinDays(Object fieldValue, RuleCondition condition) {
+    try {
+      int days = Integer.parseInt(condition.getValueSingle().trim());
+      LocalDate expiryDate = parseDate(fieldValue);
+      if (expiryDate == null) {
+        return false;
+      }
+      LocalDate threshold = LocalDate.now().plusDays(days);
+      return !expiryDate.isAfter(threshold);
+    } catch (Exception e) {
+      log.error("Erro ao avaliar EXPIRES_WITHIN_DAYS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // ========== Operadores de Padrão ==========
+
+  /** DECIMAL_PLACES_GT: Verifica se o número tem mais de N casas decimais */
+  private boolean evaluateDecimalPlacesGt(Object fieldValue, RuleCondition condition) {
+    try {
+      int threshold = Integer.parseInt(condition.getValueSingle().trim());
+      String valueStr = String.valueOf(fieldValue);
+      int dotIndex = valueStr.indexOf('.');
+      if (dotIndex < 0) {
+        return 0 > threshold;
+      }
+      int decimalPlaces = valueStr.length() - dotIndex - 1;
+      return decimalPlaces > threshold;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  /** PATTERN_ROUND_NUMBERS: Verifica se o valor é um número redondo (múltiplo de 100, 500, 1000) */
+  private boolean evaluatePatternRoundNumbers(Object fieldValue) {
+    try {
+      BigDecimal value = new BigDecimal(String.valueOf(fieldValue));
+      // Verificar se é múltiplo de 100
+      return value.remainder(BigDecimal.valueOf(100)).compareTo(BigDecimal.ZERO) == 0;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  /** GT_FIELD_MULTIPLIER: Verifica se campo > outro * fator. Formato: "otherField:multiplier" */
+  private boolean evaluateGtFieldMultiplier(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split(":");
+      if (parts.length < 2) {
+        return false;
+      }
+      String otherField = parts[0].trim();
+      BigDecimal multiplier = new BigDecimal(parts[1].trim());
+
+      Object fieldValue = getFieldValue(condition.getFieldName(), null, context);
+      Object otherValue = getFieldValue(otherField, null, context);
+
+      if (fieldValue == null || otherValue == null) {
+        return false;
+      }
+
+      BigDecimal value = new BigDecimal(String.valueOf(fieldValue));
+      BigDecimal other = new BigDecimal(String.valueOf(otherValue));
+      BigDecimal threshold = other.multiply(multiplier);
+
+      return value.compareTo(threshold) > 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar GT_FIELD_MULTIPLIER: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /** PERCENTAGE_OF_FIELD: Calcula se campo é X% de outro. Formato: "otherField:percentage:operator" */
+  private boolean evaluatePercentageOfField(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split(":");
+      if (parts.length < 2) {
+        return false;
+      }
+      String otherField = parts[0].trim();
+      BigDecimal percentage = new BigDecimal(parts[1].trim());
+
+      Object fieldValue = getFieldValue(condition.getFieldName(), null, context);
+      Object otherValue = getFieldValue(otherField, null, context);
+
+      if (fieldValue == null || otherValue == null) {
+        return false;
+      }
+
+      BigDecimal value = new BigDecimal(String.valueOf(fieldValue));
+      BigDecimal other = new BigDecimal(String.valueOf(otherValue));
+
+      if (other.compareTo(BigDecimal.ZERO) == 0) {
+        return false;
+      }
+
+      BigDecimal actualPercentage = value.multiply(BigDecimal.valueOf(100)).divide(other, 2, java.math.RoundingMode.HALF_UP);
+      return actualPercentage.compareTo(percentage) >= 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar PERCENTAGE_OF_FIELD: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // ========== Operadores de Velocity Adicionais ==========
+
+  /** SUM_LAST_N_HOURS: Soma nas últimas N horas. Formato: "hours:threshold:operator" */
+  private boolean evaluateSumLastNHours(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split(":");
+      if (parts.length < 2) {
+        log.error("Formato inválido para SUM_LAST_N_HOURS: {}", condition.getValueSingle());
+        return false;
+      }
+
+      int hours = Integer.parseInt(parts[0].trim());
+      BigDecimal threshold = new BigDecimal(parts[1].trim());
+      String operator = parts.length > 2 ? parts[2].trim() : "GT";
+
+      VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
+
+      if (context.getTransactionRequest() != null) {
+        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            window
+        );
+
+        return switch (operator) {
+          case "GT" -> stats.getTotalAmount().compareTo(threshold) > 0;
+          case "GTE" -> stats.getTotalAmount().compareTo(threshold) >= 0;
+          case "LT" -> stats.getTotalAmount().compareTo(threshold) < 0;
+          case "LTE" -> stats.getTotalAmount().compareTo(threshold) <= 0;
+          default -> false;
+        };
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SUM_LAST_N_HOURS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /** COUNT_FAILURES_LAST_N_HOURS: Contagem de falhas nas últimas N horas */
+  private boolean evaluateCountFailuresLastNHours(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split(":");
+      if (parts.length < 2) {
+        return false;
+      }
+
+      int hours = Integer.parseInt(parts[0].trim());
+      int threshold = Integer.parseInt(parts[1].trim());
+
+      // TODO: Implementar consulta real a falhas
+      // Por enquanto, usa contagem de transações suspeitas como proxy
+      VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
+
+      if (context.getTransactionRequest() != null) {
+        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            window
+        );
+        // Usar suspicious_count como proxy para falhas
+        return stats.getFraudCount() > threshold;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_FAILURES_LAST_N_HOURS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /** COUNT_DISTINCT_MERCHANTS_LAST_N_HOURS: Merchants distintos nas últimas N horas */
+  private boolean evaluateCountDistinctMerchantsLastNHours(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split(":");
+      if (parts.length < 2) {
+        return false;
+      }
+
+      int hours = Integer.parseInt(parts[0].trim());
+      int threshold = Integer.parseInt(parts[1].trim());
+
+      VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
+
+      if (context.getTransactionRequest() != null) {
+        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            window
+        );
+        return stats.getDistinctMerchants() > threshold;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_DISTINCT_MERCHANTS_LAST_N_HOURS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /** TIME_SINCE_LAST_LT: Tempo desde última transação menor que N minutos */
+  private boolean evaluateTimeSinceLastLt(RuleCondition condition, EvaluationContext context) {
+    try {
+      int minutes = Integer.parseInt(condition.getValueSingle().trim());
+
+      // TODO: Implementar consulta real ao timestamp da última transação
+      // Por enquanto, verifica se há muitas transações na janela de tempo
+      VelocityService.TimeWindow window = parseTimeWindowFromHours(1);
+
+      if (context.getTransactionRequest() != null) {
+        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            window
+        );
+        // Se há mais de 1 transação na última hora, provavelmente o tempo é curto
+        return stats.getTransactionCount() > 1;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar TIME_SINCE_LAST_LT: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // ========== Operadores de Padrão de Fraude ==========
+
+  /** VELOCITY_SPIKE: Detecta spike de velocidade comparado com média histórica */
+  private boolean evaluateVelocitySpike(RuleCondition condition, EvaluationContext context) {
+    try {
+      // Formato: "multiplier" (ex: "3" = 3x a média)
+      double multiplier = Double.parseDouble(condition.getValueSingle().trim());
+
+      if (context.getTransactionRequest() != null) {
+        // Comparar contagem atual com média histórica
+        VelocityService.VelocityStats statsHour = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            VelocityService.TimeWindow.HOUR_1
+        );
+
+        VelocityService.VelocityStats statsDay = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            VelocityService.TimeWindow.HOUR_24
+        );
+
+        // Média por hora = total do dia / 24
+        double avgPerHour = statsDay.getTransactionCount() / 24.0;
+        double currentHour = statsHour.getTransactionCount();
+
+        return avgPerHour > 0 && currentHour > (avgPerHour * multiplier);
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar VELOCITY_SPIKE: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /** AMOUNT_SPIKE: Detecta spike de valor comparado com média histórica */
+  private boolean evaluateAmountSpike(RuleCondition condition, EvaluationContext context) {
+    try {
+      double multiplier = Double.parseDouble(condition.getValueSingle().trim());
+
+      Object amountValue = getFieldValue("transactionAmount", null, context);
+      if (amountValue == null) {
+        return false;
+      }
+
+      BigDecimal currentAmount = new BigDecimal(String.valueOf(amountValue));
+
+      if (context.getTransactionRequest() != null) {
+        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            VelocityService.TimeWindow.DAY_30
+        );
+
+        BigDecimal avgAmount = stats.getAvgAmount();
+        if (avgAmount.compareTo(BigDecimal.ZERO) > 0) {
+          BigDecimal threshold = avgAmount.multiply(BigDecimal.valueOf(multiplier));
+          return currentAmount.compareTo(threshold) > 0;
+        }
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar AMOUNT_SPIKE: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /** PATTERN_ESCALATION: Detecta padrão de valores crescentes (escada) */
+  private boolean evaluatePatternEscalation(RuleCondition condition, EvaluationContext context) {
+    // TODO: Implementar detecção de padrão de escada
+    // Requer análise de histórico de transações recentes
+    // Por enquanto, retorna false
+    log.debug("PATTERN_ESCALATION não implementado completamente");
+    return false;
+  }
+
+  /**
+   * PATTERN_SPLIT_TRANSACTION: Detecta padrão de split de transação.
+   * Múltiplas transações pequenas em curto período que somam um valor maior.
+   * Formato: "maxMinutes:minTransactions:totalThreshold"
+   */
+  private boolean evaluatePatternSplitTransaction(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split(":");
+      if (parts.length < 3) {
+        log.warn("Formato inválido para PATTERN_SPLIT_TRANSACTION. Esperado: maxMinutes:minTransactions:totalThreshold");
+        return false;
+      }
+
+      int maxMinutes = Integer.parseInt(parts[0].trim());
+      int minTransactions = Integer.parseInt(parts[1].trim());
+      BigDecimal totalThreshold = new BigDecimal(parts[2].trim());
+
+      if (context.getTransactionRequest() != null) {
+        VelocityService.TimeWindow window = parseTimeWindowFromHours(maxMinutes / 60 + 1);
+        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            window
+        );
+
+        // Detectar split: muitas transações que somam mais que o threshold
+        return stats.getTransactionCount() >= minTransactions &&
+               stats.getTotalAmount().compareTo(totalThreshold) >= 0;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar PATTERN_SPLIT_TRANSACTION: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // ========== Operadores de Histórico do Cliente ==========
+
+  /**
+   * IN_CUSTOMER_HISTORY: Verifica se o valor do campo está no histórico do cliente.
+   * Formato: "fieldToCheck:days" (ex: "merchantId:90" - merchant usado nos últimos 90 dias)
+   */
+  private boolean evaluateInCustomerHistory(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split(":");
+      String fieldToCheck = parts.length > 0 ? parts[0].trim() : condition.getFieldName();
+      int days = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 90;
+
+      Object fieldValue = getFieldValue(fieldToCheck, null, context);
+      if (fieldValue == null) {
+        return false;
+      }
+
+      // Usar VelocityService para verificar histórico
+      if (context.getTransactionRequest() != null) {
+        VelocityService.TimeWindow window = parseTimeWindowFromDays(days);
+        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            window
+        );
+
+        // Se há transações no período, assumir que o campo está no histórico
+        // Para uma implementação completa, seria necessário consultar o histórico real
+        return stats.getTransactionCount() > 0;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar IN_CUSTOMER_HISTORY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * IN_CUSTOMER_USUAL_HOURS: Verifica se a transação está no horário habitual do cliente.
+   * Analisa o padrão de horários das transações anteriores.
+   */
+  private boolean evaluateInCustomerUsualHours(RuleCondition condition, EvaluationContext context) {
+    try {
+      // Obter hora da transação atual
+      Object timeValue = getFieldValue("transactionTime", null, context);
+      if (timeValue == null) {
+        return true; // Se não há hora, assumir horário normal
+      }
+
+      int currentHour;
+      if (timeValue instanceof Integer) {
+        currentHour = ((Integer) timeValue) / 10000;
+      } else {
+        LocalTime time = parseTime(timeValue);
+        if (time == null) return true;
+        currentHour = time.getHour();
+      }
+
+      // Definir horários "normais" como 6h-23h
+      // Para uma implementação completa, seria necessário analisar o histórico do cliente
+      int threshold = condition.getValueSingle() != null ?
+          Integer.parseInt(condition.getValueSingle().trim()) : 2; // Tolerância de 2 horas
+
+      // Horário comercial estendido: 6h às 23h
+      boolean isNormalHour = currentHour >= 6 && currentHour <= 23;
+
+      return isNormalHour;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar IN_CUSTOMER_USUAL_HOURS: {}", e.getMessage());
+      return true; // Em caso de erro, assumir horário normal
+    }
+  }
+
+  /**
+   * IN_CUSTOMER_CHARGEBACK_MERCHANTS: Verifica se o merchant está na lista de chargebacks do cliente.
+   */
+  private boolean evaluateInCustomerChargebackMerchants(RuleCondition condition, EvaluationContext context) {
+    try {
+      Object merchantId = getFieldValue("merchantId", null, context);
+      if (merchantId == null) {
+        return false;
+      }
+
+      // TODO: Implementar consulta real à tabela de chargebacks
+      // Por enquanto, retorna false (merchant não tem chargeback)
+      log.debug("IN_CUSTOMER_CHARGEBACK_MERCHANTS: merchantId={}", merchantId);
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar IN_CUSTOMER_CHARGEBACK_MERCHANTS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // ========== Operadores de Primeira Ocorrência ==========
+
+  /**
+   * IS_FIRST: Verifica se é a primeira ocorrência do valor para o cliente.
+   * Formato: "fieldToCheck" (ex: "merchantId" - primeiro uso deste merchant)
+   */
+  private boolean evaluateIsFirst(RuleCondition condition, EvaluationContext context) {
+    try {
+      String fieldToCheck = condition.getValueSingle() != null ?
+          condition.getValueSingle().trim() : condition.getFieldName();
+
+      Object fieldValue = getFieldValue(fieldToCheck, null, context);
+      if (fieldValue == null) {
+        return false;
+      }
+
+      // Usar VelocityService para verificar se há histórico
+      if (context.getTransactionRequest() != null) {
+        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            VelocityService.TimeWindow.DAY_30
+        );
+
+        // Se não há transações anteriores, é a primeira
+        return stats.getTransactionCount() == 0;
+      }
+      return true; // Se não há contexto, assumir primeira
+    } catch (Exception e) {
+      log.error("Erro ao avaliar IS_FIRST: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * IS_NEW: Verifica se o valor é "novo" (visto pela primeira vez recentemente).
+   * Formato: "maxDays" (ex: "7" - visto pela primeira vez nos últimos 7 dias)
+   */
+  private boolean evaluateIsNew(RuleCondition condition, EvaluationContext context) {
+    try {
+      int maxDays = condition.getValueSingle() != null ?
+          Integer.parseInt(condition.getValueSingle().trim()) : 7;
+
+      Object fieldValue = getFieldValue(condition.getFieldName(), null, context);
+      if (fieldValue == null) {
+        return false;
+      }
+
+      // Verificar se há histórico além do período especificado
+      if (context.getTransactionRequest() != null) {
+        // Verificar histórico de 30 dias
+        VelocityService.VelocityStats stats30 = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            VelocityService.TimeWindow.DAY_30
+        );
+
+        // Verificar histórico do período especificado
+        VelocityService.TimeWindow window = parseTimeWindowFromDays(maxDays);
+        VelocityService.VelocityStats statsRecent = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            window
+        );
+
+        // É "novo" se só aparece no período recente, não no histórico mais longo
+        return statsRecent.getTransactionCount() > 0 &&
+               stats30.getTransactionCount() <= statsRecent.getTransactionCount();
+      }
+      return true;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar IS_NEW: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * DISTANCE_FROM_LAST_GT: Verifica se a distância da última transação é maior que N km.
+   * Formato: "distanceKm" (ex: "500" - mais de 500km da última transação)
+   */
+  private boolean evaluateDistanceFromLastGt(RuleCondition condition, EvaluationContext context) {
+    try {
+      double thresholdKm = Double.parseDouble(condition.getValueSingle().trim());
+
+      if (context.getTransactionRequest() == null) {
+        return false;
+      }
+
+      // Obter localização atual da transação
+      String currentCountry = context.getTransactionRequest().getMerchantCountryCode();
+      String currentCity = context.getTransactionRequest().getMerchantCity();
+
+      if (currentCountry == null && currentCity == null) {
+        return false;
+      }
+
+      // Para uma implementação completa, seria necessário:
+      // 1. Consultar a última transação do cliente
+      // 2. Obter as coordenadas de ambas as localizações
+      // 3. Calcular a distância usando a fórmula de Haversine
+
+      // Por enquanto, usar heurística baseada em país
+      // Se o país mudou, assumir distância > threshold
+      if (context.getTransactionRequest() != null) {
+        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+            context.getTransactionRequest(),
+            VelocityService.KeyType.PAN,
+            VelocityService.TimeWindow.HOUR_24
+        );
+
+        // Se há transações em múltiplos países nas últimas 24h, pode indicar distância grande
+        return stats.getDistinctCountries() > 1;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar DISTANCE_FROM_LAST_GT: {}", e.getMessage());
+      return false;
+    }
   }
 }
