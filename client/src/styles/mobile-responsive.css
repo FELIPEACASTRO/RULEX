@@ -1,0 +1,444 @@
+/**
+ * Mobile Responsive Styles
+ * 
+ * FIX: PERF-002 (Mobile responsiveness)
+ * 
+ * Implementa breakpoints e estilos para dispositivos móveis
+ * conforme Material Design e Bootstrap guidelines.
+ * 
+ * @version 1.0.0
+ */
+
+/* ============================================================================
+   BREAKPOINTS
+   ============================================================================ */
+/* 
+  xs: 0-639px (Mobile portrait)
+  sm: 640-767px (Mobile landscape)
+  md: 768-1023px (Tablet)
+  lg: 1024-1279px (Desktop)
+  xl: 1280+ (Large desktop)
+*/
+
+/* ============================================================================
+   MOBILE FIRST - BASE STYLES
+   ============================================================================ */
+
+/* Container responsivo */
+.container-responsive {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-responsive {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container-responsive {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container-responsive {
+    max-width: 1280px;
+  }
+}
+
+/* ============================================================================
+   TYPOGRAPHY RESPONSIVE
+   ============================================================================ */
+
+.text-responsive-xs {
+  font-size: 0.75rem; /* 12px */
+  line-height: 1rem;
+}
+
+.text-responsive-sm {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem;
+}
+
+.text-responsive-base {
+  font-size: 1rem; /* 16px */
+  line-height: 1.5rem;
+}
+
+.text-responsive-lg {
+  font-size: 1.125rem; /* 18px */
+  line-height: 1.75rem;
+}
+
+.text-responsive-xl {
+  font-size: 1.25rem; /* 20px */
+  line-height: 1.75rem;
+}
+
+@media (max-width: 639px) {
+  .text-responsive-xl {
+    font-size: 1.125rem;
+  }
+  
+  .text-responsive-lg {
+    font-size: 1rem;
+  }
+}
+
+/* ============================================================================
+   LAYOUT RESPONSIVE
+   ============================================================================ */
+
+/* Grid responsivo */
+.grid-responsive {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Flex responsivo */
+.flex-responsive {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .flex-responsive {
+    flex-direction: row;
+  }
+}
+
+/* ============================================================================
+   DASHBOARD LAYOUT MOBILE
+   ============================================================================ */
+
+/* Sidebar mobile */
+@media (max-width: 767px) {
+  .dashboard-sidebar {
+    position: fixed;
+    left: -100%;
+    top: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 50;
+    transition: left 0.3s ease-in-out;
+    background: var(--background);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .dashboard-sidebar.open {
+    left: 0;
+  }
+  
+  .dashboard-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+  }
+  
+  .dashboard-overlay.visible {
+    display: block;
+  }
+  
+  .dashboard-content {
+    margin-left: 0 !important;
+  }
+  
+  .mobile-menu-button {
+    display: block !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-menu-button {
+    display: none !important;
+  }
+}
+
+/* ============================================================================
+   CARDS E COMPONENTES MOBILE
+   ============================================================================ */
+
+@media (max-width: 639px) {
+  /* Cards ocupam largura total */
+  .card-responsive {
+    width: 100%;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-radius: 0;
+  }
+  
+  /* Padding reduzido em mobile */
+  .card-responsive .card-content {
+    padding: 0.75rem;
+  }
+  
+  /* Botões full-width em mobile */
+  .button-responsive {
+    width: 100%;
+  }
+  
+  /* Stack de botões vertical */
+  .button-group-responsive {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .button-group-responsive {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+  
+  .button-responsive {
+    width: auto;
+  }
+}
+
+/* ============================================================================
+   TABLES RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 767px) {
+  /* Scroll horizontal em tabelas */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Tabela em modo card */
+  .table-card-mobile {
+    display: block;
+  }
+  
+  .table-card-mobile thead {
+    display: none;
+  }
+  
+  .table-card-mobile tbody {
+    display: block;
+  }
+  
+  .table-card-mobile tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+  }
+  
+  .table-card-mobile td {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .table-card-mobile td:last-child {
+    border-bottom: none;
+  }
+  
+  .table-card-mobile td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    margin-right: 1rem;
+  }
+}
+
+/* ============================================================================
+   FORMS RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 639px) {
+  /* Inputs full-width */
+  .form-responsive input,
+  .form-responsive select,
+  .form-responsive textarea {
+    width: 100%;
+  }
+  
+  /* Labels acima dos inputs */
+  .form-responsive .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  /* Botões de formulário */
+  .form-responsive .form-actions {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+  
+  .form-responsive .form-actions button {
+    width: 100%;
+  }
+}
+
+/* ============================================================================
+   MODALS E DIALOGS MOBILE
+   ============================================================================ */
+
+@media (max-width: 639px) {
+  .modal-responsive {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    border-radius: 0;
+  }
+  
+  .modal-responsive .modal-content {
+    height: 100%;
+    overflow-y: auto;
+  }
+  
+  .dialog-responsive {
+    width: calc(100vw - 2rem);
+    max-width: none;
+  }
+}
+
+/* ============================================================================
+   NAVIGATION MOBILE
+   ============================================================================ */
+
+@media (max-width: 767px) {
+  /* Navegação horizontal com scroll */
+  .nav-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  
+  .nav-responsive::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .nav-responsive ul {
+    display: flex;
+    white-space: nowrap;
+    gap: 0.5rem;
+  }
+  
+  .nav-responsive li {
+    flex-shrink: 0;
+  }
+}
+
+/* ============================================================================
+   TOUCH TARGETS (WCAG 2.1 AA)
+   ============================================================================ */
+
+/* Mínimo 44x44px para touch targets */
+@media (max-width: 767px) {
+  button,
+  a,
+  input[type="checkbox"],
+  input[type="radio"],
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem;
+  }
+  
+  /* Aumenta área de toque sem aumentar elemento visualmente */
+  .touch-target {
+    position: relative;
+  }
+  
+  .touch-target::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+/* Hide/Show em breakpoints */
+.hide-mobile {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hide-mobile {
+    display: block;
+  }
+}
+
+.show-mobile {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .show-mobile {
+    display: none;
+  }
+}
+
+/* Spacing responsivo */
+@media (max-width: 639px) {
+  .p-responsive {
+    padding: 0.75rem;
+  }
+  
+  .m-responsive {
+    margin: 0.75rem;
+  }
+  
+  .gap-responsive {
+    gap: 0.75rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .p-responsive {
+    padding: 1.5rem;
+  }
+  
+  .m-responsive {
+    margin: 1.5rem;
+  }
+  
+  .gap-responsive {
+    gap: 1.5rem;
+  }
+}

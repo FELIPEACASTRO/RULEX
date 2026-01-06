@@ -61,10 +61,20 @@ public class EvaluateController {
       return ResponseEntity.badRequest().build();
     }
 
-    // Validação básica de tamanho para prevenir DoS
+    // FIX: BUG-001 - Validação de tamanho com mensagem clara
     if (rawBody.length() > 1_000_000) { // 1MB max
-      log.warn("Payload muito grande: {} bytes", rawBody.length());
-      return ResponseEntity.badRequest().build();
+      log.warn("Payload muito grande: {} bytes (limite: 1MB)", rawBody.length());
+      return ResponseEntity.status(413)
+          .header("Content-Type", "application/json")
+          .body(
+              new EvaluateResponse(
+                  null,
+                  0,
+                  null,
+                  String.format(
+                      "Payload muito grande: %d bytes. Limite máximo: 1.000.000 bytes (1 MB). "
+                          + "Por favor, reduza o tamanho da requisição.",
+                      rawBody.length())));
     }
 
     byte[] rawBytes = (byte[]) httpRequest.getAttribute(RawPayloadCaptureFilter.RAW_BYTES_ATTR);

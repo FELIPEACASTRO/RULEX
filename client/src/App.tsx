@@ -8,7 +8,6 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardProfessional from "./pages/DashboardProfessional";
 import TransactionsProfessional from "./pages/TransactionsProfessional";
-import Rules from "./pages/Rules";
 import ComplexRules from "./pages/ComplexRules";
 import Audit from "./pages/Audit";
 import TransactionSimulator from "./pages/TransactionSimulator";
@@ -25,8 +24,7 @@ function Router() {
             <Route path={"/"} component={DashboardProfessional} />
             <Route path={"/dashboard"} component={DashboardProfessional} />
             <Route path={"/transactions"} component={TransactionsProfessional} />
-            <Route path="/rules" component={Rules} />
-            <Route path="/complex-rules" component={ComplexRules} />
+            <Route path="/rules" component={ComplexRules} />
             <Route path={"/audit"} component={Audit} />
             <Route path={"/simulator"} component={TransactionSimulator} />
             <Route path={"/404"} component={NotFound} />
