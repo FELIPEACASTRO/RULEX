@@ -1,7 +1,9 @@
 package com.rulex.domain.model;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 import lombok.With;
@@ -18,6 +20,25 @@ import lombok.With;
 @Builder(toBuilder = true)
 @With
 public class TransactionData {
+
+  // === Campos para nova API hexagonal ===
+
+  /** Identificador único da transação */
+  String transactionId;
+
+  /** Identificador do cliente */
+  String customerId;
+
+  /** Valor da transação */
+  BigDecimal amount;
+
+  /** Timestamp da transação */
+  Instant timestamp;
+
+  /** Dados dinâmicos da transação (para avaliação de regras) */
+  Map<String, Object> data;
+
+  // === Campos legados ===
 
   // Identificação
   Long id;
@@ -100,7 +121,8 @@ public class TransactionData {
 
   /** Verifica se é transação de alto valor (> R$ 5.000) */
   public boolean isHighValue() {
-    return transactionAmount != null && transactionAmount.compareTo(new BigDecimal("5000")) > 0;
+    BigDecimal amt = transactionAmount != null ? transactionAmount : amount;
+    return amt != null && amt.compareTo(new BigDecimal("5000")) > 0;
   }
 
   /** Verifica se é transação internacional */

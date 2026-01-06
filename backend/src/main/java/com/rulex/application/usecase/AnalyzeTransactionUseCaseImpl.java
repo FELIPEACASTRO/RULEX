@@ -11,9 +11,11 @@ import com.rulex.domain.exception.TamperDetectedException;
 import com.rulex.domain.model.Classification;
 import com.rulex.domain.model.Decision;
 import com.rulex.domain.model.Rule;
+import com.rulex.domain.model.TransactionData;
 import com.rulex.domain.service.RuleEvaluatorService;
 import com.rulex.domain.service.TamperDetector;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -58,10 +60,10 @@ public class AnalyzeTransactionUseCaseImpl implements AnalyzeTransactionUseCase 
 
   @Override
   @Transactional
-  public Decision analyze(AnalyzeCommand command) {
+  public AnalysisResult analyze(TransactionData transactionData) {
     long startTime = System.currentTimeMillis();
-    String externalTransactionId = command.externalTransactionId();
-    Map<String, Object> payload = command.payload();
+    String externalTransactionId = transactionData.getTransactionId();
+    Map<String, Object> payload = transactionData.getData();
 
     log.debug("Iniciando análise: externalTransactionId={}", externalTransactionId);
 
@@ -86,7 +88,7 @@ public class AnalyzeTransactionUseCaseImpl implements AnalyzeTransactionUseCase 
             decisionPersistencePort.findByExternalTransactionId(externalTransactionId);
         if (existingDecision.isPresent()) {
           log.debug("Retornando decisão existente (idempotência): {}", externalTransactionId);
-          return existingDecision.get();
+          return toAnalysisResult(existingDecision.get(), System.currentTimeMillis() - startTime);
         }
       }
 
@@ -98,12 +100,21 @@ public class AnalyzeTransactionUseCaseImpl implements AnalyzeTransactionUseCase 
 
       // 5. Avaliar regras shadow (métricas apenas)
       List<Rule> shadowRules = loadShadowRules();
+      List<TriggeredRule> shadowTriggeredRules = new ArrayList<>();
       if (!shadowRules.isEmpty()) {
         var shadowResults = ruleEvaluatorService.evaluateShadow(shadowRules, payload);
         shadowResults.forEach(
             r -> {
               if (r.triggered()) {
                 metricsPort.recordShadowRuleTriggered(r.ruleName());
+                shadowTriggeredRules.add(
+                    new TriggeredRule(
+                        r.ruleId().toString(),
+                        r.ruleName(),
+                        "SHADOW",
+                        r.score(),
+                        true,
+                        r.message()));
               }
             });
       }
@@ -131,7 +142,17 @@ public class AnalyzeTransactionUseCaseImpl implements AnalyzeTransactionUseCase 
           decision.getRiskScore(),
           processingTime);
 
-      return decision;
+      // 8. Converter para AnalysisResult incluindo shadow rules
+      AnalysisResult result = toAnalysisResult(decision, processingTime);
+
+      // Adicionar shadow rules ao resultado
+      if (!shadowTriggeredRules.isEmpty()) {
+        List<TriggeredRule> allRules = new ArrayList<>(result.triggeredRules());
+        allRules.addAll(shadowTriggeredRules);
+        result = new AnalysisResult(result.classification(), result.totalScore(), allRules, result.processingTimeMs());
+      }
+
+      return result;
 
     } catch (TamperDetectedException e) {
       // Re-throw exceções de domínio
@@ -146,6 +167,27 @@ public class AnalyzeTransactionUseCaseImpl implements AnalyzeTransactionUseCase 
           e);
       throw new RuntimeException("Erro ao analisar transação: " + e.getMessage(), e);
     }
+  }
+
+  /**
+   * Converte uma Decision de domínio para AnalysisResult.
+   */
+  private AnalysisResult toAnalysisResult(Decision decision, long processingTimeMs) {
+    List<TriggeredRule> triggeredRules =
+        decision.getTriggeredRules().stream()
+            .map(
+                tr ->
+                    new TriggeredRule(
+                        tr.getRuleName(), // ruleId não existe, usar ruleName
+                        tr.getRuleName(),
+                        tr.getRuleType(),
+                        tr.getWeight() != null ? tr.getWeight() : 0,
+                        false,
+                        tr.getDetail()))
+            .toList();
+
+    return new AnalysisResult(
+        decision.getClassification(), decision.getRiskScore(), triggeredRules, processingTimeMs);
   }
 
   // ========== Métodos de Cache ==========

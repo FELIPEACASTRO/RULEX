@@ -12,41 +12,43 @@ public class TransactionProcessingException extends DomainException {
 
   @Serial private static final long serialVersionUID = 1L;
 
-  private final String externalTransactionId;
+  private final String transactionId;
 
-  public TransactionProcessingException(String externalTransactionId, String message) {
+  public TransactionProcessingException(String transactionId, String message) {
     super("TRANSACTION_PROCESSING_ERROR", message);
-    this.externalTransactionId = externalTransactionId;
+    this.transactionId = transactionId;
   }
 
-  public TransactionProcessingException(
-      String externalTransactionId, String message, Throwable cause) {
+  public TransactionProcessingException(String transactionId, String message, Throwable cause) {
     super("TRANSACTION_PROCESSING_ERROR", message, cause);
-    this.externalTransactionId = externalTransactionId;
+    this.transactionId = transactionId;
   }
 
+  public String getTransactionId() {
+    return transactionId;
+  }
+
+  /** Alias para compatibilidade */
   public String getExternalTransactionId() {
-    return externalTransactionId;
+    return transactionId;
   }
 
   /** Cria exceção para erro de serialização */
   public static TransactionProcessingException serializationError(
-      String externalTransactionId, Throwable cause) {
+      String transactionId, Throwable cause) {
     return new TransactionProcessingException(
-        externalTransactionId, "Erro ao serializar/deserializar payload", cause);
+        transactionId, "Erro ao serializar/deserializar payload", cause);
   }
 
   /** Cria exceção para erro de persistência */
   public static TransactionProcessingException persistenceError(
-      String externalTransactionId, Throwable cause) {
-    return new TransactionProcessingException(
-        externalTransactionId, "Erro ao persistir transação", cause);
+      String transactionId, Throwable cause) {
+    return new TransactionProcessingException(transactionId, "Erro ao persistir transação", cause);
   }
 
   /** Cria exceção para erro de avaliação de regras */
   public static TransactionProcessingException ruleEvaluationError(
-      String externalTransactionId, Throwable cause) {
-    return new TransactionProcessingException(
-        externalTransactionId, "Erro ao avaliar regras", cause);
+      String transactionId, Throwable cause) {
+    return new TransactionProcessingException(transactionId, "Erro ao avaliar regras", cause);
   }
 }

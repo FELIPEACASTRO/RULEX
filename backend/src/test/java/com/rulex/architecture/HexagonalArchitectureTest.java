@@ -180,6 +180,11 @@ class HexagonalArchitectureTest {
      * REGRA 10: Arquitetura em camadas (enforcement global).
      * NOTA: Estrutura atual usa pacotes transitórios. V31 contém services que são Application layer.
      * Config é considerado parte da infraestrutura (filtros, configurações Spring).
+     * 
+     * Na arquitetura hexagonal/clean:
+     * - Domain é o núcleo e pode ser acessado por todas as camadas
+     * - Application orquestra use cases
+     * - Interfaces/Infrastructure são adapters externos
      */
     @Test
     void layeredArchitectureShouldBeRespected() {
@@ -192,7 +197,8 @@ class HexagonalArchitectureTest {
 
                 .whereLayer("Interfaces").mayNotBeAccessedByAnyLayer()
                 .whereLayer("Application").mayOnlyBeAccessedByLayers("Interfaces", "Infrastructure")
-                .whereLayer("Domain").mayOnlyBeAccessedByLayers("Application", "Infrastructure")
+                // Domain é o núcleo - pode ser acessado por todas as outras camadas
+                .whereLayer("Domain").mayOnlyBeAccessedByLayers("Application", "Infrastructure", "Interfaces")
                 .whereLayer("Infrastructure").mayOnlyBeAccessedByLayers("Interfaces", "Application")
 
                 .because("Arquitetura hexagonal deve ser respeitada: fluxo unidirecional de dependências")

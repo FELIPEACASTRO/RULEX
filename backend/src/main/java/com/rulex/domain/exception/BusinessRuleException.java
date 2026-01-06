@@ -1,6 +1,8 @@
 package com.rulex.domain.exception;
 
 import java.io.Serial;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Exceção lançada quando regra de negócio é violada.
@@ -12,25 +14,52 @@ public class BusinessRuleException extends DomainException {
 
   @Serial private static final long serialVersionUID = 1L;
 
+  private final String ruleName;
+  private final HashMap<String, Object> context;
+
   public BusinessRuleException(String message) {
     super("BUSINESS_RULE_VIOLATION", message);
+    this.ruleName = null;
+    this.context = null;
   }
 
   public BusinessRuleException(String code, String message) {
     super(code, message);
+    this.ruleName = null;
+    this.context = null;
+  }
+
+  public BusinessRuleException(String code, String message, String ruleName) {
+    super(code, message);
+    this.ruleName = ruleName;
+    this.context = null;
+  }
+
+  public BusinessRuleException(String code, String message, String ruleName, Map<String, Object> context) {
+    super(code, message);
+    this.ruleName = ruleName;
+    this.context = context != null ? new HashMap<>(context) : null;
+  }
+
+  public String getRuleName() {
+    return ruleName;
+  }
+
+  public Map<String, Object> getContext() {
+    return context;
   }
 
   /** Cria exceção para regra duplicada */
   public static BusinessRuleException duplicateRule(String ruleName) {
     return new BusinessRuleException(
-        "DUPLICATE_RULE", String.format("Já existe uma regra com o nome: %s", ruleName));
+        "DUPLICATE_RULE", String.format("Já existe uma regra com o nome: %s", ruleName), ruleName);
   }
 
   /** Cria exceção para regra em uso (não pode ser deletada) */
   public static BusinessRuleException ruleInUse(String ruleName) {
     return new BusinessRuleException(
         "RULE_IN_USE",
-        String.format("Regra '%s' não pode ser removida pois está em uso", ruleName));
+        String.format("Regra '%s' não pode ser removida pois está em uso", ruleName), ruleName);
   }
 
   /** Cria exceção para workflow de aprovação */

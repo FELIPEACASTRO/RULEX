@@ -157,7 +157,13 @@ public class RuleEvaluatorService {
 
       RuleEvaluationResult result = evaluateRule(rule, payload);
       results.add(
-          new ShadowResult(rule.getName(), result.triggered(), result.explanation(), rule.getClassification()));
+          new ShadowResult(
+              rule.getId() != null ? rule.getId().toString() : "unknown",
+              rule.getName(),
+              result.triggered(),
+              result.explanation(),
+              rule.getWeight() != null ? rule.getWeight() : 0,
+              rule.getClassification()));
     }
 
     return results;
@@ -165,7 +171,12 @@ public class RuleEvaluatorService {
 
   /** Resultado de avaliação shadow */
   public record ShadowResult(
-      String ruleName, boolean triggered, String explanation, Classification classification) {}
+      String ruleId,
+      String ruleName,
+      boolean triggered,
+      String message,
+      int score,
+      Classification classification) {}
 
   // ========== Utilitários ==========
 

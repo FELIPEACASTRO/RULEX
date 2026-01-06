@@ -15,11 +15,14 @@ public class ContractViolationException extends DomainException {
   @Serial private static final long serialVersionUID = 1L;
 
   private final ArrayList<String> missingFields;
+  private final ArrayList<String> violations;
   private final String detail;
 
   public ContractViolationException(String detail) {
     super("CONTRACT_VIOLATION", "Violação de contrato: " + detail);
     this.missingFields = new ArrayList<>();
+    this.violations = new ArrayList<>();
+    this.violations.add(detail);
     this.detail = detail;
   }
 
@@ -28,17 +31,24 @@ public class ContractViolationException extends DomainException {
         "CONTRACT_MISSING_FIELDS",
         "Campos obrigatórios ausentes: " + String.join(", ", missingFields));
     this.missingFields = new ArrayList<>(missingFields);
+    this.violations = new ArrayList<>(missingFields.stream().map(f -> "Campo ausente: " + f).toList());
     this.detail = "Campos obrigatórios ausentes para persistência";
   }
 
   public ContractViolationException(String code, String detail) {
     super(code, detail);
     this.missingFields = new ArrayList<>();
+    this.violations = new ArrayList<>();
+    this.violations.add(detail);
     this.detail = detail;
   }
 
   public List<String> getMissingFields() {
     return missingFields;
+  }
+
+  public List<String> getViolations() {
+    return violations;
   }
 
   public String getDetail() {
