@@ -273,8 +273,6 @@ class ComplexRuleEvaluatorAggregationTest {
         .transactionRequest(new TransactionRequest())
         .build();
 
-    when(velocityServiceFacade.getStats(any(TransactionRequest.class), any(), any())).thenReturn(VelocityService.VelocityStats.empty());
-
     // Act
     ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 
