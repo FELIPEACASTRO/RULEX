@@ -36,7 +36,7 @@ public class DatabaseCircuitBreaker {
    * @return CircuitBreaker configurado
    */
   @Bean
-  public CircuitBreaker databaseCircuitBreaker() {
+  public CircuitBreaker circuitBreaker() {
     CircuitBreakerConfig config =
         CircuitBreakerConfig.custom()
             // Threshold: 50% de falhas em 10 requisições
