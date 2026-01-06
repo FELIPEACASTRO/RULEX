@@ -37,7 +37,8 @@ public interface VelocityMetricsRepository extends JpaRepository<VelocityMetrics
   List<Object[]> calculateDailyLatencyAverages(@Param("date") LocalDate date);
 
   /** Busca métricas com threshold breaches. */
-  @Query("SELECT vm FROM VelocityMetrics vm WHERE vm.thresholdBreaches > 0 ORDER BY vm.metricDate DESC, vm.metricHour DESC")
+  @Query(
+      "SELECT vm FROM VelocityMetrics vm WHERE vm.thresholdBreaches > 0 ORDER BY vm.metricDate DESC, vm.metricHour DESC")
   List<VelocityMetrics> findWithThresholdBreaches();
 
   /** Calcula taxa de cache hit de um período. */

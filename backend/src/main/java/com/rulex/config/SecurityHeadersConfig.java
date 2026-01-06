@@ -15,14 +15,11 @@ import org.springframework.core.annotation.Order;
 /**
  * Configuração de Security Headers para proteção contra vulnerabilidades web.
  *
- * <p>Implementa headers recomendados pelo OWASP:
- * - X-Frame-Options: Proteção contra clickjacking
- * - X-Content-Type-Options: Proteção contra MIME sniffing
- * - X-XSS-Protection: Proteção contra XSS (legacy)
- * - Content-Security-Policy: Política de segurança de conteúdo
- * - Strict-Transport-Security: Força uso de HTTPS
- * - Referrer-Policy: Controle de informações de referência
- * - Permissions-Policy: Controle de features do browser
+ * <p>Implementa headers recomendados pelo OWASP: - X-Frame-Options: Proteção contra clickjacking -
+ * X-Content-Type-Options: Proteção contra MIME sniffing - X-XSS-Protection: Proteção contra XSS
+ * (legacy) - Content-Security-Policy: Política de segurança de conteúdo -
+ * Strict-Transport-Security: Força uso de HTTPS - Referrer-Policy: Controle de informações de
+ * referência - Permissions-Policy: Controle de features do browser
  *
  * <p>FIX: VULN-001 (Missing Security Headers)
  *

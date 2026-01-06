@@ -109,8 +109,7 @@ public class ShadowEvaluationLog {
 
   /** Verifica se a avaliação foi um falso positivo (shadow acionou, mas não deveria). */
   public boolean isFalsePositive() {
-    return Boolean.TRUE.equals(triggered)
-        && "APROVADO".equals(actualDecision);
+    return Boolean.TRUE.equals(triggered) && "APROVADO".equals(actualDecision);
   }
 
   /** Verifica se a avaliação foi um falso negativo (shadow não acionou, mas deveria). */

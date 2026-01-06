@@ -16,9 +16,7 @@ import org.hibernate.type.SqlTypes;
 @Entity
 @Table(
     name = "device_fingerprints",
-    indexes = {
-      @Index(name = "idx_device_fp_hash", columnList = "fingerprint_hash")
-    })
+    indexes = {@Index(name = "idx_device_fp_hash", columnList = "fingerprint_hash")})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

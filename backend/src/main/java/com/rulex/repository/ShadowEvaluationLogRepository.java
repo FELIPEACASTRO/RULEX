@@ -44,8 +44,8 @@ public interface ShadowEvaluationLogRepository extends JpaRepository<ShadowEvalu
   List<ShadowEvaluationLog> findByRuleIdAndEvaluatedAtAfter(UUID ruleId, OffsetDateTime after);
 
   /**
-   * Calcula estatísticas de uma regra shadow.
-   * Retorna: [total, triggered, falsePositives, falseNegatives]
+   * Calcula estatísticas de uma regra shadow. Retorna: [total, triggered, falsePositives,
+   * falseNegatives]
    */
   @Query(
       "SELECT COUNT(sel), "
@@ -55,9 +55,7 @@ public interface ShadowEvaluationLogRepository extends JpaRepository<ShadowEvalu
           + "FROM ShadowEvaluationLog sel WHERE sel.ruleId = :ruleId")
   List<Object[]> calculateStatsByRuleId(@Param("ruleId") UUID ruleId);
 
-  /**
-   * Calcula estatísticas de uma regra shadow em um período.
-   */
+  /** Calcula estatísticas de uma regra shadow em um período. */
   @Query(
       "SELECT COUNT(sel), "
           + "SUM(CASE WHEN sel.triggered = true THEN 1 ELSE 0 END), "

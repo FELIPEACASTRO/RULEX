@@ -24,11 +24,13 @@ public interface DevicePanAssociationRepository extends JpaRepository<DevicePanA
   List<DevicePanAssociation> findByPanHash(String panHash);
 
   /** Conta quantos PANs distintos estão associados a um fingerprint. */
-  @Query("SELECT COUNT(DISTINCT dpa.panHash) FROM DevicePanAssociation dpa WHERE dpa.fingerprintHash = :fingerprintHash")
+  @Query(
+      "SELECT COUNT(DISTINCT dpa.panHash) FROM DevicePanAssociation dpa WHERE dpa.fingerprintHash = :fingerprintHash")
   long countDistinctPansByFingerprintHash(@Param("fingerprintHash") String fingerprintHash);
 
   /** Conta quantos fingerprints distintos estão associados a um PAN. */
-  @Query("SELECT COUNT(DISTINCT dpa.fingerprintHash) FROM DevicePanAssociation dpa WHERE dpa.panHash = :panHash")
+  @Query(
+      "SELECT COUNT(DISTINCT dpa.fingerprintHash) FROM DevicePanAssociation dpa WHERE dpa.panHash = :panHash")
   long countDistinctFingerprintsByPanHash(@Param("panHash") String panHash);
 
   /** Busca associações com nível de risco específico. */
@@ -41,9 +43,7 @@ public interface DevicePanAssociationRepository extends JpaRepository<DevicePanA
   /** Busca dispositivos primários de um PAN. */
   List<DevicePanAssociation> findByPanHashAndIsPrimaryDeviceTrue(String panHash);
 
-  /**
-   * Busca fingerprints suspeitos de device farming (associados a muitos PANs).
-   */
+  /** Busca fingerprints suspeitos de device farming (associados a muitos PANs). */
   @Query(
       "SELECT dpa.fingerprintHash, COUNT(DISTINCT dpa.panHash) as panCount "
           + "FROM DevicePanAssociation dpa "

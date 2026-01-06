@@ -82,9 +82,7 @@ public class PanLocationHistory {
     }
   }
 
-  /**
-   * Calcula a velocidade de deslocamento em km/h. Retorna null se não houver dados suficientes.
-   */
+  /** Calcula a velocidade de deslocamento em km/h. Retorna null se não houver dados suficientes. */
   public Double calculateSpeedKmh() {
     if (distanceKm == null || elapsedMinutes == null || elapsedMinutes <= 0) {
       return null;

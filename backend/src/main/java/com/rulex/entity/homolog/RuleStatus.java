@@ -4,12 +4,13 @@ package com.rulex.entity.homolog;
  * Status de uma regra no sistema.
  *
  * <p>Valores:
+ *
  * <ul>
- *   <li>DRAFT - Rascunho, não é executada</li>
- *   <li>PUBLISHED - Publicada, em execução normal</li>
- *   <li>DEPRECATED - Descontinuada, mantida para histórico</li>
- *   <li>ARCHIVED - Arquivada, não é executada</li>
- *   <li>TESTING - Em teste, executa mas não afeta decisão final</li>
+ *   <li>DRAFT - Rascunho, não é executada
+ *   <li>PUBLISHED - Publicada, em execução normal
+ *   <li>DEPRECATED - Descontinuada, mantida para histórico
+ *   <li>ARCHIVED - Arquivada, não é executada
+ *   <li>TESTING - Em teste, executa mas não afeta decisão final
  * </ul>
  */
 public enum RuleStatus {

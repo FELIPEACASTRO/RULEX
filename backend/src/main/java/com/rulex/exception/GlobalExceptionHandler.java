@@ -55,18 +55,18 @@ public class GlobalExceptionHandler {
             .path(request.getRequestURI())
             .details(
                 Map.of(
-                    "maxSize", MAX_PAYLOAD_SIZE,
-                    "maxSizeMB", String.format("%.2f MB", MAX_PAYLOAD_SIZE / 1_000_000.0),
+                    "maxSize",
+                    MAX_PAYLOAD_SIZE,
+                    "maxSizeMB",
+                    String.format("%.2f MB", MAX_PAYLOAD_SIZE / 1_000_000.0),
                     "suggestion",
-                        "Considere dividir a requisição em múltiplas chamadas menores"))
+                    "Considere dividir a requisição em múltiplas chamadas menores"))
             .build();
 
     return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);
   }
 
-  /**
-   * Tratamento de JSON inválido ou mal formatado.
-   */
+  /** Tratamento de JSON inválido ou mal formatado. */
   @ExceptionHandler(HttpMessageNotReadableException.class)
   public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
       HttpMessageNotReadableException ex, HttpServletRequest request) {
@@ -97,9 +97,7 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
   }
 
-  /**
-   * Tratamento de validação de campos (@Valid).
-   */
+  /** Tratamento de validação de campos (@Valid). */
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
       MethodArgumentNotValidException ex, HttpServletRequest request) {
@@ -123,9 +121,7 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
   }
 
-  /**
-   * Tratamento de constraint violation.
-   */
+  /** Tratamento de constraint violation. */
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ErrorResponse> handleConstraintViolation(
       ConstraintViolationException ex, HttpServletRequest request) {
@@ -134,7 +130,8 @@ public class GlobalExceptionHandler {
     Map<String, String> violations = new HashMap<>();
     ex.getConstraintViolations()
         .forEach(
-            violation -> violations.put(violation.getPropertyPath().toString(), violation.getMessage()));
+            violation ->
+                violations.put(violation.getPropertyPath().toString(), violation.getMessage()));
 
     ErrorResponse error =
         ErrorResponse.builder()
@@ -149,9 +146,7 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
   }
 
-  /**
-   * Tratamento de tipo de argumento inválido.
-   */
+  /** Tratamento de tipo de argumento inválido. */
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(
       MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
@@ -177,9 +172,7 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
   }
 
-  /**
-   * Tratamento de Content-Type não suportado.
-   */
+  /** Tratamento de Content-Type não suportado. */
   @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
   public ResponseEntity<ErrorResponse> handleHttpMediaTypeNotSupported(
       HttpMediaTypeNotSupportedException ex, HttpServletRequest request) {
@@ -206,9 +199,7 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(error);
   }
 
-  /**
-   * Tratamento de método HTTP não suportado.
-   */
+  /** Tratamento de método HTTP não suportado. */
   @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
   public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupported(
       HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
@@ -232,9 +223,7 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
   }
 
-  /**
-   * Tratamento de exceções genéricas.
-   */
+  /** Tratamento de exceções genéricas. */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleGenericException(
       Exception ex, HttpServletRequest request) {
@@ -249,16 +238,16 @@ public class GlobalExceptionHandler {
             .path(request.getRequestURI())
             .details(
                 Map.of(
-                    "type", ex.getClass().getSimpleName(),
-                    "suggestion", "Se o problema persistir, contate o suporte"))
+                    "type",
+                    ex.getClass().getSimpleName(),
+                    "suggestion",
+                    "Se o problema persistir, contate o suporte"))
             .build();
 
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
   }
 
-  /**
-   * Classe interna para resposta de erro padronizada.
-   */
+  /** Classe interna para resposta de erro padronizada. */
   @lombok.Data
   @lombok.Builder
   public static class ErrorResponse {

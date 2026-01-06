@@ -20,7 +20,8 @@ public interface PanLocationHistoryRepository extends JpaRepository<PanLocationH
   List<PanLocationHistory> findByPanHashOrderByTransactionTimeDesc(String panHash);
 
   /** Busca histórico de localização de um PAN com limite. */
-  List<PanLocationHistory> findByPanHashOrderByTransactionTimeDesc(String panHash, Pageable pageable);
+  List<PanLocationHistory> findByPanHashOrderByTransactionTimeDesc(
+      String panHash, Pageable pageable);
 
   /** Busca a última localização de um PAN. */
   Optional<PanLocationHistory> findFirstByPanHashOrderByTransactionTimeDesc(String panHash);

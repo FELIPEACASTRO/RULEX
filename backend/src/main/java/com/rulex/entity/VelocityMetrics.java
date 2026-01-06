@@ -14,9 +14,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
     name = "velocity_metrics",
-    indexes = {
-      @Index(name = "idx_velocity_metrics_date", columnList = "metric_date")
-    },
+    indexes = {@Index(name = "idx_velocity_metrics_date", columnList = "metric_date")},
     uniqueConstraints = {
       @UniqueConstraint(
           name = "uk_velocity_metrics_date_hour",

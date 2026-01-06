@@ -12,10 +12,8 @@ import org.springframework.session.web.http.DefaultCookieSerializer;
 /**
  * Configuração de Cookies Seguros para proteção contra ataques.
  *
- * <p>Implementa flags de segurança em cookies:
- * - Secure: Apenas transmitido via HTTPS
- * - HttpOnly: Não acessível via JavaScript
- * - SameSite: Proteção contra CSRF
+ * <p>Implementa flags de segurança em cookies: - Secure: Apenas transmitido via HTTPS - HttpOnly:
+ * Não acessível via JavaScript - SameSite: Proteção contra CSRF
  *
  * <p>FIX: VULN-002 (Cookie Without Secure Flag)
  *
@@ -79,8 +77,7 @@ public class SecureCookieConfig {
    * @param secure Se deve ser transmitido apenas via HTTPS
    * @return Cookie configurado com flags de segurança
    */
-  public static Cookie createSecureCookie(
-      String name, String value, int maxAge, boolean secure) {
+  public static Cookie createSecureCookie(String name, String value, int maxAge, boolean secure) {
     Cookie cookie = new Cookie(name, value);
     cookie.setHttpOnly(true);
     cookie.setSecure(secure);

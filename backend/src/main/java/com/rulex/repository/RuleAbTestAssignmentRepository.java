@@ -39,19 +39,14 @@ public interface RuleAbTestAssignmentRepository extends JpaRepository<RuleAbTest
   /** Conta assignments triggered por test ID e grupo. */
   long countByTestIdAndAssignedGroupAndTriggeredTrue(Long testId, AssignedGroup assignedGroup);
 
-  /**
-   * Calcula estatísticas de um teste A/B.
-   * Retorna: [grupo, total, triggered]
-   */
+  /** Calcula estatísticas de um teste A/B. Retorna: [grupo, total, triggered] */
   @Query(
       "SELECT rata.assignedGroup, COUNT(rata), SUM(CASE WHEN rata.triggered = true THEN 1 ELSE 0 END) "
           + "FROM RuleAbTestAssignment rata WHERE rata.testId = :testId "
           + "GROUP BY rata.assignedGroup")
   List<Object[]> calculateStatsByTestId(@Param("testId") Long testId);
 
-  /**
-   * Calcula estatísticas de um teste A/B em um período.
-   */
+  /** Calcula estatísticas de um teste A/B em um período. */
   @Query(
       "SELECT rata.assignedGroup, COUNT(rata), SUM(CASE WHEN rata.triggered = true THEN 1 ELSE 0 END) "
           + "FROM RuleAbTestAssignment rata WHERE rata.testId = :testId "
@@ -67,7 +62,8 @@ public interface RuleAbTestAssignmentRepository extends JpaRepository<RuleAbTest
   List<String> findDistinctPanHashesByTestId(@Param("testId") Long testId);
 
   /** Conta PANs únicos em um teste. */
-  @Query("SELECT COUNT(DISTINCT rata.panHash) FROM RuleAbTestAssignment rata WHERE rata.testId = :testId")
+  @Query(
+      "SELECT COUNT(DISTINCT rata.panHash) FROM RuleAbTestAssignment rata WHERE rata.testId = :testId")
   long countDistinctPanHashesByTestId(@Param("testId") Long testId);
 
   /** Deleta assignments de um teste. */

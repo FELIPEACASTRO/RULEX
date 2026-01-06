@@ -16,8 +16,8 @@ import org.springframework.dao.DataAccessException;
 /**
  * Circuit Breaker para resiliência de conexão com banco de dados.
  *
- * <p>Implementa padrão Circuit Breaker para prevenir cascata de falhas quando o banco de dados
- * está indisponível.
+ * <p>Implementa padrão Circuit Breaker para prevenir cascata de falhas quando o banco de dados está
+ * indisponível.
  *
  * <p>Estados do Circuit Breaker: - CLOSED: Funcionamento normal - OPEN: Banco indisponível,
  * requisições falham imediatamente - HALF_OPEN: Testando recuperação
@@ -114,8 +114,7 @@ public class DatabaseCircuitBreaker {
                 org.springframework.dao.TransientDataAccessException.class)
             // Exceções que não devem ser retentadas
             .ignoreExceptions(
-                IllegalArgumentException.class,
-                org.springframework.dao.DuplicateKeyException.class)
+                IllegalArgumentException.class, org.springframework.dao.DuplicateKeyException.class)
             .build();
 
     RetryRegistry registry = RetryRegistry.of(config);
@@ -134,8 +133,7 @@ public class DatabaseCircuitBreaker {
         .onSuccess(
             event ->
                 log.info(
-                    "Database call succeeded after {} retries",
-                    event.getNumberOfRetryAttempts()))
+                    "Database call succeeded after {} retries", event.getNumberOfRetryAttempts()))
         .onError(
             event ->
                 log.error(

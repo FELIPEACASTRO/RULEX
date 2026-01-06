@@ -313,8 +313,10 @@ public class ComplexRuleEvaluator {
       case SUM_LAST_N_DAYS -> evaluateSumLastNDays(condition, context);
       case COUNT_LAST_N_HOURS -> evaluateCountLastNHours(condition, context);
       case AVG_LAST_N_DAYS -> evaluateAvgLastNDays(condition, context);
-      case COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS -> evaluateCountDistinctMerchantsLastNDays(condition, context);
-      case COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS -> evaluateCountDistinctCountriesLastNHours(condition, context);
+      case COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS ->
+          evaluateCountDistinctMerchantsLastNDays(condition, context);
+      case COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS ->
+          evaluateCountDistinctCountriesLastNHours(condition, context);
       case MAX_AMOUNT_LAST_N_DAYS -> evaluateMaxAmountLastNDays(condition, context);
       case MIN_AMOUNT_LAST_N_DAYS -> evaluateMinAmountLastNDays(condition, context);
 
@@ -326,7 +328,8 @@ public class ComplexRuleEvaluator {
       case CHARGEBACK_RATE_GT -> evaluateChargebackRateGt(condition, context);
       case ACCOUNT_AGE_LT_MINUTES -> evaluateAccountAgeLtMinutes(condition, context);
       case IS_VOIP -> evaluateIsVoip(fieldValue);
-      case COUNT_DISTINCT_PANS_LAST_N_HOURS -> evaluateCountDistinctPansLastNHours(condition, context);
+      case COUNT_DISTINCT_PANS_LAST_N_HOURS ->
+          evaluateCountDistinctPansLastNHours(condition, context);
       case COUNT_DISTINCT_ACCOUNTS -> evaluateCountDistinctAccounts(condition, context);
 
         // Operadores de Tempo/Data
@@ -347,7 +350,8 @@ public class ComplexRuleEvaluator {
         // Operadores de Velocity adicionais
       case SUM_LAST_N_HOURS -> evaluateSumLastNHours(condition, context);
       case COUNT_FAILURES_LAST_N_HOURS -> evaluateCountFailuresLastNHours(condition, context);
-      case COUNT_DISTINCT_MERCHANTS_LAST_N_HOURS -> evaluateCountDistinctMerchantsLastNHours(condition, context);
+      case COUNT_DISTINCT_MERCHANTS_LAST_N_HOURS ->
+          evaluateCountDistinctMerchantsLastNHours(condition, context);
       case TIME_SINCE_LAST_LT -> evaluateTimeSinceLastLt(condition, context);
 
         // Operadores de Padrão de Fraude
@@ -361,7 +365,8 @@ public class ComplexRuleEvaluator {
       case NOT_IN_CUSTOMER_HISTORY -> !evaluateInCustomerHistory(condition, context);
       case IN_CUSTOMER_USUAL_HOURS -> evaluateInCustomerUsualHours(condition, context);
       case NOT_IN_CUSTOMER_USUAL_HOURS -> !evaluateInCustomerUsualHours(condition, context);
-      case IN_CUSTOMER_CHARGEBACK_MERCHANTS -> evaluateInCustomerChargebackMerchants(condition, context);
+      case IN_CUSTOMER_CHARGEBACK_MERCHANTS ->
+          evaluateInCustomerChargebackMerchants(condition, context);
 
         // Operadores de Primeira Ocorrência
       case IS_FIRST -> evaluateIsFirst(condition, context);
@@ -934,9 +939,9 @@ public class ComplexRuleEvaluator {
   // ========== Agregações Temporais Avançadas (DSL Expandida) ==========
 
   /**
-   * Avalia SUM_LAST_N_DAYS: Soma de valores nos últimos N dias
-   * Formato do valueSingle: "fieldName|nDays|threshold|operator"
-   * Exemplo: "amount|7|5000|GT" -> Soma de 'amount' nos últimos 7 dias > 5000
+   * Avalia SUM_LAST_N_DAYS: Soma de valores nos últimos N dias Formato do valueSingle:
+   * "fieldName|nDays|threshold|operator" Exemplo: "amount|7|5000|GT" -> Soma de 'amount' nos
+   * últimos 7 dias > 5000
    */
   private boolean evaluateSumLastNDays(RuleCondition condition, EvaluationContext context) {
     try {
@@ -955,11 +960,7 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
 
-      var stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(),
-          keyType,
-          window
-      );
+      var stats = velocityServiceFacade.getStats(context.getTransactionRequest(), keyType, window);
 
       BigDecimal sum = stats.getTotalAmount();
 
@@ -979,9 +980,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * Avalia COUNT_LAST_N_HOURS: Contagem de transações nas últimas N horas
-   * Formato do valueSingle: "nHours|threshold|operator"
-   * Exemplo: "24|100|GT" -> Mais de 100 transações nas últimas 24 horas
+   * Avalia COUNT_LAST_N_HOURS: Contagem de transações nas últimas N horas Formato do valueSingle:
+   * "nHours|threshold|operator" Exemplo: "24|100|GT" -> Mais de 100 transações nas últimas 24 horas
    */
   private boolean evaluateCountLastNHours(RuleCondition condition, EvaluationContext context) {
     try {
@@ -998,11 +998,7 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindowFromHours(nHours);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
 
-      var stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(),
-          keyType,
-          window
-      );
+      var stats = velocityServiceFacade.getStats(context.getTransactionRequest(), keyType, window);
 
       long count = stats.getTransactionCount();
 
@@ -1022,9 +1018,9 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * Avalia AVG_LAST_N_DAYS: Média de valores nos últimos N dias
-   * Formato do valueSingle: "fieldName|nDays|threshold|operator"
-   * Exemplo: "amount|30|500|GT" -> Média de 'amount' nos últimos 30 dias > 500
+   * Avalia AVG_LAST_N_DAYS: Média de valores nos últimos N dias Formato do valueSingle:
+   * "fieldName|nDays|threshold|operator" Exemplo: "amount|30|500|GT" -> Média de 'amount' nos
+   * últimos 30 dias > 500
    */
   private boolean evaluateAvgLastNDays(RuleCondition condition, EvaluationContext context) {
     try {
@@ -1042,11 +1038,7 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
 
-      var stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(),
-          keyType,
-          window
-      );
+      var stats = velocityServiceFacade.getStats(context.getTransactionRequest(), keyType, window);
 
       BigDecimal avg = stats.getAvgAmount();
 
@@ -1066,15 +1058,18 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * Avalia COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS: Contagem de merchants distintos
-   * Formato do valueSingle: "nDays|threshold|operator"
-   * Exemplo: "7|10|GT" -> Mais de 10 merchants distintos nos últimos 7 dias
+   * Avalia COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS: Contagem de merchants distintos Formato do
+   * valueSingle: "nDays|threshold|operator" Exemplo: "7|10|GT" -> Mais de 10 merchants distintos
+   * nos últimos 7 dias
    */
-  private boolean evaluateCountDistinctMerchantsLastNDays(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCountDistinctMerchantsLastNDays(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String[] parts = condition.getValueSingle().split("\\|");
       if (parts.length != 3) {
-        log.error("Formato inválido para COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS: {}", condition.getValueSingle());
+        log.error(
+            "Formato inválido para COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS: {}",
+            condition.getValueSingle());
         return false;
       }
 
@@ -1085,11 +1080,7 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
 
-      var stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(),
-          keyType,
-          window
-      );
+      var stats = velocityServiceFacade.getStats(context.getTransactionRequest(), keyType, window);
 
       long distinctMerchants = stats.getDistinctMerchants();
 
@@ -1109,15 +1100,18 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * Avalia COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS: Contagem de países distintos
-   * Formato do valueSingle: "nHours|threshold|operator"
-   * Exemplo: "24|5|GT" -> Mais de 5 países distintos nas últimas 24 horas
+   * Avalia COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS: Contagem de países distintos Formato do
+   * valueSingle: "nHours|threshold|operator" Exemplo: "24|5|GT" -> Mais de 5 países distintos nas
+   * últimas 24 horas
    */
-  private boolean evaluateCountDistinctCountriesLastNHours(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCountDistinctCountriesLastNHours(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String[] parts = condition.getValueSingle().split("\\|");
       if (parts.length != 3) {
-        log.error("Formato inválido para COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS: {}", condition.getValueSingle());
+        log.error(
+            "Formato inválido para COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS: {}",
+            condition.getValueSingle());
         return false;
       }
 
@@ -1128,11 +1122,7 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindowFromHours(nHours);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
 
-      var stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(),
-          keyType,
-          window
-      );
+      var stats = velocityServiceFacade.getStats(context.getTransactionRequest(), keyType, window);
 
       long distinctCountries = stats.getDistinctCountries();
 
@@ -1152,9 +1142,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * Avalia MAX_AMOUNT_LAST_N_DAYS: Valor máximo nos últimos N dias
-   * Formato do valueSingle: "nDays|threshold|operator"
-   * Exemplo: "30|10000|GT" -> Valor máximo nos últimos 30 dias > 10000
+   * Avalia MAX_AMOUNT_LAST_N_DAYS: Valor máximo nos últimos N dias Formato do valueSingle:
+   * "nDays|threshold|operator" Exemplo: "30|10000|GT" -> Valor máximo nos últimos 30 dias > 10000
    */
   private boolean evaluateMaxAmountLastNDays(RuleCondition condition, EvaluationContext context) {
     try {
@@ -1171,11 +1160,7 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
 
-      var stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(),
-          keyType,
-          window
-      );
+      var stats = velocityServiceFacade.getStats(context.getTransactionRequest(), keyType, window);
 
       BigDecimal maxAmount = stats.getMaxAmount();
 
@@ -1195,9 +1180,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * Avalia MIN_AMOUNT_LAST_N_DAYS: Valor mínimo nos últimos N dias
-   * Formato do valueSingle: "nDays|threshold|operator"
-   * Exemplo: "7|10|LT" -> Valor mínimo nos últimos 7 dias < 10
+   * Avalia MIN_AMOUNT_LAST_N_DAYS: Valor mínimo nos últimos N dias Formato do valueSingle:
+   * "nDays|threshold|operator" Exemplo: "7|10|LT" -> Valor mínimo nos últimos 7 dias < 10
    */
   private boolean evaluateMinAmountLastNDays(RuleCondition condition, EvaluationContext context) {
     try {
@@ -1214,11 +1198,7 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
       VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
 
-      var stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(),
-          keyType,
-          window
-      );
+      var stats = velocityServiceFacade.getStats(context.getTransactionRequest(), keyType, window);
 
       BigDecimal minAmount = stats.getMinAmount();
 
@@ -1274,9 +1254,9 @@ public class ComplexRuleEvaluator {
   // ========== Operadores Críticos para Regras de Fraude Avançadas ==========
 
   /**
-   * NOT_IN_HISTORICAL: Verifica se o valor NÃO está no histórico do cliente.
-   * Formato: "sourceField:targetField:days" (ex: "customerAcctNumber:beneficiaryId:90")
-   * Retorna true se o beneficiário NUNCA foi usado antes pelo cliente nos últimos N dias.
+   * NOT_IN_HISTORICAL: Verifica se o valor NÃO está no histórico do cliente. Formato:
+   * "sourceField:targetField:days" (ex: "customerAcctNumber:beneficiaryId:90") Retorna true se o
+   * beneficiário NUNCA foi usado antes pelo cliente nos últimos N dias.
    */
   private boolean evaluateNotInHistorical(RuleCondition condition, EvaluationContext context) {
     try {
@@ -1310,8 +1290,8 @@ public class ComplexRuleEvaluator {
 
   /**
    * NAME_SIMILARITY_LT: Verifica se a similaridade entre dois nomes é menor que o threshold.
-   * Formato: "otherField:threshold" (ex: "shippingName:50")
-   * Usa algoritmo de Levenshtein para calcular similaridade.
+   * Formato: "otherField:threshold" (ex: "shippingName:50") Usa algoritmo de Levenshtein para
+   * calcular similaridade.
    */
   private boolean evaluateNameSimilarityLt(RuleCondition condition, EvaluationContext context) {
     try {
@@ -1364,11 +1344,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * GTE_PERCENT_OF_LAST_INCOMING: Verifica se o valor é >= X% do último valor recebido.
-   * Formato: "percentage" (ex: "80")
-   * Usado para detectar saques que drenam a conta após depósito.
+   * GTE_PERCENT_OF_LAST_INCOMING: Verifica se o valor é >= X% do último valor recebido. Formato:
+   * "percentage" (ex: "80") Usado para detectar saques que drenam a conta após depósito.
    */
-  private boolean evaluateGtePercentOfLastIncoming(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateGtePercentOfLastIncoming(
+      RuleCondition condition, EvaluationContext context) {
     try {
       int percentage = Integer.parseInt(condition.getValueSingle().trim());
       Object fieldValue = getFieldValue(condition.getFieldName(), null, context);
@@ -1383,7 +1363,8 @@ public class ComplexRuleEvaluator {
       // Por enquanto, usa um valor placeholder
       BigDecimal lastIncoming = BigDecimal.valueOf(1000); // Placeholder
 
-      BigDecimal threshold = lastIncoming.multiply(BigDecimal.valueOf(percentage)).divide(BigDecimal.valueOf(100));
+      BigDecimal threshold =
+          lastIncoming.multiply(BigDecimal.valueOf(percentage)).divide(BigDecimal.valueOf(100));
       return currentAmount.compareTo(threshold) >= 0;
     } catch (Exception e) {
       log.error("Erro ao avaliar GTE_PERCENT_OF_LAST_INCOMING: {}", e.getMessage());
@@ -1392,8 +1373,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * DOMAIN_IN_LIST: Verifica se o domínio do email está em uma lista.
-   * Formato: "domain1,domain2,domain3" (ex: "guerrillamail.com,10minutemail.com")
+   * DOMAIN_IN_LIST: Verifica se o domínio do email está em uma lista. Formato:
+   * "domain1,domain2,domain3" (ex: "guerrillamail.com,10minutemail.com")
    */
   private boolean evaluateDomainInList(Object fieldValue, RuleCondition condition) {
     if (fieldValue == null || condition.getValueSingle() == null) {
@@ -1439,7 +1420,9 @@ public class ComplexRuleEvaluator {
 
       // TODO: Implementar consulta real à taxa de chargeback do merchant
       // Por enquanto, retorna false (merchant OK)
-      log.debug("CHARGEBACK_RATE_GT: merchantId={}, threshold={}%, days={}", merchantId, rateThreshold, days);
+      log.debug(
+          "CHARGEBACK_RATE_GT: merchantId={}, threshold={}%, days={}",
+          merchantId, rateThreshold, days);
       return false; // Placeholder
     } catch (Exception e) {
       log.error("Erro ao avaliar CHARGEBACK_RATE_GT: {}", e.getMessage());
@@ -1448,8 +1431,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * ACCOUNT_AGE_LT_MINUTES: Verifica se a conta tem menos de N minutos de idade.
-   * Formato: "minutes" (ex: "10")
+   * ACCOUNT_AGE_LT_MINUTES: Verifica se a conta tem menos de N minutos de idade. Formato: "minutes"
+   * (ex: "10")
    */
   private boolean evaluateAccountAgeLtMinutes(RuleCondition condition, EvaluationContext context) {
     try {
@@ -1477,8 +1460,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * IS_VOIP: Verifica se o número de telefone é VoIP.
-   * Retorna true se o telefone for identificado como VoIP.
+   * IS_VOIP: Verifica se o número de telefone é VoIP. Retorna true se o telefone for identificado
+   * como VoIP.
    */
   private boolean evaluateIsVoip(Object fieldValue) {
     if (fieldValue == null) {
@@ -1504,11 +1487,13 @@ public class ComplexRuleEvaluator {
    * COUNT_DISTINCT_PANS_LAST_N_HOURS: Conta PANs distintos associados ao campo nas últimas N horas.
    * Formato: "threshold:hours" (ex: "5:1" = mais de 5 PANs distintos na última hora)
    */
-  private boolean evaluateCountDistinctPansLastNHours(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCountDistinctPansLastNHours(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String[] parts = condition.getValueSingle().split(":");
       if (parts.length < 2) {
-        log.warn("Formato inválido para COUNT_DISTINCT_PANS_LAST_N_HOURS. Esperado: threshold:hours");
+        log.warn(
+            "Formato inválido para COUNT_DISTINCT_PANS_LAST_N_HOURS. Esperado: threshold:hours");
         return false;
       }
 
@@ -1524,11 +1509,9 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
 
       if (context.getTransactionRequest() != null) {
-        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            window
-        );
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
         // Usar distinctMerchants como proxy para PANs distintos (simplificação)
         return stats.getDistinctMerchants() > threshold;
       }
@@ -1541,10 +1524,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * COUNT_DISTINCT_ACCOUNTS: Conta contas distintas associadas ao campo.
-   * Formato: "threshold" (ex: "3" = mais de 3 contas distintas)
+   * COUNT_DISTINCT_ACCOUNTS: Conta contas distintas associadas ao campo. Formato: "threshold" (ex:
+   * "3" = mais de 3 contas distintas)
    */
-  private boolean evaluateCountDistinctAccounts(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCountDistinctAccounts(
+      RuleCondition condition, EvaluationContext context) {
     try {
       int threshold = Integer.parseInt(condition.getValueSingle().trim());
 
@@ -1555,11 +1539,11 @@ public class ComplexRuleEvaluator {
 
       // Usar VelocityService para obter contagem de contas distintas
       if (context.getTransactionRequest() != null) {
-        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            VelocityService.TimeWindow.DAY_30
-        );
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(),
+                VelocityService.KeyType.PAN,
+                VelocityService.TimeWindow.DAY_30);
         // Usar distinctCountries como proxy para contas distintas (simplificação)
         return stats.getDistinctCountries() > threshold;
       }
@@ -1755,7 +1739,9 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /** PERCENTAGE_OF_FIELD: Calcula se campo é X% de outro. Formato: "otherField:percentage:operator" */
+  /**
+   * PERCENTAGE_OF_FIELD: Calcula se campo é X% de outro. Formato: "otherField:percentage:operator"
+   */
   private boolean evaluatePercentageOfField(RuleCondition condition, EvaluationContext context) {
     try {
       String[] parts = condition.getValueSingle().split(":");
@@ -1779,7 +1765,8 @@ public class ComplexRuleEvaluator {
         return false;
       }
 
-      BigDecimal actualPercentage = value.multiply(BigDecimal.valueOf(100)).divide(other, 2, java.math.RoundingMode.HALF_UP);
+      BigDecimal actualPercentage =
+          value.multiply(BigDecimal.valueOf(100)).divide(other, 2, java.math.RoundingMode.HALF_UP);
       return actualPercentage.compareTo(percentage) >= 0;
     } catch (Exception e) {
       log.error("Erro ao avaliar PERCENTAGE_OF_FIELD: {}", e.getMessage());
@@ -1805,11 +1792,9 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
 
       if (context.getTransactionRequest() != null) {
-        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            window
-        );
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
 
         return switch (operator) {
           case "GT" -> stats.getTotalAmount().compareTo(threshold) > 0;
@@ -1827,7 +1812,8 @@ public class ComplexRuleEvaluator {
   }
 
   /** COUNT_FAILURES_LAST_N_HOURS: Contagem de falhas nas últimas N horas */
-  private boolean evaluateCountFailuresLastNHours(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCountFailuresLastNHours(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String[] parts = condition.getValueSingle().split(":");
       if (parts.length < 2) {
@@ -1842,11 +1828,9 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
 
       if (context.getTransactionRequest() != null) {
-        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            window
-        );
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
         // Usar suspicious_count como proxy para falhas
         return stats.getFraudCount() > threshold;
       }
@@ -1858,7 +1842,8 @@ public class ComplexRuleEvaluator {
   }
 
   /** COUNT_DISTINCT_MERCHANTS_LAST_N_HOURS: Merchants distintos nas últimas N horas */
-  private boolean evaluateCountDistinctMerchantsLastNHours(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCountDistinctMerchantsLastNHours(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String[] parts = condition.getValueSingle().split(":");
       if (parts.length < 2) {
@@ -1871,11 +1856,9 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
 
       if (context.getTransactionRequest() != null) {
-        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            window
-        );
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
         return stats.getDistinctMerchants() > threshold;
       }
       return false;
@@ -1895,11 +1878,9 @@ public class ComplexRuleEvaluator {
       VelocityService.TimeWindow window = parseTimeWindowFromHours(1);
 
       if (context.getTransactionRequest() != null) {
-        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            window
-        );
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
         // Se há mais de 1 transação na última hora, provavelmente o tempo é curto
         return stats.getTransactionCount() > 1;
       }
@@ -1920,17 +1901,17 @@ public class ComplexRuleEvaluator {
 
       if (context.getTransactionRequest() != null) {
         // Comparar contagem atual com média histórica
-        VelocityService.VelocityStats statsHour = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            VelocityService.TimeWindow.HOUR_1
-        );
+        VelocityService.VelocityStats statsHour =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(),
+                VelocityService.KeyType.PAN,
+                VelocityService.TimeWindow.HOUR_1);
 
-        VelocityService.VelocityStats statsDay = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            VelocityService.TimeWindow.HOUR_24
-        );
+        VelocityService.VelocityStats statsDay =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(),
+                VelocityService.KeyType.PAN,
+                VelocityService.TimeWindow.HOUR_24);
 
         // Média por hora = total do dia / 24
         double avgPerHour = statsDay.getTransactionCount() / 24.0;
@@ -1958,11 +1939,11 @@ public class ComplexRuleEvaluator {
       BigDecimal currentAmount = new BigDecimal(String.valueOf(amountValue));
 
       if (context.getTransactionRequest() != null) {
-        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            VelocityService.TimeWindow.DAY_30
-        );
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(),
+                VelocityService.KeyType.PAN,
+                VelocityService.TimeWindow.DAY_30);
 
         BigDecimal avgAmount = stats.getAvgAmount();
         if (avgAmount.compareTo(BigDecimal.ZERO) > 0) {
@@ -1987,15 +1968,16 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * PATTERN_SPLIT_TRANSACTION: Detecta padrão de split de transação.
-   * Múltiplas transações pequenas em curto período que somam um valor maior.
-   * Formato: "maxMinutes:minTransactions:totalThreshold"
+   * PATTERN_SPLIT_TRANSACTION: Detecta padrão de split de transação. Múltiplas transações pequenas
+   * em curto período que somam um valor maior. Formato: "maxMinutes:minTransactions:totalThreshold"
    */
-  private boolean evaluatePatternSplitTransaction(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluatePatternSplitTransaction(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String[] parts = condition.getValueSingle().split(":");
       if (parts.length < 3) {
-        log.warn("Formato inválido para PATTERN_SPLIT_TRANSACTION. Esperado: maxMinutes:minTransactions:totalThreshold");
+        log.warn(
+            "Formato inválido para PATTERN_SPLIT_TRANSACTION. Esperado: maxMinutes:minTransactions:totalThreshold");
         return false;
       }
 
@@ -2005,15 +1987,13 @@ public class ComplexRuleEvaluator {
 
       if (context.getTransactionRequest() != null) {
         VelocityService.TimeWindow window = parseTimeWindowFromHours(maxMinutes / 60 + 1);
-        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            window
-        );
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
 
         // Detectar split: muitas transações que somam mais que o threshold
-        return stats.getTransactionCount() >= minTransactions &&
-               stats.getTotalAmount().compareTo(totalThreshold) >= 0;
+        return stats.getTransactionCount() >= minTransactions
+            && stats.getTotalAmount().compareTo(totalThreshold) >= 0;
       }
       return false;
     } catch (Exception e) {
@@ -2025,8 +2005,8 @@ public class ComplexRuleEvaluator {
   // ========== Operadores de Histórico do Cliente ==========
 
   /**
-   * IN_CUSTOMER_HISTORY: Verifica se o valor do campo está no histórico do cliente.
-   * Formato: "fieldToCheck:days" (ex: "merchantId:90" - merchant usado nos últimos 90 dias)
+   * IN_CUSTOMER_HISTORY: Verifica se o valor do campo está no histórico do cliente. Formato:
+   * "fieldToCheck:days" (ex: "merchantId:90" - merchant usado nos últimos 90 dias)
    */
   private boolean evaluateInCustomerHistory(RuleCondition condition, EvaluationContext context) {
     try {
@@ -2042,11 +2022,9 @@ public class ComplexRuleEvaluator {
       // Usar VelocityService para verificar histórico
       if (context.getTransactionRequest() != null) {
         VelocityService.TimeWindow window = parseTimeWindowFromDays(days);
-        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            window
-        );
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
 
         // Se há transações no período, assumir que o campo está no histórico
         // Para uma implementação completa, seria necessário consultar o histórico real
@@ -2060,8 +2038,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * IN_CUSTOMER_USUAL_HOURS: Verifica se a transação está no horário habitual do cliente.
-   * Analisa o padrão de horários das transações anteriores.
+   * IN_CUSTOMER_USUAL_HOURS: Verifica se a transação está no horário habitual do cliente. Analisa o
+   * padrão de horários das transações anteriores.
    */
   private boolean evaluateInCustomerUsualHours(RuleCondition condition, EvaluationContext context) {
     try {
@@ -2082,8 +2060,10 @@ public class ComplexRuleEvaluator {
 
       // Definir horários "normais" como 6h-23h
       // Para uma implementação completa, seria necessário analisar o histórico do cliente
-      int threshold = condition.getValueSingle() != null ?
-          Integer.parseInt(condition.getValueSingle().trim()) : 2; // Tolerância de 2 horas
+      int threshold =
+          condition.getValueSingle() != null
+              ? Integer.parseInt(condition.getValueSingle().trim())
+              : 2; // Tolerância de 2 horas
 
       // Horário comercial estendido: 6h às 23h
       boolean isNormalHour = currentHour >= 6 && currentHour <= 23;
@@ -2096,9 +2076,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * IN_CUSTOMER_CHARGEBACK_MERCHANTS: Verifica se o merchant está na lista de chargebacks do cliente.
+   * IN_CUSTOMER_CHARGEBACK_MERCHANTS: Verifica se o merchant está na lista de chargebacks do
+   * cliente.
    */
-  private boolean evaluateInCustomerChargebackMerchants(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateInCustomerChargebackMerchants(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Object merchantId = getFieldValue("merchantId", null, context);
       if (merchantId == null) {
@@ -2118,13 +2100,15 @@ public class ComplexRuleEvaluator {
   // ========== Operadores de Primeira Ocorrência ==========
 
   /**
-   * IS_FIRST: Verifica se é a primeira ocorrência do valor para o cliente.
-   * Formato: "fieldToCheck" (ex: "merchantId" - primeiro uso deste merchant)
+   * IS_FIRST: Verifica se é a primeira ocorrência do valor para o cliente. Formato: "fieldToCheck"
+   * (ex: "merchantId" - primeiro uso deste merchant)
    */
   private boolean evaluateIsFirst(RuleCondition condition, EvaluationContext context) {
     try {
-      String fieldToCheck = condition.getValueSingle() != null ?
-          condition.getValueSingle().trim() : condition.getFieldName();
+      String fieldToCheck =
+          condition.getValueSingle() != null
+              ? condition.getValueSingle().trim()
+              : condition.getFieldName();
 
       Object fieldValue = getFieldValue(fieldToCheck, null, context);
       if (fieldValue == null) {
@@ -2133,11 +2117,11 @@ public class ComplexRuleEvaluator {
 
       // Usar VelocityService para verificar se há histórico
       if (context.getTransactionRequest() != null) {
-        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            VelocityService.TimeWindow.DAY_30
-        );
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(),
+                VelocityService.KeyType.PAN,
+                VelocityService.TimeWindow.DAY_30);
 
         // Se não há transações anteriores, é a primeira
         return stats.getTransactionCount() == 0;
@@ -2150,13 +2134,15 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * IS_NEW: Verifica se o valor é "novo" (visto pela primeira vez recentemente).
-   * Formato: "maxDays" (ex: "7" - visto pela primeira vez nos últimos 7 dias)
+   * IS_NEW: Verifica se o valor é "novo" (visto pela primeira vez recentemente). Formato: "maxDays"
+   * (ex: "7" - visto pela primeira vez nos últimos 7 dias)
    */
   private boolean evaluateIsNew(RuleCondition condition, EvaluationContext context) {
     try {
-      int maxDays = condition.getValueSingle() != null ?
-          Integer.parseInt(condition.getValueSingle().trim()) : 7;
+      int maxDays =
+          condition.getValueSingle() != null
+              ? Integer.parseInt(condition.getValueSingle().trim())
+              : 7;
 
       Object fieldValue = getFieldValue(condition.getFieldName(), null, context);
       if (fieldValue == null) {
@@ -2166,23 +2152,21 @@ public class ComplexRuleEvaluator {
       // Verificar se há histórico além do período especificado
       if (context.getTransactionRequest() != null) {
         // Verificar histórico de 30 dias
-        VelocityService.VelocityStats stats30 = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            VelocityService.TimeWindow.DAY_30
-        );
+        VelocityService.VelocityStats stats30 =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(),
+                VelocityService.KeyType.PAN,
+                VelocityService.TimeWindow.DAY_30);
 
         // Verificar histórico do período especificado
         VelocityService.TimeWindow window = parseTimeWindowFromDays(maxDays);
-        VelocityService.VelocityStats statsRecent = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            window
-        );
+        VelocityService.VelocityStats statsRecent =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
 
         // É "novo" se só aparece no período recente, não no histórico mais longo
-        return statsRecent.getTransactionCount() > 0 &&
-               stats30.getTransactionCount() <= statsRecent.getTransactionCount();
+        return statsRecent.getTransactionCount() > 0
+            && stats30.getTransactionCount() <= statsRecent.getTransactionCount();
       }
       return true;
     } catch (Exception e) {
@@ -2192,8 +2176,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * DISTANCE_FROM_LAST_GT: Verifica se a distância da última transação é maior que N km.
-   * Formato: "distanceKm" (ex: "500" - mais de 500km da última transação)
+   * DISTANCE_FROM_LAST_GT: Verifica se a distância da última transação é maior que N km. Formato:
+   * "distanceKm" (ex: "500" - mais de 500km da última transação)
    */
   private boolean evaluateDistanceFromLastGt(RuleCondition condition, EvaluationContext context) {
     try {
@@ -2219,11 +2203,11 @@ public class ComplexRuleEvaluator {
       // Por enquanto, usar heurística baseada em país
       // Se o país mudou, assumir distância > threshold
       if (context.getTransactionRequest() != null) {
-        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-            context.getTransactionRequest(),
-            VelocityService.KeyType.PAN,
-            VelocityService.TimeWindow.HOUR_24
-        );
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(),
+                VelocityService.KeyType.PAN,
+                VelocityService.TimeWindow.HOUR_24);
 
         // Se há transações em múltiplos países nas últimas 24h, pode indicar distância grande
         return stats.getDistinctCountries() > 1;
