@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Play, AlertTriangle, CheckCircle2, XCircle, Loader2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import api from '@/lib/api';
 import type { ComplexRule } from './types';
 
 interface RuleSimulatorProps {
@@ -55,19 +56,25 @@ export function RuleSimulator({ rule }: RuleSimulatorProps) {
       // Validate JSON
       const parsedPayload = JSON.parse(payload);
 
-      // Simulate rule evaluation (mock for now - replace with actual API call)
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Call real API endpoint for evaluation
+      const startTime = performance.now();
+      const response = await api.post('/evaluate', {
+        payload: parsedPayload
+      });
+      const endTime = performance.now();
+      const executionTimeMs = Math.round(endTime - startTime);
 
-      // Mock result
-      const mockResult: SimulationResult = {
-        matched: true,
-        decision: rule.decision || 'FRAUD',
-        score: rule.scoreImpact || 100,
-        reason: `Regra ${rule.key} acionada`,
-        executionTimeMs: 45,
+      // Transform API response to SimulationResult
+      const apiResult = response.data;
+      const result: SimulationResult = {
+        matched: apiResult.decision !== 'APPROVE',
+        decision: apiResult.decision || 'UNKNOWN',
+        score: apiResult.totalScore || 0,
+        reason: apiResult.ruleHits?.map((hit: any) => hit.ruleName).join(', ') || 'Nenhuma regra acionada',
+        executionTimeMs,
       };
 
-      setResult(mockResult);
+      setResult(result);
       toast.success('Simulação concluída!');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';

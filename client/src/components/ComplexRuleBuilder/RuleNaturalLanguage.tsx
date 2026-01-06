@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { getFieldLabel } from '@/lib/fieldLabels';
 import type { ComplexRule, ConditionGroup, Condition } from './types';
 
 interface RuleNaturalLanguageProps {
@@ -46,26 +47,14 @@ const LOGIC_LABELS: Record<string, string> = {
   NOR: 'NEM',
 };
 
-const FIELD_LABELS: Record<string, string> = {
-  transactionAmount: 'Valor da Transação',
-  merchantCountryCode: 'País do Merchant',
-  cardCountryCode: 'País do Cartão',
-  mcc: 'Categoria do Merchant (MCC)',
-  transactionType: 'Tipo de Transação',
-  cardPresent: 'Cartão Presente',
-  cvv2Response: 'Resposta CVV2',
-  avsResponse: 'Resposta AVS',
-  pan: 'Número do Cartão',
-  merchantId: 'ID do Merchant',
-  customerIdFromHeader: 'ID do Cliente',
-};
+// FIELD_LABELS agora vem de @/lib/fieldLabels.ts com todos os 102 campos
 
 function translateCondition(condition: Condition): string {
-  const fieldLabel = FIELD_LABELS[condition.fieldName] || condition.fieldName;
+  const fieldLabel = getFieldLabel(condition.fieldName);
   const operatorLabel = OPERATOR_LABELS[condition.operator] || condition.operator;
   const value = condition.comparisonValue;
 
-  return `**${fieldLabel}** ${operatorLabel} \`${value}\``;
+  return `**${fieldLabel}** ${operatorLabel} \`${value}\`;
 }
 
 function translateGroup(group: ConditionGroup, level: number = 0): string[] {
