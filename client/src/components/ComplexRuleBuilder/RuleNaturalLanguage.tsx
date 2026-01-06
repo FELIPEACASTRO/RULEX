@@ -52,9 +52,9 @@ const LOGIC_LABELS: Record<string, string> = {
 function translateCondition(condition: Condition): string {
   const fieldLabel = getFieldLabel(condition.fieldName);
   const operatorLabel = OPERATOR_LABELS[condition.operator] || condition.operator;
-  const value = condition.comparisonValue;
+  const value = condition.valueSingle || condition.valueArray?.join(', ') || '';
 
-  return `**${fieldLabel}** ${operatorLabel} \`${value}\`;
+  return `**${fieldLabel}** ${operatorLabel} \`${value}\``;
 }
 
 function translateGroup(group: ConditionGroup, level: number = 0): string[] {
@@ -126,11 +126,11 @@ export function RuleNaturalLanguage({ rule }: RuleNaturalLanguageProps) {
 
           <div className="mb-4">
             <p className="text-xs text-muted-foreground mb-1">DECISÃO:</p>
-            <Badge variant={rule.decision === 'FRAUD' ? 'destructive' : 'secondary'}>
-              {rule.decision || 'SUSPICIOUS'}
+            <Badge variant={rule.decision === 'FRAUDE' ? 'destructive' : 'secondary'}>
+              {rule.decision || 'SUSPEITA_DE_FRAUDE'}
             </Badge>
             <span className="ml-2 text-muted-foreground">
-              (Score: {rule.scoreImpact || 0})
+              (Severidade: {rule.severity || 0})
             </span>
           </div>
 
@@ -148,7 +148,7 @@ export function RuleNaturalLanguage({ rule }: RuleNaturalLanguageProps) {
           <div className="mt-4 pt-4 border-t">
             <p className="text-xs text-muted-foreground mb-1">ENTÃO:</p>
             <p className="text-sm">
-              Classificar como <Badge variant="outline">{rule.decision || 'SUSPICIOUS'}</Badge> e adicionar <strong>{rule.scoreImpact || 0}</strong> pontos ao score de risco.
+              Classificar como <Badge variant="outline">{rule.decision || 'SUSPEITA_DE_FRAUDE'}</Badge> com severidade <strong>{rule.severity || 0}</strong>.
             </p>
           </div>
         </div>

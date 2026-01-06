@@ -36,9 +36,9 @@ export function FadeIn({
   const offset = directionOffset[direction];
   const adjustedOffset =
     direction === 'up' || direction === 'down'
-      ? { y: (offset.y || 0) * (distance / 20) }
+      ? { y: ('y' in offset ? offset.y : 0) * (distance / 20) }
       : direction === 'left' || direction === 'right'
-      ? { x: (offset.x || 0) * (distance / 20) }
+      ? { x: ('x' in offset ? offset.x : 0) * (distance / 20) }
       : {};
 
   const variants: Variants = {

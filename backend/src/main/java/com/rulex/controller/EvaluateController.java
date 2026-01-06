@@ -67,14 +67,17 @@ public class EvaluateController {
       return ResponseEntity.status(413)
           .header("Content-Type", "application/json")
           .body(
-              new EvaluateResponse(
-                  null,
-                  0,
-                  null,
-                  String.format(
-                      "Payload muito grande: %d bytes. Limite máximo: 1.000.000 bytes (1 MB). "
-                          + "Por favor, reduza o tamanho da requisição.",
-                      rawBody.length())));
+              EvaluateResponse.builder()
+                  .transactionId(null)
+                  .classification("ERROR")
+                  .riskScore(0)
+                  .reason(
+                      String.format(
+                          "Payload muito grande: %d bytes. Limite máximo: 1.000.000 bytes (1 MB). "
+                              + "Por favor, reduza o tamanho da requisição.",
+                          rawBody.length()))
+                  .timestamp(java.time.LocalDateTime.now())
+                  .build());
     }
 
     byte[] rawBytes = (byte[]) httpRequest.getAttribute(RawPayloadCaptureFilter.RAW_BYTES_ATTR);

@@ -317,6 +317,10 @@ public class ComplexRuleEvaluator {
       case COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS -> evaluateCountDistinctCountriesLastNHours(condition, context);
       case MAX_AMOUNT_LAST_N_DAYS -> evaluateMaxAmountLastNDays(condition, context);
       case MIN_AMOUNT_LAST_N_DAYS -> evaluateMinAmountLastNDays(condition, context);
+      default -> {
+        log.warn("Operador não implementado: {}", operator);
+        yield false;
+      }
     };
   }
 
@@ -875,8 +879,6 @@ public class ComplexRuleEvaluator {
     }
     return "";
   }
-}
-
 
   // ========== Agregações Temporais Avançadas (DSL Expandida) ==========
 
@@ -900,12 +902,12 @@ public class ComplexRuleEvaluator {
 
       // Calcular a soma usando o VelocityServiceFacade
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
-      String groupBy = extractGroupByFromContext(context);
+      VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
       
       var stats = velocityServiceFacade.getStats(
-          groupBy,
-          window,
-          context.getTransactionRequest()
+          context.getTransactionRequest(),
+          keyType,
+          window
       );
 
       BigDecimal sum = stats.getTotalAmount();
@@ -943,12 +945,12 @@ public class ComplexRuleEvaluator {
       String operator = parts[2];
 
       VelocityService.TimeWindow window = parseTimeWindowFromHours(nHours);
-      String groupBy = extractGroupByFromContext(context);
+      VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
       
       var stats = velocityServiceFacade.getStats(
-          groupBy,
-          window,
-          context.getTransactionRequest()
+          context.getTransactionRequest(),
+          keyType,
+          window
       );
 
       long count = stats.getTransactionCount();
@@ -987,15 +989,15 @@ public class ComplexRuleEvaluator {
       String operator = parts[3];
 
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
-      String groupBy = extractGroupByFromContext(context);
+      VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
       
       var stats = velocityServiceFacade.getStats(
-          groupBy,
-          window,
-          context.getTransactionRequest()
+          context.getTransactionRequest(),
+          keyType,
+          window
       );
 
-      BigDecimal avg = stats.getAverageAmount();
+      BigDecimal avg = stats.getAvgAmount();
 
       return switch (operator) {
         case "GT" -> avg.compareTo(threshold) > 0;
@@ -1030,15 +1032,15 @@ public class ComplexRuleEvaluator {
       String operator = parts[2];
 
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
-      String groupBy = extractGroupByFromContext(context);
+      VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
       
       var stats = velocityServiceFacade.getStats(
-          groupBy,
-          window,
-          context.getTransactionRequest()
+          context.getTransactionRequest(),
+          keyType,
+          window
       );
 
-      int distinctMerchants = stats.getDistinctMerchants();
+      long distinctMerchants = stats.getDistinctMerchants();
 
       return switch (operator) {
         case "GT" -> distinctMerchants > threshold;
@@ -1073,15 +1075,15 @@ public class ComplexRuleEvaluator {
       String operator = parts[2];
 
       VelocityService.TimeWindow window = parseTimeWindowFromHours(nHours);
-      String groupBy = extractGroupByFromContext(context);
+      VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
       
       var stats = velocityServiceFacade.getStats(
-          groupBy,
-          window,
-          context.getTransactionRequest()
+          context.getTransactionRequest(),
+          keyType,
+          window
       );
 
-      int distinctCountries = stats.getDistinctCountries();
+      long distinctCountries = stats.getDistinctCountries();
 
       return switch (operator) {
         case "GT" -> distinctCountries > threshold;
@@ -1116,12 +1118,12 @@ public class ComplexRuleEvaluator {
       String operator = parts[2];
 
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
-      String groupBy = extractGroupByFromContext(context);
+      VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
       
       var stats = velocityServiceFacade.getStats(
-          groupBy,
-          window,
-          context.getTransactionRequest()
+          context.getTransactionRequest(),
+          keyType,
+          window
       );
 
       BigDecimal maxAmount = stats.getMaxAmount();
@@ -1159,12 +1161,12 @@ public class ComplexRuleEvaluator {
       String operator = parts[2];
 
       VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
-      String groupBy = extractGroupByFromContext(context);
+      VelocityService.KeyType keyType = VelocityService.KeyType.PAN;
       
       var stats = velocityServiceFacade.getStats(
-          groupBy,
-          window,
-          context.getTransactionRequest()
+          context.getTransactionRequest(),
+          keyType,
+          window
       );
 
       BigDecimal minAmount = stats.getMinAmount();

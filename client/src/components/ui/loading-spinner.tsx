@@ -72,9 +72,10 @@ export function LoadingOverlay({ isLoading, text, children }: LoadingOverlayProp
 /**
  * LoadingButton - Botão com estado de loading
  */
-import { Button, ButtonProps } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
+import { type ComponentProps } from 'react';
 
-interface LoadingButtonProps extends ButtonProps {
+interface LoadingButtonProps extends ComponentProps<typeof Button> {
   isLoading: boolean;
   loadingText?: string;
 }
