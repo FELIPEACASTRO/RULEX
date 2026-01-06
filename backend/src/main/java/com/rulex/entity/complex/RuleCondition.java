@@ -156,7 +156,15 @@ public class RuleCondition {
     VELOCITY_AVG_GT,
     VELOCITY_AVG_LT,
     VELOCITY_DISTINCT_GT,
-    VELOCITY_DISTINCT_LT
+    VELOCITY_DISTINCT_LT,
+    // Agregações temporais avançadas (DSL expandida)
+    SUM_LAST_N_DAYS,
+    COUNT_LAST_N_HOURS,
+    AVG_LAST_N_DAYS,
+    COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS,
+    COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS,
+    MAX_AMOUNT_LAST_N_DAYS,
+    MIN_AMOUNT_LAST_N_DAYS
   }
 
   /** Tipos de valor suportados */

@@ -308,6 +308,15 @@ public class ComplexRuleEvaluator {
       case VELOCITY_AVG_LT -> evaluateVelocityAvg(condition, context, false);
       case VELOCITY_DISTINCT_GT -> evaluateVelocityDistinct(condition, context, true);
       case VELOCITY_DISTINCT_LT -> evaluateVelocityDistinct(condition, context, false);
+
+        // Agregações temporais avançadas (DSL expandida)
+      case SUM_LAST_N_DAYS -> evaluateSumLastNDays(condition, context);
+      case COUNT_LAST_N_HOURS -> evaluateCountLastNHours(condition, context);
+      case AVG_LAST_N_DAYS -> evaluateAvgLastNDays(condition, context);
+      case COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS -> evaluateCountDistinctMerchantsLastNDays(condition, context);
+      case COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS -> evaluateCountDistinctCountriesLastNHours(condition, context);
+      case MAX_AMOUNT_LAST_N_DAYS -> evaluateMaxAmountLastNDays(condition, context);
+      case MIN_AMOUNT_LAST_N_DAYS -> evaluateMinAmountLastNDays(condition, context);
     };
   }
 
@@ -865,5 +874,347 @@ public class ComplexRuleEvaluator {
       return "expr:" + condition.getValueExpression();
     }
     return "";
+  }
+}
+
+
+  // ========== Agregações Temporais Avançadas (DSL Expandida) ==========
+
+  /**
+   * Avalia SUM_LAST_N_DAYS: Soma de valores nos últimos N dias
+   * Formato do valueSingle: "fieldName|nDays|threshold|operator"
+   * Exemplo: "amount|7|5000|GT" -> Soma de 'amount' nos últimos 7 dias > 5000
+   */
+  private boolean evaluateSumLastNDays(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split("\\|");
+      if (parts.length != 4) {
+        log.error("Formato inválido para SUM_LAST_N_DAYS: {}", condition.getValueSingle());
+        return false;
+      }
+
+      String fieldName = parts[0];
+      int nDays = Integer.parseInt(parts[1]);
+      BigDecimal threshold = new BigDecimal(parts[2]);
+      String operator = parts[3]; // GT, GTE, LT, LTE, EQ
+
+      // Calcular a soma usando o VelocityServiceFacade
+      VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
+      String groupBy = extractGroupByFromContext(context);
+      
+      var stats = velocityServiceFacade.getStats(
+          groupBy,
+          window,
+          context.getTransactionRequest()
+      );
+
+      BigDecimal sum = stats.getTotalAmount();
+
+      return switch (operator) {
+        case "GT" -> sum.compareTo(threshold) > 0;
+        case "GTE" -> sum.compareTo(threshold) >= 0;
+        case "LT" -> sum.compareTo(threshold) < 0;
+        case "LTE" -> sum.compareTo(threshold) <= 0;
+        case "EQ" -> sum.compareTo(threshold) == 0;
+        default -> false;
+      };
+
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SUM_LAST_N_DAYS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Avalia COUNT_LAST_N_HOURS: Contagem de transações nas últimas N horas
+   * Formato do valueSingle: "nHours|threshold|operator"
+   * Exemplo: "24|100|GT" -> Mais de 100 transações nas últimas 24 horas
+   */
+  private boolean evaluateCountLastNHours(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split("\\|");
+      if (parts.length != 3) {
+        log.error("Formato inválido para COUNT_LAST_N_HOURS: {}", condition.getValueSingle());
+        return false;
+      }
+
+      int nHours = Integer.parseInt(parts[0]);
+      long threshold = Long.parseLong(parts[1]);
+      String operator = parts[2];
+
+      VelocityService.TimeWindow window = parseTimeWindowFromHours(nHours);
+      String groupBy = extractGroupByFromContext(context);
+      
+      var stats = velocityServiceFacade.getStats(
+          groupBy,
+          window,
+          context.getTransactionRequest()
+      );
+
+      long count = stats.getTransactionCount();
+
+      return switch (operator) {
+        case "GT" -> count > threshold;
+        case "GTE" -> count >= threshold;
+        case "LT" -> count < threshold;
+        case "LTE" -> count <= threshold;
+        case "EQ" -> count == threshold;
+        default -> false;
+      };
+
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_LAST_N_HOURS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Avalia AVG_LAST_N_DAYS: Média de valores nos últimos N dias
+   * Formato do valueSingle: "fieldName|nDays|threshold|operator"
+   * Exemplo: "amount|30|500|GT" -> Média de 'amount' nos últimos 30 dias > 500
+   */
+  private boolean evaluateAvgLastNDays(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split("\\|");
+      if (parts.length != 4) {
+        log.error("Formato inválido para AVG_LAST_N_DAYS: {}", condition.getValueSingle());
+        return false;
+      }
+
+      String fieldName = parts[0];
+      int nDays = Integer.parseInt(parts[1]);
+      BigDecimal threshold = new BigDecimal(parts[2]);
+      String operator = parts[3];
+
+      VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
+      String groupBy = extractGroupByFromContext(context);
+      
+      var stats = velocityServiceFacade.getStats(
+          groupBy,
+          window,
+          context.getTransactionRequest()
+      );
+
+      BigDecimal avg = stats.getAverageAmount();
+
+      return switch (operator) {
+        case "GT" -> avg.compareTo(threshold) > 0;
+        case "GTE" -> avg.compareTo(threshold) >= 0;
+        case "LT" -> avg.compareTo(threshold) < 0;
+        case "LTE" -> avg.compareTo(threshold) <= 0;
+        case "EQ" -> avg.compareTo(threshold) == 0;
+        default -> false;
+      };
+
+    } catch (Exception e) {
+      log.error("Erro ao avaliar AVG_LAST_N_DAYS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Avalia COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS: Contagem de merchants distintos
+   * Formato do valueSingle: "nDays|threshold|operator"
+   * Exemplo: "7|10|GT" -> Mais de 10 merchants distintos nos últimos 7 dias
+   */
+  private boolean evaluateCountDistinctMerchantsLastNDays(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split("\\|");
+      if (parts.length != 3) {
+        log.error("Formato inválido para COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS: {}", condition.getValueSingle());
+        return false;
+      }
+
+      int nDays = Integer.parseInt(parts[0]);
+      int threshold = Integer.parseInt(parts[1]);
+      String operator = parts[2];
+
+      VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
+      String groupBy = extractGroupByFromContext(context);
+      
+      var stats = velocityServiceFacade.getStats(
+          groupBy,
+          window,
+          context.getTransactionRequest()
+      );
+
+      int distinctMerchants = stats.getDistinctMerchants();
+
+      return switch (operator) {
+        case "GT" -> distinctMerchants > threshold;
+        case "GTE" -> distinctMerchants >= threshold;
+        case "LT" -> distinctMerchants < threshold;
+        case "LTE" -> distinctMerchants <= threshold;
+        case "EQ" -> distinctMerchants == threshold;
+        default -> false;
+      };
+
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Avalia COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS: Contagem de países distintos
+   * Formato do valueSingle: "nHours|threshold|operator"
+   * Exemplo: "24|5|GT" -> Mais de 5 países distintos nas últimas 24 horas
+   */
+  private boolean evaluateCountDistinctCountriesLastNHours(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split("\\|");
+      if (parts.length != 3) {
+        log.error("Formato inválido para COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS: {}", condition.getValueSingle());
+        return false;
+      }
+
+      int nHours = Integer.parseInt(parts[0]);
+      int threshold = Integer.parseInt(parts[1]);
+      String operator = parts[2];
+
+      VelocityService.TimeWindow window = parseTimeWindowFromHours(nHours);
+      String groupBy = extractGroupByFromContext(context);
+      
+      var stats = velocityServiceFacade.getStats(
+          groupBy,
+          window,
+          context.getTransactionRequest()
+      );
+
+      int distinctCountries = stats.getDistinctCountries();
+
+      return switch (operator) {
+        case "GT" -> distinctCountries > threshold;
+        case "GTE" -> distinctCountries >= threshold;
+        case "LT" -> distinctCountries < threshold;
+        case "LTE" -> distinctCountries <= threshold;
+        case "EQ" -> distinctCountries == threshold;
+        default -> false;
+      };
+
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Avalia MAX_AMOUNT_LAST_N_DAYS: Valor máximo nos últimos N dias
+   * Formato do valueSingle: "nDays|threshold|operator"
+   * Exemplo: "30|10000|GT" -> Valor máximo nos últimos 30 dias > 10000
+   */
+  private boolean evaluateMaxAmountLastNDays(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split("\\|");
+      if (parts.length != 3) {
+        log.error("Formato inválido para MAX_AMOUNT_LAST_N_DAYS: {}", condition.getValueSingle());
+        return false;
+      }
+
+      int nDays = Integer.parseInt(parts[0]);
+      BigDecimal threshold = new BigDecimal(parts[1]);
+      String operator = parts[2];
+
+      VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
+      String groupBy = extractGroupByFromContext(context);
+      
+      var stats = velocityServiceFacade.getStats(
+          groupBy,
+          window,
+          context.getTransactionRequest()
+      );
+
+      BigDecimal maxAmount = stats.getMaxAmount();
+
+      return switch (operator) {
+        case "GT" -> maxAmount.compareTo(threshold) > 0;
+        case "GTE" -> maxAmount.compareTo(threshold) >= 0;
+        case "LT" -> maxAmount.compareTo(threshold) < 0;
+        case "LTE" -> maxAmount.compareTo(threshold) <= 0;
+        case "EQ" -> maxAmount.compareTo(threshold) == 0;
+        default -> false;
+      };
+
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MAX_AMOUNT_LAST_N_DAYS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Avalia MIN_AMOUNT_LAST_N_DAYS: Valor mínimo nos últimos N dias
+   * Formato do valueSingle: "nDays|threshold|operator"
+   * Exemplo: "7|10|LT" -> Valor mínimo nos últimos 7 dias < 10
+   */
+  private boolean evaluateMinAmountLastNDays(RuleCondition condition, EvaluationContext context) {
+    try {
+      String[] parts = condition.getValueSingle().split("\\|");
+      if (parts.length != 3) {
+        log.error("Formato inválido para MIN_AMOUNT_LAST_N_DAYS: {}", condition.getValueSingle());
+        return false;
+      }
+
+      int nDays = Integer.parseInt(parts[0]);
+      BigDecimal threshold = new BigDecimal(parts[1]);
+      String operator = parts[2];
+
+      VelocityService.TimeWindow window = parseTimeWindowFromDays(nDays);
+      String groupBy = extractGroupByFromContext(context);
+      
+      var stats = velocityServiceFacade.getStats(
+          groupBy,
+          window,
+          context.getTransactionRequest()
+      );
+
+      BigDecimal minAmount = stats.getMinAmount();
+
+      return switch (operator) {
+        case "GT" -> minAmount.compareTo(threshold) > 0;
+        case "GTE" -> minAmount.compareTo(threshold) >= 0;
+        case "LT" -> minAmount.compareTo(threshold) < 0;
+        case "LTE" -> minAmount.compareTo(threshold) <= 0;
+        case "EQ" -> minAmount.compareTo(threshold) == 0;
+        default -> false;
+      };
+
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MIN_AMOUNT_LAST_N_DAYS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // ========== Métodos Auxiliares para Agregações Avançadas ==========
+
+  /** Converte dias para TimeWindow mais próxima */
+  private VelocityService.TimeWindow parseTimeWindowFromDays(int days) {
+    if (days <= 1) return VelocityService.TimeWindow.HOUR_24;
+    if (days <= 7) return VelocityService.TimeWindow.DAY_7;
+    return VelocityService.TimeWindow.DAY_30;
+  }
+
+  /** Converte horas para TimeWindow mais próxima */
+  private VelocityService.TimeWindow parseTimeWindowFromHours(int hours) {
+    if (hours <= 1) return VelocityService.TimeWindow.HOUR_1;
+    if (hours <= 6) return VelocityService.TimeWindow.HOUR_6;
+    if (hours <= 12) return VelocityService.TimeWindow.HOUR_12;
+    if (hours <= 24) return VelocityService.TimeWindow.HOUR_24;
+    if (hours <= 168) return VelocityService.TimeWindow.DAY_7;
+    return VelocityService.TimeWindow.DAY_30;
+  }
+
+  /** Extrai o campo de agrupamento do contexto (ex: cardNumber, accountId) */
+  private String extractGroupByFromContext(EvaluationContext context) {
+    // Prioridade: cardNumber > accountId > customerId
+    if (context.getPayload().containsKey("cardNumber")) {
+      return String.valueOf(context.getPayload().get("cardNumber"));
+    }
+    if (context.getPayload().containsKey("accountId")) {
+      return String.valueOf(context.getPayload().get("accountId"));
+    }
+    if (context.getPayload().containsKey("customerId")) {
+      return String.valueOf(context.getPayload().get("customerId"));
+    }
+    return "unknown";
   }
 }
