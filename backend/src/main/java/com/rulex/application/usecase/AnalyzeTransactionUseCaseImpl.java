@@ -34,9 +34,9 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <ul>
  *   <li>Verificar adulteração de payload (anti-tamper)
+ *   <li>Persistir hash do payload (anti-tamper)
  *   <li>Carregar regras ativas (com cache)
  *   <li>Delegar avaliação para RuleEvaluatorService
- *   <li>Persistir decisão
  *   <li>Registrar métricas e auditoria
  * </ul>
  */
@@ -88,6 +88,11 @@ public class AnalyzeTransactionUseCaseImpl implements AnalyzeTransactionUseCase 
           log.debug("Retornando decisão existente (idempotência): {}", externalTransactionId);
           return toAnalysisResult(existingDecision.get(), System.currentTimeMillis() - startTime);
         }
+      }
+
+      // 2.1 Persistir hash do payload para suportar anti-tamper em chamadas futuras
+      if (existingHash.isEmpty()) {
+        transactionPersistencePort.save(transactionData, payloadHash);
       }
 
       // 3. Carregar regras ativas (com cache)
@@ -173,7 +178,7 @@ public class AnalyzeTransactionUseCaseImpl implements AnalyzeTransactionUseCase 
   /** Converte uma Decision de domínio para AnalysisResult. */
   private AnalysisResult toAnalysisResult(Decision decision, long processingTimeMs) {
     List<TriggeredRule> triggeredRules =
-        decision.getTriggeredRules().stream()
+      Optional.ofNullable(decision.getTriggeredRules()).orElse(List.of()).stream()
             .map(
                 tr ->
                     new TriggeredRule(
