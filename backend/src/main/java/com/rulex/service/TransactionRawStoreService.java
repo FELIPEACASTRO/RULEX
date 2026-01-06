@@ -48,9 +48,7 @@ public class TransactionRawStoreService {
             .build();
     Objects.requireNonNull(repository.save(row));
     log.debug(
-        "Raw payload stored for transaction: {}, hash: {}",
-        externalTransactionId,
-        payloadRawHash);
+        "Raw payload stored for transaction: {}, hash: {}", externalTransactionId, payloadRawHash);
   }
 
   @Transactional(readOnly = true)

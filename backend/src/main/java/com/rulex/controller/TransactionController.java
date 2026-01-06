@@ -73,7 +73,7 @@ public class TransactionController {
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size) {
 
-  log.debug(
+    log.debug(
         "Listando transações com filtros: customerId={}, merchantId={}, page={}, size={}",
         customerId,
         merchantId,

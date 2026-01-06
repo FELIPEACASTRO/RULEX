@@ -62,7 +62,8 @@ public class AuditEventAdapter implements AuditEventPort {
 
   private AuditLog.AuditActionType toAuditActionType(EventType eventType) {
     return switch (eventType) {
-      case TRANSACTION_ANALYZED, TRANSACTION_TAMPER_DETECTED -> AuditLog.AuditActionType.TRANSACTION_PROCESSED;
+      case TRANSACTION_ANALYZED, TRANSACTION_TAMPER_DETECTED ->
+          AuditLog.AuditActionType.TRANSACTION_PROCESSED;
       case RULE_TRIGGERED -> AuditLog.AuditActionType.DECISION_MADE;
       case DECISION_CREATED -> AuditLog.AuditActionType.DECISION_MADE;
       case RULE_CREATED -> AuditLog.AuditActionType.RULE_CREATED;

@@ -185,15 +185,13 @@ public class RuleEvaluatorService {
     return Math.max(0, Math.min(100, weight));
   }
 
-  private String generateReason(
-      Classification classification, List<TriggeredRule> triggeredRules) {
+  private String generateReason(Classification classification, List<TriggeredRule> triggeredRules) {
     List<String> ruleNames = triggeredRules.stream().map(TriggeredRule::getRuleName).toList();
 
     return switch (classification) {
       case APPROVED -> "Transação aprovada. Nenhuma regra crítica foi acionada.";
       case SUSPICIOUS ->
-          String.format(
-              "Transação suspeita. Regras acionadas: %s", String.join(", ", ruleNames));
+          String.format("Transação suspeita. Regras acionadas: %s", String.join(", ", ruleNames));
       case FRAUD ->
           String.format(
               "Transação bloqueada como fraude. Regras acionadas: %s",

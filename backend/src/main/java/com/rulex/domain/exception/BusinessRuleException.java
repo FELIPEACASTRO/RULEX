@@ -35,7 +35,8 @@ public class BusinessRuleException extends DomainException {
     this.context = null;
   }
 
-  public BusinessRuleException(String code, String message, String ruleName, Map<String, Object> context) {
+  public BusinessRuleException(
+      String code, String message, String ruleName, Map<String, Object> context) {
     super(code, message);
     this.ruleName = ruleName;
     this.context = context != null ? new HashMap<>(context) : null;
@@ -59,7 +60,8 @@ public class BusinessRuleException extends DomainException {
   public static BusinessRuleException ruleInUse(String ruleName) {
     return new BusinessRuleException(
         "RULE_IN_USE",
-        String.format("Regra '%s' não pode ser removida pois está em uso", ruleName), ruleName);
+        String.format("Regra '%s' não pode ser removida pois está em uso", ruleName),
+        ruleName);
   }
 
   /** Cria exceção para workflow de aprovação */
@@ -72,7 +74,6 @@ public class BusinessRuleException extends DomainException {
   /** Cria exceção para self-approval */
   public static BusinessRuleException selfApprovalNotAllowed() {
     return new BusinessRuleException(
-        "SELF_APPROVAL_NOT_ALLOWED",
-        "Usuário não pode aprovar sua própria solicitação");
+        "SELF_APPROVAL_NOT_ALLOWED", "Usuário não pode aprovar sua própria solicitação");
   }
 }

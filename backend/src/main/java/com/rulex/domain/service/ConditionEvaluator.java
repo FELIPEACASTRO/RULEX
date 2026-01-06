@@ -1,15 +1,10 @@
 package com.rulex.domain.service;
 
-import com.rulex.domain.model.Classification;
-import com.rulex.domain.model.Decision;
 import com.rulex.domain.model.Rule;
 import com.rulex.domain.model.RuleCondition;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -52,7 +47,9 @@ public class ConditionEvaluator {
    * @return true se condições são atendidas conforme operador
    */
   public boolean evaluateAll(
-      List<RuleCondition> conditions, Rule.LogicOperator logicOperator, Map<String, Object> payload) {
+      List<RuleCondition> conditions,
+      Rule.LogicOperator logicOperator,
+      Map<String, Object> payload) {
 
     if (conditions == null || conditions.isEmpty()) {
       return false;

@@ -8,7 +8,6 @@ import com.rulex.application.port.out.RuleCachePort;
 import com.rulex.application.port.out.RulePersistencePort;
 import com.rulex.application.port.out.TransactionPersistencePort;
 import com.rulex.domain.exception.TamperDetectedException;
-import com.rulex.domain.model.Classification;
 import com.rulex.domain.model.Decision;
 import com.rulex.domain.model.Rule;
 import com.rulex.domain.model.TransactionData;
@@ -79,8 +78,7 @@ public class AnalyzeTransactionUseCaseImpl implements AnalyzeTransactionUseCase 
         // Verificar adulteração
         if (tamperDetector.isTampered(existingHash.get(), payloadHash)) {
           auditEventPort.logTamperDetected(externalTransactionId, existingHash.get(), payloadHash);
-          throw new TamperDetectedException(
-              externalTransactionId, existingHash.get(), payloadHash);
+          throw new TamperDetectedException(externalTransactionId, existingHash.get(), payloadHash);
         }
 
         // Retornar decisão existente (idempotência)
@@ -96,7 +94,8 @@ public class AnalyzeTransactionUseCaseImpl implements AnalyzeTransactionUseCase 
       List<Rule> activeRules = loadActiveRules();
 
       // 4. Avaliar regras usando Domain Service
-      Decision decision = ruleEvaluatorService.evaluate(activeRules, payload, externalTransactionId);
+      Decision decision =
+          ruleEvaluatorService.evaluate(activeRules, payload, externalTransactionId);
 
       // 5. Avaliar regras shadow (métricas apenas)
       List<Rule> shadowRules = loadShadowRules();
@@ -149,7 +148,9 @@ public class AnalyzeTransactionUseCaseImpl implements AnalyzeTransactionUseCase 
       if (!shadowTriggeredRules.isEmpty()) {
         List<TriggeredRule> allRules = new ArrayList<>(result.triggeredRules());
         allRules.addAll(shadowTriggeredRules);
-        result = new AnalysisResult(result.classification(), result.totalScore(), allRules, result.processingTimeMs());
+        result =
+            new AnalysisResult(
+                result.classification(), result.totalScore(), allRules, result.processingTimeMs());
       }
 
       return result;
@@ -169,9 +170,7 @@ public class AnalyzeTransactionUseCaseImpl implements AnalyzeTransactionUseCase 
     }
   }
 
-  /**
-   * Converte uma Decision de domínio para AnalysisResult.
-   */
+  /** Converte uma Decision de domínio para AnalysisResult. */
   private AnalysisResult toAnalysisResult(Decision decision, long processingTimeMs) {
     List<TriggeredRule> triggeredRules =
         decision.getTriggeredRules().stream()
@@ -196,7 +195,8 @@ public class AnalyzeTransactionUseCaseImpl implements AnalyzeTransactionUseCase 
   private List<Rule> loadActiveRules() {
     // Tentar cache primeiro
     Optional<List<Rule>> cached =
-        ruleCachePort.get(RuleCachePort.ACTIVE_RULES_KEY, (Class<List<Rule>>) (Class<?>) List.class);
+        ruleCachePort.get(
+            RuleCachePort.ACTIVE_RULES_KEY, (Class<List<Rule>>) (Class<?>) List.class);
 
     if (cached.isPresent()) {
       metricsPort.recordCacheAccess(true);
@@ -215,7 +215,8 @@ public class AnalyzeTransactionUseCaseImpl implements AnalyzeTransactionUseCase 
   @SuppressWarnings("unchecked")
   private List<Rule> loadShadowRules() {
     Optional<List<Rule>> cached =
-        ruleCachePort.get(RuleCachePort.SHADOW_RULES_KEY, (Class<List<Rule>>) (Class<?>) List.class);
+        ruleCachePort.get(
+            RuleCachePort.SHADOW_RULES_KEY, (Class<List<Rule>>) (Class<?>) List.class);
 
     if (cached.isPresent()) {
       return cached.get();

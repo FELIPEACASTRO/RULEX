@@ -44,7 +44,8 @@ public class DecisionPersistenceAdapter implements DecisionPersistencePort {
     Transaction transaction =
         transactionRepository
             .findById(transactionId)
-            .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + transactionId));
+            .orElseThrow(
+                () -> new IllegalArgumentException("Transaction not found: " + transactionId));
 
     TransactionDecision entity = toEntity(decision, transaction);
     TransactionDecision saved = repository.save(entity);

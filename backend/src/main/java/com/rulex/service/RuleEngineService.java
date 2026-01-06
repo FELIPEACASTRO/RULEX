@@ -644,7 +644,6 @@ public class RuleEngineService {
     return bucket < percentage;
   }
 
-
   /** Avalia uma regra específica contra a transação. */
   private RuleMatch evaluateRuleGeneric(
       Transaction transaction, TransactionRequest request, RuleConfiguration rule) {

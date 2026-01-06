@@ -8,8 +8,7 @@ import java.util.UUID;
 /**
  * Port de persistência de regras de fraude.
  *
- * <p>Define como a camada de aplicação acessa regras. Implementação em
- * infrastructure/persistence.
+ * <p>Define como a camada de aplicação acessa regras. Implementação em infrastructure/persistence.
  */
 public interface RulePersistencePort {
 

@@ -15,9 +15,7 @@ public class ResourceNotFoundException extends DomainException {
   private final String resourceId;
 
   public ResourceNotFoundException(String resourceType, String resourceId) {
-    super(
-        "RESOURCE_NOT_FOUND",
-        String.format("%s não encontrado: %s", resourceType, resourceId));
+    super("RESOURCE_NOT_FOUND", String.format("%s não encontrado: %s", resourceType, resourceId));
     this.resourceType = resourceType;
     this.resourceId = resourceId;
   }

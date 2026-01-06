@@ -1,7 +1,8 @@
 /**
  * Cache infrastructure adapters.
  *
- * <p>Provides implementations of the {@link com.rulex.application.port.out.RuleCachePort} interface:
+ * <p>Provides implementations of the {@link com.rulex.application.port.out.RuleCachePort}
+ * interface:
  *
  * <ul>
  *   <li>{@link InMemoryCacheAdapter} - Simple in-memory cache using ConcurrentHashMap (default)

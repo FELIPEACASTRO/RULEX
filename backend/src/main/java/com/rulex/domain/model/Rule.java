@@ -72,9 +72,7 @@ public class Rule {
 
   /** Verifica se a regra está ativa (não em shadow mode) */
   public boolean isActive() {
-    return enabled != null
-        && enabled
-        && (shadowMode == null || shadowMode == ShadowMode.DISABLED);
+    return enabled != null && enabled && (shadowMode == null || shadowMode == ShadowMode.DISABLED);
   }
 
   /** Verifica se a regra deve ser avaliada em modo shadow */

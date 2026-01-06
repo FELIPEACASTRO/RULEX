@@ -1,8 +1,5 @@
 package com.rulex.application.port.out;
 
-import com.rulex.domain.model.Rule;
-import java.util.Map;
-
 /**
  * Port de métricas para monitoramento de performance.
  *

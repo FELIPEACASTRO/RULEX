@@ -79,11 +79,12 @@ class DatabaseRuleExecutorServiceTest {
             .threshold(0)
             .weight(100)
             .enabled(true)
-        .advanced(true)
+            .advanced(true)
             .classification(TransactionClassification.FRAUD)
             .build();
 
-    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true)).thenReturn(List.of(duplicateRule));
+    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true))
+        .thenReturn(List.of(duplicateRule));
 
     DatabaseRuleExecutorService.RuleExecution result = service.executeAdvancedRules(req);
 
@@ -107,11 +108,12 @@ class DatabaseRuleExecutorServiceTest {
             .threshold(3)
             .weight(60)
             .enabled(true)
-        .advanced(true)
+            .advanced(true)
             .classification(TransactionClassification.FRAUD)
             .build();
 
-    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true)).thenReturn(List.of(velocityRule));
+    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true))
+        .thenReturn(List.of(velocityRule));
 
     DatabaseRuleExecutorService.RuleExecution result = service.executeAdvancedRules(req);
 
@@ -131,11 +133,12 @@ class DatabaseRuleExecutorServiceTest {
             .threshold(10000)
             .weight(35)
             .enabled(true)
-        .advanced(true)
+            .advanced(true)
             .classification(TransactionClassification.SUSPICIOUS)
             .build();
 
-    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true)).thenReturn(List.of(thresholdRule));
+    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true))
+        .thenReturn(List.of(thresholdRule));
 
     DatabaseRuleExecutorService.RuleExecution result = service.executeAdvancedRules(req);
 
@@ -184,7 +187,7 @@ class DatabaseRuleExecutorServiceTest {
             .threshold(0)
             .weight(100)
             .enabled(true)
-        .advanced(true)
+            .advanced(true)
             .classification(TransactionClassification.FRAUD)
             .build();
 
@@ -196,11 +199,12 @@ class DatabaseRuleExecutorServiceTest {
             .threshold(10000)
             .weight(35)
             .enabled(true)
-        .advanced(true)
+            .advanced(true)
             .classification(TransactionClassification.SUSPICIOUS)
             .build();
 
-    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true)).thenReturn(List.of(fraudRule, suspiciousRule));
+    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true))
+        .thenReturn(List.of(fraudRule, suspiciousRule));
 
     DatabaseRuleExecutorService.RuleExecution result = service.executeAdvancedRules(req);
 
@@ -222,7 +226,7 @@ class DatabaseRuleExecutorServiceTest {
             .threshold(100)
             .weight(50)
             .enabled(true)
-        .advanced(false)
+            .advanced(false)
             .classification(TransactionClassification.SUSPICIOUS)
             .build();
 

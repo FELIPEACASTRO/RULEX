@@ -21,7 +21,10 @@ import org.springframework.stereotype.Component;
  * disponível.
  */
 @Component
-@ConditionalOnProperty(name = "spring.data.redis.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(
+    name = "spring.data.redis.enabled",
+    havingValue = "true",
+    matchIfMissing = false)
 @Primary
 @RequiredArgsConstructor
 @Slf4j
@@ -97,9 +100,13 @@ public class RedisCacheAdapter implements RuleCachePort {
     // Para listas genéricas (List<Rule>), precisamos usar TypeReference
     if (type == java.util.List.class) {
       // Assumimos que é List<Rule>
-      return (T) objectMapper.readValue(json, 
-          objectMapper.getTypeFactory().constructCollectionType(java.util.List.class, 
-              com.rulex.domain.model.Rule.class));
+      return (T)
+          objectMapper.readValue(
+              json,
+              objectMapper
+                  .getTypeFactory()
+                  .constructCollectionType(
+                      java.util.List.class, com.rulex.domain.model.Rule.class));
     }
     return objectMapper.readValue(json, type);
   }

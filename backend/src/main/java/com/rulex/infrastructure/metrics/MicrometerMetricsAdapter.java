@@ -45,24 +45,16 @@ public class MicrometerMetricsAdapter implements MetricsPort {
             .register(registry);
 
     this.errorCounter =
-        Counter.builder("rulex.errors.total")
-            .description("Total de erros")
-            .register(registry);
+        Counter.builder("rulex.errors.total").description("Total de erros").register(registry);
 
     this.cacheHitCounter =
-        Counter.builder("rulex.cache.hits")
-            .description("Cache hits")
-            .register(registry);
+        Counter.builder("rulex.cache.hits").description("Cache hits").register(registry);
 
     this.cacheMissCounter =
-        Counter.builder("rulex.cache.misses")
-            .description("Cache misses")
-            .register(registry);
+        Counter.builder("rulex.cache.misses").description("Cache misses").register(registry);
 
     this.ruleTriggeredCounter =
-        Counter.builder("rulex.rules.triggered")
-            .description("Regras acionadas")
-            .register(registry);
+        Counter.builder("rulex.rules.triggered").description("Regras acionadas").register(registry);
 
     this.shadowRuleTriggeredCounter =
         Counter.builder("rulex.rules.shadow.triggered")
@@ -116,10 +108,7 @@ public class MicrometerMetricsAdapter implements MetricsPort {
   public void incrementErrorCount(String errorType) {
     errorCounter.increment();
 
-    Counter.builder("rulex.errors.by.type")
-        .tag("type", errorType)
-        .register(registry)
-        .increment();
+    Counter.builder("rulex.errors.by.type").tag("type", errorType).register(registry).increment();
   }
 
   @Override
@@ -138,15 +127,11 @@ public class MicrometerMetricsAdapter implements MetricsPort {
 
   @Override
   public void recordRiskScore(int score) {
-    registry
-        .summary("rulex.risk.score.distribution")
-        .record(score);
+    registry.summary("rulex.risk.score.distribution").record(score);
   }
 
   @Override
   public void recordRulesEvaluated(int count) {
-    registry
-        .summary("rulex.rules.evaluated.count")
-        .record(count);
+    registry.summary("rulex.rules.evaluated.count").record(count);
   }
 }

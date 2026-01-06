@@ -31,7 +31,8 @@ public class ContractViolationException extends DomainException {
         "CONTRACT_MISSING_FIELDS",
         "Campos obrigatórios ausentes: " + String.join(", ", missingFields));
     this.missingFields = new ArrayList<>(missingFields);
-    this.violations = new ArrayList<>(missingFields.stream().map(f -> "Campo ausente: " + f).toList());
+    this.violations =
+        new ArrayList<>(missingFields.stream().map(f -> "Campo ausente: " + f).toList());
     this.detail = "Campos obrigatórios ausentes para persistência";
   }
 
@@ -67,7 +68,8 @@ public class ContractViolationException extends DomainException {
 
   /** Cria exceção para JSON inválido */
   public static ContractViolationException invalidJson(String detail) {
-    return new ContractViolationException("CONTRACT_INVALID_JSON", "Payload JSON inválido: " + detail);
+    return new ContractViolationException(
+        "CONTRACT_INVALID_JSON", "Payload JSON inválido: " + detail);
   }
 
   /** Cria exceção para externalTransactionId ausente */
