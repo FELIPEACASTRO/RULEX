@@ -36,11 +36,15 @@ import {
   XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+import { FadeIn } from '@/components/ui/fade-in';
 
 import { ConditionGroupCard } from './ConditionGroupCard';
 import { RuleMetadataForm } from './RuleMetadataForm';
 import { RulePreview } from './RulePreview';
 import { TemplateSelector } from './TemplateSelector';
+import { RuleSimulator } from './RuleSimulator';
+import { RuleNaturalLanguage } from './RuleNaturalLanguage';
 import {
   ComplexRule,
   ConditionGroup,
@@ -304,9 +308,14 @@ export function ComplexRuleBuilder({
 
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
-        <div className="h-full grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
+        <motion.div 
+          className="h-full grid grid-cols-1 lg:grid-cols-4 gap-4 p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           {/* Left Column: Metadata */}
-          <div className="lg:col-span-1 space-y-4 overflow-y-auto">
+          <FadeIn delay={0.1} className="lg:col-span-1 space-y-4 overflow-y-auto max-h-[calc(100vh-200px)]">
             <RuleMetadataForm
               rule={rule}
               onChange={updateRule}
@@ -342,10 +351,10 @@ export function ComplexRuleBuilder({
                 )}
               </CardContent>
             </Card>
-          </div>
+          </FadeIn>
 
           {/* Center Column: Condition Builder */}
-          <div className="lg:col-span-1 overflow-y-auto">
+          <FadeIn delay={0.2} className="lg:col-span-1 overflow-y-auto max-h-[calc(100vh-200px)]">
             <Card className="h-full">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -362,13 +371,15 @@ export function ComplexRuleBuilder({
                 />
               </CardContent>
             </Card>
-          </div>
+          </FadeIn>
 
-          {/* Right Column: Preview */}
-          <div className="lg:col-span-1 overflow-y-auto">
+          {/* Right Column: Preview, Natural Language & Simulator */}
+          <FadeIn delay={0.3} className="lg:col-span-2 space-y-4 overflow-y-auto max-h-[calc(100vh-200px)]">
+            <RuleNaturalLanguage rule={rule} />
             <RulePreview rule={rule} />
-          </div>
-        </div>
+            <RuleSimulator rule={rule} />
+          </FadeIn>
+        </motion.div>
       </div>
 
       {/* Reset Confirmation Dialog */}

@@ -21,19 +21,44 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, FileText, Settings, Zap, Layers } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, FileText, Settings, Zap, Layers, Shield, Activity, ChevronDown, ChevronRight } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+import { CommandPalette } from './CommandPalette';
+import { ThemeToggle } from './ThemeToggle';
+import { KeyboardShortcuts } from './KeyboardShortcuts';
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: Users, label: "Transações", path: "/transactions" },
-  { icon: Zap, label: "Simulador", path: "/simulator" },
-  { icon: Settings, label: "Regras Simples", path: "/rules" },
-  { icon: Layers, label: "Regras Complexas", path: "/complex-rules" },
-  { icon: FileText, label: "Auditoria", path: "/audit" },
+const menuSections = [
+  {
+    id: "overview",
+    label: "Visão Geral",
+    icon: LayoutDashboard,
+    items: [
+      { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+      { icon: Activity, label: "Monitoramento", path: "/monitoring" },
+    ],
+  },
+  {
+    id: "operations",
+    label: "Operações",
+    icon: Users,
+    items: [
+      { icon: Users, label: "Transações", path: "/transactions" },
+      { icon: Zap, label: "Simulador", path: "/simulator" },
+    ],
+  },
+  {
+    id: "governance",
+    label: "Governança de Risco",
+    icon: Shield,
+    items: [
+      { icon: Layers, label: "Regras de Fraude", path: "/rules" },
+      { icon: FileText, label: "Auditoria", path: "/audit" },
+      { icon: Settings, label: "Configurações", path: "/settings" },
+    ],
+  },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -87,6 +112,8 @@ export default function DashboardLayout({
         } as CSSProperties
       }
     >
+      <CommandPalette />
+      <KeyboardShortcuts />
       <DashboardLayoutContent setSidebarWidth={setSidebarWidth}>
         {children}
       </DashboardLayoutContent>
@@ -109,7 +136,19 @@ function DashboardLayoutContent({
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const activeMenuItem = menuItems.find(item => item.path === location);
+  const [expandedSections, setExpandedSections] = useState<string[]>(['overview', 'operations', 'governance']);
+  
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => 
+      prev.includes(sectionId) 
+        ? prev.filter(id => id !== sectionId)
+        : [...prev, sectionId]
+    );
+  };
+  
+  const activeMenuItem = menuSections
+    .flatMap(section => section.items)
+    .find(item => item.path === location);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -157,7 +196,7 @@ function DashboardLayoutContent({
           disableTransition={isResizing}
         >
           <SidebarHeader className="h-16 justify-center">
-            <div className="flex items-center gap-3 px-2 transition-all w-full">
+            <div className="flex items-center gap-2 px-2 transition-all w-full">
               <button
                 onClick={toggleSidebar}
                 className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
@@ -166,33 +205,61 @@ function DashboardLayoutContent({
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
               </button>
               {!isCollapsed ? (
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
                   <span className="font-semibold tracking-tight truncate">
                     Navigation
                   </span>
                 </div>
               ) : null}
+              <ThemeToggle />
             </div>
           </SidebarHeader>
 
           <SidebarContent className="gap-0">
-            <SidebarMenu className="px-2 py-1">
-              {menuItems.map(item => {
-                const isActive = location === item.path;
+            <SidebarMenu className="px-2 py-1 space-y-1">
+              {menuSections.map(section => {
+                const isExpanded = expandedSections.includes(section.id);
                 return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      isActive={isActive}
-                      onClick={() => setLocation(item.path)}
-                      tooltip={item.label}
-                      className={`h-10 transition-all font-normal`}
-                    >
-                      <item.icon
-                        className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
-                      />
-                      <span>{item.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <div key={section.id} className="space-y-1">
+                    {/* Section Header */}
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        onClick={() => toggleSection(section.id)}
+                        tooltip={section.label}
+                        className="h-9 font-medium text-muted-foreground hover:text-foreground"
+                      >
+                        <section.icon className="h-4 w-4" />
+                        <span className="flex-1">{section.label}</span>
+                        {!isCollapsed && (
+                          isExpanded ? 
+                            <ChevronDown className="h-3 w-3" /> : 
+                            <ChevronRight className="h-3 w-3" />
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    
+                    {/* Section Items */}
+                    {(isExpanded || isCollapsed) && section.items.map(item => {
+                      const isActive = location === item.path;
+                      return (
+                        <SidebarMenuItem key={item.path}>
+                          <SidebarMenuButton
+                            isActive={isActive}
+                            onClick={() => setLocation(item.path)}
+                            tooltip={item.label}
+                            className={`h-9 transition-all font-normal ${
+                              !isCollapsed ? 'ml-6' : ''
+                            }`}
+                          >
+                            <item.icon
+                              className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
+                            />
+                            <span>{item.label}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </div>
                 );
               })}
             </SidebarMenu>
