@@ -521,19 +521,6 @@ public class RuleEngineService {
     TransactionDecision.TransactionClassification maxByRule =
         TransactionDecision.TransactionClassification.APPROVED;
 
-    // V4.0: cheap deterministic pre-checks (short-circuit on FRAUD)
-    TransactionDecision.TransactionClassification preClassification =
-        runPreChecks(request, derivedContext, triggeredRules, scoreDetails);
-    maxByRule = maxSeverity(maxByRule, preClassification);
-    if (maxByRule == TransactionDecision.TransactionClassification.FRAUD) {
-      result.setRiskScore(100);
-      result.setTriggeredRules(triggeredRules);
-      result.setScoreDetails(scoreDetails);
-      result.setClassification(maxByRule);
-      result.setReason(generateReason(maxByRule, triggeredRules));
-      return result;
-    }
-
     // V4.0: separate decision rules from shadow rules
     List<RuleConfiguration> decisionRules = new ArrayList<>();
     List<RuleConfiguration> shadowRules = new ArrayList<>();
@@ -657,157 +644,6 @@ public class RuleEngineService {
     return bucket < percentage;
   }
 
-  private TransactionDecision.TransactionClassification runPreChecks(
-      TransactionRequest request,
-      DerivedContext derivedContext,
-      List<TriggeredRuleDTO> triggeredRules,
-      Map<String, Object> scoreDetails) {
-    TransactionDecision.TransactionClassification max =
-        TransactionDecision.TransactionClassification.APPROVED;
-
-    if (bloomFilterEnabled) {
-      try {
-        if (request.getPan() != null && !request.getPan().isBlank()) {
-          var r =
-              bloomFilterService.isBlacklisted(
-                  com.rulex.entity.RuleList.EntityType.PAN, request.getPan());
-          if (r.inList()) {
-            triggeredRules.add(
-                TriggeredRuleDTO.builder()
-                    .name("BLOCKLIST_PAN")
-                    .weight(100)
-                    .contribution(100)
-                    .detail("PAN encontrado em blacklist")
-                    .build());
-            scoreDetails.put("BLOCKLIST_PAN", Map.of("triggered", true, "source", r.source()));
-            return TransactionDecision.TransactionClassification.FRAUD;
-          }
-        }
-
-        if (request.getMerchantId() != null && !request.getMerchantId().isBlank()) {
-          var r =
-              bloomFilterService.isBlacklisted(
-                  com.rulex.entity.RuleList.EntityType.MERCHANT_ID, request.getMerchantId());
-          if (r.inList()) {
-            triggeredRules.add(
-                TriggeredRuleDTO.builder()
-                    .name("BLOCKLIST_MERCHANT")
-                    .weight(100)
-                    .contribution(100)
-                    .detail("MerchantId encontrado em blacklist")
-                    .build());
-            scoreDetails.put("BLOCKLIST_MERCHANT", Map.of("triggered", true, "source", r.source()));
-            return TransactionDecision.TransactionClassification.FRAUD;
-          }
-        }
-
-        if (request.getCustomerIdFromHeader() != null
-            && !request.getCustomerIdFromHeader().isBlank()) {
-          var r =
-              bloomFilterService.isBlacklisted(
-                  com.rulex.entity.RuleList.EntityType.CUSTOMER_ID,
-                  request.getCustomerIdFromHeader());
-          if (r.inList()) {
-            triggeredRules.add(
-                TriggeredRuleDTO.builder()
-                    .name("BLOCKLIST_CUSTOMER")
-                    .weight(100)
-                    .contribution(100)
-                    .detail("CustomerId encontrado em blacklist")
-                    .build());
-            scoreDetails.put("BLOCKLIST_CUSTOMER", Map.of("triggered", true, "source", r.source()));
-            return TransactionDecision.TransactionClassification.FRAUD;
-          }
-        }
-
-        // Use terminalId as a proxy for device id if present.
-        if (request.getTerminalId() != null && !request.getTerminalId().isBlank()) {
-          var r =
-              bloomFilterService.isBlacklisted(
-                  com.rulex.entity.RuleList.EntityType.DEVICE_ID, request.getTerminalId());
-          if (r.inList()) {
-            triggeredRules.add(
-                TriggeredRuleDTO.builder()
-                    .name("BLOCKLIST_DEVICE")
-                    .weight(100)
-                    .contribution(100)
-                    .detail("DeviceId (terminalId) encontrado em blacklist")
-                    .build());
-            scoreDetails.put("BLOCKLIST_DEVICE", Map.of("triggered", true, "source", r.source()));
-            return TransactionDecision.TransactionClassification.FRAUD;
-          }
-        }
-      } catch (Exception ignored) {
-        // best-effort
-      }
-    }
-
-    if (impossibleTravelEnabled
-        && request.getPan() != null
-        && !request.getPan().isBlank()
-        && derivedContext.getTransactionTimestamp() != null) {
-      try {
-        GeoService.GeoCoordinates coords = geoService.deriveCoordinates(request);
-        if (coords != null && coords.isFound()) {
-          String panHash = PanHashUtil.sha256Hex(request.getPan());
-          boolean cardPresent = "Y".equals(request.getCustomerPresent());
-
-          var analysis =
-              impossibleTravelService.analyzeTravel(
-                  panHash,
-                  coords.getLatitude(),
-                  coords.getLongitude(),
-                  request.getMerchantCity(),
-                  derivedContext.getNormalizedCountryCode(),
-                  derivedContext.getTransactionTimestamp().toLocalDateTime(),
-                  request.getExternalTransactionId(),
-                  cardPresent);
-
-          if (analysis.riskLevel() == ImpossibleTravelService.TravelRisk.IMPOSSIBLE) {
-            triggeredRules.add(
-                TriggeredRuleDTO.builder()
-                    .name("IMPOSSIBLE_TRAVEL")
-                    .weight(100)
-                    .contribution(100)
-                    .detail(
-                        String.format(
-                            "Viagem impossível: %.0fkm em %.0fmin (%.0f km/h)",
-                            analysis.distanceKm(), analysis.elapsedMinutes(), analysis.speedKmh()))
-                    .build());
-            scoreDetails.put(
-                "IMPOSSIBLE_TRAVEL",
-                Map.of(
-                    "triggered",
-                    true,
-                    "distanceKm",
-                    analysis.distanceKm(),
-                    "speedKmh",
-                    analysis.speedKmh(),
-                    "elapsedMinutes",
-                    analysis.elapsedMinutes()));
-            return TransactionDecision.TransactionClassification.FRAUD;
-          }
-
-          if (analysis.riskLevel() == ImpossibleTravelService.TravelRisk.HIGH) {
-            triggeredRules.add(
-                TriggeredRuleDTO.builder()
-                    .name("SUSPICIOUS_TRAVEL")
-                    .weight(60)
-                    .contribution(60)
-                    .detail(String.format("Viagem suspeita: %.0f km/h", analysis.speedKmh()))
-                    .build());
-            scoreDetails.put(
-                "SUSPICIOUS_TRAVEL", Map.of("triggered", true, "speedKmh", analysis.speedKmh()));
-            max = maxSeverity(max, TransactionDecision.TransactionClassification.SUSPICIOUS);
-          }
-        }
-      } catch (Exception ignored) {
-        // best-effort
-      }
-    }
-
-    return max;
-  }
 
   /** Avalia uma regra específica contra a transação. */
   private RuleMatch evaluateRuleGeneric(
@@ -854,56 +690,7 @@ public class RuleEngineService {
         return new RuleMatch(triggered, String.join(" | ", explanations));
       }
     }
-
-    // 2) Fallback legada por nome (compatibilidade)
-    boolean legacy =
-        switch (rule.getRuleName()) {
-          case "LOW_AUTHENTICATION_SCORE" ->
-              request.getConsumerAuthenticationScore() < rule.getThreshold();
-
-          case "LOW_EXTERNAL_SCORE" -> request.getExternalScore3() < rule.getThreshold();
-
-          case "INVALID_CAVV" -> request.getCavvResult() != 0;
-
-          case "INVALID_CRYPTOGRAM" -> !"V".equals(request.getCryptogramValid());
-
-          case "CVV_MISMATCH" -> "N".equals(request.getCvv2Response());
-
-          case "HIGH_TRANSACTION_AMOUNT" ->
-              request.getTransactionAmount().doubleValue() > rule.getThreshold();
-
-          case "HIGH_RISK_MCC" -> isHighRiskMcc(request.getMcc());
-
-          case "INTERNATIONAL_TRANSACTION" -> isInternationalTransaction(request);
-
-          case "CARD_NOT_PRESENT" -> !"Y".equals(request.getCustomerPresent());
-
-          case "PIN_VERIFICATION_FAILED" -> "I".equals(request.getPinVerifyCode());
-
-            // Mapear para os campos corretos (sem depender de códigos textuais inconsistentes)
-          case "CVV_PIN_LIMIT_EXCEEDED" ->
-              Integer.valueOf(1).equals(request.getCvvPinTryLimitExceeded());
-
-          case "OFFLINE_PIN_FAILED" ->
-              Integer.valueOf(1).equals(request.getCvrofflinePinVerificationPerformed())
-                  && Integer.valueOf(1).equals(request.getCvrofflinePinVerificationFailed());
-
-          default -> false;
-        };
-
-    return new RuleMatch(legacy, legacy ? "regra legada por nome" : null);
-  }
-
-  /** Verifica se o MCC é de alto risco usando EnrichmentService com fallback. */
-  private boolean isHighRiskMcc(Integer mcc) {
-    return enrichmentService.isHighRiskMcc(mcc);
-  }
-
-  /** Verifica se é uma transação internacional. */
-  private boolean isInternationalTransaction(TransactionRequest request) {
-    // Assumir que 076 é o código do Brasil
-    return request.getMerchantCountryCode() != null
-        && !request.getMerchantCountryCode().equals("076");
+    return new RuleMatch(false, null);
   }
 
   /** Classifica o risco baseado no score. */
@@ -1601,6 +1388,28 @@ public class RuleEngineService {
     String raw = fieldExpr.trim();
     if (raw.isEmpty()) return Set.of();
 
+    // Computed/enriched fields: map to their underlying request dependencies.
+    // This keeps CandidateIndex's missing-field short-circuit correct.
+    if (raw.equalsIgnoreCase("isBlacklistedPan")) {
+      return Set.of("pan");
+    }
+    if (raw.equalsIgnoreCase("isBlacklistedMerchantId")) {
+      return Set.of("merchantId");
+    }
+    if (raw.equalsIgnoreCase("isBlacklistedCustomerId")) {
+      return Set.of("customerIdFromHeader");
+    }
+    if (raw.equalsIgnoreCase("isBlacklistedDeviceId")) {
+      return Set.of("terminalId");
+    }
+    if (raw.equalsIgnoreCase("isImpossibleTravel") || raw.equalsIgnoreCase("isSuspiciousTravel")) {
+      // Travel depends on having a PAN and a derivable timestamp.
+      return Set.of("pan", "transactionDate", "transactionTime");
+    }
+    if (raw.equalsIgnoreCase("mccIsHighRisk") || raw.equalsIgnoreCase("MCC_IS_HIGH_RISK")) {
+      return Set.of("mcc");
+    }
+
     java.util.regex.Matcher unary =
         java.util.regex.Pattern.compile("^(ABS|LEN|LOWER|UPPER|TRIM)\\(([A-Za-z0-9_]+)\\)$")
             .matcher(raw);
@@ -1899,6 +1708,96 @@ public class RuleEngineService {
         literal = literal.substring(1, literal.length() - 1);
       }
       return literal;
+    }
+
+    // Computed/enriched fields (DB-driven rules can reference these)
+    if (raw.equalsIgnoreCase("isBlacklistedPan")) {
+      if (!bloomFilterEnabled) return false;
+      String pan = request.getPan();
+      if (pan == null || pan.isBlank()) return false;
+      try {
+        return bloomFilterService
+            .isBlacklisted(com.rulex.entity.RuleList.EntityType.PAN, pan)
+            .inList();
+      } catch (Exception ignored) {
+        return false;
+      }
+    }
+
+    if (raw.equalsIgnoreCase("isBlacklistedMerchantId")) {
+      if (!bloomFilterEnabled) return false;
+      String merchantId = request.getMerchantId();
+      if (merchantId == null || merchantId.isBlank()) return false;
+      try {
+        return bloomFilterService
+            .isBlacklisted(com.rulex.entity.RuleList.EntityType.MERCHANT_ID, merchantId)
+            .inList();
+      } catch (Exception ignored) {
+        return false;
+      }
+    }
+
+    if (raw.equalsIgnoreCase("isBlacklistedCustomerId")) {
+      if (!bloomFilterEnabled) return false;
+      String customerId = request.getCustomerIdFromHeader();
+      if (customerId == null || customerId.isBlank()) return false;
+      try {
+        return bloomFilterService
+            .isBlacklisted(com.rulex.entity.RuleList.EntityType.CUSTOMER_ID, customerId)
+            .inList();
+      } catch (Exception ignored) {
+        return false;
+      }
+    }
+
+    if (raw.equalsIgnoreCase("isBlacklistedDeviceId")) {
+      if (!bloomFilterEnabled) return false;
+      String deviceId = request.getTerminalId();
+      if (deviceId == null || deviceId.isBlank()) return false;
+      try {
+        return bloomFilterService
+            .isBlacklisted(com.rulex.entity.RuleList.EntityType.DEVICE_ID, deviceId)
+            .inList();
+      } catch (Exception ignored) {
+        return false;
+      }
+    }
+
+    if (raw.equalsIgnoreCase("isImpossibleTravel") || raw.equalsIgnoreCase("isSuspiciousTravel")) {
+      if (!impossibleTravelEnabled) return false;
+      try {
+        if (request.getPan() == null || request.getPan().isBlank()) return false;
+        DerivedContext derivedContext = DerivedContext.from(request);
+        if (derivedContext.getTransactionTimestamp() == null) return false;
+
+        GeoService.GeoCoordinates coords = geoService.deriveCoordinates(request);
+        if (coords == null || !coords.isFound()) return false;
+
+        String panHash = PanHashUtil.sha256Hex(request.getPan());
+        boolean cardPresent = "Y".equals(request.getCustomerPresent());
+
+        var analysis =
+            impossibleTravelService.analyzeTravel(
+                panHash,
+                coords.getLatitude(),
+                coords.getLongitude(),
+                request.getMerchantCity(),
+                derivedContext.getNormalizedCountryCode(),
+                derivedContext.getTransactionTimestamp().toLocalDateTime(),
+                request.getExternalTransactionId(),
+                cardPresent);
+
+        if (raw.equalsIgnoreCase("isImpossibleTravel")) {
+          return analysis.riskLevel() == ImpossibleTravelService.TravelRisk.IMPOSSIBLE;
+        }
+        return analysis.riskLevel() == ImpossibleTravelService.TravelRisk.HIGH;
+      } catch (Exception ignored) {
+        return false;
+      }
+    }
+
+    if (raw.equalsIgnoreCase("mccIsHighRisk") || raw.equalsIgnoreCase("MCC_IS_HIGH_RISK")) {
+      return enrichmentService.isHighRiskMcc(request.getMcc());
     }
 
     return readFieldValue(request, TransactionRequest.class, raw);

@@ -336,14 +336,13 @@ class EnrichmentServiceTest {
     }
 
     @Test
-    @DisplayName("Deve usar fallback para MCC não encontrado na tabela")
-    void shouldUseFallbackForMccNotInTable() {
+    @DisplayName("Deve retornar false para MCC não encontrado na tabela")
+    void shouldReturnFalseForMccNotInTable() {
       when(mccCategoryRepository.isHighRisk(7995)).thenReturn(null);
 
       boolean result = enrichmentService.isHighRiskMcc(7995);
 
-      // 7995 está na lista de fallback
-      assertThat(result).isTrue();
+      assertThat(result).isFalse();
     }
 
     @Test

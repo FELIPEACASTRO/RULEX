@@ -51,7 +51,7 @@ class DatabaseRuleExecutorServiceTest {
             anyString(), any(LocalDateTime.class)))
         .thenReturn(0L);
     when(transactionRepository.countDailyTransactions(anyString(), anyInt())).thenReturn(0L);
-    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of());
+    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true)).thenReturn(List.of());
   }
 
   @Test
@@ -79,10 +79,11 @@ class DatabaseRuleExecutorServiceTest {
             .threshold(0)
             .weight(100)
             .enabled(true)
+        .advanced(true)
             .classification(TransactionClassification.FRAUD)
             .build();
 
-    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(duplicateRule));
+    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true)).thenReturn(List.of(duplicateRule));
 
     DatabaseRuleExecutorService.RuleExecution result = service.executeAdvancedRules(req);
 
@@ -106,10 +107,11 @@ class DatabaseRuleExecutorServiceTest {
             .threshold(3)
             .weight(60)
             .enabled(true)
+        .advanced(true)
             .classification(TransactionClassification.FRAUD)
             .build();
 
-    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(velocityRule));
+    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true)).thenReturn(List.of(velocityRule));
 
     DatabaseRuleExecutorService.RuleExecution result = service.executeAdvancedRules(req);
 
@@ -129,10 +131,11 @@ class DatabaseRuleExecutorServiceTest {
             .threshold(10000)
             .weight(35)
             .enabled(true)
+        .advanced(true)
             .classification(TransactionClassification.SUSPICIOUS)
             .build();
 
-    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(thresholdRule));
+    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true)).thenReturn(List.of(thresholdRule));
 
     DatabaseRuleExecutorService.RuleExecution result = service.executeAdvancedRules(req);
 
@@ -158,7 +161,7 @@ class DatabaseRuleExecutorServiceTest {
             .build();
 
     // findByEnabled(true) não retorna regras desabilitadas
-    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of());
+    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true)).thenReturn(List.of());
 
     DatabaseRuleExecutorService.RuleExecution result = service.executeAdvancedRules(req);
 
@@ -181,6 +184,7 @@ class DatabaseRuleExecutorServiceTest {
             .threshold(0)
             .weight(100)
             .enabled(true)
+        .advanced(true)
             .classification(TransactionClassification.FRAUD)
             .build();
 
@@ -192,10 +196,11 @@ class DatabaseRuleExecutorServiceTest {
             .threshold(10000)
             .weight(35)
             .enabled(true)
+        .advanced(true)
             .classification(TransactionClassification.SUSPICIOUS)
             .build();
 
-    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(fraudRule, suspiciousRule));
+    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true)).thenReturn(List.of(fraudRule, suspiciousRule));
 
     DatabaseRuleExecutorService.RuleExecution result = service.executeAdvancedRules(req);
 
@@ -217,14 +222,16 @@ class DatabaseRuleExecutorServiceTest {
             .threshold(100)
             .weight(50)
             .enabled(true)
+        .advanced(false)
             .classification(TransactionClassification.SUSPICIOUS)
             .build();
 
-    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(otherRule));
+    // Seleção do ruleset avançado é definida no banco: enabled=true AND advanced=true.
+    when(ruleConfigRepository.findByEnabledAndAdvanced(true, true)).thenReturn(List.of());
 
     DatabaseRuleExecutorService.RuleExecution result = service.executeAdvancedRules(req);
 
-    // Não deve processar regras que não estão na lista ADVANCED_RULE_NAMES
+    // Não deve processar regras que não pertencem ao ruleset advanced
     assertThat(result.result()).isEqualTo(DatabaseRuleExecutorService.RuleResult.APPROVED);
     assertThat(result.triggeredRules()).isEmpty();
   }

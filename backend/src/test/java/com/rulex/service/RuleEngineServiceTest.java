@@ -23,6 +23,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -122,6 +123,7 @@ class RuleEngineServiceTest {
   })
   void triggersLegacyRule_andImpactsDecision(
       String ruleName, int threshold, String expectedClassification) {
+    LegacyRuleSpec spec = legacyRuleSpec(ruleName, threshold);
     RuleConfiguration rule =
         RuleConfiguration.builder()
             .ruleName(ruleName)
@@ -132,6 +134,8 @@ class RuleEngineServiceTest {
             .enabled(true)
             .classification(
                 TransactionDecision.TransactionClassification.valueOf(expectedClassification))
+        .conditionsJson(spec.conditionsJson)
+        .logicOperator(spec.logicOperator)
             .build();
 
     when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(rule));
@@ -173,11 +177,145 @@ class RuleEngineServiceTest {
 
     TransactionResponse response = service.analyzeTransaction(req);
 
-    assertThat(response.getTriggeredRules()).hasSize(1);
+    assertThat(response.getTriggeredRules())
+      .withFailMessage(
+        "Expected rule to trigger. ruleName=%s conditionsJson=%s mcc=%s merchantCountryCode=%s",
+        ruleName,
+        spec.conditionsJson,
+        req.getMcc(),
+        req.getMerchantCountryCode())
+      .hasSize(1);
     assertThat(response.getTriggeredRules().getFirst().getName()).isEqualTo(ruleName);
     assertThat(response.getClassification()).isEqualTo(expectedClassification);
     assertThat(response.getRiskScore()).isEqualTo(60);
+
+    if ("HIGH_RISK_MCC".equals(ruleName)) {
+      // Called during evaluation and again when building the explanation string.
+      verify(enrichmentService, org.mockito.Mockito.atLeastOnce()).isHighRiskMcc(7995);
+    }
   }
+
+  @Test
+  void triggersBlocklistPanRule_whenDbRuleEnabled_andBloomEnabled() throws Exception {
+    // Enable bloom-filter-backed computed fields (no Spring context in unit test).
+    ReflectionTestUtils.setField(service, "bloomFilterEnabled", true);
+
+    String conditionsJson =
+        objectMapper.writeValueAsString(
+            List.of(java.util.Map.of("field", "isBlacklistedPan", "operator", "IS_TRUE", "value", "")));
+
+    RuleConfiguration rule =
+        RuleConfiguration.builder()
+            .ruleName("BLOCKLIST_PAN")
+            .description("test")
+            .ruleType(RuleConfiguration.RuleType.SECURITY)
+            .threshold(100)
+            .weight(100)
+            .enabled(true)
+            .classification(TransactionDecision.TransactionClassification.FRAUD)
+            .conditionsJson(conditionsJson)
+            .logicOperator(RuleConfiguration.LogicOperator.AND)
+            .build();
+
+    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(rule));
+    when(transactionRepository.save(any(Transaction.class)))
+        .thenAnswer(
+            invocation -> {
+              Transaction t = invocation.getArgument(0, Transaction.class);
+              t.setId(123L);
+              return t;
+            });
+    when(decisionRepository.save(any(TransactionDecision.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
+    doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
+    doNothing().when(auditService).logError(any(), any());
+
+    when(bloomFilterService.isBlacklisted(
+            com.rulex.entity.RuleList.EntityType.PAN, "4111111111111111"))
+        .thenReturn(new BloomFilterService.CheckResult(true, true, 0L, "DATABASE"));
+
+    TransactionRequest req = minimalRequest();
+    req.setPan("4111111111111111");
+
+    TransactionResponse response = service.analyzeTransaction(req);
+
+    assertThat(response.getTriggeredRules()).hasSize(1);
+    assertThat(response.getTriggeredRules().getFirst().getName()).isEqualTo("BLOCKLIST_PAN");
+    assertThat(response.getClassification()).isEqualTo("FRAUD");
+    assertThat(response.getRiskScore()).isEqualTo(100);
+  }
+
+    private record LegacyRuleSpec(String conditionsJson, RuleConfiguration.LogicOperator logicOperator) {}
+
+    private LegacyRuleSpec legacyRuleSpec(String ruleName, int threshold) {
+    try {
+      RuleConfiguration.LogicOperator op = RuleConfiguration.LogicOperator.AND;
+      java.util.List<java.util.Map<String, Object>> conditions;
+
+      switch (ruleName) {
+      case "LOW_AUTHENTICATION_SCORE" ->
+        conditions =
+          java.util.List.of(
+            java.util.Map.of(
+              "field", "consumerAuthenticationScore", "operator", "LT", "value", String.valueOf(threshold)));
+      case "LOW_EXTERNAL_SCORE" ->
+        conditions =
+          java.util.List.of(
+            java.util.Map.of(
+              "field", "externalScore3", "operator", "LT", "value", String.valueOf(threshold)));
+      case "INVALID_CAVV" ->
+        conditions = java.util.List.of(java.util.Map.of("field", "cavvResult", "operator", "NE", "value", "0"));
+      case "INVALID_CRYPTOGRAM" -> {
+        op = RuleConfiguration.LogicOperator.OR;
+        conditions =
+          java.util.List.of(
+                  java.util.Map.of("field", "cryptogramValid", "operator", "IS_NULL", "value", ""),
+            java.util.Map.of("field", "cryptogramValid", "operator", "NE", "value", "V"));
+      }
+      case "CVV_MISMATCH" ->
+        conditions = java.util.List.of(java.util.Map.of("field", "cvv2Response", "operator", "EQ", "value", "N"));
+      case "HIGH_TRANSACTION_AMOUNT" ->
+        conditions =
+          java.util.List.of(
+            java.util.Map.of(
+              "field", "transactionAmount", "operator", "GT", "value", String.valueOf(threshold)));
+      case "HIGH_RISK_MCC" ->
+        conditions =
+          java.util.List.of(
+            java.util.Map.of("field", "mccIsHighRisk", "operator", "IS_TRUE", "value", ""));
+      case "INTERNATIONAL_TRANSACTION" ->
+        conditions =
+          java.util.List.of(
+            java.util.Map.of("field", "merchantCountryCode", "operator", "IS_NOT_NULL", "value", ""),
+            java.util.Map.of("field", "merchantCountryCode", "operator", "NE", "value", "076"));
+      case "CARD_NOT_PRESENT" -> {
+        op = RuleConfiguration.LogicOperator.OR;
+        conditions =
+          java.util.List.of(
+            java.util.Map.of("field", "customerPresent", "operator", "IS_NULL", "value", ""),
+            java.util.Map.of("field", "customerPresent", "operator", "NE", "value", "Y"));
+      }
+      case "PIN_VERIFICATION_FAILED" ->
+        conditions = java.util.List.of(java.util.Map.of("field", "pinVerifyCode", "operator", "EQ", "value", "I"));
+      case "CVV_PIN_LIMIT_EXCEEDED" ->
+        conditions =
+          java.util.List.of(
+            java.util.Map.of("field", "cvvPinTryLimitExceeded", "operator", "EQ", "value", "1"));
+      case "OFFLINE_PIN_FAILED" ->
+        conditions =
+          java.util.List.of(
+            java.util.Map.of(
+              "field", "cvrofflinePinVerificationPerformed", "operator", "EQ", "value", "1"),
+            java.util.Map.of(
+              "field", "cvrofflinePinVerificationFailed", "operator", "EQ", "value", "1"));
+      default -> throw new IllegalStateException("Unexpected rule in test: " + ruleName);
+      }
+
+      return new LegacyRuleSpec(objectMapper.writeValueAsString(conditions), op);
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to build legacy rule conditions for test", e);
+    }
+    }
 
   @Test
   void evaluatesGenericConditions_andUsesAndEarlyExit() throws Exception {

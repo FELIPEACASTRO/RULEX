@@ -299,31 +299,11 @@ public class EnrichmentService {
     try {
       // Primeiro tentar na tabela
       Boolean isHighRisk = mccCategoryRepository.isHighRisk(mcc);
-      if (isHighRisk != null) {
-        return isHighRisk;
-      }
+      return Boolean.TRUE.equals(isHighRisk);
     } catch (Exception e) {
-      log.debug("Erro ao verificar MCC na tabela, usando fallback: {}", e.getMessage());
+      log.debug("Erro ao verificar MCC na tabela: {}", e.getMessage());
+      return false;
     }
-
-    // Fallback para lista hardcoded (compatibilidade)
-    return isHighRiskMccFallback(mcc);
-  }
-
-  /** Lista hardcoded de MCCs de alto risco (fallback). */
-  private boolean isHighRiskMccFallback(Integer mcc) {
-    return switch (mcc) {
-      case 7995, // Gambling
-              6211, // Securities Brokers
-              6051, // Crypto
-              7273, // Dating Services
-              7994, // Video Amusement
-              4829, // Money Transfer
-              6010 // Cash Advance
-          ->
-          true;
-      default -> false;
-    };
   }
 
   /**
@@ -342,7 +322,7 @@ public class EnrichmentService {
       return riskLevel != null ? riskLevel : "UNKNOWN";
     } catch (Exception e) {
       log.debug("Erro ao buscar nível de risco do MCC: {}", e.getMessage());
-      return isHighRiskMccFallback(mcc) ? "HIGH" : "UNKNOWN";
+      return "UNKNOWN";
     }
   }
 }

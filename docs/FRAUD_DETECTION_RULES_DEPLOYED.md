@@ -2,13 +2,16 @@
 
 **Versão:** 1.0.0  
 **Data:** 2025-01-03  
-**Fonte:** V22__fraud_detection_rules_seed.sql
+**Fonte:** V22__fraud_detection_rules_seed.sql + V31__seed_precheck_rules.sql
 
 ---
 
 ## Atualizações (2025-01-03 19:00)
 - Criação inicial do documento
 - Inventário de regras existentes no seed V22
+
+## Atualizações (2026-01-05)
+- Inclusão das regras precheck (blocklist + travel) como regras DB-driven (V31)
 
 ---
 
