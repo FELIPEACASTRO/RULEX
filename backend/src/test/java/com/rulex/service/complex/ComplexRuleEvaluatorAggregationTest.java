@@ -59,14 +59,14 @@ class ComplexRuleEvaluatorAggregationTest {
         .totalAmount(new BigDecimal("6000"))
         .build();
 
-    when(velocityServiceFacade.getStats(anyString(), any(), any())).thenReturn(stats);
+    when(velocityServiceFacade.getStats(any(TransactionRequest.class), any(), any())).thenReturn(stats);
 
     // Act
     ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 
     // Assert
     assertTrue(result.isMatched());
-    verify(velocityServiceFacade, times(1)).getStats(anyString(), any(), any());
+    verify(velocityServiceFacade, times(1)).getStats(any(TransactionRequest.class), any(), any());
   }
 
   @Test
@@ -91,7 +91,7 @@ class ComplexRuleEvaluatorAggregationTest {
         .transactionCount(50L)
         .build();
 
-    when(velocityServiceFacade.getStats(anyString(), any(), any())).thenReturn(stats);
+    when(velocityServiceFacade.getStats(any(TransactionRequest.class), any(), any())).thenReturn(stats);
 
     // Act
     ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
@@ -120,10 +120,10 @@ class ComplexRuleEvaluatorAggregationTest {
 
     // Mock do VelocityServiceFacade retornando média de 550
     VelocityService.VelocityStats stats = VelocityService.VelocityStats.builder()
-        .averageAmount(new BigDecimal("550"))
+        .avgAmount(new BigDecimal("550"))
         .build();
 
-    when(velocityServiceFacade.getStats(anyString(), any(), any())).thenReturn(stats);
+    when(velocityServiceFacade.getStats(any(TransactionRequest.class), any(), any())).thenReturn(stats);
 
     // Act
     ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
@@ -151,10 +151,10 @@ class ComplexRuleEvaluatorAggregationTest {
 
     // Mock do VelocityServiceFacade retornando 15 merchants distintos
     VelocityService.VelocityStats stats = VelocityService.VelocityStats.builder()
-        .distinctMerchants(15)
+        .distinctMerchants(15L)
         .build();
 
-    when(velocityServiceFacade.getStats(anyString(), any(), any())).thenReturn(stats);
+    when(velocityServiceFacade.getStats(any(TransactionRequest.class), any(), any())).thenReturn(stats);
 
     // Act
     ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
@@ -182,10 +182,10 @@ class ComplexRuleEvaluatorAggregationTest {
 
     // Mock do VelocityServiceFacade retornando 3 países distintos
     VelocityService.VelocityStats stats = VelocityService.VelocityStats.builder()
-        .distinctCountries(3)
+        .distinctCountries(3L)
         .build();
 
-    when(velocityServiceFacade.getStats(anyString(), any(), any())).thenReturn(stats);
+    when(velocityServiceFacade.getStats(any(TransactionRequest.class), any(), any())).thenReturn(stats);
 
     // Act
     ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
@@ -216,7 +216,7 @@ class ComplexRuleEvaluatorAggregationTest {
         .maxAmount(new BigDecimal("15000"))
         .build();
 
-    when(velocityServiceFacade.getStats(anyString(), any(), any())).thenReturn(stats);
+    when(velocityServiceFacade.getStats(any(TransactionRequest.class), any(), any())).thenReturn(stats);
 
     // Act
     ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
@@ -247,7 +247,7 @@ class ComplexRuleEvaluatorAggregationTest {
         .minAmount(new BigDecimal("5"))
         .build();
 
-    when(velocityServiceFacade.getStats(anyString(), any(), any())).thenReturn(stats);
+    when(velocityServiceFacade.getStats(any(TransactionRequest.class), any(), any())).thenReturn(stats);
 
     // Act
     ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
@@ -273,6 +273,8 @@ class ComplexRuleEvaluatorAggregationTest {
         .transactionRequest(new TransactionRequest())
         .build();
 
+    when(velocityServiceFacade.getStats(any(TransactionRequest.class), any(), any())).thenReturn(VelocityService.VelocityStats.empty());
+
     // Act
     ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 
@@ -284,7 +286,7 @@ class ComplexRuleEvaluatorAggregationTest {
 
   private RuleConditionGroup createGroupWithCondition(
       RuleCondition.ConditionOperator operator, String valueSingle) {
-    
+
     RuleCondition condition = RuleCondition.builder()
         .id(UUID.randomUUID())
         .fieldName("testField")
@@ -297,7 +299,7 @@ class ComplexRuleEvaluatorAggregationTest {
 
     RuleConditionGroup group = RuleConditionGroup.builder()
         .id(UUID.randomUUID())
-        .logicOperator(RuleConditionGroup.LogicOperator.AND)
+        .logicOperator(RuleConditionGroup.GroupLogicOperator.AND)
         .enabled(true)
         .conditions(List.of(condition))
         .build();
