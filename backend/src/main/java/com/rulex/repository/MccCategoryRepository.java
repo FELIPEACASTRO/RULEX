@@ -3,6 +3,7 @@ package com.rulex.repository;
 import com.rulex.entity.MccCategory;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Repository;
 public interface MccCategoryRepository extends JpaRepository<MccCategory, Long> {
 
   /** Busca categoria por MCC. */
+  @Cacheable(value = "mccCategory", key = "#mcc")
   Optional<MccCategory> findByMcc(Integer mcc);
 
   /** Busca todos os MCCs de alto risco. */
@@ -37,10 +39,12 @@ public interface MccCategoryRepository extends JpaRepository<MccCategory, Long> 
   List<MccCategory> findByIsCashAdvanceTrue();
 
   /** Verifica se um MCC é de alto risco. */
+  @Cacheable(value = "highRiskMcc", key = "#mcc")
   @Query("SELECT COALESCE(m.isHighRisk, false) FROM MccCategory m WHERE m.mcc = :mcc")
   Boolean isHighRisk(@Param("mcc") Integer mcc);
 
   /** Retorna o nível de risco de um MCC. */
+  @Cacheable(value = "mccCategory", key = "'riskLevel:' + #mcc")
   @Query("SELECT COALESCE(m.riskLevel, 'UNKNOWN') FROM MccCategory m WHERE m.mcc = :mcc")
   String getRiskLevel(@Param("mcc") Integer mcc);
 

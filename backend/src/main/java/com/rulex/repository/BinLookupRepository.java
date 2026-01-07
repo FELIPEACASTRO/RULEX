@@ -3,6 +3,7 @@ package com.rulex.repository;
 import com.rulex.entity.BinLookup;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,12 +14,14 @@ import org.springframework.stereotype.Repository;
 public interface BinLookupRepository extends JpaRepository<BinLookup, Long> {
 
   /** Busca BIN exato. */
+  @Cacheable(value = "binLookup", key = "#bin")
   Optional<BinLookup> findByBin(String bin);
 
   /**
    * Busca BIN por prefixo (para BINs de 6 ou 8 dígitos). Tenta primeiro com 8 dígitos, depois com
    * 6.
    */
+  @Cacheable(value = "binLookup", key = "'prefix:' + #bin8 + ':' + #bin6")
   @Query(
       "SELECT b FROM BinLookup b WHERE b.bin = :bin8 OR b.bin = :bin6 ORDER BY LENGTH(b.bin) DESC")
   List<BinLookup> findByBinPrefix(@Param("bin8") String bin8, @Param("bin6") String bin6);

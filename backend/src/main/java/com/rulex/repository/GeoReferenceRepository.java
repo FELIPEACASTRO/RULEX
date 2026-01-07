@@ -3,6 +3,7 @@ package com.rulex.repository;
 import com.rulex.entity.GeoReference;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Repository;
 public interface GeoReferenceRepository extends JpaRepository<GeoReference, Long> {
 
   /** Busca por código do país. */
+  @Cacheable(value = "geoReference", key = "'country:' + #countryCode")
   List<GeoReference> findByCountryCode(String countryCode);
 
   /** Busca por código do país e estado. */
@@ -23,6 +25,9 @@ public interface GeoReferenceRepository extends JpaRepository<GeoReference, Long
   List<GeoReference> findByCityNameIgnoreCase(@Param("cityName") String cityName);
 
   /** Busca por país, estado e cidade. */
+  @Cacheable(
+      value = "geoReference",
+      key = "'loc:' + #countryCode + ':' + #stateCode + ':' + #cityName")
   @Query(
       "SELECT g FROM GeoReference g WHERE g.countryCode = :countryCode "
           + "AND (:stateCode IS NULL OR g.stateCode = :stateCode) "
@@ -33,6 +38,7 @@ public interface GeoReferenceRepository extends JpaRepository<GeoReference, Long
       @Param("cityName") String cityName);
 
   /** Busca a capital de um país. */
+  @Cacheable(value = "geoReference", key = "'capital:' + #countryCode")
   @Query("SELECT g FROM GeoReference g WHERE g.countryCode = :countryCode AND g.isCapital = true")
   Optional<GeoReference> findCapitalByCountryCode(@Param("countryCode") String countryCode);
 
