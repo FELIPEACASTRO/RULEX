@@ -127,7 +127,54 @@ public class ConditionDTO {
     // Geolocalização
     GEO_DISTANCE_LT("Distância menor que"),
     GEO_DISTANCE_GT("Distância maior que"),
-    GEO_IN_POLYGON("Dentro do polígono");
+    GEO_IN_POLYGON("Dentro do polígono"),
+
+    // Velocity (agregações temporais)
+    VELOCITY_COUNT_GT("Contagem de velocidade maior que"),
+    VELOCITY_COUNT_LT("Contagem de velocidade menor que"),
+    VELOCITY_SUM_GT("Soma de velocidade maior que"),
+    VELOCITY_SUM_LT("Soma de velocidade menor que"),
+    VELOCITY_AVG_GT("Média de velocidade maior que"),
+    VELOCITY_AVG_LT("Média de velocidade menor que"),
+    VELOCITY_DISTINCT_GT("Distintos de velocidade maior que"),
+    VELOCITY_DISTINCT_LT("Distintos de velocidade menor que"),
+
+    // Agregações temporais avançadas
+    SUM_LAST_N_DAYS("Soma nos últimos N dias"),
+    COUNT_LAST_N_HOURS("Contagem nas últimas N horas"),
+    AVG_LAST_N_DAYS("Média nos últimos N dias"),
+    COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS("Merchants distintos nos últimos N dias"),
+    COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS("Países distintos nas últimas N horas"),
+    MAX_AMOUNT_LAST_N_DAYS("Valor máximo nos últimos N dias"),
+    MIN_AMOUNT_LAST_N_DAYS("Valor mínimo nos últimos N dias"),
+
+    // Operadores avançados de fraude
+    IN_LIST("Em lista (alias)"),
+    NOT_IN_HISTORICAL("Não está no histórico"),
+    NAME_SIMILARITY_LT("Similaridade de nome menor que"),
+    GTE_PERCENT_OF_LAST_INCOMING("Maior ou igual a % do último crédito"),
+    DOMAIN_IN_LIST("Domínio em lista"),
+    CHARGEBACK_RATE_GT("Taxa de chargeback maior que"),
+    ACCOUNT_AGE_LT_MINUTES("Idade da conta menor que N minutos"),
+    IS_VOIP("É telefone VoIP"),
+    COUNT_DISTINCT_PANS_LAST_N_HOURS("PANs distintos nas últimas N horas"),
+    COUNT_DISTINCT_ACCOUNTS("Contas distintas"),
+    HAS_FAILED_3DS_LAST_N_MINUTES("Falha 3DS nos últimos N minutos"),
+    COUNT_MFA_ABANDONMENTS("Abandonos de MFA"),
+    HAS_INCOMING_TRANSFER_LAST_N_HOURS("Transferência recebida nas últimas N horas"),
+    IS_IMPOSSIBLE_COMBINATION("Combinação impossível"),
+    PIX_KEY_CHANGED_LAST_N_DAYS("Chave PIX alterada nos últimos N dias"),
+    CONTAINS_SUSPICIOUS_KEYWORDS("Contém palavras suspeitas"),
+    COUNT_CRYPTO_TXN_LAST_N_DAYS("Transações crypto nos últimos N dias"),
+    COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS("Instrumentos distintos nos últimos N dias"),
+    COUNT_DISTINCT_PAYERS_LAST_N_DAYS("Pagadores distintos nos últimos N dias"),
+    COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS("User agents distintos nas últimas N horas"),
+    COUNT_LAST_N_DAYS("Contagem nos últimos N dias"),
+    COUNT_MFA_DENIALS_LAST_N_HOURS("Negações MFA nas últimas N horas"),
+    DAYS_SINCE_LAST_ACTIVITY("Dias desde última atividade"),
+    DEVICE_CHANGED_IN_SESSION("Device mudou na sessão"),
+    IS_CRYPTO_RANSOM_AMOUNT("Valor típico de ransom"),
+    OUTFLOW_RATE_LAST_N_DAYS("Taxa de saída nos últimos N dias");
 
     private final String description;
 

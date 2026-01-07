@@ -203,7 +203,26 @@ public class RuleCondition {
     ACCOUNT_AGE_LT_MINUTES, // Idade da conta menor que N minutos
     IS_VOIP, // Telefone é VoIP
     COUNT_DISTINCT_PANS_LAST_N_HOURS, // PANs distintos nas últimas N horas
-    COUNT_DISTINCT_ACCOUNTS // Contas distintas associadas ao campo
+    COUNT_DISTINCT_ACCOUNTS, // Contas distintas associadas ao campo
+
+    // Operadores adicionais para migrações V28-V30
+    IN_LIST, // Alias para IN (compatibilidade com migrações)
+    HAS_FAILED_3DS_LAST_N_MINUTES, // Houve falha 3DS nos últimos N minutos
+    COUNT_MFA_ABANDONMENTS, // Contagem de abandonos de MFA
+    HAS_INCOMING_TRANSFER_LAST_N_HOURS, // Houve transferência de entrada nas últimas N horas
+    IS_IMPOSSIBLE_COMBINATION, // Combinação impossível de dados
+    PIX_KEY_CHANGED_LAST_N_DAYS, // Chave PIX alterada nos últimos N dias
+    CONTAINS_SUSPICIOUS_KEYWORDS, // Contém palavras-chave suspeitas
+    COUNT_CRYPTO_TXN_LAST_N_DAYS, // Contagem de transações crypto nos últimos N dias
+    COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS, // Instrumentos distintos nos últimos N dias
+    COUNT_DISTINCT_PAYERS_LAST_N_DAYS, // Pagadores distintos nos últimos N dias
+    COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS, // User agents distintos nas últimas N horas
+    COUNT_LAST_N_DAYS, // Contagem nos últimos N dias
+    COUNT_MFA_DENIALS_LAST_N_HOURS, // Contagem de negações MFA nas últimas N horas
+    DAYS_SINCE_LAST_ACTIVITY, // Dias desde última atividade
+    DEVICE_CHANGED_IN_SESSION, // Device mudou na sessão
+    IS_CRYPTO_RANSOM_AMOUNT, // Valor típico de ransom crypto
+    OUTFLOW_RATE_LAST_N_DAYS // Taxa de saída nos últimos N dias
   }
 
   /** Tipos de valor suportados */
