@@ -99,9 +99,7 @@ public class DatabaseCircuitBreaker {
         RetryConfig.custom()
             // Máximo de 3 tentativas
             .maxAttempts(3)
-            // Intervalo entre tentativas: 500ms
-            .waitDuration(Duration.ofMillis(500))
-            // Exponential backoff: 2x a cada tentativa
+            // Exponential backoff: 500ms base, 2x a cada tentativa, max 5s
             .intervalFunction(
                 attempt -> {
                   long interval = 500L * (long) Math.pow(2, attempt - 1);

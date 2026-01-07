@@ -191,6 +191,10 @@ CREATE TABLE IF NOT EXISTS bloom_filter_metadata (
     confirmed_positives BIGINT DEFAULT 0,  -- DB confirmed in list
     false_positives BIGINT DEFAULT 0,  -- Bloom said maybe, DB said no
 
+    -- Timestamps
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
     UNIQUE(filter_type, entity_type)
 );
 

@@ -7,6 +7,7 @@
 --           - KYC Fraud (KYC): 10 regras
 --           - Transfer Fraud (TRF): 5 regras
 --           - Bot Detection (BOT): 4 regras
+-- Nota: Os operadores necessários foram adicionados na V28
 -- ============================================================================
 
 -- ============================================================================
