@@ -4,7 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Trash2, ToggleRight, Loader2, AlertTriangle } from 'lucide-react';
+import { Plus, Edit2, Trash2, ToggleRight, Loader2, AlertTriangle, Filter, Layers, Search } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -32,12 +39,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   FieldDictionaryItem,
   RuleConfiguration,
+  ComplexRuleDTO,
   createRule,
   deleteRule,
   listFieldDictionary,
   listRules,
+  listComplexRules,
   toggleRuleStatus,
+  toggleComplexRuleStatus,
   updateRule,
+  deleteComplexRule,
 } from '@/lib/javaApi';
 import { toast } from 'sonner';
 
@@ -59,7 +70,91 @@ export default function Rules() {
     retry: 1,
   });
 
-  const rules = useMemo(() => data ?? [], [data]);
+  // Query para regras complexas
+  const { data: complexRulesData, isLoading: isLoadingComplex } = useQuery({
+    queryKey: ['complexRules'],
+    queryFn: () => listComplexRules(),
+    retry: 1,
+  });
+
+  // Estado para filtro de tipo de regra
+  const [ruleTypeFilter, setRuleTypeFilter] = useState<'all' | 'simple' | 'complex'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const simpleRules = useMemo(() => data ?? [], [data]);
+  const complexRules = useMemo(() => complexRulesData ?? [], [complexRulesData]);
+
+  // Interface unificada para exibição
+  type UnifiedRule = {
+    id: string | number;
+    name: string;
+    description: string;
+    type: 'simple' | 'complex';
+    ruleType?: string;
+    classification?: string;
+    decision?: string;
+    enabled: boolean;
+    weight?: number;
+    priority?: number;
+    threshold?: number;
+    severity?: number;
+    conditionsCount: number;
+    original: RuleConfiguration | ComplexRuleDTO;
+  };
+
+  // Combinar regras simples e complexas em uma lista unificada
+  const unifiedRules = useMemo((): UnifiedRule[] => {
+    const simple: UnifiedRule[] = simpleRules.map((r: RuleConfiguration) => ({
+      id: r.id,
+      name: r.ruleName,
+      description: r.description ?? '',
+      type: 'simple' as const,
+      ruleType: r.ruleType,
+      classification: r.classification,
+      enabled: r.enabled,
+      weight: r.weight,
+      threshold: r.threshold,
+      conditionsCount: r.conditions?.length ?? 0,
+      original: r,
+    }));
+
+    const complex: UnifiedRule[] = complexRules.map((r: ComplexRuleDTO) => ({
+      id: r.id ?? r.key,
+      name: r.title || r.key,
+      description: r.description ?? '',
+      type: 'complex' as const,
+      decision: r.decision,
+      enabled: r.enabled,
+      priority: r.priority,
+      severity: r.severity,
+      conditionsCount: r.rootConditionGroup?.conditions?.length ?? 0,
+      original: r,
+    }));
+
+    return [...simple, ...complex];
+  }, [simpleRules, complexRules]);
+
+  // Filtrar regras baseado no filtro de tipo e busca
+  const filteredRules = useMemo(() => {
+    return unifiedRules.filter((rule) => {
+      // Filtro por tipo
+      if (ruleTypeFilter !== 'all' && rule.type !== ruleTypeFilter) {
+        return false;
+      }
+      // Filtro por busca
+      if (searchTerm) {
+        const search = searchTerm.toLowerCase();
+        return (
+          rule.name.toLowerCase().includes(search) ||
+          rule.description.toLowerCase().includes(search)
+        );
+      }
+      return true;
+    });
+  }, [unifiedRules, ruleTypeFilter, searchTerm]);
+
+  // Manter compatibilidade com código existente
+  const rules = simpleRules;
   const [editingRule, setEditingRule] = useState<RuleConfiguration | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState({
@@ -86,7 +181,10 @@ export default function Rules() {
   // P1-02: Estado para erros de validação
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const invalidateRules = () => queryClient.invalidateQueries({ queryKey: ['rules'] });
+  const invalidateRules = () => {
+    queryClient.invalidateQueries({ queryKey: ['rules'] });
+    queryClient.invalidateQueries({ queryKey: ['complexRules'] });
+  };
 
   // P0-04: Marcar como dirty quando formData muda
   const updateFormData = useCallback((updates: Partial<typeof formData>) => {
@@ -203,6 +301,25 @@ export default function Rules() {
     },
     onSuccess: () => invalidateRules(),
     onError: () => toast.error('Falha ao alternar regra'),
+  });
+
+  // Mutations para regras complexas
+  const deleteComplexMutation = useMutation({
+    mutationFn: (id: string) => deleteComplexRule(id),
+    onSuccess: () => {
+      toast.success('Regra complexa deletada');
+      invalidateRules();
+    },
+    onError: () => toast.error('Não foi possível deletar a regra complexa'),
+  });
+
+  const toggleComplexMutation = useMutation({
+    mutationFn: (id: string) => {
+      const current = complexRules.find((r: ComplexRuleDTO) => r.id === id);
+      return toggleComplexRuleStatus(id, !(current?.enabled ?? false));
+    },
+    onSuccess: () => invalidateRules(),
+    onError: () => toast.error('Falha ao alternar regra complexa'),
   });
 
   const handleEdit = (rule: RuleConfiguration) => {
@@ -333,12 +450,15 @@ export default function Rules() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Configuração de Regras</h1>
-          <p className="text-muted-foreground mt-1">Gerenciar regras de detecção de fraude</p>
-        </div>
-        <Dialog open={showDialog} onOpenChange={handleDialogClose}>
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Configuração de Regras</h1>
+            <p className="text-muted-foreground mt-1">
+              Gerenciar regras de detecção de fraude ({filteredRules.length} de {unifiedRules.length} regras)
+            </p>
+          </div>
+          <Dialog open={showDialog} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
             <Button
               onClick={() => {
@@ -795,13 +915,41 @@ export default function Rules() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
+
+        {/* Filtros */}
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="relative flex-1 min-w-[200px] max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar regras..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={ruleTypeFilter} onValueChange={(v) => setRuleTypeFilter(v as 'all' | 'simple' | 'complex')}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filtrar por tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas ({unifiedRules.length})</SelectItem>
+              <SelectItem value="simple">Simples ({simpleRules.length})</SelectItem>
+              <SelectItem value="complex">Complexas ({complexRules.length})</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Tabela de Regras */}
       <Card>
         <CardHeader>
           <CardTitle>Regras Configuradas</CardTitle>
-          <CardDescription>Total: {rules.length} regras</CardDescription>
+          <CardDescription>
+            Mostrando {filteredRules.length} de {unifiedRules.length} regras
+            {ruleTypeFilter !== 'all' && ` (filtro: ${ruleTypeFilter === 'simple' ? 'Simples' : 'Complexas'})`}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {isError && (
@@ -809,16 +957,20 @@ export default function Rules() {
               Erro ao carregar regras: {error instanceof Error ? error.message : 'erro inesperado'}
             </div>
           )}
-          {isLoading ? (
+          {(isLoading || isLoadingComplex) ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
                 <p className="text-muted-foreground">Carregando regras...</p>
               </div>
             </div>
-          ) : rules.length === 0 ? (
+          ) : filteredRules.length === 0 ? (
             <div className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">Nenhuma regra configurada</p>
+              <p className="text-muted-foreground">
+                {searchTerm || ruleTypeFilter !== 'all'
+                  ? 'Nenhuma regra encontrada com os filtros aplicados'
+                  : 'Nenhuma regra configurada'}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -826,29 +978,62 @@ export default function Rules() {
                 <thead className="border-b border-border">
                   <tr>
                     <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Nome da Regra</th>
-                    <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Tipo</th>
-                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Threshold</th>
-                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Peso</th>
+                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Categoria</th>
+                    <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Tipo/Decisão</th>
+                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Peso/Prioridade</th>
                     <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Classificação</th>
                     <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Status</th>
                     <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rules.map((rule) => (
-                    <tr key={rule.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                      <td className="py-3 px-4 text-sm font-medium text-foreground">{rule.ruleName}</td>
-                      <td className="py-3 px-4 text-sm">
-                        <Badge className={getRuleTypeColor(rule.ruleType)}>
-                          {rule.ruleType}
+                  {filteredRules.map((rule) => (
+                    <tr key={`${rule.type}-${rule.id}`} className="border-b border-border hover:bg-muted/50 transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-foreground">{rule.name}</span>
+                          {rule.description && (
+                            <span className="text-xs text-muted-foreground truncate max-w-[300px]" title={rule.description}>
+                              {rule.description}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-center">
+                        <Badge
+                          variant="outline"
+                          className={rule.type === 'complex'
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                            : 'bg-slate-50 text-slate-700 border-slate-200'}
+                        >
+                          <Layers className="h-3 w-3 mr-1" />
+                          {rule.type === 'complex' ? 'Complexa' : 'Simples'}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-sm text-center text-foreground">{rule.threshold}</td>
-                      <td className="py-3 px-4 text-sm text-center text-foreground">{rule.weight}%</td>
                       <td className="py-3 px-4 text-sm">
-                        <Badge className={getClassificationColor(rule.classification)}>
-                          {rule.classification}
-                        </Badge>
+                        {rule.type === 'simple' ? (
+                          <Badge className={getRuleTypeColor(rule.ruleType ?? '')}>
+                            {rule.ruleType}
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-emerald-100 text-emerald-800">
+                            {rule.decision}
+                          </Badge>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-center text-foreground">
+                        {rule.type === 'simple' ? `${rule.weight}%` : `P${rule.priority}`}
+                      </td>
+                      <td className="py-3 px-4 text-sm">
+                        {rule.type === 'simple' ? (
+                          <Badge className={getClassificationColor(rule.classification ?? '')}>
+                            {rule.classification}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            Severidade: {rule.severity}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-sm text-center">
                         <Badge variant={rule.enabled ? 'default' : 'secondary'}>
@@ -859,23 +1044,37 @@ export default function Rules() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleToggle(rule.id)}
+                          onClick={() => {
+                            if (rule.type === 'simple') {
+                              handleToggle(rule.id as number);
+                            } else {
+                              toggleComplexMutation.mutate(rule.id as string);
+                            }
+                          }}
                           title={rule.enabled ? 'Desativar' : 'Ativar'}
                         >
                           <ToggleRight className="h-4 w-4" />
                         </Button>
+                        {rule.type === 'simple' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(rule.original as RuleConfiguration)}
+                            title="Editar"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleEdit(rule)}
-                          title="Editar"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteClick(rule.id)}
+                          onClick={() => {
+                            if (rule.type === 'simple') {
+                              handleDeleteClick(rule.id as number);
+                            } else {
+                              deleteComplexMutation.mutate(rule.id as string);
+                            }
+                          }}
                           title="Deletar"
                           className="text-red-600 hover:text-red-700"
                         >
