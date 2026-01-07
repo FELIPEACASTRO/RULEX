@@ -4,6 +4,10 @@ import com.rulex.dto.RuleConfigurationDTO;
 import com.rulex.entity.RuleApproval;
 import com.rulex.service.RuleApprovalService;
 import com.rulex.service.RuleApprovalService.ApprovalResult;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.Data;
@@ -23,11 +27,14 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/rules/approvals")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Aprovações", description = "Workflow de aprovação de regras (4 olhos)")
 public class RuleApprovalController {
 
   private final RuleApprovalService approvalService;
 
   /** Solicita aprovação para criar uma regra. POST /api/rules/approvals/create */
+  @Operation(summary = "Solicitar criação", description = "Solicita aprovação para criar uma regra")
+  @ApiResponse(responseCode = "201", description = "Solicitação criada")
   @PostMapping("/create")
   public ResponseEntity<RuleApproval> requestCreateApproval(
       @Valid @RequestBody RuleConfigurationDTO ruleDto) {
@@ -37,26 +44,39 @@ public class RuleApprovalController {
   }
 
   /** Solicita aprovação para atualizar uma regra. POST /api/rules/approvals/update/{ruleId} */
+  @Operation(
+      summary = "Solicitar atualização",
+      description = "Solicita aprovação para atualizar uma regra")
+  @ApiResponse(responseCode = "201", description = "Solicitação criada")
   @PostMapping("/update/{ruleId}")
   public ResponseEntity<RuleApproval> requestUpdateApproval(
-      @PathVariable Long ruleId, @Valid @RequestBody RuleConfigurationDTO ruleDto) {
+      @Parameter(description = "ID da regra") @PathVariable Long ruleId,
+      @Valid @RequestBody RuleConfigurationDTO ruleDto) {
     log.info("Solicitação de aprovação para atualizar regra: {}", ruleId);
     RuleApproval approval = approvalService.requestUpdateApproval(ruleId, ruleDto);
     return ResponseEntity.status(HttpStatus.CREATED).body(approval);
   }
 
   /** Solicita aprovação para excluir uma regra. POST /api/rules/approvals/delete/{ruleId} */
+  @Operation(
+      summary = "Solicitar exclusão",
+      description = "Solicita aprovação para excluir uma regra")
+  @ApiResponse(responseCode = "201", description = "Solicitação criada")
   @PostMapping("/delete/{ruleId}")
-  public ResponseEntity<RuleApproval> requestDeleteApproval(@PathVariable Long ruleId) {
+  public ResponseEntity<RuleApproval> requestDeleteApproval(
+      @Parameter(description = "ID da regra") @PathVariable Long ruleId) {
     log.info("Solicitação de aprovação para excluir regra: {}", ruleId);
     RuleApproval approval = approvalService.requestDeleteApproval(ruleId);
     return ResponseEntity.status(HttpStatus.CREATED).body(approval);
   }
 
   /** Aprova uma solicitação. POST /api/rules/approvals/{id}/approve */
+  @Operation(summary = "Aprovar", description = "Aprova uma solicitação pendente")
+  @ApiResponse(responseCode = "200", description = "Solicitação aprovada")
   @PostMapping("/{id}/approve")
   public ResponseEntity<ApprovalResult> approve(
-      @PathVariable Long id, @RequestBody(required = false) ApprovalRequest request) {
+      @Parameter(description = "ID da solicitação") @PathVariable Long id,
+      @RequestBody(required = false) ApprovalRequest request) {
     log.info("Aprovando solicitação: {}", id);
     String comments = request != null ? request.getComments() : null;
     ApprovalResult result = approvalService.approve(id, comments);
@@ -64,23 +84,31 @@ public class RuleApprovalController {
   }
 
   /** Rejeita uma solicitação. POST /api/rules/approvals/{id}/reject */
+  @Operation(summary = "Rejeitar", description = "Rejeita uma solicitação pendente")
+  @ApiResponse(responseCode = "200", description = "Solicitação rejeitada")
   @PostMapping("/{id}/reject")
   public ResponseEntity<RuleApproval> reject(
-      @PathVariable Long id, @RequestBody RejectRequest request) {
+      @Parameter(description = "ID da solicitação") @PathVariable Long id,
+      @RequestBody RejectRequest request) {
     log.info("Rejeitando solicitação: {}", id);
     RuleApproval approval = approvalService.reject(id, request.getReason());
     return ResponseEntity.ok(approval);
   }
 
   /** Cancela uma solicitação. POST /api/rules/approvals/{id}/cancel */
+  @Operation(summary = "Cancelar", description = "Cancela uma solicitação pendente")
+  @ApiResponse(responseCode = "200", description = "Solicitação cancelada")
   @PostMapping("/{id}/cancel")
-  public ResponseEntity<RuleApproval> cancel(@PathVariable Long id) {
+  public ResponseEntity<RuleApproval> cancel(
+      @Parameter(description = "ID da solicitação") @PathVariable Long id) {
     log.info("Cancelando solicitação: {}", id);
     RuleApproval approval = approvalService.cancel(id);
     return ResponseEntity.ok(approval);
   }
 
   /** Lista solicitações pendentes. GET /api/rules/approvals/pending */
+  @Operation(summary = "Listar pendentes", description = "Lista todas as solicitações pendentes")
+  @ApiResponse(responseCode = "200", description = "Lista de pendentes")
   @GetMapping("/pending")
   public ResponseEntity<List<RuleApproval>> listPendingApprovals() {
     List<RuleApproval> approvals = approvalService.listPendingApprovals();
@@ -88,6 +116,8 @@ public class RuleApprovalController {
   }
 
   /** Lista solicitações pendentes paginadas. GET /api/rules/approvals/pending/page */
+  @Operation(summary = "Listar pendentes (paginado)", description = "Lista pendentes com paginação")
+  @ApiResponse(responseCode = "200", description = "Página de pendentes")
   @GetMapping("/pending/page")
   public ResponseEntity<Page<RuleApproval>> listPendingApprovalsPaged(
       @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
@@ -96,6 +126,10 @@ public class RuleApprovalController {
   }
 
   /** Conta solicitações pendentes. GET /api/rules/approvals/pending/count */
+  @Operation(
+      summary = "Contar pendentes",
+      description = "Retorna quantidade de solicitações pendentes")
+  @ApiResponse(responseCode = "200", description = "Contagem retornada")
   @GetMapping("/pending/count")
   public ResponseEntity<CountResponse> countPendingApprovals() {
     long count = approvalService.countPendingApprovals();
@@ -103,15 +137,23 @@ public class RuleApprovalController {
   }
 
   /** Busca solicitação por ID. GET /api/rules/approvals/{id} */
+  @Operation(summary = "Obter solicitação", description = "Busca uma solicitação pelo ID")
+  @ApiResponse(responseCode = "200", description = "Solicitação encontrada")
   @GetMapping("/{id}")
-  public ResponseEntity<RuleApproval> getApprovalById(@PathVariable Long id) {
+  public ResponseEntity<RuleApproval> getApprovalById(
+      @Parameter(description = "ID da solicitação") @PathVariable Long id) {
     RuleApproval approval = approvalService.getApprovalById(id);
     return ResponseEntity.ok(approval);
   }
 
   /** Lista histórico de aprovações de uma regra. GET /api/rules/approvals/history/{ruleId} */
+  @Operation(
+      summary = "Histórico de aprovações",
+      description = "Lista histórico de aprovações de uma regra")
+  @ApiResponse(responseCode = "200", description = "Histórico retornado")
   @GetMapping("/history/{ruleId}")
-  public ResponseEntity<List<RuleApproval>> getApprovalHistory(@PathVariable Long ruleId) {
+  public ResponseEntity<List<RuleApproval>> getApprovalHistory(
+      @Parameter(description = "ID da regra") @PathVariable Long ruleId) {
     List<RuleApproval> history = approvalService.getApprovalHistory(ruleId);
     return ResponseEntity.ok(history);
   }

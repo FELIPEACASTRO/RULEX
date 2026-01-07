@@ -6,6 +6,10 @@ import com.rulex.service.RuleSimulationService;
 import com.rulex.service.RuleSimulationService.BacktestResult;
 import com.rulex.service.RuleSimulationService.ComparisonResult;
 import com.rulex.service.RuleSimulationService.SimulationResult;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,11 +25,14 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/rules/simulation")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Simulação", description = "Simulação e backtesting de regras")
 public class RuleSimulationController {
 
   private final RuleSimulationService simulationService;
 
   /** Simula uma regra contra um payload de teste. POST /api/rules/simulation/test */
+  @Operation(summary = "Simular regra", description = "Simula uma regra contra um payload de teste")
+  @ApiResponse(responseCode = "200", description = "Resultado da simulação")
   @PostMapping("/test")
   public ResponseEntity<SimulationResult> simulateRule(
       @Valid @RequestBody SimulationRequest request) {
@@ -37,9 +44,13 @@ public class RuleSimulationController {
   }
 
   /** Faz backtesting de uma regra existente. POST /api/rules/simulation/backtest/{ruleId} */
+  @Operation(
+      summary = "Backtest",
+      description = "Executa backtesting de uma regra com dados históricos")
+  @ApiResponse(responseCode = "200", description = "Resultado do backtest")
   @PostMapping("/backtest/{ruleId}")
   public ResponseEntity<BacktestResult> backtestRule(
-      @PathVariable Long ruleId,
+      @Parameter(description = "ID da regra") @PathVariable Long ruleId,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
       @RequestParam(defaultValue = "1000") int sampleSize) {
@@ -51,6 +62,8 @@ public class RuleSimulationController {
   }
 
   /** Compara duas regras. POST /api/rules/simulation/compare */
+  @Operation(summary = "Comparar regras", description = "Compara performance de duas regras")
+  @ApiResponse(responseCode = "200", description = "Resultado da comparação")
   @PostMapping("/compare")
   public ResponseEntity<ComparisonResult> compareRules(
       @Valid @RequestBody ComparisonRequest request) {
@@ -66,6 +79,10 @@ public class RuleSimulationController {
   }
 
   /** Simula múltiplas regras contra um payload. POST /api/rules/simulation/batch */
+  @Operation(
+      summary = "Simulação em lote",
+      description = "Simula múltiplas regras contra um payload")
+  @ApiResponse(responseCode = "200", description = "Resultados das simulações")
   @PostMapping("/batch")
   public ResponseEntity<List<SimulationResult>> simulateBatch(
       @Valid @RequestBody BatchSimulationRequest request) {

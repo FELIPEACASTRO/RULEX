@@ -6,6 +6,12 @@ import com.rulex.api.RawPayloadCaptureFilter;
 import com.rulex.dto.EvaluateRequestDTO;
 import com.rulex.dto.EvaluateResponse;
 import com.rulex.service.RuleEngineService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/evaluate")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Avaliação", description = "Endpoints para avaliação de transações e decisão de risco")
 public class EvaluateController {
 
   private final RuleEngineService ruleEngineService;
@@ -29,6 +36,22 @@ public class EvaluateController {
   /**
    * Avalia uma transação usando o DTO validado. Este é o endpoint preferido para novas integrações.
    */
+  @Operation(
+      summary = "Avaliar transação",
+      description =
+          "Avalia uma transação usando regras configuradas e retorna decisão de risco, score e regras acionadas")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Avaliação realizada com sucesso",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = EvaluateResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Requisição inválida"),
+        @ApiResponse(responseCode = "413", description = "Payload muito grande (limite: 1MB)")
+      })
   @PostMapping
   public ResponseEntity<EvaluateResponse> evaluate(
       @Valid @RequestBody EvaluateRequestDTO request, HttpServletRequest httpRequest) {
@@ -52,6 +75,23 @@ public class EvaluateController {
    *
    * @deprecated Use o endpoint principal com EvaluateRequestDTO
    */
+  @Operation(
+      summary = "Avaliar transação (raw JSON)",
+      description =
+          "Endpoint legado que aceita JSON raw. Use o endpoint principal /evaluate para novas integrações",
+      deprecated = true)
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Avaliação realizada com sucesso",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = EvaluateResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Body vazio ou inválido"),
+        @ApiResponse(responseCode = "413", description = "Payload muito grande (limite: 1MB)")
+      })
   @Deprecated
   @PostMapping("/raw")
   public ResponseEntity<EvaluateResponse> evaluateRaw(
