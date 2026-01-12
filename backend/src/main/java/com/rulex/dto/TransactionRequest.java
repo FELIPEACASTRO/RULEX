@@ -392,6 +392,10 @@ public class TransactionRequest {
   @JsonProperty("deviceId")
   private String deviceId;
 
+  /** Endereço IP da requisição */
+  @JsonProperty("ipAddress")
+  private String ipAddress;
+
   /** User Agent do navegador/app */
   @JsonProperty("userAgent")
   private String userAgent;

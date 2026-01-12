@@ -60,10 +60,14 @@ public class VelocityService {
     private final BigDecimal avgAmount;
     private final BigDecimal minAmount;
     private final BigDecimal maxAmount;
+    private final BigDecimal stdDevAmount;
     private final long distinctMerchants;
     private final long distinctMccs;
     private final long distinctCountries;
+    private final long distinctPans;
     private final long fraudCount;
+    private final long failedCount;
+    private final long cvvFailures;
     private final boolean found;
     private final String source; // CACHE, DB, COMPUTED
 
@@ -72,10 +76,14 @@ public class VelocityService {
           .transactionCount(0)
           .totalAmount(BigDecimal.ZERO)
           .avgAmount(BigDecimal.ZERO)
+          .stdDevAmount(BigDecimal.ZERO)
           .distinctMerchants(0)
           .distinctMccs(0)
           .distinctCountries(0)
+          .distinctPans(0)
           .fraudCount(0)
+          .failedCount(0)
+          .cvvFailures(0)
           .found(false)
           .source("EMPTY")
           .build();
@@ -99,7 +107,11 @@ public class VelocityService {
   public enum KeyType {
     PAN,
     CUSTOMER_ID,
-    MERCHANT_ID
+    MERCHANT_ID,
+    IP_ADDRESS,
+    DEVICE_ID,
+    CARD_ID,
+    BENEFICIARY_ID
   }
 
   /** Janela temporal em minutos. */
@@ -291,6 +303,10 @@ public class VelocityService {
       case PAN -> hashPan(request.getPan());
       case CUSTOMER_ID -> request.getCustomerIdFromHeader();
       case MERCHANT_ID -> request.getMerchantId();
+      case IP_ADDRESS -> request.getIpAddress();
+      case DEVICE_ID -> request.getDeviceId();
+      case CARD_ID -> hashPan(request.getPan()); // Card ID is same as PAN for now
+      case BENEFICIARY_ID -> request.getBeneficiaryId();
     };
   }
 

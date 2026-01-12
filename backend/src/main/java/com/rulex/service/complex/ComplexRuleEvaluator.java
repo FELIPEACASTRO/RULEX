@@ -410,6 +410,160 @@ public class ComplexRuleEvaluator {
 
       case OUTFLOW_RATE_LAST_N_DAYS -> evaluateOutflowRateLastNDays(condition, context);
 
+        // ========== OPERADORES V31+ (82 novos) ==========
+        // CATEGORIA A: Velocity Avançado (10)
+      case VELOCITY_CROSS_CHANNEL -> evaluateVelocityCrossChannel(condition, context);
+      case VELOCITY_ROLLING_WINDOW -> evaluateVelocityRollingWindow(condition, context);
+      case VELOCITY_PERCENTILE -> evaluateVelocityPercentile(condition, context);
+      case VELOCITY_RATIO_GT -> evaluateVelocityRatioGt(condition, context);
+      case VELOCITY_TREND -> evaluateVelocityTrend(condition, context);
+      case COUNT_UNIQUE_BENEFICIARIES_LAST_N_DAYS -> evaluateCountUniqueBeneficiariesLastNDays(condition, context);
+      case COUNT_UNIQUE_IPS_LAST_N_HOURS -> evaluateCountUniqueIpsLastNHours(condition, context);
+      case SUM_BY_CHANNEL_LAST_N_DAYS -> evaluateSumByChannelLastNDays(condition, context);
+      case AVG_INTERVAL_BETWEEN_TXN -> evaluateAvgIntervalBetweenTxn(condition, context);
+      case VELOCITY_ACCELERATION -> evaluateVelocityAcceleration(condition, context);
+
+        // CATEGORIA B: Behavioral Rules (8)
+      case DORMANCY_REVIVAL -> evaluateDormancyRevival(condition, context);
+      case AMOUNT_DEVIATION_FROM_AVG -> evaluateAmountDeviationFromAvg(condition, context);
+      case TIME_DEVIATION_FROM_USUAL -> evaluateTimeDeviationFromUsual(condition, context);
+      case MERCHANT_DEVIATION -> evaluateMerchantDeviation(condition, context);
+      case MICRO_TRANSACTION_TEST -> evaluateMicroTransactionTest(condition, context);
+      case LOCATION_DEVIATION -> evaluateLocationDeviation(condition, context);
+      case CHANNEL_SWITCH_PATTERN -> evaluateChannelSwitchPattern(condition, context);
+      case BENEFICIARY_REUSE_PATTERN -> evaluateBeneficiaryReusePattern(condition, context);
+
+        // CATEGORIA C: Graph/Network (8)
+      case FAN_OUT_COUNT -> evaluateFanOutCount(condition, context);
+      case FAN_IN_COUNT -> evaluateFanInCount(condition, context);
+      case SHARED_DEVICE_COUNT -> evaluateSharedDeviceCount(condition, context);
+      case SHARED_IP_COUNT -> evaluateSharedIpCount(condition, context);
+      case ACCOUNT_LINK_DEPTH -> evaluateAccountLinkDepth(condition, context);
+      case CIRCULAR_TRANSFER_DETECTION -> evaluateCircularTransferDetection(condition, context);
+      case RAPID_MULTI_HOP -> evaluateRapidMultiHop(condition, context);
+      case BENEFICIARY_CONCENTRATION -> evaluateBeneficiaryConcentration(condition, context);
+
+        // CATEGORIA D: Sanctions & Name Matching (7)
+      case OFAC_LIST_CHECK -> evaluateOfacListCheck(fieldValue, condition);
+      case PEP_LIST_CHECK -> evaluatePepListCheck(fieldValue, condition);
+      case ADVERSE_MEDIA_CHECK -> evaluateAdverseMediaCheck(fieldValue, condition);
+      case SANCTIONS_COUNTRY_CHECK -> evaluateSanctionsCountryCheck(fieldValue, condition);
+      case HIGH_RISK_JURISDICTION -> evaluateHighRiskJurisdiction(fieldValue, condition);
+      case NAME_TRANSLITERATION_MATCH -> evaluateNameTransliterationMatch(condition, context);
+      case ALIAS_DETECTION -> evaluateAliasDetection(condition, context);
+
+        // CATEGORIA E: Synthetic ID Detection (8)
+      case CPF_SSN_VALIDATION -> evaluateCpfSsnValidation(fieldValue, condition);
+      case PHONE_CARRIER_CHECK -> evaluatePhoneCarrierCheck(fieldValue, condition);
+      case EMAIL_DOMAIN_AGE -> evaluateEmailDomainAge(fieldValue, condition);
+      case ADDRESS_VERIFICATION -> evaluateAddressVerification(condition, context);
+      case IDENTITY_VELOCITY -> evaluateIdentityVelocity(condition, context);
+      case DEVICE_ACCOUNT_RATIO -> evaluateDeviceAccountRatio(condition, context);
+      case EMAIL_PHONE_MISMATCH -> evaluateEmailPhoneMismatch(condition, context);
+      case CREDIT_FILE_THIN -> evaluateCreditFileThin(condition, context);
+
+        // CATEGORIA F: AML Typology (8)
+      case STRUCTURING_DETECTION -> evaluateStructuringDetection(condition, context);
+      case LAYERING_PATTERN -> evaluateLayeringPattern(condition, context);
+      case RAPID_MOVEMENT -> evaluateRapidMovement(condition, context);
+      case INTEGRATION_PATTERN -> evaluateIntegrationPattern(condition, context);
+      case CASH_INTENSIVE_RATIO -> evaluateCashIntensiveRatio(condition, context);
+      case UNUSUAL_BUSINESS_PATTERN -> evaluateUnusualBusinessPattern(condition, context);
+      case SHELL_COMPANY_INDICATOR -> evaluateShellCompanyIndicator(condition, context);
+      case TRADE_BASED_ML_INDICATOR -> evaluateTradeBasedMlIndicator(condition, context);
+
+        // CATEGORIA G: Regulatory (8)
+      case SCA_EXEMPTION_TRA -> evaluateScaExemptionTra(condition, context);
+      case SCA_EXEMPTION_LOW_VALUE -> evaluateScaExemptionLowValue(condition, context);
+      case SCA_EXEMPTION_TRUSTED_BENEFICIARY -> evaluateScaExemptionTrustedBeneficiary(condition, context);
+      case SCA_EXEMPTION_RECURRING -> evaluateScaExemptionRecurring(condition, context);
+      case PSD3_COP_NAME_MATCH -> evaluatePsd3CopNameMatch(condition, context);
+      case DORA_INCIDENT_SEVERITY -> evaluateDoraIncidentSeverity(condition, context);
+      case EIDAS_ASSURANCE_LEVEL -> evaluateEidasAssuranceLevel(condition, context);
+      case GDPR_DATA_RETENTION_CHECK -> evaluateGdprDataRetentionCheck(condition, context);
+
+        // CATEGORIA H: Device (7)
+      case DEVICE_JAILBREAK_ROOTED -> evaluateDeviceJailbreakRooted(condition, context);
+      case EMULATOR_DETECTION -> evaluateEmulatorDetection(condition, context);
+      case VPN_PROXY_DETECTION -> evaluateVpnProxyDetection(condition, context);
+      case TOR_EXIT_NODE -> evaluateTorExitNode(fieldValue, condition);
+      case BROWSER_INCONSISTENCY -> evaluateBrowserInconsistency(condition, context);
+      case TIMEZONE_MISMATCH -> evaluateTimezoneMismatch(condition, context);
+      case LANGUAGE_MISMATCH -> evaluateLanguageMismatch(condition, context);
+
+        // CATEGORIA I: Merchant & MCC (7)
+      case MCC_HIGH_RISK -> evaluateMccHighRisk(fieldValue, condition);
+      case MCC_GAMBLING -> evaluateMccGambling(fieldValue, condition);
+      case MCC_CRYPTO -> evaluateMccCrypto(fieldValue, condition);
+      case MERCHANT_FIRST_SEEN -> evaluateMerchantFirstSeen(condition, context);
+      case MERCHANT_COUNTRY_MISMATCH -> evaluateMerchantCountryMismatch(condition, context);
+      case MERCHANT_CATEGORY_CHANGE -> evaluateMerchantCategoryChange(condition, context);
+      case MERCHANT_VELOCITY_SPIKE -> evaluateMerchantVelocitySpike(condition, context);
+
+        // CATEGORIA J: ISO 20022 (6)
+      case PACS008_FIELD_VALIDATION -> evaluatePacs008FieldValidation(condition, context);
+      case REMITTANCE_INFO_ANALYSIS -> evaluateRemittanceInfoAnalysis(condition, context);
+      case PURPOSE_CODE_MISMATCH -> evaluatePurposeCodeMismatch(condition, context);
+      case UETR_DUPLICATE_CHECK -> evaluateUetrDuplicateCheck(condition, context);
+      case CREDITOR_NAME_VALIDATION -> evaluateCreditorNameValidation(condition, context);
+      case STRUCTURED_ADDRESS_CHECK -> evaluateStructuredAddressCheck(condition, context);
+
+        // CATEGORIA K: Estatísticos Simples (5)
+      case BENFORD_LAW_DEVIATION -> evaluateBenfordLawDeviation(condition, context);
+      case Z_SCORE_GT -> evaluateZScoreGt(condition, context);
+      case STANDARD_DEVIATION_GT -> evaluateStandardDeviationGt(condition, context);
+      case PERCENTILE_GT -> evaluatePercentileGt(condition, context);
+      case COEFFICIENT_VARIATION_GT -> evaluateCoefficientVariationGt(condition, context);
+
+        // ========== OPERADORES V4.0 PHASE 1 (40 novos) - Velocity + Device ==========
+        // CATEGORIA L: Transaction Count Velocity Avançado (12)
+      case TRANSACTION_COUNT_PER_CARD_HOUR -> evaluateTransactionCountPerCardHour(condition, context);
+      case TRANSACTION_COUNT_PER_IP_HOUR -> evaluateTransactionCountPerIpHour(condition, context);
+      case TRANSACTION_COUNT_PER_DEVICE_DAY -> evaluateTransactionCountPerDeviceDay(condition, context);
+      case TRANSACTION_COUNT_PER_MERCHANT_HOUR -> evaluateTransactionCountPerMerchantHour(condition, context);
+      case TRANSACTION_COUNT_PER_CUSTOMER_HOUR -> evaluateTransactionCountPerCustomerHour(condition, context);
+      case UNIQUE_CARD_COUNT_PER_IP_HOUR -> evaluateUniqueCardCountPerIpHour(condition, context);
+      case UNIQUE_MERCHANT_COUNT_PER_CARD_DAY -> evaluateUniqueMerchantCountPerCardDay(condition, context);
+      case TRANSACTION_ATTEMPT_COUNT_PER_CARD -> evaluateTransactionAttemptCountPerCard(condition, context);
+      case CVV_FAILURE_VELOCITY -> evaluateCvvFailureVelocity(condition, context);
+      case ADDRESS_CHANGE_VELOCITY -> evaluateAddressChangeVelocity(condition, context);
+      case BENEFICIARY_ADD_VELOCITY -> evaluateBeneficiaryAddVelocity(condition, context);
+      case CARD_ADD_VELOCITY -> evaluateCardAddVelocity(condition, context);
+
+        // CATEGORIA M: Amount Velocity Avançado (10)
+      case AMOUNT_SUM_PER_CARD_HOUR -> evaluateAmountSumPerCardHour(condition, context);
+      case AMOUNT_SUM_PER_CUSTOMER_DAY -> evaluateAmountSumPerCustomerDay(condition, context);
+      case AVG_TRANSACTION_SPIKE -> evaluateAvgTransactionSpike(condition, context);
+      case LARGE_AMOUNT_FREQUENCY -> evaluateLargeAmountFrequency(condition, context);
+      case SMALL_AMOUNT_VELOCITY -> evaluateSmallAmountVelocity(condition, context);
+      case ROUND_AMOUNT_FREQUENCY -> evaluateRoundAmountFrequency(condition, context);
+      case SEQUENTIAL_AMOUNT_PATTERN -> evaluateSequentialAmountPattern(condition, context);
+      case AMOUNT_VARIANCE_ANOMALY -> evaluateAmountVarianceAnomaly(condition, context);
+      case DAILY_LIMIT_PROXIMITY -> evaluateDailyLimitProximity(condition, context);
+      case WEEKLY_LIMIT_PROXIMITY -> evaluateWeeklyLimitProximity(condition, context);
+
+        // CATEGORIA N: Temporal Velocity Avançado (8)
+      case TIME_BETWEEN_CONSECUTIVE_TX -> evaluateTimeBetweenConsecutiveTx(condition, context);
+      case TRANSACTION_FREQUENCY_ANOMALY -> evaluateTransactionFrequencyAnomaly(condition, context);
+      case TIME_OF_DAY_ANOMALY -> evaluateTimeOfDayAnomaly(condition, context);
+      case DORMANCY_ALERT_VELOCITY -> evaluateDormancyAlertVelocity(condition, context);
+      case WEEKEND_VS_WEEKDAY_PATTERN -> evaluateWeekendVsWeekdayPattern(condition, context);
+      case HOLIDAY_TRANSACTION_SPIKE -> evaluateHolidayTransactionSpike(condition, context);
+      case NIGHTTIME_TRANSACTION_RATIO -> evaluateNighttimeTransactionRatio(condition, context);
+      case BUSINESS_HOURS_DEVIATION -> evaluateBusinessHoursDeviation(condition, context);
+
+        // CATEGORIA O: Device Fingerprint Avançado (10)
+      case DEVICE_TRUST_SCORE -> evaluateDeviceTrustScore(condition, context);
+      case CANVAS_FINGERPRINT_MISMATCH -> evaluateCanvasFingerprintMismatch(condition, context);
+      case WEBGL_FINGERPRINT_ANOMALY -> evaluateWebglFingerprintAnomaly(condition, context);
+      case AUDIO_FINGERPRINT_NEW -> evaluateAudioFingerprintNew(condition, context);
+      case FONTS_FINGERPRINT_ANOMALY -> evaluateFontsFingerprintAnomaly(condition, context);
+      case SCREEN_RESOLUTION_CHANGE -> evaluateScreenResolutionChange(condition, context);
+      case BATTERY_LEVEL_ANOMALY -> evaluateBatteryLevelAnomaly(condition, context);
+      case HARDWARE_CONCURRENCY_MISMATCH -> evaluateHardwareConcurrencyMismatch(condition, context);
+      case TOUCH_SUPPORT_INCONSISTENCY -> evaluateTouchSupportInconsistency(condition, context);
+      case DEVICE_MEMORY_ANOMALY -> evaluateDeviceMemoryAnomaly(condition, context);
+
       default -> {
         log.warn("Operador não implementado: {}", operator);
         yield false;
@@ -2912,6 +3066,1326 @@ public class ComplexRuleEvaluator {
       return new BigDecimal(String.valueOf(value));
     } catch (NumberFormatException e) {
       return null;
+    }
+  }
+
+  // ========== OPERADORES V31+ (82 stubs) - CATEGORIAS A-K ==========
+
+  // --- CATEGORIA A: Velocity Avançado (10) ---
+  private boolean evaluateVelocityCrossChannel(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ VELOCITY_CROSS_CHANNEL: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateVelocityRollingWindow(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ VELOCITY_ROLLING_WINDOW: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateVelocityPercentile(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ VELOCITY_PERCENTILE: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateVelocityRatioGt(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ VELOCITY_RATIO_GT: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateVelocityTrend(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ VELOCITY_TREND: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateCountUniqueBeneficiariesLastNDays(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ COUNT_UNIQUE_BENEFICIARIES_LAST_N_DAYS: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateCountUniqueIpsLastNHours(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ COUNT_UNIQUE_IPS_LAST_N_HOURS: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateSumByChannelLastNDays(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ SUM_BY_CHANNEL_LAST_N_DAYS: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateAvgIntervalBetweenTxn(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ AVG_INTERVAL_BETWEEN_TXN: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateVelocityAcceleration(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ VELOCITY_ACCELERATION: implementação pendente");
+    return false;
+  }
+
+  // --- CATEGORIA B: Behavioral Rules (8) ---
+  private boolean evaluateDormancyRevival(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ DORMANCY_REVIVAL: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateAmountDeviationFromAvg(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ AMOUNT_DEVIATION_FROM_AVG: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateTimeDeviationFromUsual(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ TIME_DEVIATION_FROM_USUAL: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateMerchantDeviation(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ MERCHANT_DEVIATION: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateMicroTransactionTest(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ MICRO_TRANSACTION_TEST: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateLocationDeviation(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ LOCATION_DEVIATION: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateChannelSwitchPattern(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ CHANNEL_SWITCH_PATTERN: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateBeneficiaryReusePattern(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ BENEFICIARY_REUSE_PATTERN: implementação pendente");
+    return false;
+  }
+
+  // --- CATEGORIA C: Graph/Network (8) ---
+  private boolean evaluateFanOutCount(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ FAN_OUT_COUNT: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateFanInCount(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ FAN_IN_COUNT: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateSharedDeviceCount(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ SHARED_DEVICE_COUNT: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateSharedIpCount(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ SHARED_IP_COUNT: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateAccountLinkDepth(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ ACCOUNT_LINK_DEPTH: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateCircularTransferDetection(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ CIRCULAR_TRANSFER_DETECTION: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateRapidMultiHop(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ RAPID_MULTI_HOP: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateBeneficiaryConcentration(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ BENEFICIARY_CONCENTRATION: implementação pendente");
+    return false;
+  }
+
+  // --- CATEGORIA D: Sanctions & Name Matching (7) ---
+  private boolean evaluateOfacListCheck(Object fieldValue, RuleCondition condition) {
+    log.warn("Operador V31+ OFAC_LIST_CHECK: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluatePepListCheck(Object fieldValue, RuleCondition condition) {
+    log.warn("Operador V31+ PEP_LIST_CHECK: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateAdverseMediaCheck(Object fieldValue, RuleCondition condition) {
+    log.warn("Operador V31+ ADVERSE_MEDIA_CHECK: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateSanctionsCountryCheck(Object fieldValue, RuleCondition condition) {
+    log.warn("Operador V31+ SANCTIONS_COUNTRY_CHECK: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateHighRiskJurisdiction(Object fieldValue, RuleCondition condition) {
+    log.warn("Operador V31+ HIGH_RISK_JURISDICTION: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateNameTransliterationMatch(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ NAME_TRANSLITERATION_MATCH: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateAliasDetection(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ ALIAS_DETECTION: implementação pendente");
+    return false;
+  }
+
+  // --- CATEGORIA E: Synthetic ID Detection (8) ---
+  private boolean evaluateCpfSsnValidation(Object fieldValue, RuleCondition condition) {
+    log.warn("Operador V31+ CPF_SSN_VALIDATION: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluatePhoneCarrierCheck(Object fieldValue, RuleCondition condition) {
+    log.warn("Operador V31+ PHONE_CARRIER_CHECK: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateEmailDomainAge(Object fieldValue, RuleCondition condition) {
+    log.warn("Operador V31+ EMAIL_DOMAIN_AGE: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateAddressVerification(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ ADDRESS_VERIFICATION: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateIdentityVelocity(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ IDENTITY_VELOCITY: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateDeviceAccountRatio(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ DEVICE_ACCOUNT_RATIO: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateEmailPhoneMismatch(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ EMAIL_PHONE_MISMATCH: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateCreditFileThin(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ CREDIT_FILE_THIN: implementação pendente");
+    return false;
+  }
+
+  // --- CATEGORIA F: AML Typology (8) ---
+  private boolean evaluateStructuringDetection(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ STRUCTURING_DETECTION: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateLayeringPattern(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ LAYERING_PATTERN: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateRapidMovement(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ RAPID_MOVEMENT: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateIntegrationPattern(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ INTEGRATION_PATTERN: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateCashIntensiveRatio(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ CASH_INTENSIVE_RATIO: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateUnusualBusinessPattern(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ UNUSUAL_BUSINESS_PATTERN: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateShellCompanyIndicator(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ SHELL_COMPANY_INDICATOR: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateTradeBasedMlIndicator(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ TRADE_BASED_ML_INDICATOR: implementação pendente");
+    return false;
+  }
+
+  // --- CATEGORIA G: Regulatory (8) ---
+  private boolean evaluateScaExemptionTra(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ SCA_EXEMPTION_TRA: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateScaExemptionLowValue(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ SCA_EXEMPTION_LOW_VALUE: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateScaExemptionTrustedBeneficiary(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ SCA_EXEMPTION_TRUSTED_BENEFICIARY: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateScaExemptionRecurring(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ SCA_EXEMPTION_RECURRING: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluatePsd3CopNameMatch(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ PSD3_COP_NAME_MATCH: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateDoraIncidentSeverity(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ DORA_INCIDENT_SEVERITY: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateEidasAssuranceLevel(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ EIDAS_ASSURANCE_LEVEL: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateGdprDataRetentionCheck(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ GDPR_DATA_RETENTION_CHECK: implementação pendente");
+    return false;
+  }
+
+  // --- CATEGORIA H: Device (7) ---
+  private boolean evaluateDeviceJailbreakRooted(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ DEVICE_JAILBREAK_ROOTED: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateEmulatorDetection(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ EMULATOR_DETECTION: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateVpnProxyDetection(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ VPN_PROXY_DETECTION: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateTorExitNode(Object fieldValue, RuleCondition condition) {
+    log.warn("Operador V31+ TOR_EXIT_NODE: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateBrowserInconsistency(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ BROWSER_INCONSISTENCY: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateTimezoneMismatch(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ TIMEZONE_MISMATCH: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateLanguageMismatch(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ LANGUAGE_MISMATCH: implementação pendente");
+    return false;
+  }
+
+  // --- CATEGORIA I: Merchant & MCC (7) ---
+  private boolean evaluateMccHighRisk(Object fieldValue, RuleCondition condition) {
+    log.warn("Operador V31+ MCC_HIGH_RISK: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateMccGambling(Object fieldValue, RuleCondition condition) {
+    log.warn("Operador V31+ MCC_GAMBLING: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateMccCrypto(Object fieldValue, RuleCondition condition) {
+    log.warn("Operador V31+ MCC_CRYPTO: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateMerchantFirstSeen(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ MERCHANT_FIRST_SEEN: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateMerchantCountryMismatch(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ MERCHANT_COUNTRY_MISMATCH: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateMerchantCategoryChange(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ MERCHANT_CATEGORY_CHANGE: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateMerchantVelocitySpike(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ MERCHANT_VELOCITY_SPIKE: implementação pendente");
+    return false;
+  }
+
+  // --- CATEGORIA J: ISO 20022 (6) ---
+  private boolean evaluatePacs008FieldValidation(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ PACS008_FIELD_VALIDATION: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateRemittanceInfoAnalysis(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ REMITTANCE_INFO_ANALYSIS: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluatePurposeCodeMismatch(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ PURPOSE_CODE_MISMATCH: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateUetrDuplicateCheck(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ UETR_DUPLICATE_CHECK: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateCreditorNameValidation(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ CREDITOR_NAME_VALIDATION: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateStructuredAddressCheck(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ STRUCTURED_ADDRESS_CHECK: implementação pendente");
+    return false;
+  }
+
+  // --- CATEGORIA K: Estatísticos Simples (5) ---
+  private boolean evaluateBenfordLawDeviation(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ BENFORD_LAW_DEVIATION: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateZScoreGt(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ Z_SCORE_GT: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateStandardDeviationGt(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ STANDARD_DEVIATION_GT: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluatePercentileGt(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ PERCENTILE_GT: implementação pendente");
+    return false;
+  }
+
+  private boolean evaluateCoefficientVariationGt(RuleCondition condition, EvaluationContext context) {
+    log.warn("Operador V31+ COEFFICIENT_VARIATION_GT: implementação pendente");
+    return false;
+  }
+
+  // ========== OPERADORES V4.0 PHASE 1 - VELOCITY + DEVICE (40 novos) ==========
+
+  // --- CATEGORIA L: Transaction Count Velocity Avançado (12) ---
+
+  /**
+   * TRANSACTION_COUNT_PER_CARD_HOUR: Contagem de transações por cartão por hora.
+   * Formato valueSingle: "threshold" (ex: "5")
+   */
+  private boolean evaluateTransactionCountPerCardHour(RuleCondition condition, EvaluationContext context) {
+    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.PAN, 
+        VelocityService.TimeWindow.HOUR_1, VelocityService.AggregationType.COUNT);
+  }
+
+  /**
+   * TRANSACTION_COUNT_PER_IP_HOUR: Contagem de transações por IP por hora.
+   * Formato valueSingle: "threshold" (ex: "10")
+   */
+  private boolean evaluateTransactionCountPerIpHour(RuleCondition condition, EvaluationContext context) {
+    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.IP_ADDRESS, 
+        VelocityService.TimeWindow.HOUR_1, VelocityService.AggregationType.COUNT);
+  }
+
+  /**
+   * TRANSACTION_COUNT_PER_DEVICE_DAY: Contagem de transações por dispositivo por dia.
+   * Formato valueSingle: "threshold" (ex: "20")
+   */
+  private boolean evaluateTransactionCountPerDeviceDay(RuleCondition condition, EvaluationContext context) {
+    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.DEVICE_ID, 
+        VelocityService.TimeWindow.HOUR_24, VelocityService.AggregationType.COUNT);
+  }
+
+  /**
+   * TRANSACTION_COUNT_PER_MERCHANT_HOUR: Contagem de transações por merchant por hora.
+   * Formato valueSingle: "threshold" (ex: "15")
+   */
+  private boolean evaluateTransactionCountPerMerchantHour(RuleCondition condition, EvaluationContext context) {
+    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.MERCHANT_ID, 
+        VelocityService.TimeWindow.HOUR_1, VelocityService.AggregationType.COUNT);
+  }
+
+  /**
+   * TRANSACTION_COUNT_PER_CUSTOMER_HOUR: Contagem de transações por cliente por hora.
+   * Formato valueSingle: "threshold" (ex: "8")
+   */
+  private boolean evaluateTransactionCountPerCustomerHour(RuleCondition condition, EvaluationContext context) {
+    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.CUSTOMER_ID, 
+        VelocityService.TimeWindow.HOUR_1, VelocityService.AggregationType.COUNT);
+  }
+
+  /**
+   * UNIQUE_CARD_COUNT_PER_IP_HOUR: Cartões únicos por IP por hora.
+   * Formato valueSingle: "threshold" (ex: "5")
+   */
+  private boolean evaluateUniqueCardCountPerIpHour(RuleCondition condition, EvaluationContext context) {
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      long threshold = Long.parseLong(condition.getValueSingle().trim());
+      
+      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), 
+          VelocityService.KeyType.IP_ADDRESS, 
+          VelocityService.TimeWindow.HOUR_1);
+      
+      return stats.getDistinctPans() > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar UNIQUE_CARD_COUNT_PER_IP_HOUR: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * UNIQUE_MERCHANT_COUNT_PER_CARD_DAY: Merchants únicos por cartão por dia.
+   * Formato valueSingle: "threshold" (ex: "20")
+   */
+  private boolean evaluateUniqueMerchantCountPerCardDay(RuleCondition condition, EvaluationContext context) {
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      long threshold = Long.parseLong(condition.getValueSingle().trim());
+      
+      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), 
+          VelocityService.KeyType.PAN, 
+          VelocityService.TimeWindow.HOUR_24);
+      
+      return stats.getDistinctMerchants() > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar UNIQUE_MERCHANT_COUNT_PER_CARD_DAY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * TRANSACTION_ATTEMPT_COUNT_PER_CARD: Tentativas de transação por cartão (inclui falhas).
+   * Formato valueSingle: "threshold|minutes" (ex: "5|15")
+   */
+  private boolean evaluateTransactionAttemptCountPerCard(RuleCondition condition, EvaluationContext context) {
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      long threshold = Long.parseLong(parts[0].trim());
+      int minutes = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 15;
+      
+      VelocityService.TimeWindow window = parseTimeWindow(minutes);
+      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), 
+          VelocityService.KeyType.PAN, 
+          window);
+      
+      // Inclui tentativas com falha
+      return stats.getTransactionCount() + stats.getFailedCount() > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar TRANSACTION_ATTEMPT_COUNT_PER_CARD: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * CVV_FAILURE_VELOCITY: Velocidade de falhas de CVV.
+   * Formato valueSingle: "threshold|minutes" (ex: "3|10")
+   */
+  private boolean evaluateCvvFailureVelocity(RuleCondition condition, EvaluationContext context) {
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      long threshold = Long.parseLong(parts[0].trim());
+      int minutes = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 10;
+      
+      VelocityService.TimeWindow window = parseTimeWindow(minutes);
+      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), 
+          VelocityService.KeyType.PAN, 
+          window);
+      
+      return stats.getCvvFailures() > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CVV_FAILURE_VELOCITY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * ADDRESS_CHANGE_VELOCITY: Velocidade de alteração de endereço.
+   * Formato valueSingle: "threshold|days" (ex: "3|30")
+   */
+  private boolean evaluateAddressChangeVelocity(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int threshold = Integer.parseInt(parts[0].trim());
+      int days = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 30;
+      
+      Object changesObj = payload.get("address_changes_" + days + "d");
+      if (changesObj == null) {
+        changesObj = payload.get("addressChangesCount");
+      }
+      
+      int changes = changesObj instanceof Number ? ((Number) changesObj).intValue() : 0;
+      return changes > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar ADDRESS_CHANGE_VELOCITY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * BENEFICIARY_ADD_VELOCITY: Velocidade de adição de beneficiários.
+   * Formato valueSingle: "threshold|days" (ex: "5|7")
+   */
+  private boolean evaluateBeneficiaryAddVelocity(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int threshold = Integer.parseInt(parts[0].trim());
+      int days = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 7;
+      
+      Object addedObj = payload.get("beneficiaries_added_" + days + "d");
+      if (addedObj == null) {
+        addedObj = payload.get("newBeneficiariesCount");
+      }
+      
+      int added = addedObj instanceof Number ? ((Number) addedObj).intValue() : 0;
+      return added > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar BENEFICIARY_ADD_VELOCITY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * CARD_ADD_VELOCITY: Velocidade de adição de cartões.
+   * Formato valueSingle: "threshold|days" (ex: "3|7")
+   */
+  private boolean evaluateCardAddVelocity(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int threshold = Integer.parseInt(parts[0].trim());
+      int days = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 7;
+      
+      Object addedObj = payload.get("cards_added_" + days + "d");
+      if (addedObj == null) {
+        addedObj = payload.get("newCardsCount");
+      }
+      
+      int added = addedObj instanceof Number ? ((Number) addedObj).intValue() : 0;
+      return added > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CARD_ADD_VELOCITY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // --- CATEGORIA M: Amount Velocity Avançado (10) ---
+
+  /**
+   * AMOUNT_SUM_PER_CARD_HOUR: Soma de valores por cartão por hora.
+   * Formato valueSingle: "threshold" (ex: "5000")
+   */
+  private boolean evaluateAmountSumPerCardHour(RuleCondition condition, EvaluationContext context) {
+    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.PAN, 
+        VelocityService.TimeWindow.HOUR_1, VelocityService.AggregationType.SUM);
+  }
+
+  /**
+   * AMOUNT_SUM_PER_CUSTOMER_DAY: Soma de valores por cliente por dia.
+   * Formato valueSingle: "threshold" (ex: "20000")
+   */
+  private boolean evaluateAmountSumPerCustomerDay(RuleCondition condition, EvaluationContext context) {
+    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.CUSTOMER_ID, 
+        VelocityService.TimeWindow.HOUR_24, VelocityService.AggregationType.SUM);
+  }
+
+  /**
+   * AVG_TRANSACTION_SPIKE: Spike de valor médio de transação.
+   * Formato valueSingle: "multiplier" (ex: "3.0" = 3x a média histórica)
+   */
+  private boolean evaluateAvgTransactionSpike(RuleCondition condition, EvaluationContext context) {
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      
+      double multiplier = Double.parseDouble(condition.getValueSingle().trim());
+      
+      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), 
+          VelocityService.KeyType.PAN, 
+          VelocityService.TimeWindow.DAY_30);
+      
+      BigDecimal currentAmount = context.getTransactionRequest().getTransactionAmount();
+      BigDecimal avgAmount = stats.getAvgAmount();
+      
+      if (avgAmount == null || avgAmount.compareTo(BigDecimal.ZERO) == 0) {
+        return false;
+      }
+      
+      BigDecimal spikeThreshold = avgAmount.multiply(BigDecimal.valueOf(multiplier));
+      return currentAmount.compareTo(spikeThreshold) > 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar AVG_TRANSACTION_SPIKE: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * LARGE_AMOUNT_FREQUENCY: Frequência de valores altos.
+   * Formato valueSingle: "amountThreshold|countThreshold|days" (ex: "1000|3|7")
+   */
+  private boolean evaluateLargeAmountFrequency(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      double amountThreshold = Double.parseDouble(parts[0].trim());
+      int countThreshold = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 3;
+      int days = parts.length > 2 ? Integer.parseInt(parts[2].trim()) : 7;
+      
+      Object countObj = payload.get("large_amount_count_" + days + "d_over_" + (int) amountThreshold);
+      if (countObj == null) {
+        countObj = payload.get("largeAmountTransactionCount");
+      }
+      
+      int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
+      return count >= countThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar LARGE_AMOUNT_FREQUENCY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * SMALL_AMOUNT_VELOCITY: Velocidade de valores pequenos (smurfing).
+   * Formato valueSingle: "maxAmount|countThreshold|hours" (ex: "100|10|1")
+   */
+  private boolean evaluateSmallAmountVelocity(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      double maxAmount = Double.parseDouble(parts[0].trim());
+      int countThreshold = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 10;
+      int hours = parts.length > 2 ? Integer.parseInt(parts[2].trim()) : 1;
+      
+      Object countObj = payload.get("small_amount_count_" + hours + "h_under_" + (int) maxAmount);
+      if (countObj == null) {
+        countObj = payload.get("microTransactionCount");
+      }
+      
+      int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
+      return count >= countThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SMALL_AMOUNT_VELOCITY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * ROUND_AMOUNT_FREQUENCY: Frequência de valores redondos.
+   * Formato valueSingle: "roundThreshold|percentageThreshold|days" (ex: "100|50|7")
+   */
+  private boolean evaluateRoundAmountFrequency(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int roundThreshold = Integer.parseInt(parts[0].trim());
+      double percentageThreshold = parts.length > 1 ? Double.parseDouble(parts[1].trim()) : 50.0;
+      
+      Object percentageObj = payload.get("round_amount_percentage_divisible_" + roundThreshold);
+      if (percentageObj == null) {
+        percentageObj = payload.get("roundAmountPercentage");
+      }
+      
+      double percentage = percentageObj instanceof Number ? ((Number) percentageObj).doubleValue() : 0.0;
+      return percentage >= percentageThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar ROUND_AMOUNT_FREQUENCY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * SEQUENTIAL_AMOUNT_PATTERN: Padrão sequencial de valores.
+   * Formato valueSingle: "patternType" (linear|fibonacci|geometric)
+   */
+  private boolean evaluateSequentialAmountPattern(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String patternType = condition.getValueSingle() != null ? 
+          condition.getValueSingle().trim().toLowerCase() : "linear";
+      
+      Object patternObj = payload.get("sequential_pattern_" + patternType);
+      if (patternObj == null) {
+        patternObj = payload.get("hasSequentialAmountPattern");
+      }
+      
+      return Boolean.TRUE.equals(patternObj) || "true".equalsIgnoreCase(String.valueOf(patternObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SEQUENTIAL_AMOUNT_PATTERN: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * AMOUNT_VARIANCE_ANOMALY: Anomalia de variância de valores.
+   * Formato valueSingle: "zScoreThreshold" (ex: "3.0")
+   */
+  private boolean evaluateAmountVarianceAnomaly(RuleCondition condition, EvaluationContext context) {
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      
+      double zScoreThreshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), 
+          VelocityService.KeyType.PAN, 
+          VelocityService.TimeWindow.DAY_30);
+      
+      BigDecimal currentAmount = context.getTransactionRequest().getTransactionAmount();
+      BigDecimal avgAmount = stats.getAvgAmount();
+      BigDecimal stdDev = stats.getStdDevAmount();
+      
+      if (stdDev == null || stdDev.compareTo(BigDecimal.ZERO) == 0) {
+        return false;
+      }
+      
+      double zScore = currentAmount.subtract(avgAmount).divide(stdDev, 4, java.math.RoundingMode.HALF_UP).doubleValue();
+      return Math.abs(zScore) > zScoreThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar AMOUNT_VARIANCE_ANOMALY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * DAILY_LIMIT_PROXIMITY: Proximidade do limite diário.
+   * Formato valueSingle: "percentageThreshold" (ex: "90" = 90% do limite)
+   */
+  private boolean evaluateDailyLimitProximity(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double percentageThreshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object usedObj = payload.get("daily_limit_used_percentage");
+      if (usedObj == null) {
+        usedObj = payload.get("dailyLimitUsagePercentage");
+      }
+      
+      double usedPercentage = usedObj instanceof Number ? ((Number) usedObj).doubleValue() : 0.0;
+      return usedPercentage >= percentageThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar DAILY_LIMIT_PROXIMITY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * WEEKLY_LIMIT_PROXIMITY: Proximidade do limite semanal.
+   * Formato valueSingle: "percentageThreshold" (ex: "85" = 85% do limite)
+   */
+  private boolean evaluateWeeklyLimitProximity(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double percentageThreshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object usedObj = payload.get("weekly_limit_used_percentage");
+      if (usedObj == null) {
+        usedObj = payload.get("weeklyLimitUsagePercentage");
+      }
+      
+      double usedPercentage = usedObj instanceof Number ? ((Number) usedObj).doubleValue() : 0.0;
+      return usedPercentage >= percentageThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar WEEKLY_LIMIT_PROXIMITY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // --- CATEGORIA N: Temporal Velocity Avançado (8) ---
+
+  /**
+   * TIME_BETWEEN_CONSECUTIVE_TX: Tempo entre transações consecutivas.
+   * Formato valueSingle: "minSeconds" (ex: "5" = mínimo 5 segundos)
+   */
+  private boolean evaluateTimeBetweenConsecutiveTx(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int minSeconds = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object secondsObj = payload.get("seconds_since_last_transaction");
+      if (secondsObj == null) {
+        secondsObj = payload.get("timeSinceLastTxSeconds");
+      }
+      
+      int seconds = secondsObj instanceof Number ? ((Number) secondsObj).intValue() : Integer.MAX_VALUE;
+      return seconds < minSeconds;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar TIME_BETWEEN_CONSECUTIVE_TX: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * TRANSACTION_FREQUENCY_ANOMALY: Anomalia de frequência de transações.
+   * Formato valueSingle: "multiplier" (ex: "3.0" = 3x a frequência normal)
+   */
+  private boolean evaluateTransactionFrequencyAnomaly(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double multiplier = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object ratioObj = payload.get("transaction_frequency_ratio");
+      if (ratioObj == null) {
+        ratioObj = payload.get("frequencyAnomalyRatio");
+      }
+      
+      double ratio = ratioObj instanceof Number ? ((Number) ratioObj).doubleValue() : 1.0;
+      return ratio >= multiplier;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar TRANSACTION_FREQUENCY_ANOMALY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * TIME_OF_DAY_ANOMALY: Anomalia de horário do dia.
+   * Formato valueSingle: "deviationHours" (ex: "4" = 4 horas de desvio do padrão)
+   */
+  private boolean evaluateTimeOfDayAnomaly(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int deviationThreshold = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object deviationObj = payload.get("time_of_day_deviation_hours");
+      if (deviationObj == null) {
+        deviationObj = payload.get("hourDeviationFromUsual");
+      }
+      
+      int deviation = deviationObj instanceof Number ? ((Number) deviationObj).intValue() : 0;
+      return deviation >= deviationThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar TIME_OF_DAY_ANOMALY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * DORMANCY_ALERT_VELOCITY: Alerta de velocidade pós-dormência.
+   * Formato valueSingle: "dormancyDays|amountThreshold" (ex: "90|1000")
+   */
+  private boolean evaluateDormancyAlertVelocity(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int dormancyDays = Integer.parseInt(parts[0].trim());
+      double amountThreshold = parts.length > 1 ? Double.parseDouble(parts[1].trim()) : 0.0;
+      
+      Object daysSinceObj = payload.get("days_since_last_activity");
+      if (daysSinceObj == null) {
+        daysSinceObj = payload.get("daysSinceLastTransaction");
+      }
+      
+      int daysSince = daysSinceObj instanceof Number ? ((Number) daysSinceObj).intValue() : 0;
+      
+      if (daysSince >= dormancyDays) {
+        BigDecimal currentAmount = context.getTransactionRequest() != null ? 
+            context.getTransactionRequest().getTransactionAmount() : BigDecimal.ZERO;
+        return currentAmount.compareTo(BigDecimal.valueOf(amountThreshold)) >= 0;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar DORMANCY_ALERT_VELOCITY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * WEEKEND_VS_WEEKDAY_PATTERN: Padrão fim de semana vs dia útil.
+   * Formato valueSingle: "deviationThreshold" (percentual de desvio)
+   */
+  private boolean evaluateWeekendVsWeekdayPattern(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double deviationThreshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object deviationObj = payload.get("weekend_weekday_pattern_deviation");
+      if (deviationObj == null) {
+        deviationObj = payload.get("dayTypePatternDeviation");
+      }
+      
+      double deviation = deviationObj instanceof Number ? ((Number) deviationObj).doubleValue() : 0.0;
+      return deviation >= deviationThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar WEEKEND_VS_WEEKDAY_PATTERN: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * HOLIDAY_TRANSACTION_SPIKE: Spike de transações em feriados.
+   * Formato valueSingle: "multiplier" (ex: "2.0" = 2x do normal)
+   */
+  private boolean evaluateHolidayTransactionSpike(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double multiplier = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object isHolidayObj = payload.get("is_holiday");
+      boolean isHoliday = Boolean.TRUE.equals(isHolidayObj) || "true".equalsIgnoreCase(String.valueOf(isHolidayObj));
+      
+      if (!isHoliday) return false;
+      
+      Object spikeRatioObj = payload.get("holiday_transaction_ratio");
+      if (spikeRatioObj == null) {
+        spikeRatioObj = payload.get("holidayActivityRatio");
+      }
+      
+      double spikeRatio = spikeRatioObj instanceof Number ? ((Number) spikeRatioObj).doubleValue() : 1.0;
+      return spikeRatio >= multiplier;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar HOLIDAY_TRANSACTION_SPIKE: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * NIGHTTIME_TRANSACTION_RATIO: Razão de transações noturnas.
+   * Formato valueSingle: "percentageThreshold|startHour|endHour" (ex: "50|22|6")
+   */
+  private boolean evaluateNighttimeTransactionRatio(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      double percentageThreshold = Double.parseDouble(parts[0].trim());
+      
+      Object ratioObj = payload.get("nighttime_transaction_percentage");
+      if (ratioObj == null) {
+        ratioObj = payload.get("nightTransactionPercentage");
+      }
+      
+      double ratio = ratioObj instanceof Number ? ((Number) ratioObj).doubleValue() : 0.0;
+      return ratio >= percentageThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar NIGHTTIME_TRANSACTION_RATIO: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * BUSINESS_HOURS_DEVIATION: Desvio do horário comercial.
+   * Formato valueSingle: "outsideBusinessHours" (true/false)
+   */
+  private boolean evaluateBusinessHoursDeviation(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object isOutsideObj = payload.get("is_outside_business_hours");
+      if (isOutsideObj == null) {
+        isOutsideObj = payload.get("outsideBusinessHours");
+      }
+      
+      return Boolean.TRUE.equals(isOutsideObj) || "true".equalsIgnoreCase(String.valueOf(isOutsideObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar BUSINESS_HOURS_DEVIATION: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // --- CATEGORIA O: Device Fingerprint Avançado (10) ---
+
+  /**
+   * DEVICE_TRUST_SCORE: Score de confiança do dispositivo.
+   * Formato valueSingle: "minScore" (ex: "70" = score mínimo de 70)
+   */
+  private boolean evaluateDeviceTrustScore(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double minScore = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object scoreObj = payload.get("device_trust_score");
+      if (scoreObj == null) {
+        scoreObj = payload.get("deviceReputationScore");
+      }
+      
+      double score = scoreObj instanceof Number ? ((Number) scoreObj).doubleValue() : 100.0;
+      return score < minScore;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar DEVICE_TRUST_SCORE: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * CANVAS_FINGERPRINT_MISMATCH: Incompatibilidade de fingerprint canvas.
+   */
+  private boolean evaluateCanvasFingerprintMismatch(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object mismatchObj = payload.get("canvas_fingerprint_mismatch");
+      if (mismatchObj == null) {
+        mismatchObj = payload.get("canvasMismatch");
+      }
+      
+      return Boolean.TRUE.equals(mismatchObj) || "true".equalsIgnoreCase(String.valueOf(mismatchObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CANVAS_FINGERPRINT_MISMATCH: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * WEBGL_FINGERPRINT_ANOMALY: Anomalia de fingerprint WebGL.
+   */
+  private boolean evaluateWebglFingerprintAnomaly(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object anomalyObj = payload.get("webgl_fingerprint_anomaly");
+      if (anomalyObj == null) {
+        anomalyObj = payload.get("webglAnomaly");
+      }
+      
+      return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar WEBGL_FINGERPRINT_ANOMALY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * AUDIO_FINGERPRINT_NEW: Fingerprint de áudio novo/desconhecido.
+   */
+  private boolean evaluateAudioFingerprintNew(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object isNewObj = payload.get("audio_fingerprint_new");
+      if (isNewObj == null) {
+        isNewObj = payload.get("audioFingerprintIsNew");
+      }
+      
+      return Boolean.TRUE.equals(isNewObj) || "true".equalsIgnoreCase(String.valueOf(isNewObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar AUDIO_FINGERPRINT_NEW: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * FONTS_FINGERPRINT_ANOMALY: Anomalia de fingerprint de fontes.
+   */
+  private boolean evaluateFontsFingerprintAnomaly(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object anomalyObj = payload.get("fonts_fingerprint_anomaly");
+      if (anomalyObj == null) {
+        anomalyObj = payload.get("fontsAnomaly");
+      }
+      
+      return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar FONTS_FINGERPRINT_ANOMALY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * SCREEN_RESOLUTION_CHANGE: Mudança de resolução de tela.
+   */
+  private boolean evaluateScreenResolutionChange(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object changedObj = payload.get("screen_resolution_changed");
+      if (changedObj == null) {
+        changedObj = payload.get("screenResolutionChanged");
+      }
+      
+      return Boolean.TRUE.equals(changedObj) || "true".equalsIgnoreCase(String.valueOf(changedObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SCREEN_RESOLUTION_CHANGE: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * BATTERY_LEVEL_ANOMALY: Anomalia de nível de bateria (ex: sempre 100%).
+   */
+  private boolean evaluateBatteryLevelAnomaly(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object anomalyObj = payload.get("battery_level_anomaly");
+      if (anomalyObj == null) {
+        anomalyObj = payload.get("batteryAnomaly");
+      }
+      
+      return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar BATTERY_LEVEL_ANOMALY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * HARDWARE_CONCURRENCY_MISMATCH: Incompatibilidade de concorrência de hardware.
+   */
+  private boolean evaluateHardwareConcurrencyMismatch(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object mismatchObj = payload.get("hardware_concurrency_mismatch");
+      if (mismatchObj == null) {
+        mismatchObj = payload.get("hardwareConcurrencyMismatch");
+      }
+      
+      return Boolean.TRUE.equals(mismatchObj) || "true".equalsIgnoreCase(String.valueOf(mismatchObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar HARDWARE_CONCURRENCY_MISMATCH: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * TOUCH_SUPPORT_INCONSISTENCY: Inconsistência de suporte touch.
+   */
+  private boolean evaluateTouchSupportInconsistency(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object inconsistencyObj = payload.get("touch_support_inconsistency");
+      if (inconsistencyObj == null) {
+        inconsistencyObj = payload.get("touchSupportInconsistency");
+      }
+      
+      return Boolean.TRUE.equals(inconsistencyObj) || "true".equalsIgnoreCase(String.valueOf(inconsistencyObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar TOUCH_SUPPORT_INCONSISTENCY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * DEVICE_MEMORY_ANOMALY: Anomalia de memória do dispositivo.
+   */
+  private boolean evaluateDeviceMemoryAnomaly(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object anomalyObj = payload.get("device_memory_anomaly");
+      if (anomalyObj == null) {
+        anomalyObj = payload.get("deviceMemoryAnomaly");
+      }
+      
+      return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar DEVICE_MEMORY_ANOMALY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Método auxiliar genérico para operadores de velocidade.
+   */
+  private boolean evaluateVelocityOperator(
+      RuleCondition condition, 
+      EvaluationContext context,
+      VelocityService.KeyType keyType,
+      VelocityService.TimeWindow window,
+      VelocityService.AggregationType aggregationType) {
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      
+      BigDecimal threshold = new BigDecimal(condition.getValueSingle().trim());
+      
+      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), keyType, window);
+      
+      BigDecimal value = switch (aggregationType) {
+        case COUNT -> BigDecimal.valueOf(stats.getTransactionCount());
+        case SUM -> stats.getTotalAmount();
+        case AVG -> stats.getAvgAmount();
+        case MAX -> stats.getMaxAmount();
+        case MIN -> stats.getMinAmount();
+        default -> BigDecimal.ZERO;
+      };
+      
+      return value.compareTo(threshold) > 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar operador de velocidade: {}", e.getMessage());
+      return false;
     }
   }
 }
