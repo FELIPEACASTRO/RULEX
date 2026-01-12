@@ -9,6 +9,8 @@ import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
 import com.rulex.util.RegexValidator;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -614,6 +616,80 @@ public class ComplexRuleEvaluator {
       case MERCHANT_DORMANT_REACTIVATION -> evaluateMerchantDormantReactivation(condition, context);
       case MERCHANT_CROSS_BORDER_RATIO -> evaluateMerchantCrossBorderRatio(condition, context);
       case MERCHANT_HIGH_VALUE_FREQUENCY -> evaluateMerchantHighValueFrequency(condition, context);
+
+        // ========== CATEGORIA S: FATF AML Typologies (28) ==========
+      case FATF_PLACEMENT_CASH_INTENSIVE -> evaluateFatfPlacementCashIntensive(condition, context);
+      case FATF_PLACEMENT_STRUCTURING -> evaluateFatfPlacementStructuring(condition, context);
+      case FATF_PLACEMENT_SMURFING -> evaluateFatfPlacementSmurfing(condition, context);
+      case FATF_PLACEMENT_CURRENCY_EXCHANGE -> evaluateFatfPlacementCurrencyExchange(condition, context);
+      case FATF_PLACEMENT_CASINO_GAMBLING -> evaluateFatfPlacementCasinoGambling(condition, context);
+      case FATF_LAYERING_RAPID_MOVEMENT -> evaluateFatfLayeringRapidMovement(condition, context);
+      case FATF_LAYERING_SHELL_COMPANY -> evaluateFatfLayeringShellCompany(condition, context);
+      case FATF_LAYERING_OFFSHORE -> evaluateFatfLayeringOffshore(condition, context);
+      case FATF_LAYERING_WIRE_CHAINS -> evaluateFatfLayeringWireChains(condition, context);
+      case FATF_LAYERING_CONVERTIBLE_INSTRUMENTS -> evaluateFatfLayeringConvertibleInstruments(condition, context);
+      case FATF_INTEGRATION_REAL_ESTATE -> evaluateFatfIntegrationRealEstate(condition, context);
+      case FATF_INTEGRATION_LUXURY_GOODS -> evaluateFatfIntegrationLuxuryGoods(condition, context);
+      case FATF_INTEGRATION_BUSINESS_INVESTMENT -> evaluateFatfIntegrationBusinessInvestment(condition, context);
+      case FATF_INTEGRATION_LOAN_REPAYMENT -> evaluateFatfIntegrationLoanRepayment(condition, context);
+      case FATF_TBML_OVER_INVOICING -> evaluateFatfTbmlOverInvoicing(condition, context);
+      case FATF_TBML_UNDER_INVOICING -> evaluateFatfTbmlUnderInvoicing(condition, context);
+      case FATF_TBML_PHANTOM_SHIPPING -> evaluateFatfTbmlPhantomShipping(condition, context);
+      case FATF_TBML_MULTIPLE_INVOICING -> evaluateFatfTbmlMultipleInvoicing(condition, context);
+      case FATF_TBML_FALSE_DESCRIPTION -> evaluateFatfTbmlFalseDescription(condition, context);
+      case FATF_HAWALA_INFORMAL -> evaluateFatfHawalaInformal(condition, context);
+      case FATF_NEW_PAYMENT_EXPLOITATION -> evaluateFatfNewPaymentExploitation(condition, context);
+      case FATF_CRYPTO_MIXING -> evaluateFatfCryptoMixing(condition, context);
+      case FATF_CRYPTO_ATM_CASHOUT -> evaluateFatfCryptoAtmCashout(condition, context);
+      case FATF_PEP_TRANSACTION -> evaluateFatfPepTransaction(condition, context);
+      case FATF_CORRESPONDENT_LAYERING -> evaluateFatfCorrespondentLayering(condition, context);
+      case FATF_ROUND_TRIPPING -> evaluateFatfRoundTripping(condition, context);
+      case FATF_BLACK_MARKET_EXCHANGE -> evaluateFatfBlackMarketExchange(condition, context);
+      case FATF_INSURANCE_CASH_VALUE -> evaluateFatfInsuranceCashValue(condition, context);
+
+        // ========== CATEGORIA T: PSD2 SCA Exemptions (12) ==========
+      case SCA_LOW_VALUE_EXEMPTION -> evaluateScaLowValueExemption(condition, context);
+      case SCA_CONTACTLESS_EXEMPTION -> evaluateScaContactlessExemption(condition, context);
+      case SCA_TRA_EXEMPTION -> evaluateScaTraExemption(condition, context);
+      case SCA_TRUSTED_BENEFICIARY -> evaluateScaTrustedBeneficiary(condition, context);
+      case SCA_RECURRING_TRANSACTION -> evaluateScaRecurringTransaction(condition, context);
+      case SCA_MERCHANT_INITIATED -> evaluateScaMerchantInitiated(condition, context);
+      case SCA_CORPORATE_PAYMENT -> evaluateScaCorporatePayment(condition, context);
+      case SCA_SECURE_CORPORATE_PROTOCOL -> evaluateScaSecureCorporateProtocol(condition, context);
+      case SCA_LIABILITY_SHIFT -> evaluateScaLiabilityShift(condition, context);
+      case SCA_DYNAMIC_3DS_ROUTING -> evaluateScaDynamic3dsRouting(condition, context);
+      case SCA_FRAUD_RATE_MONITORING -> evaluateScaFraudRateMonitoring(condition, context);
+      case SCA_CHALLENGE_MANDATORY -> evaluateScaChallengeMandatory(condition, context);
+
+        // ========== CATEGORIA U: Platform Best Practices (28) ==========
+      case PLT_BEHAVIOR_SORTED_LISTS -> evaluatePltBehaviorSortedLists(condition, context);
+      case PLT_BUSINESS_RULES_SCENARIO -> evaluatePltBusinessRulesScenario(condition, context);
+      case PLT_IDENTITY_RESOLUTION -> evaluatePltIdentityResolution(condition, context);
+      case PLT_COMPROMISE_MANAGER -> evaluatePltCompromiseManager(condition, context);
+      case PLT_INTELLIGENCE_NETWORK -> evaluatePltIntelligenceNetwork(condition, context);
+      case PLT_RULES_MODELS_HYBRID -> evaluatePltRulesModelsHybrid(condition, context);
+      case PLT_BEHAVIORAL_PROFILING -> evaluatePltBehavioralProfiling(condition, context);
+      case PLT_NETWORK_ANALYTICS -> evaluatePltNetworkAnalytics(condition, context);
+      case PLT_SAR_AUTOMATED -> evaluatePltSarAutomated(condition, context);
+      case PLT_DS2_RULE_ENGINE -> evaluatePltDs2RuleEngine(condition, context);
+      case PLT_REAL_TIME_DETECTION -> evaluatePltRealTimeDetection(condition, context);
+      case PLT_NETWORK_ENTITY_RESOLUTION -> evaluatePltNetworkEntityResolution(condition, context);
+      case PLT_SCENARIO_SCORECARD -> evaluatePltScenarioScorecard(condition, context);
+      case PLT_RADAR_RULE_BACKTESTING -> evaluatePltRadarRuleBacktesting(condition, context);
+      case PLT_RADAR_METADATA_MATCHING -> evaluatePltRadarMetadataMatching(condition, context);
+      case PLT_RADAR_INLINE_LISTS -> evaluatePltRadarInlineLists(condition, context);
+      case PLT_RADAR_COMPLEX_CONDITIONS -> evaluatePltRadarComplexConditions(condition, context);
+      case PLT_RISK_PROFILE_ASSIGNMENT -> evaluatePltRiskProfileAssignment(condition, context);
+      case PLT_CUSTOM_RULE_BUILDER -> evaluatePltCustomRuleBuilder(condition, context);
+      case PLT_RISK_LIST_COMPARISON -> evaluatePltRiskListComparison(condition, context);
+      case PLT_BACKTESTING_LABELING -> evaluatePltBacktestingLabeling(condition, context);
+      case PLT_ML_FRAUD_RISK_OUTCOME -> evaluatePltMlFraudRiskOutcome(condition, context);
+      case PLT_RISK_SCORE_CALCULATION -> evaluatePltRiskScoreCalculation(condition, context);
+      case PLT_VELOCITY_FILTERS -> evaluatePltVelocityFilters(condition, context);
+      case PLT_LINKING_VELOCITY -> evaluatePltLinkingVelocity(condition, context);
+      case PLT_BAD_ENTITY_NETWORK -> evaluatePltBadEntityNetwork(condition, context);
+      case PLT_REVIEWLIST_QUEUE -> evaluatePltReviewlistQueue(condition, context);
+      case PLT_CONSORTIUM_DATA_CHECK -> evaluatePltConsortiumDataCheck(condition, context);
 
       default -> {
         log.warn("Operador não implementado: {}", operator);
@@ -3123,424 +3199,1835 @@ public class ComplexRuleEvaluator {
   // ========== OPERADORES V31+ (82 stubs) - CATEGORIAS A-K ==========
 
   // --- CATEGORIA A: Velocity Avançado (10) ---
+  
+  /**
+   * VELOCITY_CROSS_CHANNEL: Detecta velocidade entre diferentes canais.
+   * Formato valueSingle: "threshold|channelField" (ex: "5|channel_type")
+   */
   private boolean evaluateVelocityCrossChannel(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ VELOCITY_CROSS_CHANNEL: implementação pendente");
-    return false;
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int threshold = Integer.parseInt(parts[0].trim());
+      
+      Object channelsObj = payload.get("cross_channel_count");
+      if (channelsObj == null) channelsObj = payload.get("distinctChannels");
+      
+      int channelCount = channelsObj instanceof Number ? ((Number) channelsObj).intValue() : 1;
+      return channelCount > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar VELOCITY_CROSS_CHANNEL: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * VELOCITY_ROLLING_WINDOW: Velocidade com janela móvel customizada.
+   * Formato valueSingle: "threshold|minutes" (ex: "10|30")
+   */
   private boolean evaluateVelocityRollingWindow(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ VELOCITY_ROLLING_WINDOW: implementação pendente");
-    return false;
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      long threshold = Long.parseLong(parts[0].trim());
+      int minutes = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 60;
+      
+      VelocityService.TimeWindow window = parseTimeWindow(minutes);
+      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
+      
+      return stats.getTransactionCount() > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar VELOCITY_ROLLING_WINDOW: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * VELOCITY_PERCENTILE: Verifica se transação está acima de determinado percentil.
+   * Formato valueSingle: "percentile" (ex: "95" = acima do P95)
+   */
   private boolean evaluateVelocityPercentile(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ VELOCITY_PERCENTILE: implementação pendente");
-    return false;
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      
+      double percentileThreshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), VelocityService.KeyType.PAN, 
+          VelocityService.TimeWindow.HOUR_24);
+      
+      BigDecimal avg = stats.getAvgAmount();
+      BigDecimal stdDev = stats.getStdDevAmount();
+      BigDecimal txAmount = context.getTransactionRequest().getTransactionAmount();
+      
+      if (avg == null || stdDev == null || stdDev.compareTo(BigDecimal.ZERO) == 0) return false;
+      
+      // Usar Z-score para aproximar percentil
+      double zScore = txAmount.subtract(avg).divide(stdDev, 4, RoundingMode.HALF_UP).doubleValue();
+      double percentile = 50 + (50 * Math.tanh(zScore / 2)); // Aproximação
+      
+      return percentile > percentileThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar VELOCITY_PERCENTILE: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * VELOCITY_RATIO_GT: Razão entre velocidade atual e histórica.
+   * Formato valueSingle: "ratio" (ex: "2.0" = 2x a velocidade normal)
+   */
   private boolean evaluateVelocityRatioGt(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ VELOCITY_RATIO_GT: implementação pendente");
-    return false;
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      
+      double ratioThreshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      VelocityService.VelocityStats statsHour = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), VelocityService.KeyType.PAN, 
+          VelocityService.TimeWindow.HOUR_1);
+      VelocityService.VelocityStats stats24h = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), VelocityService.KeyType.PAN, 
+          VelocityService.TimeWindow.HOUR_24);
+      
+      long countHour = statsHour.getTransactionCount();
+      long count24h = stats24h.getTransactionCount();
+      
+      if (count24h == 0) return false;
+      
+      double avgHourly = count24h / 24.0;
+      double ratio = avgHourly > 0 ? countHour / avgHourly : 0;
+      
+      return ratio > ratioThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar VELOCITY_RATIO_GT: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * VELOCITY_TREND: Detecta tendência de aumento na velocidade.
+   * Formato valueSingle: "direction|threshold" (ex: "UP|1.5")
+   */
   private boolean evaluateVelocityTrend(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ VELOCITY_TREND: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      String direction = parts[0].trim().toUpperCase();
+      double threshold = parts.length > 1 ? Double.parseDouble(parts[1].trim()) : 1.5;
+      
+      Object trendObj = payload.get("velocity_trend_ratio");
+      if (trendObj == null) trendObj = payload.get("velocityTrendRatio");
+      
+      double trendRatio = trendObj instanceof Number ? ((Number) trendObj).doubleValue() : 1.0;
+      
+      if ("UP".equals(direction)) {
+        return trendRatio > threshold;
+      } else if ("DOWN".equals(direction)) {
+        return trendRatio < (1.0 / threshold);
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar VELOCITY_TREND: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * COUNT_UNIQUE_BENEFICIARIES_LAST_N_DAYS: Conta beneficiários únicos em N dias.
+   * Formato valueSingle: "threshold|days" (ex: "10|7")
+   */
   private boolean evaluateCountUniqueBeneficiariesLastNDays(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ COUNT_UNIQUE_BENEFICIARIES_LAST_N_DAYS: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int threshold = Integer.parseInt(parts[0].trim());
+      
+      Object countObj = payload.get("unique_beneficiaries_count");
+      if (countObj == null) countObj = payload.get("uniqueBeneficiariesCount");
+      
+      int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
+      return count > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_UNIQUE_BENEFICIARIES_LAST_N_DAYS: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * COUNT_UNIQUE_IPS_LAST_N_HOURS: Conta IPs únicos em N horas.
+   * Formato valueSingle: "threshold|hours" (ex: "5|24")
+   */
   private boolean evaluateCountUniqueIpsLastNHours(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ COUNT_UNIQUE_IPS_LAST_N_HOURS: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int threshold = Integer.parseInt(parts[0].trim());
+      
+      Object countObj = payload.get("unique_ips_count");
+      if (countObj == null) countObj = payload.get("uniqueIpsCount");
+      
+      int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
+      return count > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_UNIQUE_IPS_LAST_N_HOURS: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * SUM_BY_CHANNEL_LAST_N_DAYS: Soma valores por canal em N dias.
+   * Formato valueSingle: "threshold|channel|days" (ex: "50000|PIX|7")
+   */
   private boolean evaluateSumByChannelLastNDays(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ SUM_BY_CHANNEL_LAST_N_DAYS: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      double threshold = Double.parseDouble(parts[0].trim());
+      String channel = parts.length > 1 ? parts[1].trim().toUpperCase() : "ALL";
+      
+      String key = "sum_by_channel_" + channel.toLowerCase();
+      Object sumObj = payload.get(key);
+      if (sumObj == null) sumObj = payload.get("sumByChannel" + channel);
+      
+      double sum = sumObj instanceof Number ? ((Number) sumObj).doubleValue() : 0.0;
+      return sum > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SUM_BY_CHANNEL_LAST_N_DAYS: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * AVG_INTERVAL_BETWEEN_TXN: Intervalo médio entre transações.
+   * Formato valueSingle: "minSeconds" (ex: "30" = mínimo 30s entre txns)
+   */
   private boolean evaluateAvgIntervalBetweenTxn(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ AVG_INTERVAL_BETWEEN_TXN: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double minSeconds = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object intervalObj = payload.get("avg_interval_seconds");
+      if (intervalObj == null) intervalObj = payload.get("avgIntervalSeconds");
+      
+      double avgInterval = intervalObj instanceof Number ? ((Number) intervalObj).doubleValue() : Double.MAX_VALUE;
+      return avgInterval < minSeconds;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar AVG_INTERVAL_BETWEEN_TXN: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * VELOCITY_ACCELERATION: Detecta aceleração na frequência de transações.
+   * Formato valueSingle: "accelerationThreshold" (ex: "2.0" = aceleração 2x)
+   */
   private boolean evaluateVelocityAcceleration(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ VELOCITY_ACCELERATION: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object accelObj = payload.get("velocity_acceleration");
+      if (accelObj == null) accelObj = payload.get("velocityAcceleration");
+      
+      double acceleration = accelObj instanceof Number ? ((Number) accelObj).doubleValue() : 1.0;
+      return acceleration > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar VELOCITY_ACCELERATION: {}", e.getMessage());
+      return false;
+    }
   }
 
   // --- CATEGORIA B: Behavioral Rules (8) ---
+  
+  /**
+   * DORMANCY_REVIVAL: Detecta conta reativada após período de dormência.
+   * Formato valueSingle: "dormancyDays|txThreshold" (ex: "90|3")
+   */
   private boolean evaluateDormancyRevival(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ DORMANCY_REVIVAL: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int dormancyDays = Integer.parseInt(parts[0].trim());
+      int txThreshold = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 3;
+      
+      Object lastActivityObj = payload.get("days_since_last_activity");
+      if (lastActivityObj == null) lastActivityObj = payload.get("daysSinceLastActivity");
+      
+      Object recentTxObj = payload.get("recent_tx_count");
+      if (recentTxObj == null) recentTxObj = payload.get("recentTxCount");
+      
+      int daysSinceActivity = lastActivityObj instanceof Number ? ((Number) lastActivityObj).intValue() : 0;
+      int recentTxCount = recentTxObj instanceof Number ? ((Number) recentTxObj).intValue() : 0;
+      
+      return daysSinceActivity > dormancyDays && recentTxCount >= txThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar DORMANCY_REVIVAL: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * AMOUNT_DEVIATION_FROM_AVG: Desvio do valor médio histórico.
+   * Formato valueSingle: "deviationMultiplier" (ex: "3.0" = 3x desvio padrão)
+   */
   private boolean evaluateAmountDeviationFromAvg(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ AMOUNT_DEVIATION_FROM_AVG: implementação pendente");
-    return false;
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      
+      double multiplier = Double.parseDouble(condition.getValueSingle().trim());
+      
+      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), VelocityService.KeyType.PAN, 
+          VelocityService.TimeWindow.HOUR_24);
+      
+      BigDecimal avg = stats.getAvgAmount();
+      BigDecimal stdDev = stats.getStdDevAmount();
+      BigDecimal txAmount = context.getTransactionRequest().getTransactionAmount();
+      
+      if (avg == null || stdDev == null || stdDev.compareTo(BigDecimal.ZERO) == 0) return false;
+      
+      BigDecimal deviation = txAmount.subtract(avg).abs();
+      BigDecimal threshold = stdDev.multiply(BigDecimal.valueOf(multiplier));
+      
+      return deviation.compareTo(threshold) > 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar AMOUNT_DEVIATION_FROM_AVG: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * TIME_DEVIATION_FROM_USUAL: Desvio do horário usual de transações.
+   * Formato valueSingle: "hoursDeviation" (ex: "4" = 4 horas fora do padrão)
+   */
   private boolean evaluateTimeDeviationFromUsual(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ TIME_DEVIATION_FROM_USUAL: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int hoursThreshold = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object deviationObj = payload.get("time_deviation_hours");
+      if (deviationObj == null) deviationObj = payload.get("timeDeviationHours");
+      
+      double deviation = deviationObj instanceof Number ? ((Number) deviationObj).doubleValue() : 0.0;
+      return Math.abs(deviation) > hoursThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar TIME_DEVIATION_FROM_USUAL: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * MERCHANT_DEVIATION: Detecta merchant fora do padrão usual do cliente.
+   * Formato valueSingle: "true" (verifica se merchant é novo/incomum)
+   */
   private boolean evaluateMerchantDeviation(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ MERCHANT_DEVIATION: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object deviationObj = payload.get("merchant_is_unusual");
+      if (deviationObj == null) deviationObj = payload.get("merchantIsUnusual");
+      if (deviationObj == null) deviationObj = payload.get("new_merchant");
+      
+      return Boolean.TRUE.equals(deviationObj) || "true".equalsIgnoreCase(String.valueOf(deviationObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_DEVIATION: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * MICRO_TRANSACTION_TEST: Detecta teste com micro-transação.
+   * Formato valueSingle: "maxAmount|count" (ex: "1.00|3")
+   */
   private boolean evaluateMicroTransactionTest(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ MICRO_TRANSACTION_TEST: implementação pendente");
-    return false;
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      double maxAmount = Double.parseDouble(parts[0].trim());
+      int countThreshold = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 2;
+      
+      BigDecimal txAmount = context.getTransactionRequest().getTransactionAmount();
+      
+      Object microCountObj = payload.get("micro_tx_count");
+      if (microCountObj == null) microCountObj = payload.get("microTxCount");
+      
+      int microCount = microCountObj instanceof Number ? ((Number) microCountObj).intValue() : 0;
+      
+      boolean isMicro = txAmount.doubleValue() <= maxAmount;
+      return isMicro && microCount >= countThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MICRO_TRANSACTION_TEST: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * LOCATION_DEVIATION: Detecta localização fora do padrão.
+   * Formato valueSingle: "kmThreshold" (ex: "100" = 100km da localização usual)
+   */
   private boolean evaluateLocationDeviation(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ LOCATION_DEVIATION: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double kmThreshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object distanceObj = payload.get("distance_from_usual_km");
+      if (distanceObj == null) distanceObj = payload.get("distanceFromUsualKm");
+      
+      double distance = distanceObj instanceof Number ? ((Number) distanceObj).doubleValue() : 0.0;
+      return distance > kmThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar LOCATION_DEVIATION: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * CHANNEL_SWITCH_PATTERN: Detecta troca suspeita de canal.
+   * Formato valueSingle: "switchCount|hours" (ex: "3|1")
+   */
   private boolean evaluateChannelSwitchPattern(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ CHANNEL_SWITCH_PATTERN: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int switchThreshold = Integer.parseInt(parts[0].trim());
+      
+      Object switchCountObj = payload.get("channel_switch_count");
+      if (switchCountObj == null) switchCountObj = payload.get("channelSwitchCount");
+      
+      int switchCount = switchCountObj instanceof Number ? ((Number) switchCountObj).intValue() : 0;
+      return switchCount >= switchThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CHANNEL_SWITCH_PATTERN: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * BENEFICIARY_REUSE_PATTERN: Detecta padrão de reutilização de beneficiário.
+   * Formato valueSingle: "reuseThreshold" (ex: "5" = mesmo beneficiário 5x)
+   */
   private boolean evaluateBeneficiaryReusePattern(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ BENEFICIARY_REUSE_PATTERN: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int reuseThreshold = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object reuseCountObj = payload.get("beneficiary_reuse_count");
+      if (reuseCountObj == null) reuseCountObj = payload.get("beneficiaryReuseCount");
+      
+      int reuseCount = reuseCountObj instanceof Number ? ((Number) reuseCountObj).intValue() : 0;
+      return reuseCount >= reuseThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar BENEFICIARY_REUSE_PATTERN: {}", e.getMessage());
+      return false;
+    }
   }
 
   // --- CATEGORIA C: Graph/Network (8) ---
+  
+  /**
+   * FAN_OUT_COUNT: Conta destinatários únicos de um remetente.
+   * Formato valueSingle: "threshold|hours" (ex: "10|24")
+   */
   private boolean evaluateFanOutCount(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ FAN_OUT_COUNT: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int threshold = Integer.parseInt(parts[0].trim());
+      
+      Object fanOutObj = payload.get("fan_out_count");
+      if (fanOutObj == null) fanOutObj = payload.get("fanOutCount");
+      
+      int fanOut = fanOutObj instanceof Number ? ((Number) fanOutObj).intValue() : 0;
+      return fanOut > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar FAN_OUT_COUNT: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * FAN_IN_COUNT: Conta remetentes únicos para um destinatário.
+   * Formato valueSingle: "threshold|hours" (ex: "10|24")
+   */
   private boolean evaluateFanInCount(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ FAN_IN_COUNT: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int threshold = Integer.parseInt(parts[0].trim());
+      
+      Object fanInObj = payload.get("fan_in_count");
+      if (fanInObj == null) fanInObj = payload.get("fanInCount");
+      
+      int fanIn = fanInObj instanceof Number ? ((Number) fanInObj).intValue() : 0;
+      return fanIn > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar FAN_IN_COUNT: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * SHARED_DEVICE_COUNT: Conta contas usando o mesmo dispositivo.
+   * Formato valueSingle: "threshold" (ex: "3")
+   */
   private boolean evaluateSharedDeviceCount(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ SHARED_DEVICE_COUNT: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int threshold = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object sharedObj = payload.get("shared_device_accounts");
+      if (sharedObj == null) sharedObj = payload.get("sharedDeviceAccounts");
+      
+      int sharedCount = sharedObj instanceof Number ? ((Number) sharedObj).intValue() : 0;
+      return sharedCount > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SHARED_DEVICE_COUNT: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * SHARED_IP_COUNT: Conta contas usando o mesmo IP.
+   * Formato valueSingle: "threshold" (ex: "5")
+   */
   private boolean evaluateSharedIpCount(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ SHARED_IP_COUNT: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int threshold = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object sharedObj = payload.get("shared_ip_accounts");
+      if (sharedObj == null) sharedObj = payload.get("sharedIpAccounts");
+      
+      int sharedCount = sharedObj instanceof Number ? ((Number) sharedObj).intValue() : 0;
+      return sharedCount > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SHARED_IP_COUNT: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * ACCOUNT_LINK_DEPTH: Profundidade de links entre contas.
+   * Formato valueSingle: "maxDepth" (ex: "3" = 3 saltos)
+   */
   private boolean evaluateAccountLinkDepth(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ ACCOUNT_LINK_DEPTH: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int maxDepth = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object depthObj = payload.get("account_link_depth");
+      if (depthObj == null) depthObj = payload.get("accountLinkDepth");
+      
+      int depth = depthObj instanceof Number ? ((Number) depthObj).intValue() : 0;
+      return depth >= maxDepth;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar ACCOUNT_LINK_DEPTH: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * CIRCULAR_TRANSFER_DETECTION: Detecta transferências circulares.
+   * Formato valueSingle: "true" (verifica se há ciclo)
+   */
   private boolean evaluateCircularTransferDetection(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ CIRCULAR_TRANSFER_DETECTION: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object circularObj = payload.get("circular_transfer_detected");
+      if (circularObj == null) circularObj = payload.get("circularTransferDetected");
+      
+      return Boolean.TRUE.equals(circularObj) || "true".equalsIgnoreCase(String.valueOf(circularObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CIRCULAR_TRANSFER_DETECTION: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * RAPID_MULTI_HOP: Detecta múltiplos saltos rápidos.
+   * Formato valueSingle: "hops|minutes" (ex: "3|10")
+   */
   private boolean evaluateRapidMultiHop(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ RAPID_MULTI_HOP: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int hopThreshold = Integer.parseInt(parts[0].trim());
+      
+      Object hopCountObj = payload.get("rapid_hop_count");
+      if (hopCountObj == null) hopCountObj = payload.get("rapidHopCount");
+      
+      int hopCount = hopCountObj instanceof Number ? ((Number) hopCountObj).intValue() : 0;
+      return hopCount >= hopThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar RAPID_MULTI_HOP: {}", e.getMessage());
+      return false;
+    }
   }
 
+  /**
+   * BENEFICIARY_CONCENTRATION: Concentração de valores em poucos beneficiários.
+   * Formato valueSingle: "percentageThreshold" (ex: "80" = 80% para top 3)
+   */
   private boolean evaluateBeneficiaryConcentration(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ BENEFICIARY_CONCENTRATION: implementação pendente");
-    return false;
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double percentageThreshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object concentrationObj = payload.get("beneficiary_concentration_pct");
+      if (concentrationObj == null) concentrationObj = payload.get("beneficiaryConcentrationPct");
+      
+      double concentration = concentrationObj instanceof Number ? ((Number) concentrationObj).doubleValue() : 0.0;
+      return concentration > percentageThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar BENEFICIARY_CONCENTRATION: {}", e.getMessage());
+      return false;
+    }
   }
 
   // --- CATEGORIA D: Sanctions & Name Matching (7) ---
   private boolean evaluateOfacListCheck(Object fieldValue, RuleCondition condition) {
-    log.warn("Operador V31+ OFAC_LIST_CHECK: implementação pendente");
-    return false;
+    try {
+      if (fieldValue == null) return false;
+      String name = normalizeForMatch(String.valueOf(fieldValue));
+      if (name.isBlank()) return false;
+
+      List<String> list = condition.getValueArray();
+      if (list == null || list.isEmpty()) {
+        String csv = condition.getValueSingle();
+        if (csv == null || csv.isBlank()) return false;
+        list = Arrays.stream(csv.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isBlank())
+            .toList();
+      }
+
+      for (String entry : list) {
+        String normalizedEntry = normalizeForMatch(entry);
+        if (normalizedEntry.isBlank()) continue;
+        if (name.equals(normalizedEntry)) return true;
+        if (calculateSimilarity(name, normalizedEntry) >= 92) return true;
+      }
+
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar OFAC_LIST_CHECK: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluatePepListCheck(Object fieldValue, RuleCondition condition) {
-    log.warn("Operador V31+ PEP_LIST_CHECK: implementação pendente");
-    return false;
+    try {
+      if (fieldValue == null) return false;
+      String name = normalizeForMatch(String.valueOf(fieldValue));
+      if (name.isBlank()) return false;
+
+      List<String> list = condition.getValueArray();
+      if (list == null || list.isEmpty()) {
+        String csv = condition.getValueSingle();
+        if (csv == null || csv.isBlank()) return false;
+        list = Arrays.stream(csv.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isBlank())
+            .toList();
+      }
+
+      for (String entry : list) {
+        String normalizedEntry = normalizeForMatch(entry);
+        if (normalizedEntry.isBlank()) continue;
+        if (name.equals(normalizedEntry)) return true;
+        if (calculateSimilarity(name, normalizedEntry) >= 92) return true;
+      }
+
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar PEP_LIST_CHECK: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateAdverseMediaCheck(Object fieldValue, RuleCondition condition) {
-    log.warn("Operador V31+ ADVERSE_MEDIA_CHECK: implementação pendente");
-    return false;
+    try {
+      if (fieldValue == null) return false;
+
+      String text = normalizeForMatch(String.valueOf(fieldValue));
+      if (text.isBlank()) return false;
+
+      List<String> keywords = condition.getValueArray();
+      if (keywords == null || keywords.isEmpty()) {
+        String csv = condition.getValueSingle();
+        if (csv == null || csv.isBlank()) {
+          keywords = List.of(
+              "fraud",
+              "scam",
+              "money laundering",
+              "sanction",
+              "terror",
+              "corruption");
+        } else {
+          keywords = Arrays.stream(csv.split(","))
+              .map(String::trim)
+              .filter(s -> !s.isBlank())
+              .toList();
+        }
+      }
+
+      for (String kw : keywords) {
+        String needle = normalizeForMatch(kw);
+        if (needle.isBlank()) continue;
+        if (text.contains(needle)) return true;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar ADVERSE_MEDIA_CHECK: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateSanctionsCountryCheck(Object fieldValue, RuleCondition condition) {
-    log.warn("Operador V31+ SANCTIONS_COUNTRY_CHECK: implementação pendente");
-    return false;
+    try {
+      if (fieldValue == null) return false;
+      String country = String.valueOf(fieldValue).trim().toUpperCase(Locale.ROOT);
+      if (country.isBlank()) return false;
+
+      List<String> list = condition.getValueArray();
+      if (list == null || list.isEmpty()) {
+        String csv = condition.getValueSingle();
+        if (csv == null || csv.isBlank()) return false;
+        list = Arrays.stream(csv.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isBlank())
+            .toList();
+      }
+
+      for (String entry : list) {
+        if (country.equalsIgnoreCase(String.valueOf(entry).trim())) return true;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SANCTIONS_COUNTRY_CHECK: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateHighRiskJurisdiction(Object fieldValue, RuleCondition condition) {
-    log.warn("Operador V31+ HIGH_RISK_JURISDICTION: implementação pendente");
-    return false;
+    try {
+      if (fieldValue == null) return false;
+      String jurisdiction = String.valueOf(fieldValue).trim().toUpperCase(Locale.ROOT);
+      if (jurisdiction.isBlank()) return false;
+
+      List<String> list = condition.getValueArray();
+      if (list == null || list.isEmpty()) {
+        String csv = condition.getValueSingle();
+        if (csv == null || csv.isBlank()) return false;
+        list = Arrays.stream(csv.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isBlank())
+            .toList();
+      }
+
+      for (String entry : list) {
+        if (jurisdiction.equalsIgnoreCase(String.valueOf(entry).trim())) return true;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar HIGH_RISK_JURISDICTION: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateNameTransliterationMatch(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ NAME_TRANSLITERATION_MATCH: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      String otherField = null;
+      int threshold = 90;
+
+      if (condition.getValueSingle() != null && !condition.getValueSingle().isBlank()) {
+        String[] parts = condition.getValueSingle().split(":");
+        if (parts.length >= 1 && !parts[0].isBlank()) otherField = parts[0].trim();
+        if (parts.length >= 2 && !parts[1].isBlank()) threshold = Integer.parseInt(parts[1].trim());
+      }
+
+      Object v1 = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      Object v2 = otherField != null ? getFieldValue(otherField, null, context) : null;
+      if (v2 == null) {
+        v2 = context.getPayload().get("transliterated_name");
+        if (v2 == null) v2 = context.getPayload().get("transliteratedName");
+      }
+
+      if (v1 == null || v2 == null) return false;
+      String s1 = normalizeForMatch(String.valueOf(v1));
+      String s2 = normalizeForMatch(String.valueOf(v2));
+      if (s1.isBlank() || s2.isBlank()) return false;
+
+      int similarity = calculateSimilarity(s1, s2);
+      return similarity >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar NAME_TRANSLITERATION_MATCH: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateAliasDetection(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ ALIAS_DETECTION: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object aliasObj = context.getPayload().get("alias_detected");
+      if (aliasObj == null) aliasObj = context.getPayload().get("aliasDetected");
+      if (aliasObj != null) {
+        return Boolean.TRUE.equals(toBoolean(aliasObj));
+      }
+
+      Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (fieldValue == null) return false;
+      String name = normalizeForMatch(String.valueOf(fieldValue));
+      if (name.isBlank()) return false;
+
+      List<String> aliases = condition.getValueArray();
+      if (aliases == null || aliases.isEmpty()) {
+        String csv = condition.getValueSingle();
+        if (csv == null || csv.isBlank()) return false;
+        aliases = Arrays.stream(csv.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isBlank())
+            .toList();
+      }
+
+      for (String alias : aliases) {
+        String a = normalizeForMatch(alias);
+        if (a.isBlank()) continue;
+        if (name.contains(a) || a.contains(name)) return true;
+        if (calculateSimilarity(name, a) >= 90) return true;
+      }
+
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar ALIAS_DETECTION: {}", e.getMessage());
+      return false;
+    }
   }
 
   // --- CATEGORIA E: Synthetic ID Detection (8) ---
   private boolean evaluateCpfSsnValidation(Object fieldValue, RuleCondition condition) {
-    log.warn("Operador V31+ CPF_SSN_VALIDATION: implementação pendente");
-    return false;
+    try {
+      if (fieldValue == null) return false;
+      String raw = String.valueOf(fieldValue);
+      String digits = raw.replaceAll("\\D", "");
+      if (digits.length() == 11) {
+        return isValidCpf(digits);
+      }
+      if (digits.length() == 9) {
+        // SSN básico: não pode ser tudo zero, e não pode iniciar com 000.
+        if (digits.chars().allMatch(ch -> ch == '0')) return false;
+        if (digits.startsWith("000")) return false;
+        return true;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CPF_SSN_VALIDATION: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluatePhoneCarrierCheck(Object fieldValue, RuleCondition condition) {
-    log.warn("Operador V31+ PHONE_CARRIER_CHECK: implementação pendente");
-    return false;
+    try {
+      if (fieldValue == null) return false;
+      String carrier = normalizeForMatch(String.valueOf(fieldValue));
+      if (carrier.isBlank()) return false;
+
+      List<String> list = condition.getValueArray();
+      if (list == null || list.isEmpty()) {
+        String csv = condition.getValueSingle();
+        if (csv == null || csv.isBlank()) return false;
+        list = Arrays.stream(csv.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isBlank())
+            .toList();
+      }
+
+      for (String entry : list) {
+        if (carrier.equals(normalizeForMatch(entry))) return true;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar PHONE_CARRIER_CHECK: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateEmailDomainAge(Object fieldValue, RuleCondition condition) {
-    log.warn("Operador V31+ EMAIL_DOMAIN_AGE: implementação pendente");
-    return false;
+    try {
+      int thresholdDays = 30;
+      if (condition.getValueSingle() != null && !condition.getValueSingle().isBlank()) {
+        thresholdDays = Integer.parseInt(condition.getValueSingle().trim());
+      }
+
+      Integer ageDays = null;
+      if (fieldValue instanceof Number) {
+        ageDays = ((Number) fieldValue).intValue();
+      } else if (fieldValue != null) {
+        String email = String.valueOf(fieldValue).trim();
+        // Se vier como email, procuramos a idade do domínio no payload/variáveis.
+        // (feature pré-computada)
+        // Sem payload aqui, então só validamos formato básico e falhamos fechado.
+        if (!email.contains("@")) return false;
+      }
+
+      if (ageDays == null) return false;
+      // Regra de risco: domínio muito novo.
+      return ageDays < thresholdDays;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar EMAIL_DOMAIN_AGE: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateAddressVerification(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ ADDRESS_VERIFICATION: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object verifiedObj = context.getPayload().get("address_verified");
+      if (verifiedObj == null) verifiedObj = context.getPayload().get("addressVerified");
+      if (verifiedObj == null) {
+        verifiedObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      }
+      Boolean verified = toBoolean(verifiedObj);
+      if (verified == null) return false;
+
+      if (condition.getValueSingle() == null || condition.getValueSingle().isBlank()) {
+        return verified;
+      }
+      boolean expected = Boolean.parseBoolean(condition.getValueSingle().trim());
+      return verified == expected;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar ADDRESS_VERIFICATION: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateIdentityVelocity(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ IDENTITY_VELOCITY: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      String[] parts = (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split("\\|");
+      long threshold = parts.length >= 1 && !parts[0].isBlank() ? Long.parseLong(parts[0].trim()) : 3L;
+
+      Object countObj = context.getPayload().get("identity_velocity_count");
+      if (countObj == null) countObj = context.getPayload().get("identityVelocityCount");
+      if (countObj == null) countObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      long count = countObj instanceof Number ? ((Number) countObj).longValue() : 0L;
+      return count >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar IDENTITY_VELOCITY: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateDeviceAccountRatio(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ DEVICE_ACCOUNT_RATIO: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+
+      Object ratioObj = context.getPayload().get("device_account_ratio");
+      if (ratioObj == null) ratioObj = context.getPayload().get("deviceAccountRatio");
+      if (ratioObj == null) ratioObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+
+      double ratio = ratioObj instanceof Number ? ((Number) ratioObj).doubleValue() : 0.0;
+      return ratio > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar DEVICE_ACCOUNT_RATIO: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateEmailPhoneMismatch(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ EMAIL_PHONE_MISMATCH: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object mismatchObj = context.getPayload().get("email_phone_mismatch");
+      if (mismatchObj == null) mismatchObj = context.getPayload().get("emailPhoneMismatch");
+      if (mismatchObj == null) mismatchObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      return Boolean.TRUE.equals(toBoolean(mismatchObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar EMAIL_PHONE_MISMATCH: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateCreditFileThin(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ CREDIT_FILE_THIN: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      int minMonths = Integer.parseInt(condition.getValueSingle().trim());
+
+      Object monthsObj = context.getPayload().get("credit_file_months");
+      if (monthsObj == null) monthsObj = context.getPayload().get("creditFileMonths");
+      if (monthsObj == null) monthsObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+
+      int months = monthsObj instanceof Number ? ((Number) monthsObj).intValue() : Integer.MAX_VALUE;
+      return months < minMonths;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CREDIT_FILE_THIN: {}", e.getMessage());
+      return false;
+    }
   }
 
   // --- CATEGORIA F: AML Typology (8) ---
   private boolean evaluateStructuringDetection(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ STRUCTURING_DETECTION: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      // Formato: "maxSingleAmount|minCount" (ex: "1000|5")
+      String[] parts = (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split("\\|");
+      BigDecimal maxSingle = parts.length >= 1 && !parts[0].isBlank() ? new BigDecimal(parts[0].trim()) : new BigDecimal("1000");
+      int minCount = parts.length >= 2 && !parts[1].isBlank() ? Integer.parseInt(parts[1].trim()) : 5;
+
+      Object countObj = context.getPayload().get("cash_like_tx_count_below_threshold");
+      if (countObj == null) countObj = context.getPayload().get("structuringCount");
+      int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
+
+      BigDecimal amount = null;
+      if (context.getTransactionRequest() != null) {
+        amount = context.getTransactionRequest().getTransactionAmount();
+      }
+      boolean currentBelow = amount != null && amount.compareTo(maxSingle) <= 0;
+
+      return currentBelow && count >= minCount;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar STRUCTURING_DETECTION: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateLayeringPattern(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ LAYERING_PATTERN: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      int minHops = Integer.parseInt(condition.getValueSingle().trim());
+      Object hopsObj = context.getPayload().get("layering_hops");
+      if (hopsObj == null) hopsObj = context.getPayload().get("layeringHops");
+      int hops = hopsObj instanceof Number ? ((Number) hopsObj).intValue() : 0;
+      return hops >= minHops;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar LAYERING_PATTERN: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateRapidMovement(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ RAPID_MOVEMENT: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      int maxMinutes = Integer.parseInt(condition.getValueSingle().trim());
+      Object minutesObj = context.getPayload().get("minutes_between_in_out");
+      if (minutesObj == null) minutesObj = context.getPayload().get("minutesBetweenInOut");
+      int minutes = minutesObj instanceof Number ? ((Number) minutesObj).intValue() : Integer.MAX_VALUE;
+      return minutes <= maxMinutes;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar RAPID_MOVEMENT: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateIntegrationPattern(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ INTEGRATION_PATTERN: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object flagObj = context.getPayload().get("integration_detected");
+      if (flagObj == null) flagObj = context.getPayload().get("integrationDetected");
+      if (flagObj == null) flagObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      return Boolean.TRUE.equals(toBoolean(flagObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar INTEGRATION_PATTERN: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateCashIntensiveRatio(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ CASH_INTENSIVE_RATIO: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      Object ratioObj = context.getPayload().get("cash_intensive_ratio");
+      if (ratioObj == null) ratioObj = context.getPayload().get("cashIntensiveRatio");
+      double ratio = ratioObj instanceof Number ? ((Number) ratioObj).doubleValue() : 0.0;
+      return ratio > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CASH_INTENSIVE_RATIO: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateUnusualBusinessPattern(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ UNUSUAL_BUSINESS_PATTERN: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object flagObj = context.getPayload().get("unusual_business_pattern");
+      if (flagObj == null) flagObj = context.getPayload().get("unusualBusinessPattern");
+      if (flagObj == null) flagObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      return Boolean.TRUE.equals(toBoolean(flagObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar UNUSUAL_BUSINESS_PATTERN: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateShellCompanyIndicator(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ SHELL_COMPANY_INDICATOR: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object flagObj = context.getPayload().get("shell_company_indicator");
+      if (flagObj == null) flagObj = context.getPayload().get("shellCompanyIndicator");
+      if (flagObj != null) return Boolean.TRUE.equals(toBoolean(flagObj));
+
+      // Heurística: empresa muito nova + sem funcionários.
+      int maxAgeMonths = Integer.parseInt(condition.getValueSingle().trim());
+      Object ageObj = context.getPayload().get("company_age_months");
+      if (ageObj == null) ageObj = context.getPayload().get("companyAgeMonths");
+      int ageMonths = ageObj instanceof Number ? ((Number) ageObj).intValue() : Integer.MAX_VALUE;
+
+      Object empObj = context.getPayload().get("employee_count");
+      if (empObj == null) empObj = context.getPayload().get("employeeCount");
+      int employees = empObj instanceof Number ? ((Number) empObj).intValue() : 1;
+
+      return ageMonths <= maxAgeMonths && employees <= 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SHELL_COMPANY_INDICATOR: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateTradeBasedMlIndicator(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ TRADE_BASED_ML_INDICATOR: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object flagObj = context.getPayload().get("trade_based_ml_indicator");
+      if (flagObj == null) flagObj = context.getPayload().get("tradeBasedMlIndicator");
+      if (flagObj != null) return Boolean.TRUE.equals(toBoolean(flagObj));
+
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      Object mismatchObj = context.getPayload().get("invoice_mismatch_pct");
+      if (mismatchObj == null) mismatchObj = context.getPayload().get("invoiceMismatchPct");
+      double mismatch = mismatchObj instanceof Number ? ((Number) mismatchObj).doubleValue() : 0.0;
+      return mismatch > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar TRADE_BASED_ML_INDICATOR: {}", e.getMessage());
+      return false;
+    }
   }
 
   // --- CATEGORIA G: Regulatory (8) ---
   private boolean evaluateScaExemptionTra(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ SCA_EXEMPTION_TRA: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      double maxRisk = Double.parseDouble(condition.getValueSingle().trim());
+      Object riskObj = context.getPayload().get("tra_risk_score");
+      if (riskObj == null) riskObj = context.getPayload().get("traRiskScore");
+      double risk = riskObj instanceof Number ? ((Number) riskObj).doubleValue() : Double.MAX_VALUE;
+      return risk <= maxRisk;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SCA_EXEMPTION_TRA: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateScaExemptionLowValue(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ SCA_EXEMPTION_LOW_VALUE: implementação pendente");
-    return false;
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      BigDecimal maxAmount = new BigDecimal(condition.getValueSingle().trim());
+      BigDecimal amount = context.getTransactionRequest().getTransactionAmount();
+      if (amount == null) return false;
+      return amount.compareTo(maxAmount) <= 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SCA_EXEMPTION_LOW_VALUE: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateScaExemptionTrustedBeneficiary(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ SCA_EXEMPTION_TRUSTED_BENEFICIARY: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object trustedObj = context.getPayload().get("trusted_beneficiary");
+      if (trustedObj == null) trustedObj = context.getPayload().get("trustedBeneficiary");
+      if (trustedObj == null) trustedObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      return Boolean.TRUE.equals(toBoolean(trustedObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SCA_EXEMPTION_TRUSTED_BENEFICIARY: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateScaExemptionRecurring(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ SCA_EXEMPTION_RECURRING: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object recurringObj = context.getPayload().get("recurring_payment");
+      if (recurringObj == null) recurringObj = context.getPayload().get("recurringPayment");
+      if (recurringObj == null) recurringObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      return Boolean.TRUE.equals(toBoolean(recurringObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SCA_EXEMPTION_RECURRING: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluatePsd3CopNameMatch(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ PSD3_COP_NAME_MATCH: implementação pendente");
-    return false;
+    try {
+      String[] parts = (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split(":");
+      if (parts.length < 2) {
+        // fallback: usa fieldName vs payload[other_name]
+        parts = new String[] {"other_name", "90"};
+      }
+      String otherField = parts[0].trim();
+      int threshold = Integer.parseInt(parts[1].trim());
+
+      Object v1 = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      Object v2 = getFieldValue(otherField, null, context);
+      if (v1 == null || v2 == null) return false;
+
+      String s1 = normalizeForMatch(String.valueOf(v1));
+      String s2 = normalizeForMatch(String.valueOf(v2));
+      if (s1.isBlank() || s2.isBlank()) return false;
+
+      return calculateSimilarity(s1, s2) >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar PSD3_COP_NAME_MATCH: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateDoraIncidentSeverity(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ DORA_INCIDENT_SEVERITY: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      int minSeverity = Integer.parseInt(condition.getValueSingle().trim());
+      Object sevObj = context.getPayload().get("incident_severity");
+      if (sevObj == null) sevObj = context.getPayload().get("incidentSeverity");
+      int sev = sevObj instanceof Number ? ((Number) sevObj).intValue() : 0;
+      return sev >= minSeverity;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar DORA_INCIDENT_SEVERITY: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateEidasAssuranceLevel(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ EIDAS_ASSURANCE_LEVEL: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      String required = (condition.getValueSingle() == null ? "" : condition.getValueSingle()).trim();
+      int requiredLevel = mapEidasLevel(required);
+      Object levelObj = context.getPayload().get("eidas_assurance_level");
+      if (levelObj == null) levelObj = context.getPayload().get("eidasAssuranceLevel");
+      if (levelObj == null) levelObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (levelObj == null) return false;
+      int actualLevel = mapEidasLevel(String.valueOf(levelObj));
+      return actualLevel >= requiredLevel;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar EIDAS_ASSURANCE_LEVEL: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateGdprDataRetentionCheck(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ GDPR_DATA_RETENTION_CHECK: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      int maxDays = Integer.parseInt(condition.getValueSingle().trim());
+      Object ageObj = context.getPayload().get("data_age_days");
+      if (ageObj == null) ageObj = context.getPayload().get("dataAgeDays");
+      int ageDays = ageObj instanceof Number ? ((Number) ageObj).intValue() : 0;
+      // Retorna true quando há violação (dados mais antigos que o permitido)
+      return ageDays > maxDays;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar GDPR_DATA_RETENTION_CHECK: {}", e.getMessage());
+      return false;
+    }
   }
 
   // --- CATEGORIA H: Device (7) ---
   private boolean evaluateDeviceJailbreakRooted(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ DEVICE_JAILBREAK_ROOTED: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object rootedObj = context.getPayload().get("device_rooted");
+      if (rootedObj == null) rootedObj = context.getPayload().get("deviceRooted");
+      if (rootedObj == null) rootedObj = context.getPayload().get("jailbroken");
+      return Boolean.TRUE.equals(toBoolean(rootedObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar DEVICE_JAILBREAK_ROOTED: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateEmulatorDetection(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ EMULATOR_DETECTION: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object emuObj = context.getPayload().get("emulator_detected");
+      if (emuObj == null) emuObj = context.getPayload().get("emulatorDetected");
+      return Boolean.TRUE.equals(toBoolean(emuObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar EMULATOR_DETECTION: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateVpnProxyDetection(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ VPN_PROXY_DETECTION: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object vpnObj = context.getPayload().get("vpn_or_proxy");
+      if (vpnObj == null) vpnObj = context.getPayload().get("vpnOrProxy");
+      if (vpnObj == null) vpnObj = context.getPayload().get("proxy_detected");
+      return Boolean.TRUE.equals(toBoolean(vpnObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar VPN_PROXY_DETECTION: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateTorExitNode(Object fieldValue, RuleCondition condition) {
-    log.warn("Operador V31+ TOR_EXIT_NODE: implementação pendente");
-    return false;
+    try {
+      if (fieldValue == null) return false;
+      String ip = String.valueOf(fieldValue).trim();
+      if (ip.isBlank()) return false;
+
+      List<String> list = condition.getValueArray();
+      if (list == null || list.isEmpty()) {
+        String csv = condition.getValueSingle();
+        if (csv == null || csv.isBlank()) return false;
+        list = Arrays.stream(csv.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isBlank())
+            .toList();
+      }
+
+      for (String entry : list) {
+        if (ip.equalsIgnoreCase(String.valueOf(entry).trim())) return true;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar TOR_EXIT_NODE: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateBrowserInconsistency(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ BROWSER_INCONSISTENCY: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      Object scoreObj = context.getPayload().get("browser_inconsistency_score");
+      if (scoreObj == null) scoreObj = context.getPayload().get("browserInconsistencyScore");
+      double score = scoreObj instanceof Number ? ((Number) scoreObj).doubleValue() : 0.0;
+      return score > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar BROWSER_INCONSISTENCY: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateTimezoneMismatch(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ TIMEZONE_MISMATCH: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object mismatchObj = context.getPayload().get("timezone_mismatch");
+      if (mismatchObj == null) mismatchObj = context.getPayload().get("timezoneMismatch");
+      return Boolean.TRUE.equals(toBoolean(mismatchObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar TIMEZONE_MISMATCH: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateLanguageMismatch(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ LANGUAGE_MISMATCH: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object mismatchObj = context.getPayload().get("language_mismatch");
+      if (mismatchObj == null) mismatchObj = context.getPayload().get("languageMismatch");
+      if (mismatchObj != null) return Boolean.TRUE.equals(toBoolean(mismatchObj));
+
+      Object userLang = context.getPayload().get("user_language");
+      if (userLang == null) userLang = context.getPayload().get("userLanguage");
+      Object deviceLang = context.getPayload().get("device_language");
+      if (deviceLang == null) deviceLang = context.getPayload().get("deviceLanguage");
+      if (userLang == null || deviceLang == null) return false;
+      return !String.valueOf(userLang).equalsIgnoreCase(String.valueOf(deviceLang));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar LANGUAGE_MISMATCH: {}", e.getMessage());
+      return false;
+    }
   }
 
   // --- CATEGORIA I: Merchant & MCC (7) ---
   private boolean evaluateMccHighRisk(Object fieldValue, RuleCondition condition) {
-    log.warn("Operador V31+ MCC_HIGH_RISK: implementação pendente");
-    return false;
+    try {
+      if (fieldValue == null) return false;
+      String mcc = String.valueOf(fieldValue).trim();
+      if (mcc.isBlank()) return false;
+
+      List<String> list = condition.getValueArray();
+      if (list == null || list.isEmpty()) {
+        String csv = condition.getValueSingle();
+        if (csv == null || csv.isBlank()) return false;
+        list = Arrays.stream(csv.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isBlank())
+            .toList();
+      }
+
+      for (String entry : list) {
+        if (mcc.equals(String.valueOf(entry).trim())) return true;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MCC_HIGH_RISK: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateMccGambling(Object fieldValue, RuleCondition condition) {
-    log.warn("Operador V31+ MCC_GAMBLING: implementação pendente");
-    return false;
+    try {
+      if (fieldValue == null) return false;
+      String mcc = String.valueOf(fieldValue).trim();
+      if (mcc.isBlank()) return false;
+      Set<String> gambling = Set.of("7995", "7800", "7801", "7802");
+      return gambling.contains(mcc);
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MCC_GAMBLING: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateMccCrypto(Object fieldValue, RuleCondition condition) {
-    log.warn("Operador V31+ MCC_CRYPTO: implementação pendente");
-    return false;
+    try {
+      if (fieldValue == null) return false;
+      String mcc = String.valueOf(fieldValue).trim();
+      if (mcc.isBlank()) return false;
+      Set<String> crypto = Set.of("6051", "4829");
+      return crypto.contains(mcc);
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MCC_CRYPTO: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateMerchantFirstSeen(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ MERCHANT_FIRST_SEEN: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      int thresholdDays = Integer.parseInt(condition.getValueSingle().trim());
+
+      Object daysObj = context.getPayload().get("merchant_first_seen_days_ago");
+      if (daysObj == null) daysObj = context.getPayload().get("merchantFirstSeenDaysAgo");
+      if (daysObj == null) {
+        Object isNewObj = context.getPayload().get("merchant_is_new");
+        if (isNewObj == null) isNewObj = context.getPayload().get("merchantIsNew");
+        if (isNewObj != null) return Boolean.TRUE.equals(toBoolean(isNewObj));
+        return false;
+      }
+
+      int daysAgo = daysObj instanceof Number ? ((Number) daysObj).intValue() : Integer.MAX_VALUE;
+      return daysAgo <= thresholdDays;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_FIRST_SEEN: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateMerchantCountryMismatch(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ MERCHANT_COUNTRY_MISMATCH: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object mismatchObj = context.getPayload().get("merchant_country_mismatch");
+      if (mismatchObj == null) mismatchObj = context.getPayload().get("merchantCountryMismatch");
+      if (mismatchObj != null) return Boolean.TRUE.equals(toBoolean(mismatchObj));
+
+      Object merchantCountry = context.getPayload().get("merchant_country");
+      if (merchantCountry == null) merchantCountry = context.getPayload().get("merchantCountry");
+      Object customerCountry = context.getPayload().get("customer_country");
+      if (customerCountry == null) customerCountry = context.getPayload().get("customerCountry");
+      if (merchantCountry == null || customerCountry == null) return false;
+      return !String.valueOf(merchantCountry).equalsIgnoreCase(String.valueOf(customerCountry));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_COUNTRY_MISMATCH: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateMerchantCategoryChange(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ MERCHANT_CATEGORY_CHANGE: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object changedObj = context.getPayload().get("merchant_category_changed");
+      if (changedObj == null) changedObj = context.getPayload().get("merchantCategoryChanged");
+      return Boolean.TRUE.equals(toBoolean(changedObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_CATEGORY_CHANGE: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateMerchantVelocitySpike(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ MERCHANT_VELOCITY_SPIKE: implementação pendente");
-    return false;
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      String[] parts = (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split("\\|");
+      long threshold = parts.length >= 1 && !parts[0].isBlank() ? Long.parseLong(parts[0].trim()) : 20L;
+      int hours = parts.length >= 2 && !parts[1].isBlank() ? Integer.parseInt(parts[1].trim()) : 1;
+      VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
+      var stats = velocityServiceFacade.getStats(context.getTransactionRequest(), VelocityService.KeyType.MERCHANT_ID, window);
+      return stats.getTransactionCount() >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_VELOCITY_SPIKE: {}", e.getMessage());
+      return false;
+    }
   }
 
   // --- CATEGORIA J: ISO 20022 (6) ---
   private boolean evaluatePacs008FieldValidation(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ PACS008_FIELD_VALIDATION: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      String requiredCsv = condition.getValueSingle();
+      if (requiredCsv == null || requiredCsv.isBlank()) {
+        requiredCsv = "uetr,instgAgt,instgAgtBic,dbtrNm,cdtrNm,cdtrAcct";
+      }
+      String[] required = Arrays.stream(requiredCsv.split(","))
+          .map(String::trim)
+          .filter(s -> !s.isBlank())
+          .toArray(String[]::new);
+
+      // Retorna true quando a mensagem está inválida (campo ausente)
+      for (String key : required) {
+        Object v = context.getPayload().get(key);
+        if (v == null) {
+          // tenta variantes camelCase
+          String camel = toCamelCaseFromSnake(key);
+          v = context.getPayload().get(camel);
+        }
+        if (v == null || String.valueOf(v).isBlank()) return true;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar PACS008_FIELD_VALIDATION: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateRemittanceInfoAnalysis(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ REMITTANCE_INFO_ANALYSIS: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object infoObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (infoObj == null) {
+        infoObj = context.getPayload().get("remittance_info");
+        if (infoObj == null) infoObj = context.getPayload().get("remittanceInfo");
+      }
+      if (infoObj == null) return false;
+      String text = normalizeForMatch(String.valueOf(infoObj));
+      if (text.isBlank()) return false;
+
+      List<String> keywords = condition.getValueArray();
+      if (keywords == null || keywords.isEmpty()) {
+        String csv = condition.getValueSingle();
+        if (csv == null || csv.isBlank()) {
+          keywords = List.of("gift", "loan", "crypto", "investment", "refund", "cash", "commission");
+        } else {
+          keywords = Arrays.stream(csv.split(","))
+              .map(String::trim)
+              .filter(s -> !s.isBlank())
+              .toList();
+        }
+      }
+
+      for (String kw : keywords) {
+        String needle = normalizeForMatch(kw);
+        if (needle.isBlank()) continue;
+        if (text.contains(needle)) return true;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar REMITTANCE_INFO_ANALYSIS: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluatePurposeCodeMismatch(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ PURPOSE_CODE_MISMATCH: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object purposeObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (purposeObj == null) {
+        purposeObj = context.getPayload().get("purpose_code");
+        if (purposeObj == null) purposeObj = context.getPayload().get("purposeCode");
+      }
+      if (purposeObj == null) return false;
+      String purpose = String.valueOf(purposeObj).trim().toUpperCase(Locale.ROOT);
+      if (purpose.isBlank()) return false;
+
+      List<String> allowed = condition.getValueArray();
+      if (allowed == null || allowed.isEmpty()) {
+        String csv = condition.getValueSingle();
+        if (csv == null || csv.isBlank()) return false;
+        allowed = Arrays.stream(csv.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isBlank())
+            .toList();
+      }
+
+      for (String entry : allowed) {
+        if (purpose.equalsIgnoreCase(String.valueOf(entry).trim())) return false;
+      }
+      // mismatch quando não está na allowlist
+      return true;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar PURPOSE_CODE_MISMATCH: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateUetrDuplicateCheck(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ UETR_DUPLICATE_CHECK: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      Object dupObj = context.getPayload().get("uetr_duplicate");
+      if (dupObj == null) dupObj = context.getPayload().get("uetrDuplicate");
+      return Boolean.TRUE.equals(toBoolean(dupObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar UETR_DUPLICATE_CHECK: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateCreditorNameValidation(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ CREDITOR_NAME_VALIDATION: implementação pendente");
-    return false;
+    try {
+      String[] parts = (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split(":");
+      String otherField = parts.length >= 1 && !parts[0].isBlank() ? parts[0].trim() : null;
+      int threshold = parts.length >= 2 && !parts[1].isBlank() ? Integer.parseInt(parts[1].trim()) : 85;
+
+      Object v1 = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (v1 == null) {
+        v1 = context.getPayload() != null ? context.getPayload().get("creditor_name") : null;
+        if (v1 == null && context.getPayload() != null) v1 = context.getPayload().get("creditorName");
+      }
+      if (v1 == null) return false;
+      String creditorName = normalizeForMatch(String.valueOf(v1));
+      if (creditorName.isBlank()) return true; // inválido
+
+      if (otherField == null) return false;
+      Object v2 = getFieldValue(otherField, null, context);
+      if (v2 == null) return false;
+      String referenceName = normalizeForMatch(String.valueOf(v2));
+      if (referenceName.isBlank()) return false;
+
+      return calculateSimilarity(creditorName, referenceName) < threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CREDITOR_NAME_VALIDATION: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateStructuredAddressCheck(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ STRUCTURED_ADDRESS_CHECK: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      String requiredCsv = condition.getValueSingle();
+      if (requiredCsv == null || requiredCsv.isBlank()) {
+        requiredCsv = "street,building,postCode,townName,country";
+      }
+      String[] required = Arrays.stream(requiredCsv.split(","))
+          .map(String::trim)
+          .filter(s -> !s.isBlank())
+          .toArray(String[]::new);
+
+      // Retorna true quando está inválido (faltando algo)
+      for (String key : required) {
+        Object v = context.getPayload().get(key);
+        if (v == null || String.valueOf(v).isBlank()) return true;
+      }
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar STRUCTURED_ADDRESS_CHECK: {}", e.getMessage());
+      return false;
+    }
   }
 
   // --- CATEGORIA K: Estatísticos Simples (5) ---
   private boolean evaluateBenfordLawDeviation(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ BENFORD_LAW_DEVIATION: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      Object devObj = context.getPayload().get("benford_deviation");
+      if (devObj == null) devObj = context.getPayload().get("benfordDeviation");
+      double deviation = devObj instanceof Number ? ((Number) devObj).doubleValue() : 0.0;
+      return deviation > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar BENFORD_LAW_DEVIATION: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateZScoreGt(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ Z_SCORE_GT: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null && context.getTransactionRequest() == null) return false;
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+
+      Object zObj = context.getPayload() != null ? context.getPayload().get("z_score") : null;
+      if (zObj == null && context.getPayload() != null) zObj = context.getPayload().get("zScore");
+      if (zObj instanceof Number) {
+        return ((Number) zObj).doubleValue() > threshold;
+      }
+
+      if (context.getTransactionRequest() == null) return false;
+      var stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), VelocityService.KeyType.PAN, VelocityService.TimeWindow.HOUR_24);
+      BigDecimal avg = stats.getAvgAmount();
+      BigDecimal std = stats.getStdDevAmount();
+      BigDecimal amount = context.getTransactionRequest().getTransactionAmount();
+      if (avg == null || std == null || std.compareTo(BigDecimal.ZERO) == 0 || amount == null) return false;
+      BigDecimal z = amount.subtract(avg).divide(std, 8, java.math.RoundingMode.HALF_UP).abs();
+      return z.compareTo(BigDecimal.valueOf(threshold)) > 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar Z_SCORE_GT: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateStandardDeviationGt(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ STANDARD_DEVIATION_GT: implementação pendente");
-    return false;
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      BigDecimal threshold = new BigDecimal(condition.getValueSingle().trim());
+      var stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), VelocityService.KeyType.PAN, VelocityService.TimeWindow.HOUR_24);
+      BigDecimal std = stats.getStdDevAmount();
+      if (std == null) return false;
+      return std.compareTo(threshold) > 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar STANDARD_DEVIATION_GT: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluatePercentileGt(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ PERCENTILE_GT: implementação pendente");
-    return false;
+    try {
+      if (context.getPayload() == null) return false;
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      Object pctObj = context.getPayload().get("current_percentile");
+      if (pctObj == null) pctObj = context.getPayload().get("currentPercentile");
+      double pct = pctObj instanceof Number ? ((Number) pctObj).doubleValue() : 0.0;
+      return pct > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar PERCENTILE_GT: {}", e.getMessage());
+      return false;
+    }
   }
 
   private boolean evaluateCoefficientVariationGt(RuleCondition condition, EvaluationContext context) {
-    log.warn("Operador V31+ COEFFICIENT_VARIATION_GT: implementação pendente");
-    return false;
+    try {
+      if (context.getTransactionRequest() == null) return false;
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      var stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), VelocityService.KeyType.PAN, VelocityService.TimeWindow.HOUR_24);
+      BigDecimal avg = stats.getAvgAmount();
+      BigDecimal std = stats.getStdDevAmount();
+      if (avg == null || std == null || avg.compareTo(BigDecimal.ZERO) == 0) return false;
+      BigDecimal cv = std.divide(avg.abs(), 8, java.math.RoundingMode.HALF_UP);
+      return cv.compareTo(BigDecimal.valueOf(threshold)) > 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COEFFICIENT_VARIATION_GT: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  private String normalizeForMatch(String value) {
+    if (value == null) return "";
+    String s = value.trim().toLowerCase(Locale.ROOT);
+    if (s.isBlank()) return "";
+    s = Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+    s = s.replaceAll("[^a-z0-9\\s]", " ");
+    s = s.replaceAll("\\s+", " ").trim();
+    return s;
+  }
+
+  private String toCamelCaseFromSnake(String value) {
+    if (value == null || value.isBlank()) return "";
+    StringBuilder sb = new StringBuilder(value.length());
+    boolean upperNext = false;
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      if (c == '_') {
+        upperNext = true;
+        continue;
+      }
+      if (upperNext) {
+        sb.append(Character.toUpperCase(c));
+        upperNext = false;
+      } else {
+        sb.append(c);
+      }
+    }
+    return sb.toString();
+  }
+
+  private boolean isValidCpf(String digits11) {
+    if (digits11 == null) return false;
+    String cpf = digits11.replaceAll("\\D", "");
+    if (cpf.length() != 11) return false;
+    // Bloqueia CPFs com todos os dígitos iguais
+    boolean allSame = cpf.chars().distinct().count() == 1;
+    if (allSame) return false;
+
+    int d1 = calcCpfDigit(cpf, 9, 10);
+    int d2 = calcCpfDigit(cpf, 10, 11);
+    return d1 == (cpf.charAt(9) - '0') && d2 == (cpf.charAt(10) - '0');
+  }
+
+  private int calcCpfDigit(String cpf, int len, int weightStart) {
+    int sum = 0;
+    int weight = weightStart;
+    for (int i = 0; i < len; i++) {
+      int n = cpf.charAt(i) - '0';
+      sum += n * weight;
+      weight--;
+    }
+    int mod = sum % 11;
+    return (mod < 2) ? 0 : (11 - mod);
+  }
+
+  private int mapEidasLevel(String level) {
+    if (level == null) return 0;
+    String v = normalizeForMatch(level);
+    if (v.isBlank()) return 0;
+    return switch (v) {
+      case "low" -> 1;
+      case "substantial" -> 2;
+      case "high" -> 3;
+      default -> {
+        try {
+          yield Integer.parseInt(v);
+        } catch (NumberFormatException e) {
+          yield 0;
+        }
+      }
+    };
   }
 
   // ========== OPERADORES V4.0 PHASE 1 - VELOCITY + DEVICE (40 novos) ==========

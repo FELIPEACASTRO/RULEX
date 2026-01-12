@@ -427,7 +427,84 @@ public class RuleCondition {
     MERCHANT_NEW_CUSTOMER_RATIO, // Razão de novos clientes do merchant
     MERCHANT_DORMANT_REACTIVATION, // Reativação de merchant dormentes
     MERCHANT_CROSS_BORDER_RATIO, // Razão cross-border do merchant
-    MERCHANT_HIGH_VALUE_FREQUENCY // Frequência de alto valor do merchant
+    MERCHANT_HIGH_VALUE_FREQUENCY, // Frequência de alto valor do merchant
+
+    // ========== OPERADORES V4.0 PHASE 2A (28 novos) - FATF AML Typologies ==========
+    // CATEGORIA S: FATF AML Typologies (28) - 100% Rule-Based
+    FATF_PLACEMENT_CASH_INTENSIVE, // FATF001: Placement via cash-intensive business
+    FATF_PLACEMENT_STRUCTURING, // FATF002: Structuring deposits below CTR threshold
+    FATF_PLACEMENT_SMURFING, // FATF003: Coordinated smurfing network
+    FATF_PLACEMENT_CURRENCY_EXCHANGE, // FATF004: Large cash currency exchange
+    FATF_PLACEMENT_CASINO_GAMBLING, // FATF005: Casino chip placement
+    FATF_LAYERING_RAPID_MOVEMENT, // FATF006: Rapid movement of funds
+    FATF_LAYERING_SHELL_COMPANY, // FATF007: Shell company transfers
+    FATF_LAYERING_OFFSHORE, // FATF008: Offshore account transactions
+    FATF_LAYERING_WIRE_CHAINS, // FATF009: Wire transfer chains
+    FATF_LAYERING_CONVERTIBLE_INSTRUMENTS, // FATF010: Convertible instruments
+    FATF_INTEGRATION_REAL_ESTATE, // FATF011: Real estate purchase integration
+    FATF_INTEGRATION_LUXURY_GOODS, // FATF012: Luxury goods purchase
+    FATF_INTEGRATION_BUSINESS_INVESTMENT, // FATF013: Business investment
+    FATF_INTEGRATION_LOAN_REPAYMENT, // FATF014: Loan repayment with illicit funds
+    FATF_TBML_OVER_INVOICING, // FATF015: Trade-based ML over-invoicing
+    FATF_TBML_UNDER_INVOICING, // FATF016: Trade-based ML under-invoicing
+    FATF_TBML_PHANTOM_SHIPPING, // FATF017: Phantom shipping
+    FATF_TBML_MULTIPLE_INVOICING, // FATF018: Multiple invoicing same shipment
+    FATF_TBML_FALSE_DESCRIPTION, // FATF019: False description of goods
+    FATF_HAWALA_INFORMAL, // FATF020: Hawala/informal value transfer
+    FATF_NEW_PAYMENT_EXPLOITATION, // FATF021: New payment method exploitation
+    FATF_CRYPTO_MIXING, // FATF022: Cryptocurrency mixing services
+    FATF_CRYPTO_ATM_CASHOUT, // FATF023: Crypto ATM cash-out
+    FATF_PEP_TRANSACTION, // FATF024: PEP relationship transaction
+    FATF_CORRESPONDENT_LAYERING, // FATF025: Correspondent banking layering
+    FATF_ROUND_TRIPPING, // FATF026: Round-tripping investment
+    FATF_BLACK_MARKET_EXCHANGE, // FATF027: Black market currency exchange
+    FATF_INSURANCE_CASH_VALUE, // FATF028: Insurance policy cash value extraction
+
+    // ========== OPERADORES V4.0 PHASE 2B (12 novos) - PSD2 SCA Exemptions ==========
+    // CATEGORIA T: PSD2 SCA Exemptions (12) - 100% Rule-Based
+    SCA_LOW_VALUE_EXEMPTION, // SCA001: Low value exemption (≤€30)
+    SCA_CONTACTLESS_EXEMPTION, // SCA002: Contactless exemption (≤€50)
+    SCA_TRA_EXEMPTION, // SCA003: Transaction risk analysis exemption
+    SCA_TRUSTED_BENEFICIARY, // SCA004: Trusted beneficiary exemption
+    SCA_RECURRING_TRANSACTION, // SCA005: Recurring transaction exemption
+    SCA_MERCHANT_INITIATED, // SCA006: Merchant initiated transaction
+    SCA_CORPORATE_PAYMENT, // SCA007: Corporate payment exemption
+    SCA_SECURE_CORPORATE_PROTOCOL, // SCA008: Secure corporate payment protocol
+    SCA_LIABILITY_SHIFT, // SCA009: SCA exemption liability shift check
+    SCA_DYNAMIC_3DS_ROUTING, // SCA010: Dynamic 3DS exemption routing
+    SCA_FRAUD_RATE_MONITORING, // SCA011: PSP fraud rate threshold monitoring
+    SCA_CHALLENGE_MANDATORY, // SCA012: SCA challenge mandatory triggers
+
+    // ========== OPERADORES V4.0 PHASE 2C (28 novos) - Platform Best Practices ==========
+    // CATEGORIA U: Platform Best Practices (28) - 100% Rule-Based
+    PLT_BEHAVIOR_SORTED_LISTS, // PLT001: FICO behavior sorted lists tracking
+    PLT_BUSINESS_RULES_SCENARIO, // PLT002: FICO business rules scenario editor
+    PLT_IDENTITY_RESOLUTION, // PLT003: FICO identity resolution engine
+    PLT_COMPROMISE_MANAGER, // PLT004: FICO compromise manager
+    PLT_INTELLIGENCE_NETWORK, // PLT005: FICO intelligence network
+    PLT_RULES_MODELS_HYBRID, // PLT006: Feedzai rules+models hybrid
+    PLT_BEHAVIORAL_PROFILING, // PLT007: Feedzai behavioral profiling
+    PLT_NETWORK_ANALYTICS, // PLT008: Feedzai network analytics
+    PLT_SAR_AUTOMATED, // PLT009: Feedzai SAR automated submission
+    PLT_DS2_RULE_ENGINE, // PLT010: SAS DS2 rule engine
+    PLT_REAL_TIME_DETECTION, // PLT011: SAS real-time detection engine
+    PLT_NETWORK_ENTITY_RESOLUTION, // PLT012: SAS network entity resolution
+    PLT_SCENARIO_SCORECARD, // PLT013: SAS scenario contribution scorecard
+    PLT_RADAR_RULE_BACKTESTING, // PLT014: Stripe radar rule backtesting
+    PLT_RADAR_METADATA_MATCHING, // PLT015: Stripe radar metadata matching
+    PLT_RADAR_INLINE_LISTS, // PLT016: Stripe radar inline lists
+    PLT_RADAR_COMPLEX_CONDITIONS, // PLT017: Stripe radar complex conditions
+    PLT_RISK_PROFILE_ASSIGNMENT, // PLT018: Adyen risk profile assignment
+    PLT_CUSTOM_RULE_BUILDER, // PLT019: Adyen custom rule builder
+    PLT_RISK_LIST_COMPARISON, // PLT020: Adyen risk list comparison
+    PLT_BACKTESTING_LABELING, // PLT021: Adyen backtesting labeling
+    PLT_ML_FRAUD_RISK_OUTCOME, // PLT022: Adyen ML fraud risk outcome
+    PLT_RISK_SCORE_CALCULATION, // PLT023: PayPal FPA risk score calculation
+    PLT_VELOCITY_FILTERS, // PLT024: PayPal FPA velocity filters
+    PLT_LINKING_VELOCITY, // PLT025: PayPal FPA linking velocity
+    PLT_BAD_ENTITY_NETWORK, // PLT026: PayPal FPA bad entity network
+    PLT_REVIEWLIST_QUEUE, // PLT027: PayPal FPA reviewlist queue
+    PLT_CONSORTIUM_DATA_CHECK // PLT028: Consortium data cross-check
   }
 
   /** Tipos de valor suportados */
