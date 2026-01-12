@@ -323,6 +323,7 @@ public class VelocityService {
     String merchantId = request.getMerchantId();
 
     statsCache
+        .asMap()
         .entrySet()
         .removeIf(
             entry -> {
@@ -335,13 +336,13 @@ public class VelocityService {
 
   /** Limpa todo o cache. */
   public void clearCache() {
-    statsCache.clear();
+    statsCache.invalidateAll();
     log.info("Cache de velocidade limpo");
   }
 
-  /** Retorna estatísticas do cache. */
-  public Map<String, Integer> getCacheStats() {
-    return Map.of("statsCache", statsCache.size());
+  /** Retorna estatisticas do cache. */
+  public Map<String, Long> getCacheStats() {
+    return Map.of("statsCache", statsCache.estimatedSize());
   }
 
   // ========== Métodos de conveniência para regras ==========

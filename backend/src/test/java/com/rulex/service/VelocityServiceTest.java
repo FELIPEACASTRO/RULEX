@@ -493,7 +493,7 @@ class VelocityServiceTest {
 
       velocityService.getStats(request, KeyType.PAN, TimeWindow.HOUR_1);
 
-      assertThat(velocityService.getCacheStats().get("statsCache")).isEqualTo(1);
+      assertThat(velocityService.getCacheStats().get("statsCache")).isEqualTo(1L);
 
       velocityService.clearCache();
 
