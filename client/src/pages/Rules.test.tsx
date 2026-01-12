@@ -48,6 +48,11 @@ function mockRulesApi(initialContent: any[] = []) {
       return okJson([]);
     }
 
+    // Complex rules (must be checked BEFORE /api/rules to avoid false match)
+    if (url.includes('/api/complex-rules') && method === 'GET') {
+      return okJson([]);
+    }
+
     // GET list
     if (url.includes('/api/rules') && method === 'GET') {
       return okJson(rules);
