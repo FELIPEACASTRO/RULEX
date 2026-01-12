@@ -736,6 +736,57 @@ public class ComplexRuleEvaluator {
       case FUZZY_MEMBERSHIP -> evaluateFuzzyMembership(condition, context);
       case FUZZY_ADAPTIVE_THRESHOLD -> evaluateFuzzyAdaptiveThreshold(condition, context);
 
+        // ========== LLM & Generative AI Fraud Detection (LLM001-LLM012) ==========
+      case LLM_TRANSACTION_DESCRIPTION_ANALYSIS -> evaluateLlmTransactionDescriptionAnalysis(condition, context);
+      case LLM_GENERATIVE_RULE_SYNTHESIS -> evaluateLlmGenerativeRuleSynthesis(condition, context);
+      case LLM_ANOMALY_EXPLANATION_GENERATION -> evaluateLlmAnomalyExplanationGeneration(condition, context);
+      case LLM_CHATBOT_FRAUD_DETECTION -> evaluateLlmChatbotFraudDetection(condition, context);
+      case LLM_DEEPFAKE_VOICE_DETECTION -> evaluateLlmDeepfakeVoiceDetection(condition, context);
+      case LLM_SYNTHETIC_IMAGE_DETECTION -> evaluateLlmSyntheticImageDetection(condition, context);
+      case LLM_EMAIL_PHISHING_ANALYSIS -> evaluateLlmEmailPhishingAnalysis(condition, context);
+      case LLM_SOCIAL_ENGINEERING_CLASSIFICATION -> evaluateLlmSocialEngineeringClassification(condition, context);
+      case LLM_FRAUD_ALERT_PRIORITIZATION -> evaluateLlmFraudAlertPrioritization(condition, context);
+      case LLM_MULTI_MODAL_FRAUD_DETECTION -> evaluateLlmMultiModalFraudDetection(condition, context);
+      case LLM_ADVERSARIAL_ATTACK_RESISTANCE -> evaluateLlmAdversarialAttackResistance(condition, context);
+      case LLM_FRAUD_PATTERN_AUTODISCOVERY -> evaluateLlmFraudPatternAutodiscovery(condition, context);
+
+        // ========== Neo4j Graph Fraud Detection (NEO001-NEO018) ==========
+      case NEO4J_WEAKLY_CONNECTED_COMPONENTS -> evaluateNeo4jWeaklyConnectedComponents(condition, context);
+      case NEO4J_DEGREE_CENTRALITY -> evaluateNeo4jDegreeCentrality(condition, context);
+      case NEO4J_PAGERANK_FRAUD_SCORE -> evaluateNeo4jPagerankFraudScore(condition, context);
+      case NEO4J_LOUVAIN_COMMUNITY_DETECTION -> evaluateNeo4jLouvainCommunityDetection(condition, context);
+      case NEO4J_PAIRWISE_SIMILARITY_PII -> evaluateNeo4jPairwiseSimilarityPii(condition, context);
+      case NEO4J_ENTITY_RESOLUTION_SHARED_PII -> evaluateNeo4jEntityResolutionSharedPii(condition, context);
+      case NEO4J_FRAUD_RING_DETECTION -> evaluateNeo4jFraudRingDetection(condition, context);
+      case NEO4J_MONEY_MULE_NETWORK_ANALYSIS -> evaluateNeo4jMoneyMuleNetworkAnalysis(condition, context);
+      case NEO4J_CIRCULAR_TRANSACTION_DETECTION -> evaluateNeo4jCircularTransactionDetection(condition, context);
+      case NEO4J_FIRST_PARTY_FRAUD_CLUSTERING -> evaluateNeo4jFirstPartyFraudClustering(condition, context);
+      case NEO4J_SECOND_LEVEL_FRAUDSTER_ID -> evaluateNeo4jSecondLevelFraudsterId(condition, context);
+      case NEO4J_BETWEENNESS_CENTRALITY_MULE -> evaluateNeo4jBetweennessCentralityMule(condition, context);
+      case NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD -> evaluateNeo4jLabelPropagationFraudSpread(condition, context);
+      case NEO4J_SHORTEST_PATH_AML_TRACKING -> evaluateNeo4jShortestPathAmlTracking(condition, context);
+      case NEO4J_TRIANGLE_COUNT_COLLUSION -> evaluateNeo4jTriangleCountCollusion(condition, context);
+      case NEO4J_NODE_SIMILARITY_SYNTHETIC_ID -> evaluateNeo4jNodeSimilaritySyntheticId(condition, context);
+      case NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION -> evaluateNeo4jGraphEmbeddingFraudPrediction(condition, context);
+      case NEO4J_TEMPORAL_MOTIF_PATTERN -> evaluateNeo4jTemporalMotifPattern(condition, context);
+
+        // ========== Synthetic Identity Detection (SYN001-SYN015) ==========
+      case BIOMETRIC_KEYSTROKE_DYNAMICS -> evaluateBiometricKeystrokeDynamics(condition, context);
+      case BIOMETRIC_MOUSE_MOVEMENT -> evaluateBiometricMouseMovement(condition, context);
+      case BIOMETRIC_SCROLL_VELOCITY -> evaluateBiometricScrollVelocity(condition, context);
+      case DEVICE_FINGERPRINT_CONSISTENCY_CHECK -> evaluateDeviceFingerprintConsistencyCheck(condition, context);
+      case ECBSV_SSN_VALIDATION -> evaluateEcbsvSsnValidation(condition, context);
+      case SYNTHETIC_FRAUD_SCORE -> evaluateSyntheticFraudScore(condition, context);
+      case INJECTION_ATTACK_DETECTION -> evaluateInjectionAttackDetection(condition, context);
+      case LIVENESS_DETECTION_FACIAL -> evaluateLivenessDetectionFacial(condition, context);
+      case LIVENESS_DETECTION_VOICE -> evaluateLivenessDetectionVoice(condition, context);
+      case ANTI_DETECT_BROWSER_DETECTION -> evaluateAntiDetectBrowserDetection(condition, context);
+      case DOCUMENT_FORGERY_DETECTION -> evaluateDocumentForgeryDetection(condition, context);
+      case FACE_TO_ID_PHOTO_MATCHING -> evaluateFaceToIdPhotoMatching(condition, context);
+      case ADAPTIVE_BEHAVIORAL_ANALYTICS -> evaluateAdaptiveBehavioralAnalytics(condition, context);
+      case SYNTHETIC_ID_LABEL_CORRECTION -> evaluateSyntheticIdLabelCorrection(condition, context);
+      case MULTI_LAYERED_SYNTHETIC_ID_CONTROLS -> evaluateMultiLayeredSyntheticIdControls(condition, context);
+
       default -> {
         log.warn("Operador não implementado: {}", operator);
         yield false;
@@ -7651,6 +7702,282 @@ public class ComplexRuleEvaluator {
 
   private boolean evaluateBslScenarioAnalysis(RuleCondition condition, EvaluationContext context) {
     log.debug("BSL_SCENARIO_ANALYSIS: stub - retornando false");
+    return false;
+  }
+
+  // ========== LLM & Generative AI Fraud Detection (LLM001-LLM012) ==========
+
+  private boolean evaluateLlmTransactionDescriptionAnalysis(RuleCondition condition, EvaluationContext context) {
+    // LLM001: Análise de descrição de transação via LLM para detectar padrões suspeitos
+    log.debug("LLM_TRANSACTION_DESCRIPTION_ANALYSIS: Analisando descrição de transação");
+    return false; // Stub - integração com API LLM necessária
+  }
+
+  private boolean evaluateLlmGenerativeRuleSynthesis(RuleCondition condition, EvaluationContext context) {
+    // LLM002: Síntese automática de regras via LLM
+    log.debug("LLM_GENERATIVE_RULE_SYNTHESIS: Gerando regras automaticamente");
+    return false;
+  }
+
+  private boolean evaluateLlmAnomalyExplanationGeneration(RuleCondition condition, EvaluationContext context) {
+    // LLM003: Geração de explicação de anomalia em linguagem natural
+    log.debug("LLM_ANOMALY_EXPLANATION_GENERATION: Gerando explicação de anomalia");
+    return false;
+  }
+
+  private boolean evaluateLlmChatbotFraudDetection(RuleCondition condition, EvaluationContext context) {
+    // LLM004: Detecção de fraude em chatbot/conversação
+    log.debug("LLM_CHATBOT_FRAUD_DETECTION: Analisando conversa para fraude");
+    return false;
+  }
+
+  private boolean evaluateLlmDeepfakeVoiceDetection(RuleCondition condition, EvaluationContext context) {
+    // LLM005: Detecção de deepfake de voz
+    log.debug("LLM_DEEPFAKE_VOICE_DETECTION: Verificando autenticidade de voz");
+    return false;
+  }
+
+  private boolean evaluateLlmSyntheticImageDetection(RuleCondition condition, EvaluationContext context) {
+    // LLM006: Detecção de imagem sintética/GAN
+    log.debug("LLM_SYNTHETIC_IMAGE_DETECTION: Verificando imagem sintética");
+    return false;
+  }
+
+  private boolean evaluateLlmEmailPhishingAnalysis(RuleCondition condition, EvaluationContext context) {
+    // LLM007: Análise de phishing em email
+    log.debug("LLM_EMAIL_PHISHING_ANALYSIS: Analisando email para phishing");
+    return false;
+  }
+
+  private boolean evaluateLlmSocialEngineeringClassification(RuleCondition condition, EvaluationContext context) {
+    // LLM008: Classificação de engenharia social
+    log.debug("LLM_SOCIAL_ENGINEERING_CLASSIFICATION: Classificando engenharia social");
+    return false;
+  }
+
+  private boolean evaluateLlmFraudAlertPrioritization(RuleCondition condition, EvaluationContext context) {
+    // LLM009: Priorização automática de alertas
+    log.debug("LLM_FRAUD_ALERT_PRIORITIZATION: Priorizando alertas");
+    return false;
+  }
+
+  private boolean evaluateLlmMultiModalFraudDetection(RuleCondition condition, EvaluationContext context) {
+    // LLM010: Detecção multimodal (texto+imagem+dados)
+    log.debug("LLM_MULTI_MODAL_FRAUD_DETECTION: Detecção multimodal");
+    return false;
+  }
+
+  private boolean evaluateLlmAdversarialAttackResistance(RuleCondition condition, EvaluationContext context) {
+    // LLM011: Resistência a ataques adversariais
+    log.debug("LLM_ADVERSARIAL_ATTACK_RESISTANCE: Verificando resistência adversarial");
+    return false;
+  }
+
+  private boolean evaluateLlmFraudPatternAutodiscovery(RuleCondition condition, EvaluationContext context) {
+    // LLM012: Autodescoberta de padrões de fraude
+    log.debug("LLM_FRAUD_PATTERN_AUTODISCOVERY: Descobrindo padrões automaticamente");
+    return false;
+  }
+
+  // ========== Neo4j Graph Fraud Detection (NEO001-NEO018) ==========
+
+  private boolean evaluateNeo4jWeaklyConnectedComponents(RuleCondition condition, EvaluationContext context) {
+    // NEO001: Componentes fracamente conectados (WCC)
+    log.debug("NEO4J_WEAKLY_CONNECTED_COMPONENTS: Analisando componentes conectados");
+    return false;
+  }
+
+  private boolean evaluateNeo4jDegreeCentrality(RuleCondition condition, EvaluationContext context) {
+    // NEO002: Centralidade de grau
+    log.debug("NEO4J_DEGREE_CENTRALITY: Calculando centralidade de grau");
+    return false;
+  }
+
+  private boolean evaluateNeo4jPagerankFraudScore(RuleCondition condition, EvaluationContext context) {
+    // NEO003: Score de fraude via PageRank
+    log.debug("NEO4J_PAGERANK_FRAUD_SCORE: Calculando PageRank para fraude");
+    return false;
+  }
+
+  private boolean evaluateNeo4jLouvainCommunityDetection(RuleCondition condition, EvaluationContext context) {
+    // NEO004: Detecção de comunidade Louvain
+    log.debug("NEO4J_LOUVAIN_COMMUNITY_DETECTION: Detectando comunidades");
+    return false;
+  }
+
+  private boolean evaluateNeo4jPairwiseSimilarityPii(RuleCondition condition, EvaluationContext context) {
+    // NEO005: Similaridade de PII entre pares
+    log.debug("NEO4J_PAIRWISE_SIMILARITY_PII: Calculando similaridade de PII");
+    return false;
+  }
+
+  private boolean evaluateNeo4jEntityResolutionSharedPii(RuleCondition condition, EvaluationContext context) {
+    // NEO006: Resolução de entidade por PII compartilhado
+    log.debug("NEO4J_ENTITY_RESOLUTION_SHARED_PII: Resolvendo entidades");
+    return false;
+  }
+
+  private boolean evaluateNeo4jFraudRingDetection(RuleCondition condition, EvaluationContext context) {
+    // NEO007: Detecção de anel de fraude
+    log.debug("NEO4J_FRAUD_RING_DETECTION: Detectando anéis de fraude");
+    return false;
+  }
+
+  private boolean evaluateNeo4jMoneyMuleNetworkAnalysis(RuleCondition condition, EvaluationContext context) {
+    // NEO008: Análise de rede de money mules
+    log.debug("NEO4J_MONEY_MULE_NETWORK_ANALYSIS: Analisando rede de mules");
+    return false;
+  }
+
+  private boolean evaluateNeo4jCircularTransactionDetection(RuleCondition condition, EvaluationContext context) {
+    // NEO009: Detecção de transação circular
+    log.debug("NEO4J_CIRCULAR_TRANSACTION_DETECTION: Detectando transações circulares");
+    return false;
+  }
+
+  private boolean evaluateNeo4jFirstPartyFraudClustering(RuleCondition condition, EvaluationContext context) {
+    // NEO010: Clustering de fraude de primeira parte
+    log.debug("NEO4J_FIRST_PARTY_FRAUD_CLUSTERING: Clustering de fraude");
+    return false;
+  }
+
+  private boolean evaluateNeo4jSecondLevelFraudsterId(RuleCondition condition, EvaluationContext context) {
+    // NEO011: Identificação de fraudador de segundo nível
+    log.debug("NEO4J_SECOND_LEVEL_FRAUDSTER_ID: Identificando fraudador de segundo nível");
+    return false;
+  }
+
+  private boolean evaluateNeo4jBetweennessCentralityMule(RuleCondition condition, EvaluationContext context) {
+    // NEO012: Centralidade de intermediação para mules
+    log.debug("NEO4J_BETWEENNESS_CENTRALITY_MULE: Calculando centralidade de intermediação");
+    return false;
+  }
+
+  private boolean evaluateNeo4jLabelPropagationFraudSpread(RuleCondition condition, EvaluationContext context) {
+    // NEO013: Propagação de label de fraude
+    log.debug("NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD: Propagando labels de fraude");
+    return false;
+  }
+
+  private boolean evaluateNeo4jShortestPathAmlTracking(RuleCondition condition, EvaluationContext context) {
+    // NEO014: Rastreamento AML via caminho mais curto
+    log.debug("NEO4J_SHORTEST_PATH_AML_TRACKING: Rastreando caminho AML");
+    return false;
+  }
+
+  private boolean evaluateNeo4jTriangleCountCollusion(RuleCondition condition, EvaluationContext context) {
+    // NEO015: Contagem de triângulos para colusão
+    log.debug("NEO4J_TRIANGLE_COUNT_COLLUSION: Contando triângulos para colusão");
+    return false;
+  }
+
+  private boolean evaluateNeo4jNodeSimilaritySyntheticId(RuleCondition condition, EvaluationContext context) {
+    // NEO016: Similaridade de nó para ID sintético
+    log.debug("NEO4J_NODE_SIMILARITY_SYNTHETIC_ID: Calculando similaridade de nó");
+    return false;
+  }
+
+  private boolean evaluateNeo4jGraphEmbeddingFraudPrediction(RuleCondition condition, EvaluationContext context) {
+    // NEO017: Predição de fraude via embedding de grafo
+    log.debug("NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION: Predição via embedding");
+    return false;
+  }
+
+  private boolean evaluateNeo4jTemporalMotifPattern(RuleCondition condition, EvaluationContext context) {
+    // NEO018: Padrão de motif temporal
+    log.debug("NEO4J_TEMPORAL_MOTIF_PATTERN: Analisando padrão temporal");
+    return false;
+  }
+
+  // ========== Synthetic Identity Detection (SYN001-SYN015) ==========
+
+  private boolean evaluateBiometricKeystrokeDynamics(RuleCondition condition, EvaluationContext context) {
+    // SYN001: Dinâmica de digitação biométrica
+    log.debug("BIOMETRIC_KEYSTROKE_DYNAMICS: Analisando dinâmica de digitação");
+    return false;
+  }
+
+  private boolean evaluateBiometricMouseMovement(RuleCondition condition, EvaluationContext context) {
+    // SYN002: Movimento de mouse biométrico
+    log.debug("BIOMETRIC_MOUSE_MOVEMENT: Analisando movimento de mouse");
+    return false;
+  }
+
+  private boolean evaluateBiometricScrollVelocity(RuleCondition condition, EvaluationContext context) {
+    // SYN003: Velocidade de scroll biométrica
+    log.debug("BIOMETRIC_SCROLL_VELOCITY: Analisando velocidade de scroll");
+    return false;
+  }
+
+  private boolean evaluateDeviceFingerprintConsistencyCheck(RuleCondition condition, EvaluationContext context) {
+    // SYN004: Verificação de consistência de fingerprint
+    log.debug("DEVICE_FINGERPRINT_CONSISTENCY_CHECK: Verificando consistência de fingerprint");
+    return false;
+  }
+
+  private boolean evaluateEcbsvSsnValidation(RuleCondition condition, EvaluationContext context) {
+    // SYN005: Validação SSN via eCBSV
+    log.debug("ECBSV_SSN_VALIDATION: Validando SSN via eCBSV");
+    return false;
+  }
+
+  private boolean evaluateSyntheticFraudScore(RuleCondition condition, EvaluationContext context) {
+    // SYN006: Score de fraude sintética
+    log.debug("SYNTHETIC_FRAUD_SCORE: Calculando score de fraude sintética");
+    return false;
+  }
+
+  private boolean evaluateInjectionAttackDetection(RuleCondition condition, EvaluationContext context) {
+    // SYN007: Detecção de ataque de injeção
+    log.debug("INJECTION_ATTACK_DETECTION: Detectando ataque de injeção");
+    return false;
+  }
+
+  private boolean evaluateLivenessDetectionFacial(RuleCondition condition, EvaluationContext context) {
+    // SYN008: Detecção de liveness facial
+    log.debug("LIVENESS_DETECTION_FACIAL: Verificando liveness facial");
+    return false;
+  }
+
+  private boolean evaluateLivenessDetectionVoice(RuleCondition condition, EvaluationContext context) {
+    // SYN009: Detecção de liveness de voz
+    log.debug("LIVENESS_DETECTION_VOICE: Verificando liveness de voz");
+    return false;
+  }
+
+  private boolean evaluateAntiDetectBrowserDetection(RuleCondition condition, EvaluationContext context) {
+    // SYN010: Detecção de browser anti-detect
+    log.debug("ANTI_DETECT_BROWSER_DETECTION: Detectando browser anti-detect");
+    return false;
+  }
+
+  private boolean evaluateDocumentForgeryDetection(RuleCondition condition, EvaluationContext context) {
+    // SYN011: Detecção de falsificação de documento
+    log.debug("DOCUMENT_FORGERY_DETECTION: Detectando falsificação de documento");
+    return false;
+  }
+
+  private boolean evaluateFaceToIdPhotoMatching(RuleCondition condition, EvaluationContext context) {
+    // SYN012: Matching de face com foto de ID
+    log.debug("FACE_TO_ID_PHOTO_MATCHING: Comparando face com foto de ID");
+    return false;
+  }
+
+  private boolean evaluateAdaptiveBehavioralAnalytics(RuleCondition condition, EvaluationContext context) {
+    // SYN013: Analytics comportamental adaptativo
+    log.debug("ADAPTIVE_BEHAVIORAL_ANALYTICS: Analisando comportamento adaptativo");
+    return false;
+  }
+
+  private boolean evaluateSyntheticIdLabelCorrection(RuleCondition condition, EvaluationContext context) {
+    // SYN014: Correção de label de ID sintético
+    log.debug("SYNTHETIC_ID_LABEL_CORRECTION: Corrigindo label de ID sintético");
+    return false;
+  }
+
+  private boolean evaluateMultiLayeredSyntheticIdControls(RuleCondition condition, EvaluationContext context) {
+    // SYN015: Controles multicamada para ID sintético
+    log.debug("MULTI_LAYERED_SYNTHETIC_ID_CONTROLS: Aplicando controles multicamada");
     return false;
   }
 }

@@ -529,7 +529,58 @@ public class RuleCondition {
 
     // ========== OPERADORES V4.0 PHASE 2F (2 novos) - Fuzzy Logic ==========
     FUZZY_MEMBERSHIP, // FUZZY001: Fuzzy membership function evaluation
-    FUZZY_ADAPTIVE_THRESHOLD // FUZZY002: Adaptive fuzzy threshold adjustment
+    FUZZY_ADAPTIVE_THRESHOLD, // FUZZY002: Adaptive fuzzy threshold adjustment
+
+    // ========== OPERADORES V4.0 PHASE 5A (12 novos) - LLM & Generative AI Fraud Detection ==========
+    LLM_TRANSACTION_DESCRIPTION_ANALYSIS, // LLM001: Análise de descrição de transação via LLM
+    LLM_GENERATIVE_RULE_SYNTHESIS, // LLM002: Síntese automática de regras via LLM
+    LLM_ANOMALY_EXPLANATION_GENERATION, // LLM003: Geração de explicação de anomalia em linguagem natural
+    LLM_CHATBOT_FRAUD_DETECTION, // LLM004: Detecção de fraude em chatbot/conversação
+    LLM_DEEPFAKE_VOICE_DETECTION, // LLM005: Detecção de deepfake de voz
+    LLM_SYNTHETIC_IMAGE_DETECTION, // LLM006: Detecção de imagem sintética/GAN
+    LLM_EMAIL_PHISHING_ANALYSIS, // LLM007: Análise de phishing em email
+    LLM_SOCIAL_ENGINEERING_CLASSIFICATION, // LLM008: Classificação de engenharia social
+    LLM_FRAUD_ALERT_PRIORITIZATION, // LLM009: Priorização automática de alertas
+    LLM_MULTI_MODAL_FRAUD_DETECTION, // LLM010: Detecção multimodal (texto+imagem+dados)
+    LLM_ADVERSARIAL_ATTACK_RESISTANCE, // LLM011: Resistência a ataques adversariais
+    LLM_FRAUD_PATTERN_AUTODISCOVERY, // LLM012: Autodescoberta de padrões de fraude
+
+    // ========== OPERADORES V4.0 PHASE 5B (18 novos) - Neo4j Graph Fraud Detection ==========
+    NEO4J_WEAKLY_CONNECTED_COMPONENTS, // NEO001: Componentes fracamente conectados (WCC)
+    NEO4J_DEGREE_CENTRALITY, // NEO002: Centralidade de grau
+    NEO4J_PAGERANK_FRAUD_SCORE, // NEO003: Score de fraude via PageRank
+    NEO4J_LOUVAIN_COMMUNITY_DETECTION, // NEO004: Detecção de comunidade Louvain
+    NEO4J_PAIRWISE_SIMILARITY_PII, // NEO005: Similaridade de PII entre pares
+    NEO4J_ENTITY_RESOLUTION_SHARED_PII, // NEO006: Resolução de entidade por PII compartilhado
+    NEO4J_FRAUD_RING_DETECTION, // NEO007: Detecção de anel de fraude
+    NEO4J_MONEY_MULE_NETWORK_ANALYSIS, // NEO008: Análise de rede de money mules
+    NEO4J_CIRCULAR_TRANSACTION_DETECTION, // NEO009: Detecção de transação circular
+    NEO4J_FIRST_PARTY_FRAUD_CLUSTERING, // NEO010: Clustering de fraude de primeira parte
+    NEO4J_SECOND_LEVEL_FRAUDSTER_ID, // NEO011: Identificação de fraudador de segundo nível
+    NEO4J_BETWEENNESS_CENTRALITY_MULE, // NEO012: Centralidade de intermediação para mules
+    NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD, // NEO013: Propagação de label de fraude
+    NEO4J_SHORTEST_PATH_AML_TRACKING, // NEO014: Rastreamento AML via caminho mais curto
+    NEO4J_TRIANGLE_COUNT_COLLUSION, // NEO015: Contagem de triângulos para colusão
+    NEO4J_NODE_SIMILARITY_SYNTHETIC_ID, // NEO016: Similaridade de nó para ID sintético
+    NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION, // NEO017: Predição de fraude via embedding de grafo
+    NEO4J_TEMPORAL_MOTIF_PATTERN, // NEO018: Padrão de motif temporal
+
+    // ========== OPERADORES V4.0 PHASE 5C (15 novos) - Synthetic Identity Detection ==========
+    BIOMETRIC_KEYSTROKE_DYNAMICS, // SYN001: Dinâmica de digitação biométrica
+    BIOMETRIC_MOUSE_MOVEMENT, // SYN002: Movimento de mouse biométrico
+    BIOMETRIC_SCROLL_VELOCITY, // SYN003: Velocidade de scroll biométrica
+    DEVICE_FINGERPRINT_CONSISTENCY_CHECK, // SYN004: Verificação de consistência de fingerprint
+    ECBSV_SSN_VALIDATION, // SYN005: Validação SSN via eCBSV
+    SYNTHETIC_FRAUD_SCORE, // SYN006: Score de fraude sintética
+    INJECTION_ATTACK_DETECTION, // SYN007: Detecção de ataque de injeção
+    LIVENESS_DETECTION_FACIAL, // SYN008: Detecção de liveness facial
+    LIVENESS_DETECTION_VOICE, // SYN009: Detecção de liveness de voz
+    ANTI_DETECT_BROWSER_DETECTION, // SYN010: Detecção de browser anti-detect
+    DOCUMENT_FORGERY_DETECTION, // SYN011: Detecção de falsificação de documento
+    FACE_TO_ID_PHOTO_MATCHING, // SYN012: Matching de face com foto de ID
+    ADAPTIVE_BEHAVIORAL_ANALYTICS, // SYN013: Analytics comportamental adaptativo
+    SYNTHETIC_ID_LABEL_CORRECTION, // SYN014: Correção de label de ID sintético
+    MULTI_LAYERED_SYNTHETIC_ID_CONTROLS // SYN015: Controles multicamada para ID sintético
   }
 
   /** Tipos de valor suportados */
