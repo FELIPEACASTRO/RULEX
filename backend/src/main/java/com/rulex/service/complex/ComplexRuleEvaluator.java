@@ -710,6 +710,31 @@ public class ComplexRuleEvaluator {
       case PLT_REVIEWLIST_QUEUE -> evaluatePltReviewlistQueue(condition, context);
       case PLT_CONSORTIUM_DATA_CHECK -> evaluatePltConsortiumDataCheck(condition, context);
 
+      // ========== Basel III Operational Risk (BSL001-BSL014) ==========
+      case BSL_BUSINESS_INDICATOR -> evaluateBslBusinessIndicator(condition, context);
+      case BSL_BUSINESS_INDICATOR_COMPONENT -> evaluateBslBusinessIndicatorComponent(condition, context);
+      case BSL_INTERNAL_LOSS_MULTIPLIER -> evaluateBslInternalLossMultiplier(condition, context);
+      case BSL_LOSS_DATA_COLLECTION -> evaluateBslLossDataCollection(condition, context);
+      case BSL_LOSS_EXCLUSION_APPROVAL -> evaluateBslLossExclusionApproval(condition, context);
+      case BSL_BUCKET_CLASSIFICATION -> evaluateBslBucketClassification(condition, context);
+      case BSL_MARGINAL_COEFFICIENT -> evaluateBslMarginalCoefficient(condition, context);
+      case BSL_LOSS_THRESHOLD_SETTING -> evaluateBslLossThresholdSetting(condition, context);
+      case BSL_RETENTION_PERIOD -> evaluateBslRetentionPeriod(condition, context);
+      case BSL_RISK_GOVERNANCE -> evaluateBslRiskGovernance(condition, context);
+      case BSL_LOSS_EVENT_REPORTING -> evaluateBslLossEventReporting(condition, context);
+      case BSL_CONTROL_DEFICIENCY -> evaluateBslControlDeficiency(condition, context);
+      case BSL_KRI_MONITORING -> evaluateBslKriMonitoring(condition, context);
+      case BSL_SCENARIO_ANALYSIS -> evaluateBslScenarioAnalysis(condition, context);
+
+      // ========== Rule Mining Determinístico (APRIORI, FPGROWTH, ECLAT) ==========
+      case APRIORI_ASSOCIATION -> evaluateAprioriAssociation(condition, context);
+      case FPGROWTH_FREQUENT_PATTERNS -> evaluateFpgrowthFrequentPatterns(condition, context);
+      case ECLAT_ITEMSET -> evaluateEclatItemset(condition, context);
+
+      // ========== Fuzzy Logic (FUZZY001, FUZZY002) ==========
+      case FUZZY_MEMBERSHIP -> evaluateFuzzyMembership(condition, context);
+      case FUZZY_ADAPTIVE_THRESHOLD -> evaluateFuzzyAdaptiveThreshold(condition, context);
+
       default -> {
         log.warn("Operador não implementado: {}", operator);
         yield false;

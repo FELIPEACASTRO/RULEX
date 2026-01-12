@@ -504,7 +504,32 @@ public class RuleCondition {
     PLT_LINKING_VELOCITY, // PLT025: PayPal FPA linking velocity
     PLT_BAD_ENTITY_NETWORK, // PLT026: PayPal FPA bad entity network
     PLT_REVIEWLIST_QUEUE, // PLT027: PayPal FPA reviewlist queue
-    PLT_CONSORTIUM_DATA_CHECK // PLT028: Consortium data cross-check
+    PLT_CONSORTIUM_DATA_CHECK, // PLT028: Consortium data cross-check
+
+    // ========== OPERADORES V4.0 PHASE 2D (14 novos) - Basel III Operational Risk ==========
+    BSL_BUSINESS_INDICATOR, // BSL001: Business Indicator calculation (BI = ILDC + SC + FC)
+    BSL_BUSINESS_INDICATOR_COMPONENT, // BSL002: BI component extraction (ILDC, SC, FC)
+    BSL_INTERNAL_LOSS_MULTIPLIER, // BSL003: Internal Loss Multiplier (ILM) calculation
+    BSL_LOSS_DATA_COLLECTION, // BSL004: Operational loss data collection validation
+    BSL_LOSS_EXCLUSION_APPROVAL, // BSL005: Loss event exclusion approval workflow
+    BSL_BUCKET_CLASSIFICATION, // BSL006: BI bucket classification (€1bn, €3bn, €30bn)
+    BSL_MARGINAL_COEFFICIENT, // BSL007: Marginal coefficient application (12%/15%/18%)
+    BSL_LOSS_THRESHOLD_SETTING, // BSL008: Loss data threshold setting (€20k default)
+    BSL_RETENTION_PERIOD, // BSL009: Loss data retention period validation (10 years)
+    BSL_RISK_GOVERNANCE, // BSL010: Operational risk governance framework check
+    BSL_LOSS_EVENT_REPORTING, // BSL011: Operational loss event reporting compliance
+    BSL_CONTROL_DEFICIENCY, // BSL012: Control deficiency tracking and remediation
+    BSL_KRI_MONITORING, // BSL013: Key Risk Indicator monitoring thresholds
+    BSL_SCENARIO_ANALYSIS, // BSL014: Scenario analysis capital calculation
+
+    // ========== OPERADORES V4.0 PHASE 2E (3 novos) - Rule Mining Determinístico ==========
+    APRIORI_ASSOCIATION, // APRIORI001: Apriori association rule mining (support/confidence)
+    FPGROWTH_FREQUENT_PATTERNS, // FPGROWTH001: FP-Growth frequent pattern detection
+    ECLAT_ITEMSET, // ECLAT001: Eclat itemset detection (vertical format)
+
+    // ========== OPERADORES V4.0 PHASE 2F (2 novos) - Fuzzy Logic ==========
+    FUZZY_MEMBERSHIP, // FUZZY001: Fuzzy membership function evaluation
+    FUZZY_ADAPTIVE_THRESHOLD // FUZZY002: Adaptive fuzzy threshold adjustment
   }
 
   /** Tipos de valor suportados */
