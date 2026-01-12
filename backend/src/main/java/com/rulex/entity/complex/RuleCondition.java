@@ -376,7 +376,58 @@ public class RuleCondition {
     BATTERY_LEVEL_ANOMALY, // Anomalia de nível de bateria
     HARDWARE_CONCURRENCY_MISMATCH, // Incompatibilidade de concorrência de hardware
     TOUCH_SUPPORT_INCONSISTENCY, // Inconsistência de suporte touch
-    DEVICE_MEMORY_ANOMALY // Anomalia de memória do dispositivo
+    DEVICE_MEMORY_ANOMALY, // Anomalia de memória do dispositivo
+
+    // ========== OPERADORES V4.0 PHASE 1B (25 novos) - Behavioral ==========
+    // CATEGORIA P: Behavioral Patterns (15)
+    BEHAVIORAL_BASELINE_DEVIATION, // Desvio do baseline comportamental
+    SPENDING_CATEGORY_SHIFT, // Mudança de categoria de gastos
+    TRANSACTION_SIZE_ESCALATION, // Escalada de tamanho de transação
+    FREQUENCY_PATTERN_CHANGE, // Mudança de padrão de frequência
+    TIME_PREFERENCE_SHIFT, // Mudança de preferência de horário
+    CHANNEL_USAGE_ANOMALY, // Anomalia de uso de canal
+    PAYMENT_METHOD_SWITCH, // Troca de método de pagamento
+    RECIPIENT_DIVERSITY_CHANGE, // Mudança de diversidade de destinatários
+    GEOGRAPHIC_BEHAVIOR_SHIFT, // Mudança de comportamento geográfico
+    SESSION_BEHAVIOR_ANOMALY, // Anomalia de comportamento de sessão
+    LOGIN_PATTERN_DEVIATION, // Desvio de padrão de login
+    NAVIGATION_PATTERN_ANOMALY, // Anomalia de padrão de navegação
+    TRANSACTION_TIMING_CLUSTER, // Cluster de timing de transações
+    AMOUNT_ROUNDING_BEHAVIOR, // Comportamento de arredondamento de valores
+    SPLIT_PAYMENT_PATTERN, // Padrão de pagamento dividido
+
+    // CATEGORIA Q: Statistical Behavioral (10)
+    CHI_SQUARE_DISTRIBUTION_TEST, // Teste Chi-Square de distribuição
+    KOLMOGOROV_SMIRNOV_TEST, // Teste Kolmogorov-Smirnov
+    ANDERSON_DARLING_TEST, // Teste Anderson-Darling
+    T_TEST_AMOUNT_DEVIATION, // T-Test de desvio de valor
+    MANN_WHITNEY_U_TEST, // Teste Mann-Whitney U
+    CORRELATION_ANOMALY, // Anomalia de correlação
+    REGRESSION_RESIDUAL_OUTLIER, // Outlier de resíduo de regressão
+    VARIANCE_RATIO_TEST, // Teste de razão de variância
+    ENTROPY_SCORE_ANOMALY, // Anomalia de score de entropia
+    SKEWNESS_KURTOSIS_ANOMALY, // Anomalia de skewness/kurtosis
+
+    // ========== OPERADORES V4.0 PHASE 1C (18 novos) - MCC & Merchant ==========
+    // CATEGORIA R: MCC & Merchant Advanced (18)
+    MCC_CATEGORY_VELOCITY, // Velocidade por categoria MCC
+    MCC_SPENDING_LIMIT_CHECK, // Verificação de limite por MCC
+    MCC_CROSS_CATEGORY_PATTERN, // Padrão cross-category MCC
+    MERCHANT_REPUTATION_SCORE, // Score de reputação do merchant
+    MERCHANT_AGE_CHECK, // Verificação de idade do merchant
+    MERCHANT_TRANSACTION_VOLUME, // Volume de transações do merchant
+    MERCHANT_CHARGEBACK_HISTORY, // Histórico de chargeback do merchant
+    MERCHANT_FRAUD_RATE_CHECK, // Verificação de taxa de fraude do merchant
+    MERCHANT_GEOGRAPHIC_SPREAD, // Dispersão geográfica do merchant
+    MERCHANT_CUSTOMER_CONCENTRATION, // Concentração de clientes do merchant
+    MERCHANT_AMOUNT_DISTRIBUTION, // Distribuição de valores do merchant
+    MERCHANT_TIME_PATTERN, // Padrão temporal do merchant
+    MERCHANT_DEVICE_DIVERSITY, // Diversidade de dispositivos do merchant
+    MERCHANT_REFUND_RATIO, // Razão de reembolso do merchant
+    MERCHANT_NEW_CUSTOMER_RATIO, // Razão de novos clientes do merchant
+    MERCHANT_DORMANT_REACTIVATION, // Reativação de merchant dormentes
+    MERCHANT_CROSS_BORDER_RATIO, // Razão cross-border do merchant
+    MERCHANT_HIGH_VALUE_FREQUENCY // Frequência de alto valor do merchant
   }
 
   /** Tipos de valor suportados */

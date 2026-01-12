@@ -564,6 +564,57 @@ public class ComplexRuleEvaluator {
       case TOUCH_SUPPORT_INCONSISTENCY -> evaluateTouchSupportInconsistency(condition, context);
       case DEVICE_MEMORY_ANOMALY -> evaluateDeviceMemoryAnomaly(condition, context);
 
+        // ========== OPERADORES V4.0 PHASE 1B (25 novos) - Behavioral ==========
+        // CATEGORIA P: Behavioral Patterns (15)
+      case BEHAVIORAL_BASELINE_DEVIATION -> evaluateBehavioralBaselineDeviation(condition, context);
+      case SPENDING_CATEGORY_SHIFT -> evaluateSpendingCategoryShift(condition, context);
+      case TRANSACTION_SIZE_ESCALATION -> evaluateTransactionSizeEscalation(condition, context);
+      case FREQUENCY_PATTERN_CHANGE -> evaluateFrequencyPatternChange(condition, context);
+      case TIME_PREFERENCE_SHIFT -> evaluateTimePreferenceShift(condition, context);
+      case CHANNEL_USAGE_ANOMALY -> evaluateChannelUsageAnomaly(condition, context);
+      case PAYMENT_METHOD_SWITCH -> evaluatePaymentMethodSwitch(condition, context);
+      case RECIPIENT_DIVERSITY_CHANGE -> evaluateRecipientDiversityChange(condition, context);
+      case GEOGRAPHIC_BEHAVIOR_SHIFT -> evaluateGeographicBehaviorShift(condition, context);
+      case SESSION_BEHAVIOR_ANOMALY -> evaluateSessionBehaviorAnomaly(condition, context);
+      case LOGIN_PATTERN_DEVIATION -> evaluateLoginPatternDeviation(condition, context);
+      case NAVIGATION_PATTERN_ANOMALY -> evaluateNavigationPatternAnomaly(condition, context);
+      case TRANSACTION_TIMING_CLUSTER -> evaluateTransactionTimingCluster(condition, context);
+      case AMOUNT_ROUNDING_BEHAVIOR -> evaluateAmountRoundingBehavior(condition, context);
+      case SPLIT_PAYMENT_PATTERN -> evaluateSplitPaymentPattern(condition, context);
+
+        // CATEGORIA Q: Statistical Behavioral (10)
+      case CHI_SQUARE_DISTRIBUTION_TEST -> evaluateChiSquareDistributionTest(condition, context);
+      case KOLMOGOROV_SMIRNOV_TEST -> evaluateKolmogorovSmirnovTest(condition, context);
+      case ANDERSON_DARLING_TEST -> evaluateAndersonDarlingTest(condition, context);
+      case T_TEST_AMOUNT_DEVIATION -> evaluateTTestAmountDeviation(condition, context);
+      case MANN_WHITNEY_U_TEST -> evaluateMannWhitneyUTest(condition, context);
+      case CORRELATION_ANOMALY -> evaluateCorrelationAnomaly(condition, context);
+      case REGRESSION_RESIDUAL_OUTLIER -> evaluateRegressionResidualOutlier(condition, context);
+      case VARIANCE_RATIO_TEST -> evaluateVarianceRatioTest(condition, context);
+      case ENTROPY_SCORE_ANOMALY -> evaluateEntropyScoreAnomaly(condition, context);
+      case SKEWNESS_KURTOSIS_ANOMALY -> evaluateSkewnessKurtosisAnomaly(condition, context);
+
+        // ========== OPERADORES V4.0 PHASE 1C (18 novos) - MCC & Merchant ==========
+        // CATEGORIA R: MCC & Merchant Advanced (18)
+      case MCC_CATEGORY_VELOCITY -> evaluateMccCategoryVelocity(condition, context);
+      case MCC_SPENDING_LIMIT_CHECK -> evaluateMccSpendingLimitCheck(condition, context);
+      case MCC_CROSS_CATEGORY_PATTERN -> evaluateMccCrossCategoryPattern(condition, context);
+      case MERCHANT_REPUTATION_SCORE -> evaluateMerchantReputationScore(condition, context);
+      case MERCHANT_AGE_CHECK -> evaluateMerchantAgeCheck(condition, context);
+      case MERCHANT_TRANSACTION_VOLUME -> evaluateMerchantTransactionVolume(condition, context);
+      case MERCHANT_CHARGEBACK_HISTORY -> evaluateMerchantChargebackHistory(condition, context);
+      case MERCHANT_FRAUD_RATE_CHECK -> evaluateMerchantFraudRateCheck(condition, context);
+      case MERCHANT_GEOGRAPHIC_SPREAD -> evaluateMerchantGeographicSpread(condition, context);
+      case MERCHANT_CUSTOMER_CONCENTRATION -> evaluateMerchantCustomerConcentration(condition, context);
+      case MERCHANT_AMOUNT_DISTRIBUTION -> evaluateMerchantAmountDistribution(condition, context);
+      case MERCHANT_TIME_PATTERN -> evaluateMerchantTimePattern(condition, context);
+      case MERCHANT_DEVICE_DIVERSITY -> evaluateMerchantDeviceDiversity(condition, context);
+      case MERCHANT_REFUND_RATIO -> evaluateMerchantRefundRatio(condition, context);
+      case MERCHANT_NEW_CUSTOMER_RATIO -> evaluateMerchantNewCustomerRatio(condition, context);
+      case MERCHANT_DORMANT_REACTIVATION -> evaluateMerchantDormantReactivation(condition, context);
+      case MERCHANT_CROSS_BORDER_RATIO -> evaluateMerchantCrossBorderRatio(condition, context);
+      case MERCHANT_HIGH_VALUE_FREQUENCY -> evaluateMerchantHighValueFrequency(condition, context);
+
       default -> {
         log.warn("Operador não implementado: {}", operator);
         yield false;
@@ -4385,6 +4436,1064 @@ public class ComplexRuleEvaluator {
       return value.compareTo(threshold) > 0;
     } catch (Exception e) {
       log.error("Erro ao avaliar operador de velocidade: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // ========== OPERADORES V4.0 PHASE 1B - BEHAVIORAL (25 novos) ==========
+
+  // --- CATEGORIA P: Behavioral Patterns (15) ---
+
+  /**
+   * BEHAVIORAL_BASELINE_DEVIATION: Verifica desvio do baseline comportamental.
+   * Formato valueSingle: "deviationThreshold" (ex: "2.5" = 2.5 desvios padrão)
+   */
+  private boolean evaluateBehavioralBaselineDeviation(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object deviationObj = payload.get("behavioral_deviation_score");
+      if (deviationObj == null) {
+        deviationObj = payload.get("behavioralDeviationScore");
+      }
+      
+      if (deviationObj == null) return false;
+      double deviation = deviationObj instanceof Number ? ((Number) deviationObj).doubleValue() : 0.0;
+      return deviation > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar BEHAVIORAL_BASELINE_DEVIATION: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * SPENDING_CATEGORY_SHIFT: Detecta mudança de categoria de gastos.
+   */
+  private boolean evaluateSpendingCategoryShift(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object shiftObj = payload.get("spending_category_shift");
+      if (shiftObj == null) {
+        shiftObj = payload.get("spendingCategoryShift");
+      }
+      
+      return Boolean.TRUE.equals(shiftObj) || "true".equalsIgnoreCase(String.valueOf(shiftObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SPENDING_CATEGORY_SHIFT: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * TRANSACTION_SIZE_ESCALATION: Detecta escalada de tamanho de transação.
+   * Formato valueSingle: "escalationFactor" (ex: "1.5" = 50% de aumento)
+   */
+  private boolean evaluateTransactionSizeEscalation(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double factor = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object escalationObj = payload.get("transaction_escalation_factor");
+      if (escalationObj == null) {
+        escalationObj = payload.get("transactionEscalationFactor");
+      }
+      
+      if (escalationObj == null) return false;
+      double escalation = escalationObj instanceof Number ? ((Number) escalationObj).doubleValue() : 0.0;
+      return escalation > factor;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar TRANSACTION_SIZE_ESCALATION: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * FREQUENCY_PATTERN_CHANGE: Detecta mudança de padrão de frequência.
+   */
+  private boolean evaluateFrequencyPatternChange(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object changeObj = payload.get("frequency_pattern_changed");
+      if (changeObj == null) {
+        changeObj = payload.get("frequencyPatternChanged");
+      }
+      
+      return Boolean.TRUE.equals(changeObj) || "true".equalsIgnoreCase(String.valueOf(changeObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar FREQUENCY_PATTERN_CHANGE: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * TIME_PREFERENCE_SHIFT: Detecta mudança de preferência de horário.
+   */
+  private boolean evaluateTimePreferenceShift(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object shiftObj = payload.get("time_preference_shift");
+      if (shiftObj == null) {
+        shiftObj = payload.get("timePreferenceShift");
+      }
+      
+      return Boolean.TRUE.equals(shiftObj) || "true".equalsIgnoreCase(String.valueOf(shiftObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar TIME_PREFERENCE_SHIFT: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * CHANNEL_USAGE_ANOMALY: Detecta anomalia de uso de canal.
+   */
+  private boolean evaluateChannelUsageAnomaly(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object anomalyObj = payload.get("channel_usage_anomaly");
+      if (anomalyObj == null) {
+        anomalyObj = payload.get("channelUsageAnomaly");
+      }
+      
+      return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CHANNEL_USAGE_ANOMALY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * PAYMENT_METHOD_SWITCH: Detecta troca de método de pagamento.
+   */
+  private boolean evaluatePaymentMethodSwitch(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object switchObj = payload.get("payment_method_switched");
+      if (switchObj == null) {
+        switchObj = payload.get("paymentMethodSwitched");
+      }
+      
+      return Boolean.TRUE.equals(switchObj) || "true".equalsIgnoreCase(String.valueOf(switchObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar PAYMENT_METHOD_SWITCH: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * RECIPIENT_DIVERSITY_CHANGE: Detecta mudança na diversidade de destinatários.
+   * Formato valueSingle: "diversityThreshold" (ex: "3" = mais de 3 novos destinatários)
+   */
+  private boolean evaluateRecipientDiversityChange(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int threshold = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object countObj = payload.get("new_recipient_count");
+      if (countObj == null) {
+        countObj = payload.get("newRecipientCount");
+      }
+      
+      if (countObj == null) return false;
+      int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
+      return count > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar RECIPIENT_DIVERSITY_CHANGE: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * GEOGRAPHIC_BEHAVIOR_SHIFT: Detecta mudança de comportamento geográfico.
+   */
+  private boolean evaluateGeographicBehaviorShift(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object shiftObj = payload.get("geographic_behavior_shift");
+      if (shiftObj == null) {
+        shiftObj = payload.get("geographicBehaviorShift");
+      }
+      
+      return Boolean.TRUE.equals(shiftObj) || "true".equalsIgnoreCase(String.valueOf(shiftObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar GEOGRAPHIC_BEHAVIOR_SHIFT: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * SESSION_BEHAVIOR_ANOMALY: Detecta anomalia de comportamento de sessão.
+   */
+  private boolean evaluateSessionBehaviorAnomaly(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object anomalyObj = payload.get("session_behavior_anomaly");
+      if (anomalyObj == null) {
+        anomalyObj = payload.get("sessionBehaviorAnomaly");
+      }
+      
+      return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SESSION_BEHAVIOR_ANOMALY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * LOGIN_PATTERN_DEVIATION: Detecta desvio de padrão de login.
+   */
+  private boolean evaluateLoginPatternDeviation(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object deviationObj = payload.get("login_pattern_deviation");
+      if (deviationObj == null) {
+        deviationObj = payload.get("loginPatternDeviation");
+      }
+      
+      return Boolean.TRUE.equals(deviationObj) || "true".equalsIgnoreCase(String.valueOf(deviationObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar LOGIN_PATTERN_DEVIATION: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * NAVIGATION_PATTERN_ANOMALY: Detecta anomalia de padrão de navegação.
+   */
+  private boolean evaluateNavigationPatternAnomaly(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object anomalyObj = payload.get("navigation_pattern_anomaly");
+      if (anomalyObj == null) {
+        anomalyObj = payload.get("navigationPatternAnomaly");
+      }
+      
+      return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar NAVIGATION_PATTERN_ANOMALY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * TRANSACTION_TIMING_CLUSTER: Detecta cluster de timing de transações.
+   * Formato valueSingle: "clusterSize" (ex: "5" = 5+ transações em cluster)
+   */
+  private boolean evaluateTransactionTimingCluster(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int threshold = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object clusterObj = payload.get("transaction_cluster_size");
+      if (clusterObj == null) {
+        clusterObj = payload.get("transactionClusterSize");
+      }
+      
+      if (clusterObj == null) return false;
+      int clusterSize = clusterObj instanceof Number ? ((Number) clusterObj).intValue() : 0;
+      return clusterSize >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar TRANSACTION_TIMING_CLUSTER: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * AMOUNT_ROUNDING_BEHAVIOR: Detecta comportamento de arredondamento de valores.
+   * Formato valueSingle: "roundingPercentage" (ex: "80" = 80% valores redondos)
+   */
+  private boolean evaluateAmountRoundingBehavior(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object percentObj = payload.get("rounding_percentage");
+      if (percentObj == null) {
+        percentObj = payload.get("roundingPercentage");
+      }
+      
+      if (percentObj == null) {
+        // Fallback: check current transaction
+        TransactionRequest tx = context.getTransactionRequest();
+        if (tx != null && tx.getTransactionAmount() != null) {
+          BigDecimal amount = tx.getTransactionAmount();
+          boolean isRound = amount.remainder(BigDecimal.valueOf(100)).compareTo(BigDecimal.ZERO) == 0;
+          return isRound && threshold <= 50; // Simple heuristic
+        }
+        return false;
+      }
+      
+      double percentage = percentObj instanceof Number ? ((Number) percentObj).doubleValue() : 0.0;
+      return percentage >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar AMOUNT_ROUNDING_BEHAVIOR: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * SPLIT_PAYMENT_PATTERN: Detecta padrão de pagamento dividido.
+   * Formato valueSingle: "splitCount" (ex: "3" = 3+ pagamentos divididos)
+   */
+  private boolean evaluateSplitPaymentPattern(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int threshold = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object countObj = payload.get("split_payment_count");
+      if (countObj == null) {
+        countObj = payload.get("splitPaymentCount");
+      }
+      
+      if (countObj == null) return false;
+      int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
+      return count >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SPLIT_PAYMENT_PATTERN: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // --- CATEGORIA Q: Statistical Behavioral (10) ---
+
+  /**
+   * CHI_SQUARE_DISTRIBUTION_TEST: Teste Chi-Square de distribuição.
+   * Formato valueSingle: "significanceLevel" (ex: "0.05")
+   */
+  private boolean evaluateChiSquareDistributionTest(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double significanceLevel = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object pValueObj = payload.get("chi_square_p_value");
+      if (pValueObj == null) {
+        pValueObj = payload.get("chiSquarePValue");
+      }
+      
+      if (pValueObj == null) return false;
+      double pValue = pValueObj instanceof Number ? ((Number) pValueObj).doubleValue() : 1.0;
+      return pValue < significanceLevel; // Reject null hypothesis = anomaly
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CHI_SQUARE_DISTRIBUTION_TEST: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * KOLMOGOROV_SMIRNOV_TEST: Teste Kolmogorov-Smirnov.
+   * Formato valueSingle: "significanceLevel" (ex: "0.05")
+   */
+  private boolean evaluateKolmogorovSmirnovTest(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double significanceLevel = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object pValueObj = payload.get("ks_test_p_value");
+      if (pValueObj == null) {
+        pValueObj = payload.get("ksTestPValue");
+      }
+      
+      if (pValueObj == null) return false;
+      double pValue = pValueObj instanceof Number ? ((Number) pValueObj).doubleValue() : 1.0;
+      return pValue < significanceLevel;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar KOLMOGOROV_SMIRNOV_TEST: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * ANDERSON_DARLING_TEST: Teste Anderson-Darling.
+   * Formato valueSingle: "criticalValue" (ex: "2.5")
+   */
+  private boolean evaluateAndersonDarlingTest(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double criticalValue = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object statObj = payload.get("anderson_darling_statistic");
+      if (statObj == null) {
+        statObj = payload.get("andersonDarlingStatistic");
+      }
+      
+      if (statObj == null) return false;
+      double statistic = statObj instanceof Number ? ((Number) statObj).doubleValue() : 0.0;
+      return statistic > criticalValue;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar ANDERSON_DARLING_TEST: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * T_TEST_AMOUNT_DEVIATION: T-Test de desvio de valor.
+   * Formato valueSingle: "tStatThreshold" (ex: "2.0")
+   */
+  private boolean evaluateTTestAmountDeviation(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object tStatObj = payload.get("t_test_statistic");
+      if (tStatObj == null) {
+        tStatObj = payload.get("tTestStatistic");
+      }
+      
+      if (tStatObj == null) return false;
+      double tStat = tStatObj instanceof Number ? ((Number) tStatObj).doubleValue() : 0.0;
+      return Math.abs(tStat) > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar T_TEST_AMOUNT_DEVIATION: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MANN_WHITNEY_U_TEST: Teste Mann-Whitney U.
+   * Formato valueSingle: "significanceLevel" (ex: "0.05")
+   */
+  private boolean evaluateMannWhitneyUTest(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double significanceLevel = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object pValueObj = payload.get("mann_whitney_p_value");
+      if (pValueObj == null) {
+        pValueObj = payload.get("mannWhitneyPValue");
+      }
+      
+      if (pValueObj == null) return false;
+      double pValue = pValueObj instanceof Number ? ((Number) pValueObj).doubleValue() : 1.0;
+      return pValue < significanceLevel;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MANN_WHITNEY_U_TEST: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * CORRELATION_ANOMALY: Detecta anomalia de correlação.
+   * Formato valueSingle: "correlationThreshold" (ex: "0.7")
+   */
+  private boolean evaluateCorrelationAnomaly(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object corrObj = payload.get("correlation_coefficient");
+      if (corrObj == null) {
+        corrObj = payload.get("correlationCoefficient");
+      }
+      
+      if (corrObj == null) return false;
+      double correlation = corrObj instanceof Number ? ((Number) corrObj).doubleValue() : 0.0;
+      return Math.abs(correlation) > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CORRELATION_ANOMALY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * REGRESSION_RESIDUAL_OUTLIER: Detecta outlier de resíduo de regressão.
+   * Formato valueSingle: "residualThreshold" (ex: "3.0" = 3 desvios)
+   */
+  private boolean evaluateRegressionResidualOutlier(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object residualObj = payload.get("standardized_residual");
+      if (residualObj == null) {
+        residualObj = payload.get("standardizedResidual");
+      }
+      
+      if (residualObj == null) return false;
+      double residual = residualObj instanceof Number ? ((Number) residualObj).doubleValue() : 0.0;
+      return Math.abs(residual) > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar REGRESSION_RESIDUAL_OUTLIER: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * VARIANCE_RATIO_TEST: Teste de razão de variância (F-test).
+   * Formato valueSingle: "fStatThreshold" (ex: "4.0")
+   */
+  private boolean evaluateVarianceRatioTest(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object fStatObj = payload.get("f_statistic");
+      if (fStatObj == null) {
+        fStatObj = payload.get("fStatistic");
+      }
+      
+      if (fStatObj == null) return false;
+      double fStat = fStatObj instanceof Number ? ((Number) fStatObj).doubleValue() : 0.0;
+      return fStat > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar VARIANCE_RATIO_TEST: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * ENTROPY_SCORE_ANOMALY: Detecta anomalia de score de entropia.
+   * Formato valueSingle: "entropyThreshold" (ex: "0.3" = baixa entropia suspeita)
+   */
+  private boolean evaluateEntropyScoreAnomaly(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object entropyObj = payload.get("entropy_score");
+      if (entropyObj == null) {
+        entropyObj = payload.get("entropyScore");
+      }
+      
+      if (entropyObj == null) return false;
+      double entropy = entropyObj instanceof Number ? ((Number) entropyObj).doubleValue() : 1.0;
+      return entropy < threshold; // Low entropy is suspicious (too predictable)
+    } catch (Exception e) {
+      log.error("Erro ao avaliar ENTROPY_SCORE_ANOMALY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * SKEWNESS_KURTOSIS_ANOMALY: Detecta anomalia de skewness/kurtosis.
+   * Formato valueSingle: "threshold" (ex: "3.0")
+   */
+  private boolean evaluateSkewnessKurtosisAnomaly(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object skewnessObj = payload.get("skewness");
+      Object kurtosisObj = payload.get("kurtosis");
+      
+      double skewness = skewnessObj instanceof Number ? ((Number) skewnessObj).doubleValue() : 0.0;
+      double kurtosis = kurtosisObj instanceof Number ? ((Number) kurtosisObj).doubleValue() : 0.0;
+      
+      // Anomaly if either is beyond threshold
+      return Math.abs(skewness) > threshold || Math.abs(kurtosis - 3) > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar SKEWNESS_KURTOSIS_ANOMALY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // ========== OPERADORES V4.0 PHASE 1C - MCC & MERCHANT (18 novos) ==========
+
+  // --- CATEGORIA R: MCC & Merchant Advanced (18) ---
+
+  /**
+   * MCC_CATEGORY_VELOCITY: Velocidade por categoria MCC.
+   * Formato valueSingle: "mccCategory|threshold" (ex: "gambling|5")
+   */
+  private boolean evaluateMccCategoryVelocity(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      String mccCategory = parts[0].trim();
+      int threshold = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 5;
+      
+      Object velocityObj = payload.get("mcc_velocity_" + mccCategory.toLowerCase());
+      if (velocityObj == null) {
+        velocityObj = payload.get("mccVelocity_" + mccCategory);
+      }
+      
+      if (velocityObj == null) return false;
+      int velocity = velocityObj instanceof Number ? ((Number) velocityObj).intValue() : 0;
+      return velocity > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MCC_CATEGORY_VELOCITY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MCC_SPENDING_LIMIT_CHECK: Verificação de limite por MCC.
+   * Formato valueSingle: "limitAmount" (ex: "5000")
+   */
+  private boolean evaluateMccSpendingLimitCheck(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      TransactionRequest tx = context.getTransactionRequest();
+      if (tx == null) return false;
+      
+      BigDecimal limit = new BigDecimal(condition.getValueSingle().trim());
+      
+      Object spentObj = payload != null ? payload.get("mcc_spending_total") : null;
+      if (spentObj == null && payload != null) {
+        spentObj = payload.get("mccSpendingTotal");
+      }
+      
+      BigDecimal spent = BigDecimal.ZERO;
+      if (spentObj instanceof Number) {
+        spent = BigDecimal.valueOf(((Number) spentObj).doubleValue());
+      }
+      
+      BigDecimal total = spent.add(tx.getTransactionAmount());
+      return total.compareTo(limit) > 0;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MCC_SPENDING_LIMIT_CHECK: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MCC_CROSS_CATEGORY_PATTERN: Detecta padrão cross-category MCC.
+   * Formato valueSingle: "categoryCount" (ex: "4" = 4+ categorias diferentes)
+   */
+  private boolean evaluateMccCrossCategoryPattern(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int threshold = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object countObj = payload.get("distinct_mcc_categories");
+      if (countObj == null) {
+        countObj = payload.get("distinctMccCategories");
+      }
+      
+      if (countObj == null) return false;
+      int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
+      return count >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MCC_CROSS_CATEGORY_PATTERN: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_REPUTATION_SCORE: Score de reputação do merchant.
+   * Formato valueSingle: "minScore" (ex: "70" = score mínimo)
+   */
+  private boolean evaluateMerchantReputationScore(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double minScore = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object scoreObj = payload.get("merchant_reputation_score");
+      if (scoreObj == null) {
+        scoreObj = payload.get("merchantReputationScore");
+      }
+      
+      if (scoreObj == null) return true; // No score = suspicious
+      double score = scoreObj instanceof Number ? ((Number) scoreObj).doubleValue() : 0.0;
+      return score < minScore;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_REPUTATION_SCORE: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_AGE_CHECK: Verificação de idade do merchant.
+   * Formato valueSingle: "minAgeDays" (ex: "30" = mínimo 30 dias)
+   */
+  private boolean evaluateMerchantAgeCheck(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int minAge = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object ageObj = payload.get("merchant_age_days");
+      if (ageObj == null) {
+        ageObj = payload.get("merchantAgeDays");
+      }
+      
+      if (ageObj == null) return true; // No age = new merchant = suspicious
+      int age = ageObj instanceof Number ? ((Number) ageObj).intValue() : 0;
+      return age < minAge;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_AGE_CHECK: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_TRANSACTION_VOLUME: Volume de transações do merchant.
+   * Formato valueSingle: "minVolume|maxVolume" (ex: "100|10000")
+   */
+  private boolean evaluateMerchantTransactionVolume(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int minVolume = Integer.parseInt(parts[0].trim());
+      int maxVolume = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : Integer.MAX_VALUE;
+      
+      Object volumeObj = payload.get("merchant_transaction_volume");
+      if (volumeObj == null) {
+        volumeObj = payload.get("merchantTransactionVolume");
+      }
+      
+      if (volumeObj == null) return false;
+      int volume = volumeObj instanceof Number ? ((Number) volumeObj).intValue() : 0;
+      return volume < minVolume || volume > maxVolume;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_TRANSACTION_VOLUME: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_CHARGEBACK_HISTORY: Histórico de chargeback do merchant.
+   * Formato valueSingle: "maxChargebackRate" (ex: "0.02" = 2%)
+   */
+  private boolean evaluateMerchantChargebackHistory(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double maxRate = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object rateObj = payload.get("merchant_chargeback_rate");
+      if (rateObj == null) {
+        rateObj = payload.get("merchantChargebackRate");
+      }
+      
+      if (rateObj == null) return false;
+      double rate = rateObj instanceof Number ? ((Number) rateObj).doubleValue() : 0.0;
+      return rate > maxRate;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_CHARGEBACK_HISTORY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_FRAUD_RATE_CHECK: Verificação de taxa de fraude do merchant.
+   * Formato valueSingle: "maxFraudRate" (ex: "0.01" = 1%)
+   */
+  private boolean evaluateMerchantFraudRateCheck(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double maxRate = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object rateObj = payload.get("merchant_fraud_rate");
+      if (rateObj == null) {
+        rateObj = payload.get("merchantFraudRate");
+      }
+      
+      if (rateObj == null) return false;
+      double rate = rateObj instanceof Number ? ((Number) rateObj).doubleValue() : 0.0;
+      return rate > maxRate;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_FRAUD_RATE_CHECK: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_GEOGRAPHIC_SPREAD: Dispersão geográfica do merchant.
+   * Formato valueSingle: "maxCountries" (ex: "10")
+   */
+  private boolean evaluateMerchantGeographicSpread(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int maxCountries = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object countObj = payload.get("merchant_country_count");
+      if (countObj == null) {
+        countObj = payload.get("merchantCountryCount");
+      }
+      
+      if (countObj == null) return false;
+      int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
+      return count > maxCountries;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_GEOGRAPHIC_SPREAD: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_CUSTOMER_CONCENTRATION: Concentração de clientes do merchant.
+   * Formato valueSingle: "concentrationThreshold" (ex: "0.5" = 50%)
+   */
+  private boolean evaluateMerchantCustomerConcentration(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object concObj = payload.get("merchant_customer_concentration");
+      if (concObj == null) {
+        concObj = payload.get("merchantCustomerConcentration");
+      }
+      
+      if (concObj == null) return false;
+      double concentration = concObj instanceof Number ? ((Number) concObj).doubleValue() : 0.0;
+      return concentration > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_CUSTOMER_CONCENTRATION: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_AMOUNT_DISTRIBUTION: Distribuição de valores do merchant.
+   * Formato valueSingle: "stdDevThreshold" (ex: "1000")
+   */
+  private boolean evaluateMerchantAmountDistribution(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double threshold = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object stdObj = payload.get("merchant_amount_stddev");
+      if (stdObj == null) {
+        stdObj = payload.get("merchantAmountStddev");
+      }
+      
+      if (stdObj == null) return false;
+      double stdDev = stdObj instanceof Number ? ((Number) stdObj).doubleValue() : 0.0;
+      return stdDev > threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_AMOUNT_DISTRIBUTION: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_TIME_PATTERN: Padrão temporal do merchant.
+   */
+  private boolean evaluateMerchantTimePattern(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      Object anomalyObj = payload.get("merchant_time_pattern_anomaly");
+      if (anomalyObj == null) {
+        anomalyObj = payload.get("merchantTimePatternAnomaly");
+      }
+      
+      return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_TIME_PATTERN: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_DEVICE_DIVERSITY: Diversidade de dispositivos do merchant.
+   * Formato valueSingle: "minDiversity|maxDiversity" (ex: "10|1000")
+   */
+  private boolean evaluateMerchantDeviceDiversity(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      int minDiversity = Integer.parseInt(parts[0].trim());
+      int maxDiversity = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : Integer.MAX_VALUE;
+      
+      Object diversityObj = payload.get("merchant_device_diversity");
+      if (diversityObj == null) {
+        diversityObj = payload.get("merchantDeviceDiversity");
+      }
+      
+      if (diversityObj == null) return false;
+      int diversity = diversityObj instanceof Number ? ((Number) diversityObj).intValue() : 0;
+      return diversity < minDiversity || diversity > maxDiversity;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_DEVICE_DIVERSITY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_REFUND_RATIO: Razão de reembolso do merchant.
+   * Formato valueSingle: "maxRefundRatio" (ex: "0.1" = 10%)
+   */
+  private boolean evaluateMerchantRefundRatio(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double maxRatio = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object ratioObj = payload.get("merchant_refund_ratio");
+      if (ratioObj == null) {
+        ratioObj = payload.get("merchantRefundRatio");
+      }
+      
+      if (ratioObj == null) return false;
+      double ratio = ratioObj instanceof Number ? ((Number) ratioObj).doubleValue() : 0.0;
+      return ratio > maxRatio;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_REFUND_RATIO: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_NEW_CUSTOMER_RATIO: Razão de novos clientes do merchant.
+   * Formato valueSingle: "maxNewCustomerRatio" (ex: "0.8" = 80%)
+   */
+  private boolean evaluateMerchantNewCustomerRatio(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double maxRatio = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object ratioObj = payload.get("merchant_new_customer_ratio");
+      if (ratioObj == null) {
+        ratioObj = payload.get("merchantNewCustomerRatio");
+      }
+      
+      if (ratioObj == null) return false;
+      double ratio = ratioObj instanceof Number ? ((Number) ratioObj).doubleValue() : 0.0;
+      return ratio > maxRatio;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_NEW_CUSTOMER_RATIO: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_DORMANT_REACTIVATION: Reativação de merchant dormente.
+   * Formato valueSingle: "dormantDays" (ex: "90" = 90 dias de inatividade)
+   */
+  private boolean evaluateMerchantDormantReactivation(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      int dormantThreshold = Integer.parseInt(condition.getValueSingle().trim());
+      
+      Object daysObj = payload.get("merchant_days_since_last_tx");
+      if (daysObj == null) {
+        daysObj = payload.get("merchantDaysSinceLastTx");
+      }
+      
+      if (daysObj == null) return false;
+      int daysSinceLastTx = daysObj instanceof Number ? ((Number) daysObj).intValue() : 0;
+      return daysSinceLastTx > dormantThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_DORMANT_REACTIVATION: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_CROSS_BORDER_RATIO: Razão cross-border do merchant.
+   * Formato valueSingle: "maxCrossBorderRatio" (ex: "0.3" = 30%)
+   */
+  private boolean evaluateMerchantCrossBorderRatio(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      double maxRatio = Double.parseDouble(condition.getValueSingle().trim());
+      
+      Object ratioObj = payload.get("merchant_cross_border_ratio");
+      if (ratioObj == null) {
+        ratioObj = payload.get("merchantCrossBorderRatio");
+      }
+      
+      if (ratioObj == null) return false;
+      double ratio = ratioObj instanceof Number ? ((Number) ratioObj).doubleValue() : 0.0;
+      return ratio > maxRatio;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_CROSS_BORDER_RATIO: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * MERCHANT_HIGH_VALUE_FREQUENCY: Frequência de alto valor do merchant.
+   * Formato valueSingle: "threshold|percentage" (ex: "1000|0.5" = 50% acima de 1000)
+   */
+  private boolean evaluateMerchantHighValueFrequency(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+      
+      String[] parts = condition.getValueSingle().split("\\|");
+      double amountThreshold = Double.parseDouble(parts[0].trim());
+      double percentageThreshold = parts.length > 1 ? Double.parseDouble(parts[1].trim()) : 0.5;
+      
+      Object percentageObj = payload.get("merchant_high_value_percentage");
+      if (percentageObj == null) {
+        percentageObj = payload.get("merchantHighValuePercentage");
+      }
+      
+      if (percentageObj == null) return false;
+      double percentage = percentageObj instanceof Number ? ((Number) percentageObj).doubleValue() : 0.0;
+      return percentage > percentageThreshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar MERCHANT_HIGH_VALUE_FREQUENCY: {}", e.getMessage());
       return false;
     }
   }
