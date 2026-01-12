@@ -24,9 +24,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 /**
- * Testes para operadores V4.0 Phase 1: Velocity + Device (40 operadores)
- * Categorias L, M, N, O
- * 
+ * Testes para operadores V4.0 Phase 1: Velocity + Device (40 operadores) Categorias L, M, N, O
+ *
  * <p>Foco em: Device Fingerprint (Categoria O) - operadores baseados em payload
  */
 @DisplayName("ComplexRuleEvaluator V4 Phase 1 Tests")
@@ -51,7 +50,7 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
     transactionRequest.setTransactionAmount(BigDecimal.valueOf(1000));
     transactionRequest.setPan("4111111111111111");
     transactionRequest.setMerchantId("MERCH-001");
-    
+
     payload = new HashMap<>();
   }
 
@@ -84,14 +83,17 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
   class CategoryLTests {
 
     @Test
-    @DisplayName("TRANSACTION_COUNT_PER_CARD_HOUR - Deve retornar true quando contagem excede threshold")
+    @DisplayName(
+        "TRANSACTION_COUNT_PER_CARD_HOUR - Deve retornar true quando contagem excede threshold")
     void transactionCountPerCardHour_exceedsThreshold_returnsTrue() {
       VelocityService.VelocityStats stats = mock(VelocityService.VelocityStats.class);
       when(stats.getTransactionCount()).thenReturn(10L);
-      when(velocityServiceFacade.getStats(any(TransactionRequest.class), 
-          eq(VelocityService.KeyType.PAN), any())).thenReturn(stats);
+      when(velocityServiceFacade.getStats(
+              any(TransactionRequest.class), eq(VelocityService.KeyType.PAN), any()))
+          .thenReturn(stats);
 
-      RuleCondition condition = createCondition(ConditionOperator.TRANSACTION_COUNT_PER_CARD_HOUR, "5");
+      RuleCondition condition =
+          createCondition(ConditionOperator.TRANSACTION_COUNT_PER_CARD_HOUR, "5");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, createContext());
@@ -100,14 +102,17 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
     }
 
     @Test
-    @DisplayName("TRANSACTION_COUNT_PER_CARD_HOUR - Deve retornar false quando contagem abaixo do threshold")
+    @DisplayName(
+        "TRANSACTION_COUNT_PER_CARD_HOUR - Deve retornar false quando contagem abaixo do threshold")
     void transactionCountPerCardHour_belowThreshold_returnsFalse() {
       VelocityService.VelocityStats stats = mock(VelocityService.VelocityStats.class);
       when(stats.getTransactionCount()).thenReturn(3L);
-      when(velocityServiceFacade.getStats(any(TransactionRequest.class), 
-          eq(VelocityService.KeyType.PAN), any())).thenReturn(stats);
+      when(velocityServiceFacade.getStats(
+              any(TransactionRequest.class), eq(VelocityService.KeyType.PAN), any()))
+          .thenReturn(stats);
 
-      RuleCondition condition = createCondition(ConditionOperator.TRANSACTION_COUNT_PER_CARD_HOUR, "5");
+      RuleCondition condition =
+          createCondition(ConditionOperator.TRANSACTION_COUNT_PER_CARD_HOUR, "5");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, createContext());
@@ -127,10 +132,12 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
     void amountSumPerCardHour_exceedsThreshold_returnsTrue() {
       VelocityService.VelocityStats stats = mock(VelocityService.VelocityStats.class);
       when(stats.getTotalAmount()).thenReturn(BigDecimal.valueOf(15000));
-      when(velocityServiceFacade.getStats(any(TransactionRequest.class), 
-          eq(VelocityService.KeyType.PAN), any())).thenReturn(stats);
+      when(velocityServiceFacade.getStats(
+              any(TransactionRequest.class), eq(VelocityService.KeyType.PAN), any()))
+          .thenReturn(stats);
 
-      RuleCondition condition = createCondition(ConditionOperator.AMOUNT_SUM_PER_CARD_HOUR, "10000");
+      RuleCondition condition =
+          createCondition(ConditionOperator.AMOUNT_SUM_PER_CARD_HOUR, "10000");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, createContext());
@@ -144,8 +151,9 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
       VelocityService.VelocityStats stats = mock(VelocityService.VelocityStats.class);
       when(stats.getAvgAmount()).thenReturn(BigDecimal.valueOf(500));
       when(stats.getStdDevAmount()).thenReturn(BigDecimal.valueOf(100));
-      when(velocityServiceFacade.getStats(any(TransactionRequest.class), 
-          eq(VelocityService.KeyType.PAN), any())).thenReturn(stats);
+      when(velocityServiceFacade.getStats(
+              any(TransactionRequest.class), eq(VelocityService.KeyType.PAN), any()))
+          .thenReturn(stats);
 
       transactionRequest.setTransactionAmount(BigDecimal.valueOf(1500)); // 10 std devs away
 
@@ -192,7 +200,8 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
     @DisplayName("CANVAS_FINGERPRINT_MISMATCH - Deve detectar incompatibilidade de canvas")
     void canvasFingerprintMismatch_detected_returnsTrue() {
       payload.put("canvas_fingerprint_mismatch", true);
-      RuleCondition condition = createCondition(ConditionOperator.CANVAS_FINGERPRINT_MISMATCH, "true");
+      RuleCondition condition =
+          createCondition(ConditionOperator.CANVAS_FINGERPRINT_MISMATCH, "true");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, createContext());
@@ -204,7 +213,8 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
     @DisplayName("WEBGL_FINGERPRINT_ANOMALY - Deve detectar anomalia WebGL")
     void webglFingerprintAnomaly_detected_returnsTrue() {
       payload.put("webgl_fingerprint_anomaly", true);
-      RuleCondition condition = createCondition(ConditionOperator.WEBGL_FINGERPRINT_ANOMALY, "true");
+      RuleCondition condition =
+          createCondition(ConditionOperator.WEBGL_FINGERPRINT_ANOMALY, "true");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, createContext());
@@ -228,7 +238,8 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
     @DisplayName("FONTS_FINGERPRINT_ANOMALY - Deve detectar anomalia de fontes")
     void fontsFingerprintAnomaly_detected_returnsTrue() {
       payload.put("fonts_fingerprint_anomaly", true);
-      RuleCondition condition = createCondition(ConditionOperator.FONTS_FINGERPRINT_ANOMALY, "true");
+      RuleCondition condition =
+          createCondition(ConditionOperator.FONTS_FINGERPRINT_ANOMALY, "true");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, createContext());
@@ -264,7 +275,8 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
     @DisplayName("HARDWARE_CONCURRENCY_MISMATCH - Deve detectar incompatibilidade de hardware")
     void hardwareConcurrencyMismatch_detected_returnsTrue() {
       payload.put("hardware_concurrency_mismatch", true);
-      RuleCondition condition = createCondition(ConditionOperator.HARDWARE_CONCURRENCY_MISMATCH, "true");
+      RuleCondition condition =
+          createCondition(ConditionOperator.HARDWARE_CONCURRENCY_MISMATCH, "true");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, createContext());
@@ -276,7 +288,8 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
     @DisplayName("TOUCH_SUPPORT_INCONSISTENCY - Deve detectar inconsistência de touch")
     void touchSupportInconsistency_detected_returnsTrue() {
       payload.put("touch_support_inconsistency", true);
-      RuleCondition condition = createCondition(ConditionOperator.TOUCH_SUPPORT_INCONSISTENCY, "true");
+      RuleCondition condition =
+          createCondition(ConditionOperator.TOUCH_SUPPORT_INCONSISTENCY, "true");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, createContext());
@@ -306,10 +319,11 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
     @Test
     @DisplayName("Deve retornar false quando payload é null para operador de device")
     void nullPayload_returnsFalse() {
-      ComplexRuleEvaluator.EvaluationContext context = ComplexRuleEvaluator.EvaluationContext.builder()
-          .transactionRequest(transactionRequest)
-          .payload(null)
-          .build();
+      ComplexRuleEvaluator.EvaluationContext context =
+          ComplexRuleEvaluator.EvaluationContext.builder()
+              .transactionRequest(transactionRequest)
+              .payload(null)
+              .build();
 
       RuleCondition condition = createCondition(ConditionOperator.DEVICE_TRUST_SCORE, "50");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
@@ -322,12 +336,14 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
     @Test
     @DisplayName("Deve retornar false quando TransactionRequest é null para operador de velocidade")
     void nullTransactionRequest_returnsFalse() {
-      ComplexRuleEvaluator.EvaluationContext context = ComplexRuleEvaluator.EvaluationContext.builder()
-          .transactionRequest(null)
-          .payload(payload)
-          .build();
+      ComplexRuleEvaluator.EvaluationContext context =
+          ComplexRuleEvaluator.EvaluationContext.builder()
+              .transactionRequest(null)
+              .payload(payload)
+              .build();
 
-      RuleCondition condition = createCondition(ConditionOperator.TRANSACTION_COUNT_PER_CARD_HOUR, "5");
+      RuleCondition condition =
+          createCondition(ConditionOperator.TRANSACTION_COUNT_PER_CARD_HOUR, "5");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
@@ -338,7 +354,8 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
     @Test
     @DisplayName("Deve retornar false quando valueSingle é inválido")
     void invalidValueSingle_returnsFalse() {
-      RuleCondition condition = createCondition(ConditionOperator.TRANSACTION_COUNT_PER_CARD_HOUR, "invalid");
+      RuleCondition condition =
+          createCondition(ConditionOperator.TRANSACTION_COUNT_PER_CARD_HOUR, "invalid");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, createContext());
@@ -347,12 +364,13 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
     }
 
     @Test
-    @DisplayName("Deve usar fallback key deviceReputationScore quando device_trust_score não existe")
+    @DisplayName(
+        "Deve usar fallback key deviceReputationScore quando device_trust_score não existe")
     void fallbackKey_deviceReputationScore_works() {
       payload.put("deviceReputationScore", 25.0);
       RuleCondition condition = createCondition(ConditionOperator.DEVICE_TRUST_SCORE, "50");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      
+
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, createContext());
       assertThat(result.isMatched()).isTrue();
     }
@@ -364,7 +382,7 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
       // So checking for < 50 should return false
       RuleCondition condition = createCondition(ConditionOperator.DEVICE_TRUST_SCORE, "50");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      
+
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, createContext());
       assertThat(result.isMatched()).isFalse();
     }

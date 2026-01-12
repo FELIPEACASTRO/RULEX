@@ -237,7 +237,8 @@ public class VelocityServiceFacade {
       case PAN -> RedisVelocityService.KeyType.PAN;
       case CUSTOMER_ID -> RedisVelocityService.KeyType.CUSTOMER_ID;
       case MERCHANT_ID -> RedisVelocityService.KeyType.MERCHANT_ID;
-      case IP_ADDRESS, DEVICE_ID, CARD_ID, BENEFICIARY_ID -> RedisVelocityService.KeyType.PAN; // Fallback to PAN for new types
+      case IP_ADDRESS, DEVICE_ID, CARD_ID, BENEFICIARY_ID ->
+          RedisVelocityService.KeyType.PAN; // Fallback to PAN for new types
     };
   }
 
@@ -262,7 +263,8 @@ public class VelocityServiceFacade {
       case PAN -> RedisVelocityCacheService.KeyType.PAN;
       case CUSTOMER_ID -> RedisVelocityCacheService.KeyType.CUSTOMER_ID;
       case MERCHANT_ID -> RedisVelocityCacheService.KeyType.MERCHANT_ID;
-      case IP_ADDRESS, DEVICE_ID, CARD_ID, BENEFICIARY_ID -> RedisVelocityCacheService.KeyType.PAN; // Fallback to PAN for new types
+      case IP_ADDRESS, DEVICE_ID, CARD_ID, BENEFICIARY_ID ->
+          RedisVelocityCacheService.KeyType.PAN; // Fallback to PAN for new types
     };
   }
 

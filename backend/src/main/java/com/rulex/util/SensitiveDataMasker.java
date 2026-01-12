@@ -5,8 +5,8 @@ import java.util.regex.Pattern;
 /**
  * Utility para mascarar dados sensiveis em logs e outputs.
  *
- * <p>Evita exposicao de PAN, CPF, tokens e outros dados sensiveis
- * em conformidade com PCI-DSS e LGPD.
+ * <p>Evita exposicao de PAN, CPF, tokens e outros dados sensiveis em conformidade com PCI-DSS e
+ * LGPD.
  */
 public final class SensitiveDataMasker {
 
@@ -15,8 +15,7 @@ public final class SensitiveDataMasker {
   }
 
   /** Padrao para PAN (13-19 digitos) */
-  private static final Pattern PAN_PATTERN =
-      Pattern.compile("\\b(\\d{4})\\d{5,11}(\\d{4})\\b");
+  private static final Pattern PAN_PATTERN = Pattern.compile("\\b(\\d{4})\\d{5,11}(\\d{4})\\b");
 
   /** Padrao para CPF (11 digitos, com ou sem formatacao) */
   private static final Pattern CPF_PATTERN =

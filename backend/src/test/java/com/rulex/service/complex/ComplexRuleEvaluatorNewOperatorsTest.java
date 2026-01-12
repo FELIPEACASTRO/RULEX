@@ -19,13 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 /**
- * Testes unitarios para operadores implementados (V28-V30).
- * Foca em operadores que podem ser testados sem dependencias externas.
+ * Testes unitarios para operadores implementados (V28-V30). Foca em operadores que podem ser
+ * testados sem dependencias externas.
  *
- * <p>Operadores testados:
- * - IN_LIST
- * - CONTAINS_SUSPICIOUS_KEYWORDS
- * - IS_CRYPTO_RANSOM_AMOUNT
+ * <p>Operadores testados: - IN_LIST - CONTAINS_SUSPICIOUS_KEYWORDS - IS_CRYPTO_RANSOM_AMOUNT
  *
  * @see ComplexRuleEvaluator
  */
@@ -65,9 +62,7 @@ class ComplexRuleEvaluatorNewOperatorsTest {
   }
 
   private ComplexRuleEvaluator.EvaluationContext createContext(Map<String, Object> payload) {
-    return ComplexRuleEvaluator.EvaluationContext.builder()
-        .payload(payload)
-        .build();
+    return ComplexRuleEvaluator.EvaluationContext.builder().payload(payload).build();
   }
 
   // =====================================================
@@ -81,8 +76,7 @@ class ComplexRuleEvaluatorNewOperatorsTest {
     @Test
     @DisplayName("Deve retornar TRUE quando valor esta na lista")
     void inList_shouldReturnTrue_whenValueInList() {
-      RuleCondition condition =
-          createCondition("mcc", ConditionOperator.IN_LIST, "5411|5412|5413");
+      RuleCondition condition = createCondition("mcc", ConditionOperator.IN_LIST, "5411|5412|5413");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
       ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", "5412"));
 
@@ -94,8 +88,7 @@ class ComplexRuleEvaluatorNewOperatorsTest {
     @Test
     @DisplayName("Deve retornar FALSE quando valor nao esta na lista")
     void inList_shouldReturnFalse_whenValueNotInList() {
-      RuleCondition condition =
-          createCondition("mcc", ConditionOperator.IN_LIST, "5411|5412|5413");
+      RuleCondition condition = createCondition("mcc", ConditionOperator.IN_LIST, "5411|5412|5413");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
       ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", "7995"));
 
@@ -119,8 +112,7 @@ class ComplexRuleEvaluatorNewOperatorsTest {
     @Test
     @DisplayName("Deve ser case-insensitive para strings")
     void inList_shouldBeCaseInsensitive() {
-      RuleCondition condition =
-          createCondition("country", ConditionOperator.IN_LIST, "BR|US|UK");
+      RuleCondition condition = createCondition("country", ConditionOperator.IN_LIST, "BR|US|UK");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
       ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("country", "br"));
 
@@ -132,8 +124,7 @@ class ComplexRuleEvaluatorNewOperatorsTest {
     @Test
     @DisplayName("Deve suportar valores numericos na lista")
     void inList_shouldSupportNumericValues() {
-      RuleCondition condition =
-          createCondition("amount", ConditionOperator.IN_LIST, "100|200|300");
+      RuleCondition condition = createCondition("amount", ConditionOperator.IN_LIST, "100|200|300");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
       ComplexRuleEvaluator.EvaluationContext context =
           createContext(Map.of("amount", new BigDecimal("200")));
@@ -157,9 +148,7 @@ class ComplexRuleEvaluatorNewOperatorsTest {
     void containsSuspiciousKeywords_shouldDetect_urgente() {
       RuleCondition condition =
           createCondition(
-              "description",
-              ConditionOperator.CONTAINS_SUSPICIOUS_KEYWORDS,
-              "urgente|pix|agora");
+              "description", ConditionOperator.CONTAINS_SUSPICIOUS_KEYWORDS, "urgente|pix|agora");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
       ComplexRuleEvaluator.EvaluationContext context =
           createContext(Map.of("description", "Pagamento URGENTE favor confirmar"));
@@ -323,8 +312,7 @@ class ComplexRuleEvaluatorNewOperatorsTest {
     @Test
     @DisplayName("IN_LIST deve lidar com valor null graciosamente")
     void inList_shouldHandle_nullValue() {
-      RuleCondition condition =
-          createCondition("mcc", ConditionOperator.IN_LIST, "5411|5412|5413");
+      RuleCondition condition = createCondition("mcc", ConditionOperator.IN_LIST, "5411|5412|5413");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
       ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of());
 
@@ -403,13 +391,9 @@ class ComplexRuleEvaluatorNewOperatorsTest {
       RuleCondition gtCondition =
           createCondition("transactionAmount", ConditionOperator.GT, "1000");
 
-      RuleConditionGroup group =
-          createGroup(GroupLogicOperator.AND, inListCondition, gtCondition);
+      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, inListCondition, gtCondition);
       ComplexRuleEvaluator.EvaluationContext context =
-          createContext(
-              Map.of(
-                  "mcc", "5411",
-                  "transactionAmount", new BigDecimal("1500")));
+          createContext(Map.of("mcc", "5411", "transactionAmount", new BigDecimal("1500")));
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 

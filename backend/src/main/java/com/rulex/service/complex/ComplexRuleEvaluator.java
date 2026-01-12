@@ -384,21 +384,26 @@ public class ComplexRuleEvaluator {
 
       case COUNT_MFA_ABANDONMENTS -> evaluateCountMfaAbandonments(condition, context);
 
-      case HAS_INCOMING_TRANSFER_LAST_N_HOURS -> evaluateHasIncomingTransferLastNHours(condition, context);
+      case HAS_INCOMING_TRANSFER_LAST_N_HOURS ->
+          evaluateHasIncomingTransferLastNHours(condition, context);
 
       case IS_IMPOSSIBLE_COMBINATION -> evaluateIsImpossibleCombination(condition, context);
 
       case PIX_KEY_CHANGED_LAST_N_DAYS -> evaluatePixKeyChangedLastNDays(condition, context);
 
-      case CONTAINS_SUSPICIOUS_KEYWORDS -> evaluateContainsSuspiciousKeywords(fieldValue, condition);
+      case CONTAINS_SUSPICIOUS_KEYWORDS ->
+          evaluateContainsSuspiciousKeywords(fieldValue, condition);
 
       case COUNT_CRYPTO_TXN_LAST_N_DAYS -> evaluateCountCryptoTxnLastNDays(condition, context);
 
-      case COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS -> evaluateCountDistinctInstrumentsLastNDays(condition, context);
+      case COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS ->
+          evaluateCountDistinctInstrumentsLastNDays(condition, context);
 
-      case COUNT_DISTINCT_PAYERS_LAST_N_DAYS -> evaluateCountDistinctPayersLastNDays(condition, context);
+      case COUNT_DISTINCT_PAYERS_LAST_N_DAYS ->
+          evaluateCountDistinctPayersLastNDays(condition, context);
 
-      case COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS -> evaluateCountDistinctUserAgentsLastNHours(condition, context);
+      case COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS ->
+          evaluateCountDistinctUserAgentsLastNHours(condition, context);
 
       case COUNT_LAST_N_DAYS -> evaluateCountLastNDays(condition, context);
 
@@ -419,7 +424,8 @@ public class ComplexRuleEvaluator {
       case VELOCITY_PERCENTILE -> evaluateVelocityPercentile(condition, context);
       case VELOCITY_RATIO_GT -> evaluateVelocityRatioGt(condition, context);
       case VELOCITY_TREND -> evaluateVelocityTrend(condition, context);
-      case COUNT_UNIQUE_BENEFICIARIES_LAST_N_DAYS -> evaluateCountUniqueBeneficiariesLastNDays(condition, context);
+      case COUNT_UNIQUE_BENEFICIARIES_LAST_N_DAYS ->
+          evaluateCountUniqueBeneficiariesLastNDays(condition, context);
       case COUNT_UNIQUE_IPS_LAST_N_HOURS -> evaluateCountUniqueIpsLastNHours(condition, context);
       case SUM_BY_CHANNEL_LAST_N_DAYS -> evaluateSumByChannelLastNDays(condition, context);
       case AVG_INTERVAL_BETWEEN_TXN -> evaluateAvgIntervalBetweenTxn(condition, context);
@@ -477,7 +483,8 @@ public class ComplexRuleEvaluator {
         // CATEGORIA G: Regulatory (8)
       case SCA_EXEMPTION_TRA -> evaluateScaExemptionTra(condition, context);
       case SCA_EXEMPTION_LOW_VALUE -> evaluateScaExemptionLowValue(condition, context);
-      case SCA_EXEMPTION_TRUSTED_BENEFICIARY -> evaluateScaExemptionTrustedBeneficiary(condition, context);
+      case SCA_EXEMPTION_TRUSTED_BENEFICIARY ->
+          evaluateScaExemptionTrustedBeneficiary(condition, context);
       case SCA_EXEMPTION_RECURRING -> evaluateScaExemptionRecurring(condition, context);
       case PSD3_COP_NAME_MATCH -> evaluatePsd3CopNameMatch(condition, context);
       case DORA_INCIDENT_SEVERITY -> evaluateDoraIncidentSeverity(condition, context);
@@ -519,14 +526,20 @@ public class ComplexRuleEvaluator {
 
         // ========== OPERADORES V4.0 PHASE 1 (40 novos) - Velocity + Device ==========
         // CATEGORIA L: Transaction Count Velocity Avançado (12)
-      case TRANSACTION_COUNT_PER_CARD_HOUR -> evaluateTransactionCountPerCardHour(condition, context);
+      case TRANSACTION_COUNT_PER_CARD_HOUR ->
+          evaluateTransactionCountPerCardHour(condition, context);
       case TRANSACTION_COUNT_PER_IP_HOUR -> evaluateTransactionCountPerIpHour(condition, context);
-      case TRANSACTION_COUNT_PER_DEVICE_DAY -> evaluateTransactionCountPerDeviceDay(condition, context);
-      case TRANSACTION_COUNT_PER_MERCHANT_HOUR -> evaluateTransactionCountPerMerchantHour(condition, context);
-      case TRANSACTION_COUNT_PER_CUSTOMER_HOUR -> evaluateTransactionCountPerCustomerHour(condition, context);
+      case TRANSACTION_COUNT_PER_DEVICE_DAY ->
+          evaluateTransactionCountPerDeviceDay(condition, context);
+      case TRANSACTION_COUNT_PER_MERCHANT_HOUR ->
+          evaluateTransactionCountPerMerchantHour(condition, context);
+      case TRANSACTION_COUNT_PER_CUSTOMER_HOUR ->
+          evaluateTransactionCountPerCustomerHour(condition, context);
       case UNIQUE_CARD_COUNT_PER_IP_HOUR -> evaluateUniqueCardCountPerIpHour(condition, context);
-      case UNIQUE_MERCHANT_COUNT_PER_CARD_DAY -> evaluateUniqueMerchantCountPerCardDay(condition, context);
-      case TRANSACTION_ATTEMPT_COUNT_PER_CARD -> evaluateTransactionAttemptCountPerCard(condition, context);
+      case UNIQUE_MERCHANT_COUNT_PER_CARD_DAY ->
+          evaluateUniqueMerchantCountPerCardDay(condition, context);
+      case TRANSACTION_ATTEMPT_COUNT_PER_CARD ->
+          evaluateTransactionAttemptCountPerCard(condition, context);
       case CVV_FAILURE_VELOCITY -> evaluateCvvFailureVelocity(condition, context);
       case ADDRESS_CHANGE_VELOCITY -> evaluateAddressChangeVelocity(condition, context);
       case BENEFICIARY_ADD_VELOCITY -> evaluateBeneficiaryAddVelocity(condition, context);
@@ -607,7 +620,8 @@ public class ComplexRuleEvaluator {
       case MERCHANT_CHARGEBACK_HISTORY -> evaluateMerchantChargebackHistory(condition, context);
       case MERCHANT_FRAUD_RATE_CHECK -> evaluateMerchantFraudRateCheck(condition, context);
       case MERCHANT_GEOGRAPHIC_SPREAD -> evaluateMerchantGeographicSpread(condition, context);
-      case MERCHANT_CUSTOMER_CONCENTRATION -> evaluateMerchantCustomerConcentration(condition, context);
+      case MERCHANT_CUSTOMER_CONCENTRATION ->
+          evaluateMerchantCustomerConcentration(condition, context);
       case MERCHANT_AMOUNT_DISTRIBUTION -> evaluateMerchantAmountDistribution(condition, context);
       case MERCHANT_TIME_PATTERN -> evaluateMerchantTimePattern(condition, context);
       case MERCHANT_DEVICE_DIVERSITY -> evaluateMerchantDeviceDiversity(condition, context);
@@ -621,17 +635,22 @@ public class ComplexRuleEvaluator {
       case FATF_PLACEMENT_CASH_INTENSIVE -> evaluateFatfPlacementCashIntensive(condition, context);
       case FATF_PLACEMENT_STRUCTURING -> evaluateFatfPlacementStructuring(condition, context);
       case FATF_PLACEMENT_SMURFING -> evaluateFatfPlacementSmurfing(condition, context);
-      case FATF_PLACEMENT_CURRENCY_EXCHANGE -> evaluateFatfPlacementCurrencyExchange(condition, context);
-      case FATF_PLACEMENT_CASINO_GAMBLING -> evaluateFatfPlacementCasinoGambling(condition, context);
+      case FATF_PLACEMENT_CURRENCY_EXCHANGE ->
+          evaluateFatfPlacementCurrencyExchange(condition, context);
+      case FATF_PLACEMENT_CASINO_GAMBLING ->
+          evaluateFatfPlacementCasinoGambling(condition, context);
       case FATF_LAYERING_RAPID_MOVEMENT -> evaluateFatfLayeringRapidMovement(condition, context);
       case FATF_LAYERING_SHELL_COMPANY -> evaluateFatfLayeringShellCompany(condition, context);
       case FATF_LAYERING_OFFSHORE -> evaluateFatfLayeringOffshore(condition, context);
       case FATF_LAYERING_WIRE_CHAINS -> evaluateFatfLayeringWireChains(condition, context);
-      case FATF_LAYERING_CONVERTIBLE_INSTRUMENTS -> evaluateFatfLayeringConvertibleInstruments(condition, context);
+      case FATF_LAYERING_CONVERTIBLE_INSTRUMENTS ->
+          evaluateFatfLayeringConvertibleInstruments(condition, context);
       case FATF_INTEGRATION_REAL_ESTATE -> evaluateFatfIntegrationRealEstate(condition, context);
       case FATF_INTEGRATION_LUXURY_GOODS -> evaluateFatfIntegrationLuxuryGoods(condition, context);
-      case FATF_INTEGRATION_BUSINESS_INVESTMENT -> evaluateFatfIntegrationBusinessInvestment(condition, context);
-      case FATF_INTEGRATION_LOAN_REPAYMENT -> evaluateFatfIntegrationLoanRepayment(condition, context);
+      case FATF_INTEGRATION_BUSINESS_INVESTMENT ->
+          evaluateFatfIntegrationBusinessInvestment(condition, context);
+      case FATF_INTEGRATION_LOAN_REPAYMENT ->
+          evaluateFatfIntegrationLoanRepayment(condition, context);
       case FATF_TBML_OVER_INVOICING -> evaluateFatfTbmlOverInvoicing(condition, context);
       case FATF_TBML_UNDER_INVOICING -> evaluateFatfTbmlUnderInvoicing(condition, context);
       case FATF_TBML_PHANTOM_SHIPPING -> evaluateFatfTbmlPhantomShipping(condition, context);
@@ -737,9 +756,7 @@ public class ComplexRuleEvaluator {
     return false;
   }
 
-  /**
-   * Avalia IN_LIST com suporte a valueArray ou valueSingle com delimitador pipe.
-   */
+  /** Avalia IN_LIST com suporte a valueArray ou valueSingle com delimitador pipe. */
   private boolean evaluateInList(Object fieldValue, RuleCondition condition) {
     if (fieldValue == null) return false;
 
@@ -2572,8 +2589,7 @@ public class ComplexRuleEvaluator {
   // Implementados conforme recomendação do Triple-Check de Especialistas
 
   /**
-   * Helper seguro para parsing de inteiros.
-   * Evita NumberFormatException retornando valor default.
+   * Helper seguro para parsing de inteiros. Evita NumberFormatException retornando valor default.
    */
   private int parseIntSafe(String value, int defaultValue) {
     if (value == null || value.isBlank()) {
@@ -2582,15 +2598,15 @@ public class ComplexRuleEvaluator {
     try {
       return Integer.parseInt(value.trim());
     } catch (NumberFormatException e) {
-      log.warn("Valor inválido para parse int: '{}', usando default: {}", 
-          maskSensitiveData(value), defaultValue);
+      log.warn(
+          "Valor inválido para parse int: '{}', usando default: {}",
+          maskSensitiveData(value),
+          defaultValue);
       return defaultValue;
     }
   }
 
-  /**
-   * Helper seguro para parsing de doubles.
-   */
+  /** Helper seguro para parsing de doubles. */
   private double parseDoubleSafe(String value, double defaultValue) {
     if (value == null || value.isBlank()) {
       return defaultValue;
@@ -2598,15 +2614,15 @@ public class ComplexRuleEvaluator {
     try {
       return Double.parseDouble(value.trim());
     } catch (NumberFormatException e) {
-      log.warn("Valor inválido para parse double: '{}', usando default: {}", 
-          maskSensitiveData(value), defaultValue);
+      log.warn(
+          "Valor inválido para parse double: '{}', usando default: {}",
+          maskSensitiveData(value),
+          defaultValue);
       return defaultValue;
     }
   }
 
-  /**
-   * Mascara dados sensíveis para logging seguro.
-   */
+  /** Mascara dados sensíveis para logging seguro. */
   private String maskSensitiveData(String data) {
     if (data == null || data.length() < 4) {
       return "****";
@@ -2615,10 +2631,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * HAS_FAILED_3DS_LAST_N_MINUTES: Verifica se houve falha 3DS nos últimos N minutos.
-   * Formato valueSingle: "minutes" (ex: "30")
+   * HAS_FAILED_3DS_LAST_N_MINUTES: Verifica se houve falha 3DS nos últimos N minutos. Formato
+   * valueSingle: "minutes" (ex: "30")
    */
-  private boolean evaluateHasFailed3dsLastNMinutes(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateHasFailed3dsLastNMinutes(
+      RuleCondition condition, EvaluationContext context) {
     try {
       int minutes = parseIntSafe(condition.getValueSingle(), 30);
       Map<String, Object> payload = context.getPayload();
@@ -2642,8 +2659,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * COUNT_MFA_ABANDONMENTS: Contagem de abandonos de MFA.
-   * Formato valueSingle: "threshold:hours" (ex: "3:24")
+   * COUNT_MFA_ABANDONMENTS: Contagem de abandonos de MFA. Formato valueSingle: "threshold:hours"
+   * (ex: "3:24")
    */
   private boolean evaluateCountMfaAbandonments(RuleCondition condition, EvaluationContext context) {
     try {
@@ -2672,10 +2689,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * HAS_INCOMING_TRANSFER_LAST_N_HOURS: Verifica se houve transferência de entrada.
-   * Formato valueSingle: "hours" (ex: "24")
+   * HAS_INCOMING_TRANSFER_LAST_N_HOURS: Verifica se houve transferência de entrada. Formato
+   * valueSingle: "hours" (ex: "24")
    */
-  private boolean evaluateHasIncomingTransferLastNHours(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateHasIncomingTransferLastNHours(
+      RuleCondition condition, EvaluationContext context) {
     try {
       int hours = parseIntSafe(condition.getValueSingle(), 24);
       Map<String, Object> payload = context.getPayload();
@@ -2694,10 +2712,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * IS_IMPOSSIBLE_COMBINATION: Verifica combinações impossíveis de dados.
-   * Formato valueSingle: tipo de combinação (ex: "age_corporate", "country_currency")
+   * IS_IMPOSSIBLE_COMBINATION: Verifica combinações impossíveis de dados. Formato valueSingle: tipo
+   * de combinação (ex: "age_corporate", "country_currency")
    */
-  private boolean evaluateIsImpossibleCombination(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateIsImpossibleCombination(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String combinationType = condition.getValueSingle();
       if (combinationType == null || combinationType.isBlank()) {
@@ -2738,34 +2757,33 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * Verifica se a moeda é válida para o país.
-   */
+  /** Verifica se a moeda é válida para o país. */
   private boolean isValidCurrencyForCountry(String country, String currency) {
     if (country == null || currency == null) return true;
-    
-    Map<String, List<String>> validCurrencies = Map.of(
-      "BR", List.of("BRL"),
-      "US", List.of("USD"),
-      "GB", List.of("GBP"),
-      "DE", List.of("EUR"),
-      "FR", List.of("EUR"),
-      "IT", List.of("EUR"),
-      "ES", List.of("EUR"),
-      "PT", List.of("EUR"),
-      "JP", List.of("JPY"),
-      "CN", List.of("CNY", "CNH")
-    );
-    
+
+    Map<String, List<String>> validCurrencies =
+        Map.of(
+            "BR", List.of("BRL"),
+            "US", List.of("USD"),
+            "GB", List.of("GBP"),
+            "DE", List.of("EUR"),
+            "FR", List.of("EUR"),
+            "IT", List.of("EUR"),
+            "ES", List.of("EUR"),
+            "PT", List.of("EUR"),
+            "JP", List.of("JPY"),
+            "CN", List.of("CNY", "CNH"));
+
     List<String> valid = validCurrencies.get(country.toUpperCase());
     return valid == null || valid.contains(currency.toUpperCase());
   }
 
   /**
-   * PIX_KEY_CHANGED_LAST_N_DAYS: Verifica se chave PIX foi alterada recentemente.
-   * Formato valueSingle: "days" (ex: "7")
+   * PIX_KEY_CHANGED_LAST_N_DAYS: Verifica se chave PIX foi alterada recentemente. Formato
+   * valueSingle: "days" (ex: "7")
    */
-  private boolean evaluatePixKeyChangedLastNDays(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluatePixKeyChangedLastNDays(
+      RuleCondition condition, EvaluationContext context) {
     try {
       int days = parseIntSafe(condition.getValueSingle(), 7);
       Map<String, Object> payload = context.getPayload();
@@ -2784,8 +2802,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * CONTAINS_SUSPICIOUS_KEYWORDS: Detecta palavras suspeitas em texto.
-   * Formato valueArray: lista de keywords, ou usa lista padrão
+   * CONTAINS_SUSPICIOUS_KEYWORDS: Detecta palavras suspeitas em texto. Formato valueArray: lista de
+   * keywords, ou usa lista padrão
    */
   private boolean evaluateContainsSuspiciousKeywords(Object fieldValue, RuleCondition condition) {
     try {
@@ -2801,18 +2819,26 @@ public class ComplexRuleEvaluator {
 
       if (keywords == null || keywords.isEmpty()) {
         // Keywords padrao para fraude brasileira
-        keywords = List.of(
-          "urgente", "transferir agora", "bloqueio", "seguranca",
-          "atualizar dados", "conta suspensa", "premio", "heranca",
-          "emprestimo aprovado", "divida", "spc", "serasa",
-          "banco central", "pix devolvido", "comprovante falso"
-        );
+        keywords =
+            List.of(
+                "urgente",
+                "transferir agora",
+                "bloqueio",
+                "seguranca",
+                "atualizar dados",
+                "conta suspensa",
+                "premio",
+                "heranca",
+                "emprestimo aprovado",
+                "divida",
+                "spc",
+                "serasa",
+                "banco central",
+                "pix devolvido",
+                "comprovante falso");
       }
 
-      return keywords.stream()
-          .map(String::toLowerCase)
-          .map(String::trim)
-          .anyMatch(text::contains);
+      return keywords.stream().map(String::toLowerCase).map(String::trim).anyMatch(text::contains);
     } catch (Exception e) {
       log.error("Erro ao avaliar CONTAINS_SUSPICIOUS_KEYWORDS: {}", e.getMessage());
       return false;
@@ -2820,10 +2846,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * COUNT_CRYPTO_TXN_LAST_N_DAYS: Conta transações crypto nos últimos N dias.
-   * Formato valueSingle: "threshold|days" (ex: "5|30")
+   * COUNT_CRYPTO_TXN_LAST_N_DAYS: Conta transações crypto nos últimos N dias. Formato valueSingle:
+   * "threshold|days" (ex: "5|30")
    */
-  private boolean evaluateCountCryptoTxnLastNDays(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCountCryptoTxnLastNDays(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String valueSingle = condition.getValueSingle();
       if (valueSingle == null || valueSingle.isBlank()) {
@@ -2851,10 +2878,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS: Instrumentos distintos nos últimos N dias.
-   * Formato valueSingle: "threshold|days" (ex: "10|30")
+   * COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS: Instrumentos distintos nos últimos N dias. Formato
+   * valueSingle: "threshold|days" (ex: "10|30")
    */
-  private boolean evaluateCountDistinctInstrumentsLastNDays(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCountDistinctInstrumentsLastNDays(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String valueSingle = condition.getValueSingle();
       if (valueSingle == null || valueSingle.isBlank()) {
@@ -2882,10 +2910,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * COUNT_DISTINCT_PAYERS_LAST_N_DAYS: Pagadores distintos nos últimos N dias.
-   * Formato valueSingle: "threshold|days" (ex: "5|7")
+   * COUNT_DISTINCT_PAYERS_LAST_N_DAYS: Pagadores distintos nos últimos N dias. Formato valueSingle:
+   * "threshold|days" (ex: "5|7")
    */
-  private boolean evaluateCountDistinctPayersLastNDays(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCountDistinctPayersLastNDays(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String valueSingle = condition.getValueSingle();
       if (valueSingle == null || valueSingle.isBlank()) {
@@ -2913,10 +2942,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS: User agents distintos nas últimas N horas.
-   * Formato valueSingle: "threshold|hours" (ex: "5|24")
+   * COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS: User agents distintos nas últimas N horas. Formato
+   * valueSingle: "threshold|hours" (ex: "5|24")
    */
-  private boolean evaluateCountDistinctUserAgentsLastNHours(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCountDistinctUserAgentsLastNHours(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String valueSingle = condition.getValueSingle();
       if (valueSingle == null || valueSingle.isBlank()) {
@@ -2944,8 +2974,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * COUNT_LAST_N_DAYS: Contagem genérica nos últimos N dias.
-   * Formato valueSingle: "threshold|days" ou "keyType|threshold|days"
+   * COUNT_LAST_N_DAYS: Contagem genérica nos últimos N dias. Formato valueSingle: "threshold|days"
+   * ou "keyType|threshold|days"
    */
   private boolean evaluateCountLastNDays(RuleCondition condition, EvaluationContext context) {
     try {
@@ -2955,7 +2985,7 @@ public class ComplexRuleEvaluator {
       }
 
       String[] parts = valueSingle.split("\\|");
-      
+
       String keyType = "PAN";
       int threshold;
       int days;
@@ -2976,8 +3006,8 @@ public class ComplexRuleEvaluator {
       if (context.getTransactionRequest() != null) {
         VelocityService.TimeWindow window = parseTimeWindowFromDays(days);
         VelocityService.KeyType kt = parseKeyType(keyType);
-        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-            context.getTransactionRequest(), kt, window);
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(context.getTransactionRequest(), kt, window);
         return stats.getTransactionCount() >= threshold;
       }
 
@@ -2994,9 +3024,7 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * Converte string para KeyType.
-   */
+  /** Converte string para KeyType. */
   private VelocityService.KeyType parseKeyType(String keyType) {
     try {
       return VelocityService.KeyType.valueOf(keyType.toUpperCase());
@@ -3006,10 +3034,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * COUNT_MFA_DENIALS_LAST_N_HOURS: Negações de MFA nas últimas N horas.
-   * Formato valueSingle: "threshold:hours" (ex: "3:24")
+   * COUNT_MFA_DENIALS_LAST_N_HOURS: Negações de MFA nas últimas N horas. Formato valueSingle:
+   * "threshold:hours" (ex: "3:24")
    */
-  private boolean evaluateCountMfaDenialsLastNHours(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCountMfaDenialsLastNHours(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String valueSingle = condition.getValueSingle();
       if (valueSingle == null || valueSingle.isBlank()) {
@@ -3036,10 +3065,11 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * DAYS_SINCE_LAST_ACTIVITY: Dias desde última atividade.
-   * Formato valueSingle: "threshold|operator" (ex: "30|GT" = mais de 30 dias)
+   * DAYS_SINCE_LAST_ACTIVITY: Dias desde última atividade. Formato valueSingle:
+   * "threshold|operator" (ex: "30|GT" = mais de 30 dias)
    */
-  private boolean evaluateDaysSinceLastActivity(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateDaysSinceLastActivity(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String valueSingle = condition.getValueSingle();
       if (valueSingle == null || valueSingle.isBlank()) {
@@ -3076,10 +3106,9 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * DEVICE_CHANGED_IN_SESSION: Verifica se device mudou durante a sessão.
-   */
-  private boolean evaluateDeviceChangedInSession(RuleCondition condition, EvaluationContext context) {
+  /** DEVICE_CHANGED_IN_SESSION: Verifica se device mudou durante a sessão. */
+  private boolean evaluateDeviceChangedInSession(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
@@ -3097,8 +3126,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * IS_CRYPTO_RANSOM_AMOUNT: Detecta valores típicos de ransomware.
-   * Verifica se o valor está próximo de quantias típicas de ransom.
+   * IS_CRYPTO_RANSOM_AMOUNT: Detecta valores típicos de ransomware. Verifica se o valor está
+   * próximo de quantias típicas de ransom.
    */
   private boolean evaluateIsCryptoRansomAmount(RuleCondition condition, EvaluationContext context) {
     try {
@@ -3116,24 +3145,25 @@ public class ComplexRuleEvaluator {
       // Valores tipicos de ransom (em BRL ou USD)
       // Convertidos de valores comuns em BTC: 0.05, 0.1, 0.25, 0.5, 1, 2, 5 BTC
       // Considerando BTC entre R$ 300.000 - R$ 400.000
-      List<BigDecimal> typicalRansomAmounts = List.of(
-          new BigDecimal("500"),       // ~0.001 BTC
-          new BigDecimal("1000"),      // ~0.003 BTC
-          new BigDecimal("2500"),      // ~0.007 BTC
-          new BigDecimal("5000"),      // ~0.015 BTC
-          new BigDecimal("10000"),     // ~0.03 BTC
-          new BigDecimal("15000"),     // ~0.05 BTC
-          new BigDecimal("25000"),     // ~0.08 BTC
-          new BigDecimal("35000"),     // ~0.1 BTC
-          new BigDecimal("50000"),     // ~0.15 BTC
-          new BigDecimal("75000"),     // ~0.25 BTC
-          new BigDecimal("100000"),    // ~0.3 BTC
-          new BigDecimal("150000"),    // ~0.5 BTC
-          new BigDecimal("175000"),    // ~0.5 BTC
-          new BigDecimal("200000"),    // ~0.6 BTC
-          new BigDecimal("350000"),    // ~1 BTC
-          new BigDecimal("500000")     // ~1.5 BTC
-      );
+      List<BigDecimal> typicalRansomAmounts =
+          List.of(
+              new BigDecimal("500"), // ~0.001 BTC
+              new BigDecimal("1000"), // ~0.003 BTC
+              new BigDecimal("2500"), // ~0.007 BTC
+              new BigDecimal("5000"), // ~0.015 BTC
+              new BigDecimal("10000"), // ~0.03 BTC
+              new BigDecimal("15000"), // ~0.05 BTC
+              new BigDecimal("25000"), // ~0.08 BTC
+              new BigDecimal("35000"), // ~0.1 BTC
+              new BigDecimal("50000"), // ~0.15 BTC
+              new BigDecimal("75000"), // ~0.25 BTC
+              new BigDecimal("100000"), // ~0.3 BTC
+              new BigDecimal("150000"), // ~0.5 BTC
+              new BigDecimal("175000"), // ~0.5 BTC
+              new BigDecimal("200000"), // ~0.6 BTC
+              new BigDecimal("350000"), // ~1 BTC
+              new BigDecimal("500000") // ~1.5 BTC
+              );
 
       // Verificar se valor esta proximo (±10%) de valores tipicos
       for (BigDecimal typical : typicalRansomAmounts) {
@@ -3152,8 +3182,8 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * OUTFLOW_RATE_LAST_N_DAYS: Taxa de saída nos últimos N dias.
-   * Formato valueSingle: "threshold|days" (threshold em percentual)
+   * OUTFLOW_RATE_LAST_N_DAYS: Taxa de saída nos últimos N dias. Formato valueSingle:
+   * "threshold|days" (threshold em percentual)
    */
   private boolean evaluateOutflowRateLastNDays(RuleCondition condition, EvaluationContext context) {
     try {
@@ -3182,9 +3212,7 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * Converte objeto para BigDecimal de forma segura.
-   */
+  /** Converte objeto para BigDecimal de forma segura. */
   private BigDecimal getBigDecimal(Object value) {
     if (value == null) return null;
     if (value instanceof BigDecimal) return (BigDecimal) value;
@@ -3199,23 +3227,23 @@ public class ComplexRuleEvaluator {
   // ========== OPERADORES V31+ (82 stubs) - CATEGORIAS A-K ==========
 
   // --- CATEGORIA A: Velocity Avançado (10) ---
-  
+
   /**
-   * VELOCITY_CROSS_CHANNEL: Detecta velocidade entre diferentes canais.
-   * Formato valueSingle: "threshold|channelField" (ex: "5|channel_type")
+   * VELOCITY_CROSS_CHANNEL: Detecta velocidade entre diferentes canais. Formato valueSingle:
+   * "threshold|channelField" (ex: "5|channel_type")
    */
   private boolean evaluateVelocityCrossChannel(RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int threshold = Integer.parseInt(parts[0].trim());
-      
+
       Object channelsObj = payload.get("cross_channel_count");
       if (channelsObj == null) channelsObj = payload.get("distinctChannels");
-      
+
       int channelCount = channelsObj instanceof Number ? ((Number) channelsObj).intValue() : 1;
       return channelCount > threshold;
     } catch (Exception e) {
@@ -3225,21 +3253,23 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * VELOCITY_ROLLING_WINDOW: Velocidade com janela móvel customizada.
-   * Formato valueSingle: "threshold|minutes" (ex: "10|30")
+   * VELOCITY_ROLLING_WINDOW: Velocidade com janela móvel customizada. Formato valueSingle:
+   * "threshold|minutes" (ex: "10|30")
    */
-  private boolean evaluateVelocityRollingWindow(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateVelocityRollingWindow(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       long threshold = Long.parseLong(parts[0].trim());
       int minutes = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 60;
-      
+
       VelocityService.TimeWindow window = parseTimeWindow(minutes);
-      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
-      
+      VelocityService.VelocityStats stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
+
       return stats.getTransactionCount() > threshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar VELOCITY_ROLLING_WINDOW: {}", e.getMessage());
@@ -3248,29 +3278,31 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * VELOCITY_PERCENTILE: Verifica se transação está acima de determinado percentil.
-   * Formato valueSingle: "percentile" (ex: "95" = acima do P95)
+   * VELOCITY_PERCENTILE: Verifica se transação está acima de determinado percentil. Formato
+   * valueSingle: "percentile" (ex: "95" = acima do P95)
    */
   private boolean evaluateVelocityPercentile(RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
-      
+
       double percentileThreshold = Double.parseDouble(condition.getValueSingle().trim());
-      
-      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), VelocityService.KeyType.PAN, 
-          VelocityService.TimeWindow.HOUR_24);
-      
+
+      VelocityService.VelocityStats stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(),
+              VelocityService.KeyType.PAN,
+              VelocityService.TimeWindow.HOUR_24);
+
       BigDecimal avg = stats.getAvgAmount();
       BigDecimal stdDev = stats.getStdDevAmount();
       BigDecimal txAmount = context.getTransactionRequest().getTransactionAmount();
-      
+
       if (avg == null || stdDev == null || stdDev.compareTo(BigDecimal.ZERO) == 0) return false;
-      
+
       // Usar Z-score para aproximar percentil
       double zScore = txAmount.subtract(avg).divide(stdDev, 4, RoundingMode.HALF_UP).doubleValue();
       double percentile = 50 + (50 * Math.tanh(zScore / 2)); // Aproximação
-      
+
       return percentile > percentileThreshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar VELOCITY_PERCENTILE: {}", e.getMessage());
@@ -3279,30 +3311,34 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * VELOCITY_RATIO_GT: Razão entre velocidade atual e histórica.
-   * Formato valueSingle: "ratio" (ex: "2.0" = 2x a velocidade normal)
+   * VELOCITY_RATIO_GT: Razão entre velocidade atual e histórica. Formato valueSingle: "ratio" (ex:
+   * "2.0" = 2x a velocidade normal)
    */
   private boolean evaluateVelocityRatioGt(RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
-      
+
       double ratioThreshold = Double.parseDouble(condition.getValueSingle().trim());
-      
-      VelocityService.VelocityStats statsHour = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), VelocityService.KeyType.PAN, 
-          VelocityService.TimeWindow.HOUR_1);
-      VelocityService.VelocityStats stats24h = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), VelocityService.KeyType.PAN, 
-          VelocityService.TimeWindow.HOUR_24);
-      
+
+      VelocityService.VelocityStats statsHour =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(),
+              VelocityService.KeyType.PAN,
+              VelocityService.TimeWindow.HOUR_1);
+      VelocityService.VelocityStats stats24h =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(),
+              VelocityService.KeyType.PAN,
+              VelocityService.TimeWindow.HOUR_24);
+
       long countHour = statsHour.getTransactionCount();
       long count24h = stats24h.getTransactionCount();
-      
+
       if (count24h == 0) return false;
-      
+
       double avgHourly = count24h / 24.0;
       double ratio = avgHourly > 0 ? countHour / avgHourly : 0;
-      
+
       return ratio > ratioThreshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar VELOCITY_RATIO_GT: {}", e.getMessage());
@@ -3311,23 +3347,23 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * VELOCITY_TREND: Detecta tendência de aumento na velocidade.
-   * Formato valueSingle: "direction|threshold" (ex: "UP|1.5")
+   * VELOCITY_TREND: Detecta tendência de aumento na velocidade. Formato valueSingle:
+   * "direction|threshold" (ex: "UP|1.5")
    */
   private boolean evaluateVelocityTrend(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       String direction = parts[0].trim().toUpperCase();
       double threshold = parts.length > 1 ? Double.parseDouble(parts[1].trim()) : 1.5;
-      
+
       Object trendObj = payload.get("velocity_trend_ratio");
       if (trendObj == null) trendObj = payload.get("velocityTrendRatio");
-      
+
       double trendRatio = trendObj instanceof Number ? ((Number) trendObj).doubleValue() : 1.0;
-      
+
       if ("UP".equals(direction)) {
         return trendRatio > threshold;
       } else if ("DOWN".equals(direction)) {
@@ -3341,20 +3377,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * COUNT_UNIQUE_BENEFICIARIES_LAST_N_DAYS: Conta beneficiários únicos em N dias.
-   * Formato valueSingle: "threshold|days" (ex: "10|7")
+   * COUNT_UNIQUE_BENEFICIARIES_LAST_N_DAYS: Conta beneficiários únicos em N dias. Formato
+   * valueSingle: "threshold|days" (ex: "10|7")
    */
-  private boolean evaluateCountUniqueBeneficiariesLastNDays(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCountUniqueBeneficiariesLastNDays(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int threshold = Integer.parseInt(parts[0].trim());
-      
+
       Object countObj = payload.get("unique_beneficiaries_count");
       if (countObj == null) countObj = payload.get("uniqueBeneficiariesCount");
-      
+
       int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
       return count > threshold;
     } catch (Exception e) {
@@ -3364,20 +3401,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * COUNT_UNIQUE_IPS_LAST_N_HOURS: Conta IPs únicos em N horas.
-   * Formato valueSingle: "threshold|hours" (ex: "5|24")
+   * COUNT_UNIQUE_IPS_LAST_N_HOURS: Conta IPs únicos em N horas. Formato valueSingle:
+   * "threshold|hours" (ex: "5|24")
    */
-  private boolean evaluateCountUniqueIpsLastNHours(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCountUniqueIpsLastNHours(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int threshold = Integer.parseInt(parts[0].trim());
-      
+
       Object countObj = payload.get("unique_ips_count");
       if (countObj == null) countObj = payload.get("uniqueIpsCount");
-      
+
       int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
       return count > threshold;
     } catch (Exception e) {
@@ -3387,22 +3425,23 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * SUM_BY_CHANNEL_LAST_N_DAYS: Soma valores por canal em N dias.
-   * Formato valueSingle: "threshold|channel|days" (ex: "50000|PIX|7")
+   * SUM_BY_CHANNEL_LAST_N_DAYS: Soma valores por canal em N dias. Formato valueSingle:
+   * "threshold|channel|days" (ex: "50000|PIX|7")
    */
-  private boolean evaluateSumByChannelLastNDays(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateSumByChannelLastNDays(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       double threshold = Double.parseDouble(parts[0].trim());
       String channel = parts.length > 1 ? parts[1].trim().toUpperCase() : "ALL";
-      
+
       String key = "sum_by_channel_" + channel.toLowerCase();
       Object sumObj = payload.get(key);
       if (sumObj == null) sumObj = payload.get("sumByChannel" + channel);
-      
+
       double sum = sumObj instanceof Number ? ((Number) sumObj).doubleValue() : 0.0;
       return sum > threshold;
     } catch (Exception e) {
@@ -3412,20 +3451,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * AVG_INTERVAL_BETWEEN_TXN: Intervalo médio entre transações.
-   * Formato valueSingle: "minSeconds" (ex: "30" = mínimo 30s entre txns)
+   * AVG_INTERVAL_BETWEEN_TXN: Intervalo médio entre transações. Formato valueSingle: "minSeconds"
+   * (ex: "30" = mínimo 30s entre txns)
    */
-  private boolean evaluateAvgIntervalBetweenTxn(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateAvgIntervalBetweenTxn(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double minSeconds = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object intervalObj = payload.get("avg_interval_seconds");
       if (intervalObj == null) intervalObj = payload.get("avgIntervalSeconds");
-      
-      double avgInterval = intervalObj instanceof Number ? ((Number) intervalObj).doubleValue() : Double.MAX_VALUE;
+
+      double avgInterval =
+          intervalObj instanceof Number ? ((Number) intervalObj).doubleValue() : Double.MAX_VALUE;
       return avgInterval < minSeconds;
     } catch (Exception e) {
       log.error("Erro ao avaliar AVG_INTERVAL_BETWEEN_TXN: {}", e.getMessage());
@@ -3434,19 +3475,19 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * VELOCITY_ACCELERATION: Detecta aceleração na frequência de transações.
-   * Formato valueSingle: "accelerationThreshold" (ex: "2.0" = aceleração 2x)
+   * VELOCITY_ACCELERATION: Detecta aceleração na frequência de transações. Formato valueSingle:
+   * "accelerationThreshold" (ex: "2.0" = aceleração 2x)
    */
   private boolean evaluateVelocityAcceleration(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double threshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object accelObj = payload.get("velocity_acceleration");
       if (accelObj == null) accelObj = payload.get("velocityAcceleration");
-      
+
       double acceleration = accelObj instanceof Number ? ((Number) accelObj).doubleValue() : 1.0;
       return acceleration > threshold;
     } catch (Exception e) {
@@ -3456,29 +3497,30 @@ public class ComplexRuleEvaluator {
   }
 
   // --- CATEGORIA B: Behavioral Rules (8) ---
-  
+
   /**
-   * DORMANCY_REVIVAL: Detecta conta reativada após período de dormência.
-   * Formato valueSingle: "dormancyDays|txThreshold" (ex: "90|3")
+   * DORMANCY_REVIVAL: Detecta conta reativada após período de dormência. Formato valueSingle:
+   * "dormancyDays|txThreshold" (ex: "90|3")
    */
   private boolean evaluateDormancyRevival(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int dormancyDays = Integer.parseInt(parts[0].trim());
       int txThreshold = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 3;
-      
+
       Object lastActivityObj = payload.get("days_since_last_activity");
       if (lastActivityObj == null) lastActivityObj = payload.get("daysSinceLastActivity");
-      
+
       Object recentTxObj = payload.get("recent_tx_count");
       if (recentTxObj == null) recentTxObj = payload.get("recentTxCount");
-      
-      int daysSinceActivity = lastActivityObj instanceof Number ? ((Number) lastActivityObj).intValue() : 0;
+
+      int daysSinceActivity =
+          lastActivityObj instanceof Number ? ((Number) lastActivityObj).intValue() : 0;
       int recentTxCount = recentTxObj instanceof Number ? ((Number) recentTxObj).intValue() : 0;
-      
+
       return daysSinceActivity > dormancyDays && recentTxCount >= txThreshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar DORMANCY_REVIVAL: {}", e.getMessage());
@@ -3487,28 +3529,31 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * AMOUNT_DEVIATION_FROM_AVG: Desvio do valor médio histórico.
-   * Formato valueSingle: "deviationMultiplier" (ex: "3.0" = 3x desvio padrão)
+   * AMOUNT_DEVIATION_FROM_AVG: Desvio do valor médio histórico. Formato valueSingle:
+   * "deviationMultiplier" (ex: "3.0" = 3x desvio padrão)
    */
-  private boolean evaluateAmountDeviationFromAvg(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateAmountDeviationFromAvg(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
-      
+
       double multiplier = Double.parseDouble(condition.getValueSingle().trim());
-      
-      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), VelocityService.KeyType.PAN, 
-          VelocityService.TimeWindow.HOUR_24);
-      
+
+      VelocityService.VelocityStats stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(),
+              VelocityService.KeyType.PAN,
+              VelocityService.TimeWindow.HOUR_24);
+
       BigDecimal avg = stats.getAvgAmount();
       BigDecimal stdDev = stats.getStdDevAmount();
       BigDecimal txAmount = context.getTransactionRequest().getTransactionAmount();
-      
+
       if (avg == null || stdDev == null || stdDev.compareTo(BigDecimal.ZERO) == 0) return false;
-      
+
       BigDecimal deviation = txAmount.subtract(avg).abs();
       BigDecimal threshold = stdDev.multiply(BigDecimal.valueOf(multiplier));
-      
+
       return deviation.compareTo(threshold) > 0;
     } catch (Exception e) {
       log.error("Erro ao avaliar AMOUNT_DEVIATION_FROM_AVG: {}", e.getMessage());
@@ -3517,20 +3562,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * TIME_DEVIATION_FROM_USUAL: Desvio do horário usual de transações.
-   * Formato valueSingle: "hoursDeviation" (ex: "4" = 4 horas fora do padrão)
+   * TIME_DEVIATION_FROM_USUAL: Desvio do horário usual de transações. Formato valueSingle:
+   * "hoursDeviation" (ex: "4" = 4 horas fora do padrão)
    */
-  private boolean evaluateTimeDeviationFromUsual(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateTimeDeviationFromUsual(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int hoursThreshold = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object deviationObj = payload.get("time_deviation_hours");
       if (deviationObj == null) deviationObj = payload.get("timeDeviationHours");
-      
-      double deviation = deviationObj instanceof Number ? ((Number) deviationObj).doubleValue() : 0.0;
+
+      double deviation =
+          deviationObj instanceof Number ? ((Number) deviationObj).doubleValue() : 0.0;
       return Math.abs(deviation) > hoursThreshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar TIME_DEVIATION_FROM_USUAL: {}", e.getMessage());
@@ -3539,19 +3586,20 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_DEVIATION: Detecta merchant fora do padrão usual do cliente.
-   * Formato valueSingle: "true" (verifica se merchant é novo/incomum)
+   * MERCHANT_DEVIATION: Detecta merchant fora do padrão usual do cliente. Formato valueSingle:
+   * "true" (verifica se merchant é novo/incomum)
    */
   private boolean evaluateMerchantDeviation(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object deviationObj = payload.get("merchant_is_unusual");
       if (deviationObj == null) deviationObj = payload.get("merchantIsUnusual");
       if (deviationObj == null) deviationObj = payload.get("new_merchant");
-      
-      return Boolean.TRUE.equals(deviationObj) || "true".equalsIgnoreCase(String.valueOf(deviationObj));
+
+      return Boolean.TRUE.equals(deviationObj)
+          || "true".equalsIgnoreCase(String.valueOf(deviationObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar MERCHANT_DEVIATION: {}", e.getMessage());
       return false;
@@ -3559,26 +3607,26 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MICRO_TRANSACTION_TEST: Detecta teste com micro-transação.
-   * Formato valueSingle: "maxAmount|count" (ex: "1.00|3")
+   * MICRO_TRANSACTION_TEST: Detecta teste com micro-transação. Formato valueSingle:
+   * "maxAmount|count" (ex: "1.00|3")
    */
   private boolean evaluateMicroTransactionTest(RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       double maxAmount = Double.parseDouble(parts[0].trim());
       int countThreshold = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 2;
-      
+
       BigDecimal txAmount = context.getTransactionRequest().getTransactionAmount();
-      
+
       Object microCountObj = payload.get("micro_tx_count");
       if (microCountObj == null) microCountObj = payload.get("microTxCount");
-      
+
       int microCount = microCountObj instanceof Number ? ((Number) microCountObj).intValue() : 0;
-      
+
       boolean isMicro = txAmount.doubleValue() <= maxAmount;
       return isMicro && microCount >= countThreshold;
     } catch (Exception e) {
@@ -3588,19 +3636,19 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * LOCATION_DEVIATION: Detecta localização fora do padrão.
-   * Formato valueSingle: "kmThreshold" (ex: "100" = 100km da localização usual)
+   * LOCATION_DEVIATION: Detecta localização fora do padrão. Formato valueSingle: "kmThreshold" (ex:
+   * "100" = 100km da localização usual)
    */
   private boolean evaluateLocationDeviation(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double kmThreshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object distanceObj = payload.get("distance_from_usual_km");
       if (distanceObj == null) distanceObj = payload.get("distanceFromUsualKm");
-      
+
       double distance = distanceObj instanceof Number ? ((Number) distanceObj).doubleValue() : 0.0;
       return distance > kmThreshold;
     } catch (Exception e) {
@@ -3610,20 +3658,20 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * CHANNEL_SWITCH_PATTERN: Detecta troca suspeita de canal.
-   * Formato valueSingle: "switchCount|hours" (ex: "3|1")
+   * CHANNEL_SWITCH_PATTERN: Detecta troca suspeita de canal. Formato valueSingle:
+   * "switchCount|hours" (ex: "3|1")
    */
   private boolean evaluateChannelSwitchPattern(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int switchThreshold = Integer.parseInt(parts[0].trim());
-      
+
       Object switchCountObj = payload.get("channel_switch_count");
       if (switchCountObj == null) switchCountObj = payload.get("channelSwitchCount");
-      
+
       int switchCount = switchCountObj instanceof Number ? ((Number) switchCountObj).intValue() : 0;
       return switchCount >= switchThreshold;
     } catch (Exception e) {
@@ -3633,19 +3681,20 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * BENEFICIARY_REUSE_PATTERN: Detecta padrão de reutilização de beneficiário.
-   * Formato valueSingle: "reuseThreshold" (ex: "5" = mesmo beneficiário 5x)
+   * BENEFICIARY_REUSE_PATTERN: Detecta padrão de reutilização de beneficiário. Formato valueSingle:
+   * "reuseThreshold" (ex: "5" = mesmo beneficiário 5x)
    */
-  private boolean evaluateBeneficiaryReusePattern(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateBeneficiaryReusePattern(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int reuseThreshold = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object reuseCountObj = payload.get("beneficiary_reuse_count");
       if (reuseCountObj == null) reuseCountObj = payload.get("beneficiaryReuseCount");
-      
+
       int reuseCount = reuseCountObj instanceof Number ? ((Number) reuseCountObj).intValue() : 0;
       return reuseCount >= reuseThreshold;
     } catch (Exception e) {
@@ -3655,22 +3704,22 @@ public class ComplexRuleEvaluator {
   }
 
   // --- CATEGORIA C: Graph/Network (8) ---
-  
+
   /**
-   * FAN_OUT_COUNT: Conta destinatários únicos de um remetente.
-   * Formato valueSingle: "threshold|hours" (ex: "10|24")
+   * FAN_OUT_COUNT: Conta destinatários únicos de um remetente. Formato valueSingle:
+   * "threshold|hours" (ex: "10|24")
    */
   private boolean evaluateFanOutCount(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int threshold = Integer.parseInt(parts[0].trim());
-      
+
       Object fanOutObj = payload.get("fan_out_count");
       if (fanOutObj == null) fanOutObj = payload.get("fanOutCount");
-      
+
       int fanOut = fanOutObj instanceof Number ? ((Number) fanOutObj).intValue() : 0;
       return fanOut > threshold;
     } catch (Exception e) {
@@ -3680,20 +3729,20 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * FAN_IN_COUNT: Conta remetentes únicos para um destinatário.
-   * Formato valueSingle: "threshold|hours" (ex: "10|24")
+   * FAN_IN_COUNT: Conta remetentes únicos para um destinatário. Formato valueSingle:
+   * "threshold|hours" (ex: "10|24")
    */
   private boolean evaluateFanInCount(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int threshold = Integer.parseInt(parts[0].trim());
-      
+
       Object fanInObj = payload.get("fan_in_count");
       if (fanInObj == null) fanInObj = payload.get("fanInCount");
-      
+
       int fanIn = fanInObj instanceof Number ? ((Number) fanInObj).intValue() : 0;
       return fanIn > threshold;
     } catch (Exception e) {
@@ -3703,19 +3752,19 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * SHARED_DEVICE_COUNT: Conta contas usando o mesmo dispositivo.
-   * Formato valueSingle: "threshold" (ex: "3")
+   * SHARED_DEVICE_COUNT: Conta contas usando o mesmo dispositivo. Formato valueSingle: "threshold"
+   * (ex: "3")
    */
   private boolean evaluateSharedDeviceCount(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int threshold = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object sharedObj = payload.get("shared_device_accounts");
       if (sharedObj == null) sharedObj = payload.get("sharedDeviceAccounts");
-      
+
       int sharedCount = sharedObj instanceof Number ? ((Number) sharedObj).intValue() : 0;
       return sharedCount > threshold;
     } catch (Exception e) {
@@ -3724,20 +3773,17 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * SHARED_IP_COUNT: Conta contas usando o mesmo IP.
-   * Formato valueSingle: "threshold" (ex: "5")
-   */
+  /** SHARED_IP_COUNT: Conta contas usando o mesmo IP. Formato valueSingle: "threshold" (ex: "5") */
   private boolean evaluateSharedIpCount(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int threshold = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object sharedObj = payload.get("shared_ip_accounts");
       if (sharedObj == null) sharedObj = payload.get("sharedIpAccounts");
-      
+
       int sharedCount = sharedObj instanceof Number ? ((Number) sharedObj).intValue() : 0;
       return sharedCount > threshold;
     } catch (Exception e) {
@@ -3747,19 +3793,19 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * ACCOUNT_LINK_DEPTH: Profundidade de links entre contas.
-   * Formato valueSingle: "maxDepth" (ex: "3" = 3 saltos)
+   * ACCOUNT_LINK_DEPTH: Profundidade de links entre contas. Formato valueSingle: "maxDepth" (ex:
+   * "3" = 3 saltos)
    */
   private boolean evaluateAccountLinkDepth(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int maxDepth = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object depthObj = payload.get("account_link_depth");
       if (depthObj == null) depthObj = payload.get("accountLinkDepth");
-      
+
       int depth = depthObj instanceof Number ? ((Number) depthObj).intValue() : 0;
       return depth >= maxDepth;
     } catch (Exception e) {
@@ -3769,18 +3815,20 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * CIRCULAR_TRANSFER_DETECTION: Detecta transferências circulares.
-   * Formato valueSingle: "true" (verifica se há ciclo)
+   * CIRCULAR_TRANSFER_DETECTION: Detecta transferências circulares. Formato valueSingle: "true"
+   * (verifica se há ciclo)
    */
-  private boolean evaluateCircularTransferDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCircularTransferDetection(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object circularObj = payload.get("circular_transfer_detected");
       if (circularObj == null) circularObj = payload.get("circularTransferDetected");
-      
-      return Boolean.TRUE.equals(circularObj) || "true".equalsIgnoreCase(String.valueOf(circularObj));
+
+      return Boolean.TRUE.equals(circularObj)
+          || "true".equalsIgnoreCase(String.valueOf(circularObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar CIRCULAR_TRANSFER_DETECTION: {}", e.getMessage());
       return false;
@@ -3788,20 +3836,20 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * RAPID_MULTI_HOP: Detecta múltiplos saltos rápidos.
-   * Formato valueSingle: "hops|minutes" (ex: "3|10")
+   * RAPID_MULTI_HOP: Detecta múltiplos saltos rápidos. Formato valueSingle: "hops|minutes" (ex:
+   * "3|10")
    */
   private boolean evaluateRapidMultiHop(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int hopThreshold = Integer.parseInt(parts[0].trim());
-      
+
       Object hopCountObj = payload.get("rapid_hop_count");
       if (hopCountObj == null) hopCountObj = payload.get("rapidHopCount");
-      
+
       int hopCount = hopCountObj instanceof Number ? ((Number) hopCountObj).intValue() : 0;
       return hopCount >= hopThreshold;
     } catch (Exception e) {
@@ -3811,20 +3859,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * BENEFICIARY_CONCENTRATION: Concentração de valores em poucos beneficiários.
-   * Formato valueSingle: "percentageThreshold" (ex: "80" = 80% para top 3)
+   * BENEFICIARY_CONCENTRATION: Concentração de valores em poucos beneficiários. Formato
+   * valueSingle: "percentageThreshold" (ex: "80" = 80% para top 3)
    */
-  private boolean evaluateBeneficiaryConcentration(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateBeneficiaryConcentration(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double percentageThreshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object concentrationObj = payload.get("beneficiary_concentration_pct");
       if (concentrationObj == null) concentrationObj = payload.get("beneficiaryConcentrationPct");
-      
-      double concentration = concentrationObj instanceof Number ? ((Number) concentrationObj).doubleValue() : 0.0;
+
+      double concentration =
+          concentrationObj instanceof Number ? ((Number) concentrationObj).doubleValue() : 0.0;
       return concentration > percentageThreshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar BENEFICIARY_CONCENTRATION: {}", e.getMessage());
@@ -3843,10 +3893,7 @@ public class ComplexRuleEvaluator {
       if (list == null || list.isEmpty()) {
         String csv = condition.getValueSingle();
         if (csv == null || csv.isBlank()) return false;
-        list = Arrays.stream(csv.split(","))
-            .map(String::trim)
-            .filter(s -> !s.isBlank())
-            .toList();
+        list = Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
       }
 
       for (String entry : list) {
@@ -3873,10 +3920,7 @@ public class ComplexRuleEvaluator {
       if (list == null || list.isEmpty()) {
         String csv = condition.getValueSingle();
         if (csv == null || csv.isBlank()) return false;
-        list = Arrays.stream(csv.split(","))
-            .map(String::trim)
-            .filter(s -> !s.isBlank())
-            .toList();
+        list = Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
       }
 
       for (String entry : list) {
@@ -3904,18 +3948,11 @@ public class ComplexRuleEvaluator {
       if (keywords == null || keywords.isEmpty()) {
         String csv = condition.getValueSingle();
         if (csv == null || csv.isBlank()) {
-          keywords = List.of(
-              "fraud",
-              "scam",
-              "money laundering",
-              "sanction",
-              "terror",
-              "corruption");
+          keywords =
+              List.of("fraud", "scam", "money laundering", "sanction", "terror", "corruption");
         } else {
-          keywords = Arrays.stream(csv.split(","))
-              .map(String::trim)
-              .filter(s -> !s.isBlank())
-              .toList();
+          keywords =
+              Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
         }
       }
 
@@ -3941,10 +3978,7 @@ public class ComplexRuleEvaluator {
       if (list == null || list.isEmpty()) {
         String csv = condition.getValueSingle();
         if (csv == null || csv.isBlank()) return false;
-        list = Arrays.stream(csv.split(","))
-            .map(String::trim)
-            .filter(s -> !s.isBlank())
-            .toList();
+        list = Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
       }
 
       for (String entry : list) {
@@ -3967,10 +4001,7 @@ public class ComplexRuleEvaluator {
       if (list == null || list.isEmpty()) {
         String csv = condition.getValueSingle();
         if (csv == null || csv.isBlank()) return false;
-        list = Arrays.stream(csv.split(","))
-            .map(String::trim)
-            .filter(s -> !s.isBlank())
-            .toList();
+        list = Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
       }
 
       for (String entry : list) {
@@ -3983,7 +4014,8 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateNameTransliterationMatch(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNameTransliterationMatch(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       String otherField = null;
@@ -4024,7 +4056,8 @@ public class ComplexRuleEvaluator {
         return Boolean.TRUE.equals(toBoolean(aliasObj));
       }
 
-      Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      Object fieldValue =
+          getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
       if (fieldValue == null) return false;
       String name = normalizeForMatch(String.valueOf(fieldValue));
       if (name.isBlank()) return false;
@@ -4033,10 +4066,8 @@ public class ComplexRuleEvaluator {
       if (aliases == null || aliases.isEmpty()) {
         String csv = condition.getValueSingle();
         if (csv == null || csv.isBlank()) return false;
-        aliases = Arrays.stream(csv.split(","))
-            .map(String::trim)
-            .filter(s -> !s.isBlank())
-            .toList();
+        aliases =
+            Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
       }
 
       for (String alias : aliases) {
@@ -4085,10 +4116,7 @@ public class ComplexRuleEvaluator {
       if (list == null || list.isEmpty()) {
         String csv = condition.getValueSingle();
         if (csv == null || csv.isBlank()) return false;
-        list = Arrays.stream(csv.split(","))
-            .map(String::trim)
-            .filter(s -> !s.isBlank())
-            .toList();
+        list = Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
       }
 
       for (String entry : list) {
@@ -4153,12 +4181,15 @@ public class ComplexRuleEvaluator {
   private boolean evaluateIdentityVelocity(RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
-      String[] parts = (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split("\\|");
-      long threshold = parts.length >= 1 && !parts[0].isBlank() ? Long.parseLong(parts[0].trim()) : 3L;
+      String[] parts =
+          (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split("\\|");
+      long threshold =
+          parts.length >= 1 && !parts[0].isBlank() ? Long.parseLong(parts[0].trim()) : 3L;
 
       Object countObj = context.getPayload().get("identity_velocity_count");
       if (countObj == null) countObj = context.getPayload().get("identityVelocityCount");
-      if (countObj == null) countObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (countObj == null)
+        countObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
       long count = countObj instanceof Number ? ((Number) countObj).longValue() : 0L;
       return count >= threshold;
     } catch (Exception e) {
@@ -4174,7 +4205,8 @@ public class ComplexRuleEvaluator {
 
       Object ratioObj = context.getPayload().get("device_account_ratio");
       if (ratioObj == null) ratioObj = context.getPayload().get("deviceAccountRatio");
-      if (ratioObj == null) ratioObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (ratioObj == null)
+        ratioObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
 
       double ratio = ratioObj instanceof Number ? ((Number) ratioObj).doubleValue() : 0.0;
       return ratio > threshold;
@@ -4189,7 +4221,8 @@ public class ComplexRuleEvaluator {
       if (context.getPayload() == null) return false;
       Object mismatchObj = context.getPayload().get("email_phone_mismatch");
       if (mismatchObj == null) mismatchObj = context.getPayload().get("emailPhoneMismatch");
-      if (mismatchObj == null) mismatchObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (mismatchObj == null)
+        mismatchObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
       return Boolean.TRUE.equals(toBoolean(mismatchObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar EMAIL_PHONE_MISMATCH: {}", e.getMessage());
@@ -4204,9 +4237,11 @@ public class ComplexRuleEvaluator {
 
       Object monthsObj = context.getPayload().get("credit_file_months");
       if (monthsObj == null) monthsObj = context.getPayload().get("creditFileMonths");
-      if (monthsObj == null) monthsObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (monthsObj == null)
+        monthsObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
 
-      int months = monthsObj instanceof Number ? ((Number) monthsObj).intValue() : Integer.MAX_VALUE;
+      int months =
+          monthsObj instanceof Number ? ((Number) monthsObj).intValue() : Integer.MAX_VALUE;
       return months < minMonths;
     } catch (Exception e) {
       log.error("Erro ao avaliar CREDIT_FILE_THIN: {}", e.getMessage());
@@ -4219,9 +4254,14 @@ public class ComplexRuleEvaluator {
     try {
       if (context.getPayload() == null) return false;
       // Formato: "maxSingleAmount|minCount" (ex: "1000|5")
-      String[] parts = (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split("\\|");
-      BigDecimal maxSingle = parts.length >= 1 && !parts[0].isBlank() ? new BigDecimal(parts[0].trim()) : new BigDecimal("1000");
-      int minCount = parts.length >= 2 && !parts[1].isBlank() ? Integer.parseInt(parts[1].trim()) : 5;
+      String[] parts =
+          (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split("\\|");
+      BigDecimal maxSingle =
+          parts.length >= 1 && !parts[0].isBlank()
+              ? new BigDecimal(parts[0].trim())
+              : new BigDecimal("1000");
+      int minCount =
+          parts.length >= 2 && !parts[1].isBlank() ? Integer.parseInt(parts[1].trim()) : 5;
 
       Object countObj = context.getPayload().get("cash_like_tx_count_below_threshold");
       if (countObj == null) countObj = context.getPayload().get("structuringCount");
@@ -4260,7 +4300,8 @@ public class ComplexRuleEvaluator {
       int maxMinutes = Integer.parseInt(condition.getValueSingle().trim());
       Object minutesObj = context.getPayload().get("minutes_between_in_out");
       if (minutesObj == null) minutesObj = context.getPayload().get("minutesBetweenInOut");
-      int minutes = minutesObj instanceof Number ? ((Number) minutesObj).intValue() : Integer.MAX_VALUE;
+      int minutes =
+          minutesObj instanceof Number ? ((Number) minutesObj).intValue() : Integer.MAX_VALUE;
       return minutes <= maxMinutes;
     } catch (Exception e) {
       log.error("Erro ao avaliar RAPID_MOVEMENT: {}", e.getMessage());
@@ -4273,7 +4314,8 @@ public class ComplexRuleEvaluator {
       if (context.getPayload() == null) return false;
       Object flagObj = context.getPayload().get("integration_detected");
       if (flagObj == null) flagObj = context.getPayload().get("integrationDetected");
-      if (flagObj == null) flagObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (flagObj == null)
+        flagObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
       return Boolean.TRUE.equals(toBoolean(flagObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar INTEGRATION_PATTERN: {}", e.getMessage());
@@ -4295,12 +4337,14 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateUnusualBusinessPattern(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateUnusualBusinessPattern(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       Object flagObj = context.getPayload().get("unusual_business_pattern");
       if (flagObj == null) flagObj = context.getPayload().get("unusualBusinessPattern");
-      if (flagObj == null) flagObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (flagObj == null)
+        flagObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
       return Boolean.TRUE.equals(toBoolean(flagObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar UNUSUAL_BUSINESS_PATTERN: {}", e.getMessage());
@@ -4308,7 +4352,8 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateShellCompanyIndicator(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateShellCompanyIndicator(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       Object flagObj = context.getPayload().get("shell_company_indicator");
@@ -4332,7 +4377,8 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateTradeBasedMlIndicator(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateTradeBasedMlIndicator(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       Object flagObj = context.getPayload().get("trade_based_ml_indicator");
@@ -4378,12 +4424,14 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateScaExemptionTrustedBeneficiary(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateScaExemptionTrustedBeneficiary(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       Object trustedObj = context.getPayload().get("trusted_beneficiary");
       if (trustedObj == null) trustedObj = context.getPayload().get("trustedBeneficiary");
-      if (trustedObj == null) trustedObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (trustedObj == null)
+        trustedObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
       return Boolean.TRUE.equals(toBoolean(trustedObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar SCA_EXEMPTION_TRUSTED_BENEFICIARY: {}", e.getMessage());
@@ -4391,12 +4439,14 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateScaExemptionRecurring(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateScaExemptionRecurring(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       Object recurringObj = context.getPayload().get("recurring_payment");
       if (recurringObj == null) recurringObj = context.getPayload().get("recurringPayment");
-      if (recurringObj == null) recurringObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (recurringObj == null)
+        recurringObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
       return Boolean.TRUE.equals(toBoolean(recurringObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar SCA_EXEMPTION_RECURRING: {}", e.getMessage());
@@ -4406,7 +4456,8 @@ public class ComplexRuleEvaluator {
 
   private boolean evaluatePsd3CopNameMatch(RuleCondition condition, EvaluationContext context) {
     try {
-      String[] parts = (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split(":");
+      String[] parts =
+          (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split(":");
       if (parts.length < 2) {
         // fallback: usa fieldName vs payload[other_name]
         parts = new String[] {"other_name", "90"};
@@ -4446,11 +4497,13 @@ public class ComplexRuleEvaluator {
   private boolean evaluateEidasAssuranceLevel(RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
-      String required = (condition.getValueSingle() == null ? "" : condition.getValueSingle()).trim();
+      String required =
+          (condition.getValueSingle() == null ? "" : condition.getValueSingle()).trim();
       int requiredLevel = mapEidasLevel(required);
       Object levelObj = context.getPayload().get("eidas_assurance_level");
       if (levelObj == null) levelObj = context.getPayload().get("eidasAssuranceLevel");
-      if (levelObj == null) levelObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      if (levelObj == null)
+        levelObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
       if (levelObj == null) return false;
       int actualLevel = mapEidasLevel(String.valueOf(levelObj));
       return actualLevel >= requiredLevel;
@@ -4460,7 +4513,8 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateGdprDataRetentionCheck(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateGdprDataRetentionCheck(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       int maxDays = Integer.parseInt(condition.getValueSingle().trim());
@@ -4476,7 +4530,8 @@ public class ComplexRuleEvaluator {
   }
 
   // --- CATEGORIA H: Device (7) ---
-  private boolean evaluateDeviceJailbreakRooted(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateDeviceJailbreakRooted(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       Object rootedObj = context.getPayload().get("device_rooted");
@@ -4524,10 +4579,7 @@ public class ComplexRuleEvaluator {
       if (list == null || list.isEmpty()) {
         String csv = condition.getValueSingle();
         if (csv == null || csv.isBlank()) return false;
-        list = Arrays.stream(csv.split(","))
-            .map(String::trim)
-            .filter(s -> !s.isBlank())
-            .toList();
+        list = Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
       }
 
       for (String entry : list) {
@@ -4596,10 +4648,7 @@ public class ComplexRuleEvaluator {
       if (list == null || list.isEmpty()) {
         String csv = condition.getValueSingle();
         if (csv == null || csv.isBlank()) return false;
-        list = Arrays.stream(csv.split(","))
-            .map(String::trim)
-            .filter(s -> !s.isBlank())
-            .toList();
+        list = Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
       }
 
       for (String entry : list) {
@@ -4660,7 +4709,8 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateMerchantCountryMismatch(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantCountryMismatch(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       Object mismatchObj = context.getPayload().get("merchant_country_mismatch");
@@ -4679,7 +4729,8 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateMerchantCategoryChange(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantCategoryChange(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       Object changedObj = context.getPayload().get("merchant_category_changed");
@@ -4691,14 +4742,19 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateMerchantVelocitySpike(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantVelocitySpike(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
-      String[] parts = (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split("\\|");
-      long threshold = parts.length >= 1 && !parts[0].isBlank() ? Long.parseLong(parts[0].trim()) : 20L;
+      String[] parts =
+          (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split("\\|");
+      long threshold =
+          parts.length >= 1 && !parts[0].isBlank() ? Long.parseLong(parts[0].trim()) : 20L;
       int hours = parts.length >= 2 && !parts[1].isBlank() ? Integer.parseInt(parts[1].trim()) : 1;
       VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
-      var stats = velocityServiceFacade.getStats(context.getTransactionRequest(), VelocityService.KeyType.MERCHANT_ID, window);
+      var stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(), VelocityService.KeyType.MERCHANT_ID, window);
       return stats.getTransactionCount() >= threshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar MERCHANT_VELOCITY_SPIKE: {}", e.getMessage());
@@ -4707,17 +4763,19 @@ public class ComplexRuleEvaluator {
   }
 
   // --- CATEGORIA J: ISO 20022 (6) ---
-  private boolean evaluatePacs008FieldValidation(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluatePacs008FieldValidation(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       String requiredCsv = condition.getValueSingle();
       if (requiredCsv == null || requiredCsv.isBlank()) {
         requiredCsv = "uetr,instgAgt,instgAgtBic,dbtrNm,cdtrNm,cdtrAcct";
       }
-      String[] required = Arrays.stream(requiredCsv.split(","))
-          .map(String::trim)
-          .filter(s -> !s.isBlank())
-          .toArray(String[]::new);
+      String[] required =
+          Arrays.stream(requiredCsv.split(","))
+              .map(String::trim)
+              .filter(s -> !s.isBlank())
+              .toArray(String[]::new);
 
       // Retorna true quando a mensagem está inválida (campo ausente)
       for (String key : required) {
@@ -4736,7 +4794,8 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateRemittanceInfoAnalysis(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateRemittanceInfoAnalysis(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       Object infoObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
@@ -4752,12 +4811,11 @@ public class ComplexRuleEvaluator {
       if (keywords == null || keywords.isEmpty()) {
         String csv = condition.getValueSingle();
         if (csv == null || csv.isBlank()) {
-          keywords = List.of("gift", "loan", "crypto", "investment", "refund", "cash", "commission");
+          keywords =
+              List.of("gift", "loan", "crypto", "investment", "refund", "cash", "commission");
         } else {
-          keywords = Arrays.stream(csv.split(","))
-              .map(String::trim)
-              .filter(s -> !s.isBlank())
-              .toList();
+          keywords =
+              Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
         }
       }
 
@@ -4776,7 +4834,8 @@ public class ComplexRuleEvaluator {
   private boolean evaluatePurposeCodeMismatch(RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
-      Object purposeObj = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      Object purposeObj =
+          getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
       if (purposeObj == null) {
         purposeObj = context.getPayload().get("purpose_code");
         if (purposeObj == null) purposeObj = context.getPayload().get("purposeCode");
@@ -4789,10 +4848,8 @@ public class ComplexRuleEvaluator {
       if (allowed == null || allowed.isEmpty()) {
         String csv = condition.getValueSingle();
         if (csv == null || csv.isBlank()) return false;
-        allowed = Arrays.stream(csv.split(","))
-            .map(String::trim)
-            .filter(s -> !s.isBlank())
-            .toList();
+        allowed =
+            Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
       }
 
       for (String entry : allowed) {
@@ -4818,16 +4875,20 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateCreditorNameValidation(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCreditorNameValidation(
+      RuleCondition condition, EvaluationContext context) {
     try {
-      String[] parts = (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split(":");
+      String[] parts =
+          (condition.getValueSingle() == null ? "" : condition.getValueSingle()).split(":");
       String otherField = parts.length >= 1 && !parts[0].isBlank() ? parts[0].trim() : null;
-      int threshold = parts.length >= 2 && !parts[1].isBlank() ? Integer.parseInt(parts[1].trim()) : 85;
+      int threshold =
+          parts.length >= 2 && !parts[1].isBlank() ? Integer.parseInt(parts[1].trim()) : 85;
 
       Object v1 = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
       if (v1 == null) {
         v1 = context.getPayload() != null ? context.getPayload().get("creditor_name") : null;
-        if (v1 == null && context.getPayload() != null) v1 = context.getPayload().get("creditorName");
+        if (v1 == null && context.getPayload() != null)
+          v1 = context.getPayload().get("creditorName");
       }
       if (v1 == null) return false;
       String creditorName = normalizeForMatch(String.valueOf(v1));
@@ -4846,17 +4907,19 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateStructuredAddressCheck(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateStructuredAddressCheck(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       String requiredCsv = condition.getValueSingle();
       if (requiredCsv == null || requiredCsv.isBlank()) {
         requiredCsv = "street,building,postCode,townName,country";
       }
-      String[] required = Arrays.stream(requiredCsv.split(","))
-          .map(String::trim)
-          .filter(s -> !s.isBlank())
-          .toArray(String[]::new);
+      String[] required =
+          Arrays.stream(requiredCsv.split(","))
+              .map(String::trim)
+              .filter(s -> !s.isBlank())
+              .toArray(String[]::new);
 
       // Retorna true quando está inválido (faltando algo)
       for (String key : required) {
@@ -4897,12 +4960,16 @@ public class ComplexRuleEvaluator {
       }
 
       if (context.getTransactionRequest() == null) return false;
-      var stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), VelocityService.KeyType.PAN, VelocityService.TimeWindow.HOUR_24);
+      var stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(),
+              VelocityService.KeyType.PAN,
+              VelocityService.TimeWindow.HOUR_24);
       BigDecimal avg = stats.getAvgAmount();
       BigDecimal std = stats.getStdDevAmount();
       BigDecimal amount = context.getTransactionRequest().getTransactionAmount();
-      if (avg == null || std == null || std.compareTo(BigDecimal.ZERO) == 0 || amount == null) return false;
+      if (avg == null || std == null || std.compareTo(BigDecimal.ZERO) == 0 || amount == null)
+        return false;
       BigDecimal z = amount.subtract(avg).divide(std, 8, java.math.RoundingMode.HALF_UP).abs();
       return z.compareTo(BigDecimal.valueOf(threshold)) > 0;
     } catch (Exception e) {
@@ -4915,8 +4982,11 @@ public class ComplexRuleEvaluator {
     try {
       if (context.getTransactionRequest() == null) return false;
       BigDecimal threshold = new BigDecimal(condition.getValueSingle().trim());
-      var stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), VelocityService.KeyType.PAN, VelocityService.TimeWindow.HOUR_24);
+      var stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(),
+              VelocityService.KeyType.PAN,
+              VelocityService.TimeWindow.HOUR_24);
       BigDecimal std = stats.getStdDevAmount();
       if (std == null) return false;
       return std.compareTo(threshold) > 0;
@@ -4940,12 +5010,16 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  private boolean evaluateCoefficientVariationGt(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCoefficientVariationGt(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
       double threshold = Double.parseDouble(condition.getValueSingle().trim());
-      var stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), VelocityService.KeyType.PAN, VelocityService.TimeWindow.HOUR_24);
+      var stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(),
+              VelocityService.KeyType.PAN,
+              VelocityService.TimeWindow.HOUR_24);
       BigDecimal avg = stats.getAvgAmount();
       BigDecimal std = stats.getStdDevAmount();
       if (avg == null || std == null || avg.compareTo(BigDecimal.ZERO) == 0) return false;
@@ -5035,64 +5109,91 @@ public class ComplexRuleEvaluator {
   // --- CATEGORIA L: Transaction Count Velocity Avançado (12) ---
 
   /**
-   * TRANSACTION_COUNT_PER_CARD_HOUR: Contagem de transações por cartão por hora.
-   * Formato valueSingle: "threshold" (ex: "5")
+   * TRANSACTION_COUNT_PER_CARD_HOUR: Contagem de transações por cartão por hora. Formato
+   * valueSingle: "threshold" (ex: "5")
    */
-  private boolean evaluateTransactionCountPerCardHour(RuleCondition condition, EvaluationContext context) {
-    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.PAN, 
-        VelocityService.TimeWindow.HOUR_1, VelocityService.AggregationType.COUNT);
+  private boolean evaluateTransactionCountPerCardHour(
+      RuleCondition condition, EvaluationContext context) {
+    return evaluateVelocityOperator(
+        condition,
+        context,
+        VelocityService.KeyType.PAN,
+        VelocityService.TimeWindow.HOUR_1,
+        VelocityService.AggregationType.COUNT);
   }
 
   /**
-   * TRANSACTION_COUNT_PER_IP_HOUR: Contagem de transações por IP por hora.
-   * Formato valueSingle: "threshold" (ex: "10")
+   * TRANSACTION_COUNT_PER_IP_HOUR: Contagem de transações por IP por hora. Formato valueSingle:
+   * "threshold" (ex: "10")
    */
-  private boolean evaluateTransactionCountPerIpHour(RuleCondition condition, EvaluationContext context) {
-    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.IP_ADDRESS, 
-        VelocityService.TimeWindow.HOUR_1, VelocityService.AggregationType.COUNT);
+  private boolean evaluateTransactionCountPerIpHour(
+      RuleCondition condition, EvaluationContext context) {
+    return evaluateVelocityOperator(
+        condition,
+        context,
+        VelocityService.KeyType.IP_ADDRESS,
+        VelocityService.TimeWindow.HOUR_1,
+        VelocityService.AggregationType.COUNT);
   }
 
   /**
-   * TRANSACTION_COUNT_PER_DEVICE_DAY: Contagem de transações por dispositivo por dia.
-   * Formato valueSingle: "threshold" (ex: "20")
+   * TRANSACTION_COUNT_PER_DEVICE_DAY: Contagem de transações por dispositivo por dia. Formato
+   * valueSingle: "threshold" (ex: "20")
    */
-  private boolean evaluateTransactionCountPerDeviceDay(RuleCondition condition, EvaluationContext context) {
-    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.DEVICE_ID, 
-        VelocityService.TimeWindow.HOUR_24, VelocityService.AggregationType.COUNT);
+  private boolean evaluateTransactionCountPerDeviceDay(
+      RuleCondition condition, EvaluationContext context) {
+    return evaluateVelocityOperator(
+        condition,
+        context,
+        VelocityService.KeyType.DEVICE_ID,
+        VelocityService.TimeWindow.HOUR_24,
+        VelocityService.AggregationType.COUNT);
   }
 
   /**
-   * TRANSACTION_COUNT_PER_MERCHANT_HOUR: Contagem de transações por merchant por hora.
-   * Formato valueSingle: "threshold" (ex: "15")
+   * TRANSACTION_COUNT_PER_MERCHANT_HOUR: Contagem de transações por merchant por hora. Formato
+   * valueSingle: "threshold" (ex: "15")
    */
-  private boolean evaluateTransactionCountPerMerchantHour(RuleCondition condition, EvaluationContext context) {
-    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.MERCHANT_ID, 
-        VelocityService.TimeWindow.HOUR_1, VelocityService.AggregationType.COUNT);
+  private boolean evaluateTransactionCountPerMerchantHour(
+      RuleCondition condition, EvaluationContext context) {
+    return evaluateVelocityOperator(
+        condition,
+        context,
+        VelocityService.KeyType.MERCHANT_ID,
+        VelocityService.TimeWindow.HOUR_1,
+        VelocityService.AggregationType.COUNT);
   }
 
   /**
-   * TRANSACTION_COUNT_PER_CUSTOMER_HOUR: Contagem de transações por cliente por hora.
-   * Formato valueSingle: "threshold" (ex: "8")
+   * TRANSACTION_COUNT_PER_CUSTOMER_HOUR: Contagem de transações por cliente por hora. Formato
+   * valueSingle: "threshold" (ex: "8")
    */
-  private boolean evaluateTransactionCountPerCustomerHour(RuleCondition condition, EvaluationContext context) {
-    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.CUSTOMER_ID, 
-        VelocityService.TimeWindow.HOUR_1, VelocityService.AggregationType.COUNT);
+  private boolean evaluateTransactionCountPerCustomerHour(
+      RuleCondition condition, EvaluationContext context) {
+    return evaluateVelocityOperator(
+        condition,
+        context,
+        VelocityService.KeyType.CUSTOMER_ID,
+        VelocityService.TimeWindow.HOUR_1,
+        VelocityService.AggregationType.COUNT);
   }
 
   /**
-   * UNIQUE_CARD_COUNT_PER_IP_HOUR: Cartões únicos por IP por hora.
-   * Formato valueSingle: "threshold" (ex: "5")
+   * UNIQUE_CARD_COUNT_PER_IP_HOUR: Cartões únicos por IP por hora. Formato valueSingle: "threshold"
+   * (ex: "5")
    */
-  private boolean evaluateUniqueCardCountPerIpHour(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateUniqueCardCountPerIpHour(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
       long threshold = Long.parseLong(condition.getValueSingle().trim());
-      
-      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), 
-          VelocityService.KeyType.IP_ADDRESS, 
-          VelocityService.TimeWindow.HOUR_1);
-      
+
+      VelocityService.VelocityStats stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(),
+              VelocityService.KeyType.IP_ADDRESS,
+              VelocityService.TimeWindow.HOUR_1);
+
       return stats.getDistinctPans() > threshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar UNIQUE_CARD_COUNT_PER_IP_HOUR: {}", e.getMessage());
@@ -5101,19 +5202,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * UNIQUE_MERCHANT_COUNT_PER_CARD_DAY: Merchants únicos por cartão por dia.
-   * Formato valueSingle: "threshold" (ex: "20")
+   * UNIQUE_MERCHANT_COUNT_PER_CARD_DAY: Merchants únicos por cartão por dia. Formato valueSingle:
+   * "threshold" (ex: "20")
    */
-  private boolean evaluateUniqueMerchantCountPerCardDay(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateUniqueMerchantCountPerCardDay(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
       long threshold = Long.parseLong(condition.getValueSingle().trim());
-      
-      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), 
-          VelocityService.KeyType.PAN, 
-          VelocityService.TimeWindow.HOUR_24);
-      
+
+      VelocityService.VelocityStats stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(),
+              VelocityService.KeyType.PAN,
+              VelocityService.TimeWindow.HOUR_24);
+
       return stats.getDistinctMerchants() > threshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar UNIQUE_MERCHANT_COUNT_PER_CARD_DAY: {}", e.getMessage());
@@ -5122,23 +5225,23 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * TRANSACTION_ATTEMPT_COUNT_PER_CARD: Tentativas de transação por cartão (inclui falhas).
-   * Formato valueSingle: "threshold|minutes" (ex: "5|15")
+   * TRANSACTION_ATTEMPT_COUNT_PER_CARD: Tentativas de transação por cartão (inclui falhas). Formato
+   * valueSingle: "threshold|minutes" (ex: "5|15")
    */
-  private boolean evaluateTransactionAttemptCountPerCard(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateTransactionAttemptCountPerCard(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       long threshold = Long.parseLong(parts[0].trim());
       int minutes = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 15;
-      
+
       VelocityService.TimeWindow window = parseTimeWindow(minutes);
-      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), 
-          VelocityService.KeyType.PAN, 
-          window);
-      
+      VelocityService.VelocityStats stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
+
       // Inclui tentativas com falha
       return stats.getTransactionCount() + stats.getFailedCount() > threshold;
     } catch (Exception e) {
@@ -5148,23 +5251,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * CVV_FAILURE_VELOCITY: Velocidade de falhas de CVV.
-   * Formato valueSingle: "threshold|minutes" (ex: "3|10")
+   * CVV_FAILURE_VELOCITY: Velocidade de falhas de CVV. Formato valueSingle: "threshold|minutes"
+   * (ex: "3|10")
    */
   private boolean evaluateCvvFailureVelocity(RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       long threshold = Long.parseLong(parts[0].trim());
       int minutes = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 10;
-      
+
       VelocityService.TimeWindow window = parseTimeWindow(minutes);
-      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), 
-          VelocityService.KeyType.PAN, 
-          window);
-      
+      VelocityService.VelocityStats stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
+
       return stats.getCvvFailures() > threshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar CVV_FAILURE_VELOCITY: {}", e.getMessage());
@@ -5173,23 +5275,24 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * ADDRESS_CHANGE_VELOCITY: Velocidade de alteração de endereço.
-   * Formato valueSingle: "threshold|days" (ex: "3|30")
+   * ADDRESS_CHANGE_VELOCITY: Velocidade de alteração de endereço. Formato valueSingle:
+   * "threshold|days" (ex: "3|30")
    */
-  private boolean evaluateAddressChangeVelocity(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateAddressChangeVelocity(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int threshold = Integer.parseInt(parts[0].trim());
       int days = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 30;
-      
+
       Object changesObj = payload.get("address_changes_" + days + "d");
       if (changesObj == null) {
         changesObj = payload.get("addressChangesCount");
       }
-      
+
       int changes = changesObj instanceof Number ? ((Number) changesObj).intValue() : 0;
       return changes > threshold;
     } catch (Exception e) {
@@ -5199,23 +5302,24 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * BENEFICIARY_ADD_VELOCITY: Velocidade de adição de beneficiários.
-   * Formato valueSingle: "threshold|days" (ex: "5|7")
+   * BENEFICIARY_ADD_VELOCITY: Velocidade de adição de beneficiários. Formato valueSingle:
+   * "threshold|days" (ex: "5|7")
    */
-  private boolean evaluateBeneficiaryAddVelocity(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateBeneficiaryAddVelocity(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int threshold = Integer.parseInt(parts[0].trim());
       int days = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 7;
-      
+
       Object addedObj = payload.get("beneficiaries_added_" + days + "d");
       if (addedObj == null) {
         addedObj = payload.get("newBeneficiariesCount");
       }
-      
+
       int added = addedObj instanceof Number ? ((Number) addedObj).intValue() : 0;
       return added > threshold;
     } catch (Exception e) {
@@ -5225,23 +5329,23 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * CARD_ADD_VELOCITY: Velocidade de adição de cartões.
-   * Formato valueSingle: "threshold|days" (ex: "3|7")
+   * CARD_ADD_VELOCITY: Velocidade de adição de cartões. Formato valueSingle: "threshold|days" (ex:
+   * "3|7")
    */
   private boolean evaluateCardAddVelocity(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int threshold = Integer.parseInt(parts[0].trim());
       int days = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 7;
-      
+
       Object addedObj = payload.get("cards_added_" + days + "d");
       if (addedObj == null) {
         addedObj = payload.get("newCardsCount");
       }
-      
+
       int added = addedObj instanceof Number ? ((Number) addedObj).intValue() : 0;
       return added > threshold;
     } catch (Exception e) {
@@ -5253,45 +5357,55 @@ public class ComplexRuleEvaluator {
   // --- CATEGORIA M: Amount Velocity Avançado (10) ---
 
   /**
-   * AMOUNT_SUM_PER_CARD_HOUR: Soma de valores por cartão por hora.
-   * Formato valueSingle: "threshold" (ex: "5000")
+   * AMOUNT_SUM_PER_CARD_HOUR: Soma de valores por cartão por hora. Formato valueSingle: "threshold"
+   * (ex: "5000")
    */
   private boolean evaluateAmountSumPerCardHour(RuleCondition condition, EvaluationContext context) {
-    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.PAN, 
-        VelocityService.TimeWindow.HOUR_1, VelocityService.AggregationType.SUM);
+    return evaluateVelocityOperator(
+        condition,
+        context,
+        VelocityService.KeyType.PAN,
+        VelocityService.TimeWindow.HOUR_1,
+        VelocityService.AggregationType.SUM);
   }
 
   /**
-   * AMOUNT_SUM_PER_CUSTOMER_DAY: Soma de valores por cliente por dia.
-   * Formato valueSingle: "threshold" (ex: "20000")
+   * AMOUNT_SUM_PER_CUSTOMER_DAY: Soma de valores por cliente por dia. Formato valueSingle:
+   * "threshold" (ex: "20000")
    */
-  private boolean evaluateAmountSumPerCustomerDay(RuleCondition condition, EvaluationContext context) {
-    return evaluateVelocityOperator(condition, context, VelocityService.KeyType.CUSTOMER_ID, 
-        VelocityService.TimeWindow.HOUR_24, VelocityService.AggregationType.SUM);
+  private boolean evaluateAmountSumPerCustomerDay(
+      RuleCondition condition, EvaluationContext context) {
+    return evaluateVelocityOperator(
+        condition,
+        context,
+        VelocityService.KeyType.CUSTOMER_ID,
+        VelocityService.TimeWindow.HOUR_24,
+        VelocityService.AggregationType.SUM);
   }
 
   /**
-   * AVG_TRANSACTION_SPIKE: Spike de valor médio de transação.
-   * Formato valueSingle: "multiplier" (ex: "3.0" = 3x a média histórica)
+   * AVG_TRANSACTION_SPIKE: Spike de valor médio de transação. Formato valueSingle: "multiplier"
+   * (ex: "3.0" = 3x a média histórica)
    */
   private boolean evaluateAvgTransactionSpike(RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
-      
+
       double multiplier = Double.parseDouble(condition.getValueSingle().trim());
-      
-      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), 
-          VelocityService.KeyType.PAN, 
-          VelocityService.TimeWindow.DAY_30);
-      
+
+      VelocityService.VelocityStats stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(),
+              VelocityService.KeyType.PAN,
+              VelocityService.TimeWindow.DAY_30);
+
       BigDecimal currentAmount = context.getTransactionRequest().getTransactionAmount();
       BigDecimal avgAmount = stats.getAvgAmount();
-      
+
       if (avgAmount == null || avgAmount.compareTo(BigDecimal.ZERO) == 0) {
         return false;
       }
-      
+
       BigDecimal spikeThreshold = avgAmount.multiply(BigDecimal.valueOf(multiplier));
       return currentAmount.compareTo(spikeThreshold) > 0;
     } catch (Exception e) {
@@ -5301,24 +5415,25 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * LARGE_AMOUNT_FREQUENCY: Frequência de valores altos.
-   * Formato valueSingle: "amountThreshold|countThreshold|days" (ex: "1000|3|7")
+   * LARGE_AMOUNT_FREQUENCY: Frequência de valores altos. Formato valueSingle:
+   * "amountThreshold|countThreshold|days" (ex: "1000|3|7")
    */
   private boolean evaluateLargeAmountFrequency(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       double amountThreshold = Double.parseDouble(parts[0].trim());
       int countThreshold = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 3;
       int days = parts.length > 2 ? Integer.parseInt(parts[2].trim()) : 7;
-      
-      Object countObj = payload.get("large_amount_count_" + days + "d_over_" + (int) amountThreshold);
+
+      Object countObj =
+          payload.get("large_amount_count_" + days + "d_over_" + (int) amountThreshold);
       if (countObj == null) {
         countObj = payload.get("largeAmountTransactionCount");
       }
-      
+
       int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
       return count >= countThreshold;
     } catch (Exception e) {
@@ -5328,24 +5443,24 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * SMALL_AMOUNT_VELOCITY: Velocidade de valores pequenos (smurfing).
-   * Formato valueSingle: "maxAmount|countThreshold|hours" (ex: "100|10|1")
+   * SMALL_AMOUNT_VELOCITY: Velocidade de valores pequenos (smurfing). Formato valueSingle:
+   * "maxAmount|countThreshold|hours" (ex: "100|10|1")
    */
   private boolean evaluateSmallAmountVelocity(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       double maxAmount = Double.parseDouble(parts[0].trim());
       int countThreshold = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 10;
       int hours = parts.length > 2 ? Integer.parseInt(parts[2].trim()) : 1;
-      
+
       Object countObj = payload.get("small_amount_count_" + hours + "h_under_" + (int) maxAmount);
       if (countObj == null) {
         countObj = payload.get("microTransactionCount");
       }
-      
+
       int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
       return count >= countThreshold;
     } catch (Exception e) {
@@ -5355,24 +5470,25 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * ROUND_AMOUNT_FREQUENCY: Frequência de valores redondos.
-   * Formato valueSingle: "roundThreshold|percentageThreshold|days" (ex: "100|50|7")
+   * ROUND_AMOUNT_FREQUENCY: Frequência de valores redondos. Formato valueSingle:
+   * "roundThreshold|percentageThreshold|days" (ex: "100|50|7")
    */
   private boolean evaluateRoundAmountFrequency(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int roundThreshold = Integer.parseInt(parts[0].trim());
       double percentageThreshold = parts.length > 1 ? Double.parseDouble(parts[1].trim()) : 50.0;
-      
+
       Object percentageObj = payload.get("round_amount_percentage_divisible_" + roundThreshold);
       if (percentageObj == null) {
         percentageObj = payload.get("roundAmountPercentage");
       }
-      
-      double percentage = percentageObj instanceof Number ? ((Number) percentageObj).doubleValue() : 0.0;
+
+      double percentage =
+          percentageObj instanceof Number ? ((Number) percentageObj).doubleValue() : 0.0;
       return percentage >= percentageThreshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar ROUND_AMOUNT_FREQUENCY: {}", e.getMessage());
@@ -5381,22 +5497,25 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * SEQUENTIAL_AMOUNT_PATTERN: Padrão sequencial de valores.
-   * Formato valueSingle: "patternType" (linear|fibonacci|geometric)
+   * SEQUENTIAL_AMOUNT_PATTERN: Padrão sequencial de valores. Formato valueSingle: "patternType"
+   * (linear|fibonacci|geometric)
    */
-  private boolean evaluateSequentialAmountPattern(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateSequentialAmountPattern(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
-      String patternType = condition.getValueSingle() != null ? 
-          condition.getValueSingle().trim().toLowerCase() : "linear";
-      
+
+      String patternType =
+          condition.getValueSingle() != null
+              ? condition.getValueSingle().trim().toLowerCase()
+              : "linear";
+
       Object patternObj = payload.get("sequential_pattern_" + patternType);
       if (patternObj == null) {
         patternObj = payload.get("hasSequentialAmountPattern");
       }
-      
+
       return Boolean.TRUE.equals(patternObj) || "true".equalsIgnoreCase(String.valueOf(patternObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar SEQUENTIAL_AMOUNT_PATTERN: {}", e.getMessage());
@@ -5405,29 +5524,35 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * AMOUNT_VARIANCE_ANOMALY: Anomalia de variância de valores.
-   * Formato valueSingle: "zScoreThreshold" (ex: "3.0")
+   * AMOUNT_VARIANCE_ANOMALY: Anomalia de variância de valores. Formato valueSingle:
+   * "zScoreThreshold" (ex: "3.0")
    */
-  private boolean evaluateAmountVarianceAnomaly(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateAmountVarianceAnomaly(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getTransactionRequest() == null) return false;
-      
+
       double zScoreThreshold = Double.parseDouble(condition.getValueSingle().trim());
-      
-      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), 
-          VelocityService.KeyType.PAN, 
-          VelocityService.TimeWindow.DAY_30);
-      
+
+      VelocityService.VelocityStats stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(),
+              VelocityService.KeyType.PAN,
+              VelocityService.TimeWindow.DAY_30);
+
       BigDecimal currentAmount = context.getTransactionRequest().getTransactionAmount();
       BigDecimal avgAmount = stats.getAvgAmount();
       BigDecimal stdDev = stats.getStdDevAmount();
-      
+
       if (stdDev == null || stdDev.compareTo(BigDecimal.ZERO) == 0) {
         return false;
       }
-      
-      double zScore = currentAmount.subtract(avgAmount).divide(stdDev, 4, java.math.RoundingMode.HALF_UP).doubleValue();
+
+      double zScore =
+          currentAmount
+              .subtract(avgAmount)
+              .divide(stdDev, 4, java.math.RoundingMode.HALF_UP)
+              .doubleValue();
       return Math.abs(zScore) > zScoreThreshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar AMOUNT_VARIANCE_ANOMALY: {}", e.getMessage());
@@ -5436,21 +5561,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * DAILY_LIMIT_PROXIMITY: Proximidade do limite diário.
-   * Formato valueSingle: "percentageThreshold" (ex: "90" = 90% do limite)
+   * DAILY_LIMIT_PROXIMITY: Proximidade do limite diário. Formato valueSingle: "percentageThreshold"
+   * (ex: "90" = 90% do limite)
    */
   private boolean evaluateDailyLimitProximity(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double percentageThreshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object usedObj = payload.get("daily_limit_used_percentage");
       if (usedObj == null) {
         usedObj = payload.get("dailyLimitUsagePercentage");
       }
-      
+
       double usedPercentage = usedObj instanceof Number ? ((Number) usedObj).doubleValue() : 0.0;
       return usedPercentage >= percentageThreshold;
     } catch (Exception e) {
@@ -5460,21 +5585,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * WEEKLY_LIMIT_PROXIMITY: Proximidade do limite semanal.
-   * Formato valueSingle: "percentageThreshold" (ex: "85" = 85% do limite)
+   * WEEKLY_LIMIT_PROXIMITY: Proximidade do limite semanal. Formato valueSingle:
+   * "percentageThreshold" (ex: "85" = 85% do limite)
    */
   private boolean evaluateWeeklyLimitProximity(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double percentageThreshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object usedObj = payload.get("weekly_limit_used_percentage");
       if (usedObj == null) {
         usedObj = payload.get("weeklyLimitUsagePercentage");
       }
-      
+
       double usedPercentage = usedObj instanceof Number ? ((Number) usedObj).doubleValue() : 0.0;
       return usedPercentage >= percentageThreshold;
     } catch (Exception e) {
@@ -5486,22 +5611,24 @@ public class ComplexRuleEvaluator {
   // --- CATEGORIA N: Temporal Velocity Avançado (8) ---
 
   /**
-   * TIME_BETWEEN_CONSECUTIVE_TX: Tempo entre transações consecutivas.
-   * Formato valueSingle: "minSeconds" (ex: "5" = mínimo 5 segundos)
+   * TIME_BETWEEN_CONSECUTIVE_TX: Tempo entre transações consecutivas. Formato valueSingle:
+   * "minSeconds" (ex: "5" = mínimo 5 segundos)
    */
-  private boolean evaluateTimeBetweenConsecutiveTx(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateTimeBetweenConsecutiveTx(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int minSeconds = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object secondsObj = payload.get("seconds_since_last_transaction");
       if (secondsObj == null) {
         secondsObj = payload.get("timeSinceLastTxSeconds");
       }
-      
-      int seconds = secondsObj instanceof Number ? ((Number) secondsObj).intValue() : Integer.MAX_VALUE;
+
+      int seconds =
+          secondsObj instanceof Number ? ((Number) secondsObj).intValue() : Integer.MAX_VALUE;
       return seconds < minSeconds;
     } catch (Exception e) {
       log.error("Erro ao avaliar TIME_BETWEEN_CONSECUTIVE_TX: {}", e.getMessage());
@@ -5510,21 +5637,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * TRANSACTION_FREQUENCY_ANOMALY: Anomalia de frequência de transações.
-   * Formato valueSingle: "multiplier" (ex: "3.0" = 3x a frequência normal)
+   * TRANSACTION_FREQUENCY_ANOMALY: Anomalia de frequência de transações. Formato valueSingle:
+   * "multiplier" (ex: "3.0" = 3x a frequência normal)
    */
-  private boolean evaluateTransactionFrequencyAnomaly(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateTransactionFrequencyAnomaly(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double multiplier = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object ratioObj = payload.get("transaction_frequency_ratio");
       if (ratioObj == null) {
         ratioObj = payload.get("frequencyAnomalyRatio");
       }
-      
+
       double ratio = ratioObj instanceof Number ? ((Number) ratioObj).doubleValue() : 1.0;
       return ratio >= multiplier;
     } catch (Exception e) {
@@ -5534,21 +5662,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * TIME_OF_DAY_ANOMALY: Anomalia de horário do dia.
-   * Formato valueSingle: "deviationHours" (ex: "4" = 4 horas de desvio do padrão)
+   * TIME_OF_DAY_ANOMALY: Anomalia de horário do dia. Formato valueSingle: "deviationHours" (ex: "4"
+   * = 4 horas de desvio do padrão)
    */
   private boolean evaluateTimeOfDayAnomaly(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int deviationThreshold = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object deviationObj = payload.get("time_of_day_deviation_hours");
       if (deviationObj == null) {
         deviationObj = payload.get("hourDeviationFromUsual");
       }
-      
+
       int deviation = deviationObj instanceof Number ? ((Number) deviationObj).intValue() : 0;
       return deviation >= deviationThreshold;
     } catch (Exception e) {
@@ -5558,28 +5686,31 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * DORMANCY_ALERT_VELOCITY: Alerta de velocidade pós-dormência.
-   * Formato valueSingle: "dormancyDays|amountThreshold" (ex: "90|1000")
+   * DORMANCY_ALERT_VELOCITY: Alerta de velocidade pós-dormência. Formato valueSingle:
+   * "dormancyDays|amountThreshold" (ex: "90|1000")
    */
-  private boolean evaluateDormancyAlertVelocity(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateDormancyAlertVelocity(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int dormancyDays = Integer.parseInt(parts[0].trim());
       double amountThreshold = parts.length > 1 ? Double.parseDouble(parts[1].trim()) : 0.0;
-      
+
       Object daysSinceObj = payload.get("days_since_last_activity");
       if (daysSinceObj == null) {
         daysSinceObj = payload.get("daysSinceLastTransaction");
       }
-      
+
       int daysSince = daysSinceObj instanceof Number ? ((Number) daysSinceObj).intValue() : 0;
-      
+
       if (daysSince >= dormancyDays) {
-        BigDecimal currentAmount = context.getTransactionRequest() != null ? 
-            context.getTransactionRequest().getTransactionAmount() : BigDecimal.ZERO;
+        BigDecimal currentAmount =
+            context.getTransactionRequest() != null
+                ? context.getTransactionRequest().getTransactionAmount()
+                : BigDecimal.ZERO;
         return currentAmount.compareTo(BigDecimal.valueOf(amountThreshold)) >= 0;
       }
       return false;
@@ -5590,22 +5721,24 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * WEEKEND_VS_WEEKDAY_PATTERN: Padrão fim de semana vs dia útil.
-   * Formato valueSingle: "deviationThreshold" (percentual de desvio)
+   * WEEKEND_VS_WEEKDAY_PATTERN: Padrão fim de semana vs dia útil. Formato valueSingle:
+   * "deviationThreshold" (percentual de desvio)
    */
-  private boolean evaluateWeekendVsWeekdayPattern(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateWeekendVsWeekdayPattern(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double deviationThreshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object deviationObj = payload.get("weekend_weekday_pattern_deviation");
       if (deviationObj == null) {
         deviationObj = payload.get("dayTypePatternDeviation");
       }
-      
-      double deviation = deviationObj instanceof Number ? ((Number) deviationObj).doubleValue() : 0.0;
+
+      double deviation =
+          deviationObj instanceof Number ? ((Number) deviationObj).doubleValue() : 0.0;
       return deviation >= deviationThreshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar WEEKEND_VS_WEEKDAY_PATTERN: {}", e.getMessage());
@@ -5614,27 +5747,31 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * HOLIDAY_TRANSACTION_SPIKE: Spike de transações em feriados.
-   * Formato valueSingle: "multiplier" (ex: "2.0" = 2x do normal)
+   * HOLIDAY_TRANSACTION_SPIKE: Spike de transações em feriados. Formato valueSingle: "multiplier"
+   * (ex: "2.0" = 2x do normal)
    */
-  private boolean evaluateHolidayTransactionSpike(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateHolidayTransactionSpike(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double multiplier = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object isHolidayObj = payload.get("is_holiday");
-      boolean isHoliday = Boolean.TRUE.equals(isHolidayObj) || "true".equalsIgnoreCase(String.valueOf(isHolidayObj));
-      
+      boolean isHoliday =
+          Boolean.TRUE.equals(isHolidayObj)
+              || "true".equalsIgnoreCase(String.valueOf(isHolidayObj));
+
       if (!isHoliday) return false;
-      
+
       Object spikeRatioObj = payload.get("holiday_transaction_ratio");
       if (spikeRatioObj == null) {
         spikeRatioObj = payload.get("holidayActivityRatio");
       }
-      
-      double spikeRatio = spikeRatioObj instanceof Number ? ((Number) spikeRatioObj).doubleValue() : 1.0;
+
+      double spikeRatio =
+          spikeRatioObj instanceof Number ? ((Number) spikeRatioObj).doubleValue() : 1.0;
       return spikeRatio >= multiplier;
     } catch (Exception e) {
       log.error("Erro ao avaliar HOLIDAY_TRANSACTION_SPIKE: {}", e.getMessage());
@@ -5643,22 +5780,23 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * NIGHTTIME_TRANSACTION_RATIO: Razão de transações noturnas.
-   * Formato valueSingle: "percentageThreshold|startHour|endHour" (ex: "50|22|6")
+   * NIGHTTIME_TRANSACTION_RATIO: Razão de transações noturnas. Formato valueSingle:
+   * "percentageThreshold|startHour|endHour" (ex: "50|22|6")
    */
-  private boolean evaluateNighttimeTransactionRatio(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNighttimeTransactionRatio(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       double percentageThreshold = Double.parseDouble(parts[0].trim());
-      
+
       Object ratioObj = payload.get("nighttime_transaction_percentage");
       if (ratioObj == null) {
         ratioObj = payload.get("nightTransactionPercentage");
       }
-      
+
       double ratio = ratioObj instanceof Number ? ((Number) ratioObj).doubleValue() : 0.0;
       return ratio >= percentageThreshold;
     } catch (Exception e) {
@@ -5668,20 +5806,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * BUSINESS_HOURS_DEVIATION: Desvio do horário comercial.
-   * Formato valueSingle: "outsideBusinessHours" (true/false)
+   * BUSINESS_HOURS_DEVIATION: Desvio do horário comercial. Formato valueSingle:
+   * "outsideBusinessHours" (true/false)
    */
-  private boolean evaluateBusinessHoursDeviation(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateBusinessHoursDeviation(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object isOutsideObj = payload.get("is_outside_business_hours");
       if (isOutsideObj == null) {
         isOutsideObj = payload.get("outsideBusinessHours");
       }
-      
-      return Boolean.TRUE.equals(isOutsideObj) || "true".equalsIgnoreCase(String.valueOf(isOutsideObj));
+
+      return Boolean.TRUE.equals(isOutsideObj)
+          || "true".equalsIgnoreCase(String.valueOf(isOutsideObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar BUSINESS_HOURS_DEVIATION: {}", e.getMessage());
       return false;
@@ -5691,21 +5831,21 @@ public class ComplexRuleEvaluator {
   // --- CATEGORIA O: Device Fingerprint Avançado (10) ---
 
   /**
-   * DEVICE_TRUST_SCORE: Score de confiança do dispositivo.
-   * Formato valueSingle: "minScore" (ex: "70" = score mínimo de 70)
+   * DEVICE_TRUST_SCORE: Score de confiança do dispositivo. Formato valueSingle: "minScore" (ex:
+   * "70" = score mínimo de 70)
    */
   private boolean evaluateDeviceTrustScore(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double minScore = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object scoreObj = payload.get("device_trust_score");
       if (scoreObj == null) {
         scoreObj = payload.get("deviceReputationScore");
       }
-      
+
       double score = scoreObj instanceof Number ? ((Number) scoreObj).doubleValue() : 100.0;
       return score < minScore;
     } catch (Exception e) {
@@ -5714,39 +5854,38 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * CANVAS_FINGERPRINT_MISMATCH: Incompatibilidade de fingerprint canvas.
-   */
-  private boolean evaluateCanvasFingerprintMismatch(RuleCondition condition, EvaluationContext context) {
+  /** CANVAS_FINGERPRINT_MISMATCH: Incompatibilidade de fingerprint canvas. */
+  private boolean evaluateCanvasFingerprintMismatch(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object mismatchObj = payload.get("canvas_fingerprint_mismatch");
       if (mismatchObj == null) {
         mismatchObj = payload.get("canvasMismatch");
       }
-      
-      return Boolean.TRUE.equals(mismatchObj) || "true".equalsIgnoreCase(String.valueOf(mismatchObj));
+
+      return Boolean.TRUE.equals(mismatchObj)
+          || "true".equalsIgnoreCase(String.valueOf(mismatchObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar CANVAS_FINGERPRINT_MISMATCH: {}", e.getMessage());
       return false;
     }
   }
 
-  /**
-   * WEBGL_FINGERPRINT_ANOMALY: Anomalia de fingerprint WebGL.
-   */
-  private boolean evaluateWebglFingerprintAnomaly(RuleCondition condition, EvaluationContext context) {
+  /** WEBGL_FINGERPRINT_ANOMALY: Anomalia de fingerprint WebGL. */
+  private boolean evaluateWebglFingerprintAnomaly(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object anomalyObj = payload.get("webgl_fingerprint_anomaly");
       if (anomalyObj == null) {
         anomalyObj = payload.get("webglAnomaly");
       }
-      
+
       return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar WEBGL_FINGERPRINT_ANOMALY: {}", e.getMessage());
@@ -5754,19 +5893,17 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * AUDIO_FINGERPRINT_NEW: Fingerprint de áudio novo/desconhecido.
-   */
+  /** AUDIO_FINGERPRINT_NEW: Fingerprint de áudio novo/desconhecido. */
   private boolean evaluateAudioFingerprintNew(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object isNewObj = payload.get("audio_fingerprint_new");
       if (isNewObj == null) {
         isNewObj = payload.get("audioFingerprintIsNew");
       }
-      
+
       return Boolean.TRUE.equals(isNewObj) || "true".equalsIgnoreCase(String.valueOf(isNewObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar AUDIO_FINGERPRINT_NEW: {}", e.getMessage());
@@ -5774,19 +5911,18 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * FONTS_FINGERPRINT_ANOMALY: Anomalia de fingerprint de fontes.
-   */
-  private boolean evaluateFontsFingerprintAnomaly(RuleCondition condition, EvaluationContext context) {
+  /** FONTS_FINGERPRINT_ANOMALY: Anomalia de fingerprint de fontes. */
+  private boolean evaluateFontsFingerprintAnomaly(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object anomalyObj = payload.get("fonts_fingerprint_anomaly");
       if (anomalyObj == null) {
         anomalyObj = payload.get("fontsAnomaly");
       }
-      
+
       return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar FONTS_FINGERPRINT_ANOMALY: {}", e.getMessage());
@@ -5794,19 +5930,18 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * SCREEN_RESOLUTION_CHANGE: Mudança de resolução de tela.
-   */
-  private boolean evaluateScreenResolutionChange(RuleCondition condition, EvaluationContext context) {
+  /** SCREEN_RESOLUTION_CHANGE: Mudança de resolução de tela. */
+  private boolean evaluateScreenResolutionChange(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object changedObj = payload.get("screen_resolution_changed");
       if (changedObj == null) {
         changedObj = payload.get("screenResolutionChanged");
       }
-      
+
       return Boolean.TRUE.equals(changedObj) || "true".equalsIgnoreCase(String.valueOf(changedObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar SCREEN_RESOLUTION_CHANGE: {}", e.getMessage());
@@ -5814,19 +5949,17 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * BATTERY_LEVEL_ANOMALY: Anomalia de nível de bateria (ex: sempre 100%).
-   */
+  /** BATTERY_LEVEL_ANOMALY: Anomalia de nível de bateria (ex: sempre 100%). */
   private boolean evaluateBatteryLevelAnomaly(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object anomalyObj = payload.get("battery_level_anomaly");
       if (anomalyObj == null) {
         anomalyObj = payload.get("batteryAnomaly");
       }
-      
+
       return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar BATTERY_LEVEL_ANOMALY: {}", e.getMessage());
@@ -5834,59 +5967,57 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * HARDWARE_CONCURRENCY_MISMATCH: Incompatibilidade de concorrência de hardware.
-   */
-  private boolean evaluateHardwareConcurrencyMismatch(RuleCondition condition, EvaluationContext context) {
+  /** HARDWARE_CONCURRENCY_MISMATCH: Incompatibilidade de concorrência de hardware. */
+  private boolean evaluateHardwareConcurrencyMismatch(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object mismatchObj = payload.get("hardware_concurrency_mismatch");
       if (mismatchObj == null) {
         mismatchObj = payload.get("hardwareConcurrencyMismatch");
       }
-      
-      return Boolean.TRUE.equals(mismatchObj) || "true".equalsIgnoreCase(String.valueOf(mismatchObj));
+
+      return Boolean.TRUE.equals(mismatchObj)
+          || "true".equalsIgnoreCase(String.valueOf(mismatchObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar HARDWARE_CONCURRENCY_MISMATCH: {}", e.getMessage());
       return false;
     }
   }
 
-  /**
-   * TOUCH_SUPPORT_INCONSISTENCY: Inconsistência de suporte touch.
-   */
-  private boolean evaluateTouchSupportInconsistency(RuleCondition condition, EvaluationContext context) {
+  /** TOUCH_SUPPORT_INCONSISTENCY: Inconsistência de suporte touch. */
+  private boolean evaluateTouchSupportInconsistency(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object inconsistencyObj = payload.get("touch_support_inconsistency");
       if (inconsistencyObj == null) {
         inconsistencyObj = payload.get("touchSupportInconsistency");
       }
-      
-      return Boolean.TRUE.equals(inconsistencyObj) || "true".equalsIgnoreCase(String.valueOf(inconsistencyObj));
+
+      return Boolean.TRUE.equals(inconsistencyObj)
+          || "true".equalsIgnoreCase(String.valueOf(inconsistencyObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar TOUCH_SUPPORT_INCONSISTENCY: {}", e.getMessage());
       return false;
     }
   }
 
-  /**
-   * DEVICE_MEMORY_ANOMALY: Anomalia de memória do dispositivo.
-   */
+  /** DEVICE_MEMORY_ANOMALY: Anomalia de memória do dispositivo. */
   private boolean evaluateDeviceMemoryAnomaly(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object anomalyObj = payload.get("device_memory_anomaly");
       if (anomalyObj == null) {
         anomalyObj = payload.get("deviceMemoryAnomaly");
       }
-      
+
       return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar DEVICE_MEMORY_ANOMALY: {}", e.getMessage());
@@ -5894,32 +6025,31 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * Método auxiliar genérico para operadores de velocidade.
-   */
+  /** Método auxiliar genérico para operadores de velocidade. */
   private boolean evaluateVelocityOperator(
-      RuleCondition condition, 
+      RuleCondition condition,
       EvaluationContext context,
       VelocityService.KeyType keyType,
       VelocityService.TimeWindow window,
       VelocityService.AggregationType aggregationType) {
     try {
       if (context.getTransactionRequest() == null) return false;
-      
+
       BigDecimal threshold = new BigDecimal(condition.getValueSingle().trim());
-      
-      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), keyType, window);
-      
-      BigDecimal value = switch (aggregationType) {
-        case COUNT -> BigDecimal.valueOf(stats.getTransactionCount());
-        case SUM -> stats.getTotalAmount();
-        case AVG -> stats.getAvgAmount();
-        case MAX -> stats.getMaxAmount();
-        case MIN -> stats.getMinAmount();
-        default -> BigDecimal.ZERO;
-      };
-      
+
+      VelocityService.VelocityStats stats =
+          velocityServiceFacade.getStats(context.getTransactionRequest(), keyType, window);
+
+      BigDecimal value =
+          switch (aggregationType) {
+            case COUNT -> BigDecimal.valueOf(stats.getTransactionCount());
+            case SUM -> stats.getTotalAmount();
+            case AVG -> stats.getAvgAmount();
+            case MAX -> stats.getMaxAmount();
+            case MIN -> stats.getMinAmount();
+            default -> BigDecimal.ZERO;
+          };
+
       return value.compareTo(threshold) > 0;
     } catch (Exception e) {
       log.error("Erro ao avaliar operador de velocidade: {}", e.getMessage());
@@ -5932,23 +6062,25 @@ public class ComplexRuleEvaluator {
   // --- CATEGORIA P: Behavioral Patterns (15) ---
 
   /**
-   * BEHAVIORAL_BASELINE_DEVIATION: Verifica desvio do baseline comportamental.
-   * Formato valueSingle: "deviationThreshold" (ex: "2.5" = 2.5 desvios padrão)
+   * BEHAVIORAL_BASELINE_DEVIATION: Verifica desvio do baseline comportamental. Formato valueSingle:
+   * "deviationThreshold" (ex: "2.5" = 2.5 desvios padrão)
    */
-  private boolean evaluateBehavioralBaselineDeviation(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateBehavioralBaselineDeviation(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double threshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object deviationObj = payload.get("behavioral_deviation_score");
       if (deviationObj == null) {
         deviationObj = payload.get("behavioralDeviationScore");
       }
-      
+
       if (deviationObj == null) return false;
-      double deviation = deviationObj instanceof Number ? ((Number) deviationObj).doubleValue() : 0.0;
+      double deviation =
+          deviationObj instanceof Number ? ((Number) deviationObj).doubleValue() : 0.0;
       return deviation > threshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar BEHAVIORAL_BASELINE_DEVIATION: {}", e.getMessage());
@@ -5956,19 +6088,18 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * SPENDING_CATEGORY_SHIFT: Detecta mudança de categoria de gastos.
-   */
-  private boolean evaluateSpendingCategoryShift(RuleCondition condition, EvaluationContext context) {
+  /** SPENDING_CATEGORY_SHIFT: Detecta mudança de categoria de gastos. */
+  private boolean evaluateSpendingCategoryShift(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object shiftObj = payload.get("spending_category_shift");
       if (shiftObj == null) {
         shiftObj = payload.get("spendingCategoryShift");
       }
-      
+
       return Boolean.TRUE.equals(shiftObj) || "true".equalsIgnoreCase(String.valueOf(shiftObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar SPENDING_CATEGORY_SHIFT: {}", e.getMessage());
@@ -5977,23 +6108,25 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * TRANSACTION_SIZE_ESCALATION: Detecta escalada de tamanho de transação.
-   * Formato valueSingle: "escalationFactor" (ex: "1.5" = 50% de aumento)
+   * TRANSACTION_SIZE_ESCALATION: Detecta escalada de tamanho de transação. Formato valueSingle:
+   * "escalationFactor" (ex: "1.5" = 50% de aumento)
    */
-  private boolean evaluateTransactionSizeEscalation(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateTransactionSizeEscalation(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double factor = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object escalationObj = payload.get("transaction_escalation_factor");
       if (escalationObj == null) {
         escalationObj = payload.get("transactionEscalationFactor");
       }
-      
+
       if (escalationObj == null) return false;
-      double escalation = escalationObj instanceof Number ? ((Number) escalationObj).doubleValue() : 0.0;
+      double escalation =
+          escalationObj instanceof Number ? ((Number) escalationObj).doubleValue() : 0.0;
       return escalation > factor;
     } catch (Exception e) {
       log.error("Erro ao avaliar TRANSACTION_SIZE_ESCALATION: {}", e.getMessage());
@@ -6001,19 +6134,18 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * FREQUENCY_PATTERN_CHANGE: Detecta mudança de padrão de frequência.
-   */
-  private boolean evaluateFrequencyPatternChange(RuleCondition condition, EvaluationContext context) {
+  /** FREQUENCY_PATTERN_CHANGE: Detecta mudança de padrão de frequência. */
+  private boolean evaluateFrequencyPatternChange(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object changeObj = payload.get("frequency_pattern_changed");
       if (changeObj == null) {
         changeObj = payload.get("frequencyPatternChanged");
       }
-      
+
       return Boolean.TRUE.equals(changeObj) || "true".equalsIgnoreCase(String.valueOf(changeObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar FREQUENCY_PATTERN_CHANGE: {}", e.getMessage());
@@ -6021,19 +6153,17 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * TIME_PREFERENCE_SHIFT: Detecta mudança de preferência de horário.
-   */
+  /** TIME_PREFERENCE_SHIFT: Detecta mudança de preferência de horário. */
   private boolean evaluateTimePreferenceShift(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object shiftObj = payload.get("time_preference_shift");
       if (shiftObj == null) {
         shiftObj = payload.get("timePreferenceShift");
       }
-      
+
       return Boolean.TRUE.equals(shiftObj) || "true".equalsIgnoreCase(String.valueOf(shiftObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar TIME_PREFERENCE_SHIFT: {}", e.getMessage());
@@ -6041,19 +6171,17 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * CHANNEL_USAGE_ANOMALY: Detecta anomalia de uso de canal.
-   */
+  /** CHANNEL_USAGE_ANOMALY: Detecta anomalia de uso de canal. */
   private boolean evaluateChannelUsageAnomaly(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object anomalyObj = payload.get("channel_usage_anomaly");
       if (anomalyObj == null) {
         anomalyObj = payload.get("channelUsageAnomaly");
       }
-      
+
       return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar CHANNEL_USAGE_ANOMALY: {}", e.getMessage());
@@ -6061,19 +6189,17 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * PAYMENT_METHOD_SWITCH: Detecta troca de método de pagamento.
-   */
+  /** PAYMENT_METHOD_SWITCH: Detecta troca de método de pagamento. */
   private boolean evaluatePaymentMethodSwitch(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object switchObj = payload.get("payment_method_switched");
       if (switchObj == null) {
         switchObj = payload.get("paymentMethodSwitched");
       }
-      
+
       return Boolean.TRUE.equals(switchObj) || "true".equalsIgnoreCase(String.valueOf(switchObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar PAYMENT_METHOD_SWITCH: {}", e.getMessage());
@@ -6082,21 +6208,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * RECIPIENT_DIVERSITY_CHANGE: Detecta mudança na diversidade de destinatários.
-   * Formato valueSingle: "diversityThreshold" (ex: "3" = mais de 3 novos destinatários)
+   * RECIPIENT_DIVERSITY_CHANGE: Detecta mudança na diversidade de destinatários. Formato
+   * valueSingle: "diversityThreshold" (ex: "3" = mais de 3 novos destinatários)
    */
-  private boolean evaluateRecipientDiversityChange(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateRecipientDiversityChange(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int threshold = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object countObj = payload.get("new_recipient_count");
       if (countObj == null) {
         countObj = payload.get("newRecipientCount");
       }
-      
+
       if (countObj == null) return false;
       int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
       return count > threshold;
@@ -6106,19 +6233,18 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * GEOGRAPHIC_BEHAVIOR_SHIFT: Detecta mudança de comportamento geográfico.
-   */
-  private boolean evaluateGeographicBehaviorShift(RuleCondition condition, EvaluationContext context) {
+  /** GEOGRAPHIC_BEHAVIOR_SHIFT: Detecta mudança de comportamento geográfico. */
+  private boolean evaluateGeographicBehaviorShift(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object shiftObj = payload.get("geographic_behavior_shift");
       if (shiftObj == null) {
         shiftObj = payload.get("geographicBehaviorShift");
       }
-      
+
       return Boolean.TRUE.equals(shiftObj) || "true".equalsIgnoreCase(String.valueOf(shiftObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar GEOGRAPHIC_BEHAVIOR_SHIFT: {}", e.getMessage());
@@ -6126,19 +6252,18 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * SESSION_BEHAVIOR_ANOMALY: Detecta anomalia de comportamento de sessão.
-   */
-  private boolean evaluateSessionBehaviorAnomaly(RuleCondition condition, EvaluationContext context) {
+  /** SESSION_BEHAVIOR_ANOMALY: Detecta anomalia de comportamento de sessão. */
+  private boolean evaluateSessionBehaviorAnomaly(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object anomalyObj = payload.get("session_behavior_anomaly");
       if (anomalyObj == null) {
         anomalyObj = payload.get("sessionBehaviorAnomaly");
       }
-      
+
       return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar SESSION_BEHAVIOR_ANOMALY: {}", e.getMessage());
@@ -6146,39 +6271,38 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * LOGIN_PATTERN_DEVIATION: Detecta desvio de padrão de login.
-   */
-  private boolean evaluateLoginPatternDeviation(RuleCondition condition, EvaluationContext context) {
+  /** LOGIN_PATTERN_DEVIATION: Detecta desvio de padrão de login. */
+  private boolean evaluateLoginPatternDeviation(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object deviationObj = payload.get("login_pattern_deviation");
       if (deviationObj == null) {
         deviationObj = payload.get("loginPatternDeviation");
       }
-      
-      return Boolean.TRUE.equals(deviationObj) || "true".equalsIgnoreCase(String.valueOf(deviationObj));
+
+      return Boolean.TRUE.equals(deviationObj)
+          || "true".equalsIgnoreCase(String.valueOf(deviationObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar LOGIN_PATTERN_DEVIATION: {}", e.getMessage());
       return false;
     }
   }
 
-  /**
-   * NAVIGATION_PATTERN_ANOMALY: Detecta anomalia de padrão de navegação.
-   */
-  private boolean evaluateNavigationPatternAnomaly(RuleCondition condition, EvaluationContext context) {
+  /** NAVIGATION_PATTERN_ANOMALY: Detecta anomalia de padrão de navegação. */
+  private boolean evaluateNavigationPatternAnomaly(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object anomalyObj = payload.get("navigation_pattern_anomaly");
       if (anomalyObj == null) {
         anomalyObj = payload.get("navigationPatternAnomaly");
       }
-      
+
       return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar NAVIGATION_PATTERN_ANOMALY: {}", e.getMessage());
@@ -6187,21 +6311,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * TRANSACTION_TIMING_CLUSTER: Detecta cluster de timing de transações.
-   * Formato valueSingle: "clusterSize" (ex: "5" = 5+ transações em cluster)
+   * TRANSACTION_TIMING_CLUSTER: Detecta cluster de timing de transações. Formato valueSingle:
+   * "clusterSize" (ex: "5" = 5+ transações em cluster)
    */
-  private boolean evaluateTransactionTimingCluster(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateTransactionTimingCluster(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int threshold = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object clusterObj = payload.get("transaction_cluster_size");
       if (clusterObj == null) {
         clusterObj = payload.get("transactionClusterSize");
       }
-      
+
       if (clusterObj == null) return false;
       int clusterSize = clusterObj instanceof Number ? ((Number) clusterObj).intValue() : 0;
       return clusterSize >= threshold;
@@ -6212,32 +6337,34 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * AMOUNT_ROUNDING_BEHAVIOR: Detecta comportamento de arredondamento de valores.
-   * Formato valueSingle: "roundingPercentage" (ex: "80" = 80% valores redondos)
+   * AMOUNT_ROUNDING_BEHAVIOR: Detecta comportamento de arredondamento de valores. Formato
+   * valueSingle: "roundingPercentage" (ex: "80" = 80% valores redondos)
    */
-  private boolean evaluateAmountRoundingBehavior(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateAmountRoundingBehavior(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double threshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object percentObj = payload.get("rounding_percentage");
       if (percentObj == null) {
         percentObj = payload.get("roundingPercentage");
       }
-      
+
       if (percentObj == null) {
         // Fallback: check current transaction
         TransactionRequest tx = context.getTransactionRequest();
         if (tx != null && tx.getTransactionAmount() != null) {
           BigDecimal amount = tx.getTransactionAmount();
-          boolean isRound = amount.remainder(BigDecimal.valueOf(100)).compareTo(BigDecimal.ZERO) == 0;
+          boolean isRound =
+              amount.remainder(BigDecimal.valueOf(100)).compareTo(BigDecimal.ZERO) == 0;
           return isRound && threshold <= 50; // Simple heuristic
         }
         return false;
       }
-      
+
       double percentage = percentObj instanceof Number ? ((Number) percentObj).doubleValue() : 0.0;
       return percentage >= threshold;
     } catch (Exception e) {
@@ -6247,21 +6374,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * SPLIT_PAYMENT_PATTERN: Detecta padrão de pagamento dividido.
-   * Formato valueSingle: "splitCount" (ex: "3" = 3+ pagamentos divididos)
+   * SPLIT_PAYMENT_PATTERN: Detecta padrão de pagamento dividido. Formato valueSingle: "splitCount"
+   * (ex: "3" = 3+ pagamentos divididos)
    */
   private boolean evaluateSplitPaymentPattern(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int threshold = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object countObj = payload.get("split_payment_count");
       if (countObj == null) {
         countObj = payload.get("splitPaymentCount");
       }
-      
+
       if (countObj == null) return false;
       int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
       return count >= threshold;
@@ -6274,21 +6401,22 @@ public class ComplexRuleEvaluator {
   // --- CATEGORIA Q: Statistical Behavioral (10) ---
 
   /**
-   * CHI_SQUARE_DISTRIBUTION_TEST: Teste Chi-Square de distribuição.
-   * Formato valueSingle: "significanceLevel" (ex: "0.05")
+   * CHI_SQUARE_DISTRIBUTION_TEST: Teste Chi-Square de distribuição. Formato valueSingle:
+   * "significanceLevel" (ex: "0.05")
    */
-  private boolean evaluateChiSquareDistributionTest(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateChiSquareDistributionTest(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double significanceLevel = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object pValueObj = payload.get("chi_square_p_value");
       if (pValueObj == null) {
         pValueObj = payload.get("chiSquarePValue");
       }
-      
+
       if (pValueObj == null) return false;
       double pValue = pValueObj instanceof Number ? ((Number) pValueObj).doubleValue() : 1.0;
       return pValue < significanceLevel; // Reject null hypothesis = anomaly
@@ -6299,21 +6427,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * KOLMOGOROV_SMIRNOV_TEST: Teste Kolmogorov-Smirnov.
-   * Formato valueSingle: "significanceLevel" (ex: "0.05")
+   * KOLMOGOROV_SMIRNOV_TEST: Teste Kolmogorov-Smirnov. Formato valueSingle: "significanceLevel"
+   * (ex: "0.05")
    */
-  private boolean evaluateKolmogorovSmirnovTest(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateKolmogorovSmirnovTest(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double significanceLevel = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object pValueObj = payload.get("ks_test_p_value");
       if (pValueObj == null) {
         pValueObj = payload.get("ksTestPValue");
       }
-      
+
       if (pValueObj == null) return false;
       double pValue = pValueObj instanceof Number ? ((Number) pValueObj).doubleValue() : 1.0;
       return pValue < significanceLevel;
@@ -6324,21 +6453,20 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * ANDERSON_DARLING_TEST: Teste Anderson-Darling.
-   * Formato valueSingle: "criticalValue" (ex: "2.5")
+   * ANDERSON_DARLING_TEST: Teste Anderson-Darling. Formato valueSingle: "criticalValue" (ex: "2.5")
    */
   private boolean evaluateAndersonDarlingTest(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double criticalValue = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object statObj = payload.get("anderson_darling_statistic");
       if (statObj == null) {
         statObj = payload.get("andersonDarlingStatistic");
       }
-      
+
       if (statObj == null) return false;
       double statistic = statObj instanceof Number ? ((Number) statObj).doubleValue() : 0.0;
       return statistic > criticalValue;
@@ -6349,21 +6477,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * T_TEST_AMOUNT_DEVIATION: T-Test de desvio de valor.
-   * Formato valueSingle: "tStatThreshold" (ex: "2.0")
+   * T_TEST_AMOUNT_DEVIATION: T-Test de desvio de valor. Formato valueSingle: "tStatThreshold" (ex:
+   * "2.0")
    */
   private boolean evaluateTTestAmountDeviation(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double threshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object tStatObj = payload.get("t_test_statistic");
       if (tStatObj == null) {
         tStatObj = payload.get("tTestStatistic");
       }
-      
+
       if (tStatObj == null) return false;
       double tStat = tStatObj instanceof Number ? ((Number) tStatObj).doubleValue() : 0.0;
       return Math.abs(tStat) > threshold;
@@ -6374,21 +6502,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MANN_WHITNEY_U_TEST: Teste Mann-Whitney U.
-   * Formato valueSingle: "significanceLevel" (ex: "0.05")
+   * MANN_WHITNEY_U_TEST: Teste Mann-Whitney U. Formato valueSingle: "significanceLevel" (ex:
+   * "0.05")
    */
   private boolean evaluateMannWhitneyUTest(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double significanceLevel = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object pValueObj = payload.get("mann_whitney_p_value");
       if (pValueObj == null) {
         pValueObj = payload.get("mannWhitneyPValue");
       }
-      
+
       if (pValueObj == null) return false;
       double pValue = pValueObj instanceof Number ? ((Number) pValueObj).doubleValue() : 1.0;
       return pValue < significanceLevel;
@@ -6399,21 +6527,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * CORRELATION_ANOMALY: Detecta anomalia de correlação.
-   * Formato valueSingle: "correlationThreshold" (ex: "0.7")
+   * CORRELATION_ANOMALY: Detecta anomalia de correlação. Formato valueSingle:
+   * "correlationThreshold" (ex: "0.7")
    */
   private boolean evaluateCorrelationAnomaly(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double threshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object corrObj = payload.get("correlation_coefficient");
       if (corrObj == null) {
         corrObj = payload.get("correlationCoefficient");
       }
-      
+
       if (corrObj == null) return false;
       double correlation = corrObj instanceof Number ? ((Number) corrObj).doubleValue() : 0.0;
       return Math.abs(correlation) > threshold;
@@ -6424,21 +6552,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * REGRESSION_RESIDUAL_OUTLIER: Detecta outlier de resíduo de regressão.
-   * Formato valueSingle: "residualThreshold" (ex: "3.0" = 3 desvios)
+   * REGRESSION_RESIDUAL_OUTLIER: Detecta outlier de resíduo de regressão. Formato valueSingle:
+   * "residualThreshold" (ex: "3.0" = 3 desvios)
    */
-  private boolean evaluateRegressionResidualOutlier(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateRegressionResidualOutlier(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double threshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object residualObj = payload.get("standardized_residual");
       if (residualObj == null) {
         residualObj = payload.get("standardizedResidual");
       }
-      
+
       if (residualObj == null) return false;
       double residual = residualObj instanceof Number ? ((Number) residualObj).doubleValue() : 0.0;
       return Math.abs(residual) > threshold;
@@ -6449,21 +6578,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * VARIANCE_RATIO_TEST: Teste de razão de variância (F-test).
-   * Formato valueSingle: "fStatThreshold" (ex: "4.0")
+   * VARIANCE_RATIO_TEST: Teste de razão de variância (F-test). Formato valueSingle:
+   * "fStatThreshold" (ex: "4.0")
    */
   private boolean evaluateVarianceRatioTest(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double threshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object fStatObj = payload.get("f_statistic");
       if (fStatObj == null) {
         fStatObj = payload.get("fStatistic");
       }
-      
+
       if (fStatObj == null) return false;
       double fStat = fStatObj instanceof Number ? ((Number) fStatObj).doubleValue() : 0.0;
       return fStat > threshold;
@@ -6474,21 +6603,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * ENTROPY_SCORE_ANOMALY: Detecta anomalia de score de entropia.
-   * Formato valueSingle: "entropyThreshold" (ex: "0.3" = baixa entropia suspeita)
+   * ENTROPY_SCORE_ANOMALY: Detecta anomalia de score de entropia. Formato valueSingle:
+   * "entropyThreshold" (ex: "0.3" = baixa entropia suspeita)
    */
   private boolean evaluateEntropyScoreAnomaly(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double threshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object entropyObj = payload.get("entropy_score");
       if (entropyObj == null) {
         entropyObj = payload.get("entropyScore");
       }
-      
+
       if (entropyObj == null) return false;
       double entropy = entropyObj instanceof Number ? ((Number) entropyObj).doubleValue() : 1.0;
       return entropy < threshold; // Low entropy is suspicious (too predictable)
@@ -6499,22 +6628,23 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * SKEWNESS_KURTOSIS_ANOMALY: Detecta anomalia de skewness/kurtosis.
-   * Formato valueSingle: "threshold" (ex: "3.0")
+   * SKEWNESS_KURTOSIS_ANOMALY: Detecta anomalia de skewness/kurtosis. Formato valueSingle:
+   * "threshold" (ex: "3.0")
    */
-  private boolean evaluateSkewnessKurtosisAnomaly(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateSkewnessKurtosisAnomaly(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double threshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object skewnessObj = payload.get("skewness");
       Object kurtosisObj = payload.get("kurtosis");
-      
+
       double skewness = skewnessObj instanceof Number ? ((Number) skewnessObj).doubleValue() : 0.0;
       double kurtosis = kurtosisObj instanceof Number ? ((Number) kurtosisObj).doubleValue() : 0.0;
-      
+
       // Anomaly if either is beyond threshold
       return Math.abs(skewness) > threshold || Math.abs(kurtosis - 3) > threshold;
     } catch (Exception e) {
@@ -6528,23 +6658,23 @@ public class ComplexRuleEvaluator {
   // --- CATEGORIA R: MCC & Merchant Advanced (18) ---
 
   /**
-   * MCC_CATEGORY_VELOCITY: Velocidade por categoria MCC.
-   * Formato valueSingle: "mccCategory|threshold" (ex: "gambling|5")
+   * MCC_CATEGORY_VELOCITY: Velocidade por categoria MCC. Formato valueSingle:
+   * "mccCategory|threshold" (ex: "gambling|5")
    */
   private boolean evaluateMccCategoryVelocity(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       String mccCategory = parts[0].trim();
       int threshold = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 5;
-      
+
       Object velocityObj = payload.get("mcc_velocity_" + mccCategory.toLowerCase());
       if (velocityObj == null) {
         velocityObj = payload.get("mccVelocity_" + mccCategory);
       }
-      
+
       if (velocityObj == null) return false;
       int velocity = velocityObj instanceof Number ? ((Number) velocityObj).intValue() : 0;
       return velocity > threshold;
@@ -6555,27 +6685,28 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MCC_SPENDING_LIMIT_CHECK: Verificação de limite por MCC.
-   * Formato valueSingle: "limitAmount" (ex: "5000")
+   * MCC_SPENDING_LIMIT_CHECK: Verificação de limite por MCC. Formato valueSingle: "limitAmount"
+   * (ex: "5000")
    */
-  private boolean evaluateMccSpendingLimitCheck(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMccSpendingLimitCheck(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       TransactionRequest tx = context.getTransactionRequest();
       if (tx == null) return false;
-      
+
       BigDecimal limit = new BigDecimal(condition.getValueSingle().trim());
-      
+
       Object spentObj = payload != null ? payload.get("mcc_spending_total") : null;
       if (spentObj == null && payload != null) {
         spentObj = payload.get("mccSpendingTotal");
       }
-      
+
       BigDecimal spent = BigDecimal.ZERO;
       if (spentObj instanceof Number) {
         spent = BigDecimal.valueOf(((Number) spentObj).doubleValue());
       }
-      
+
       BigDecimal total = spent.add(tx.getTransactionAmount());
       return total.compareTo(limit) > 0;
     } catch (Exception e) {
@@ -6585,21 +6716,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MCC_CROSS_CATEGORY_PATTERN: Detecta padrão cross-category MCC.
-   * Formato valueSingle: "categoryCount" (ex: "4" = 4+ categorias diferentes)
+   * MCC_CROSS_CATEGORY_PATTERN: Detecta padrão cross-category MCC. Formato valueSingle:
+   * "categoryCount" (ex: "4" = 4+ categorias diferentes)
    */
-  private boolean evaluateMccCrossCategoryPattern(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMccCrossCategoryPattern(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int threshold = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object countObj = payload.get("distinct_mcc_categories");
       if (countObj == null) {
         countObj = payload.get("distinctMccCategories");
       }
-      
+
       if (countObj == null) return false;
       int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
       return count >= threshold;
@@ -6610,21 +6742,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_REPUTATION_SCORE: Score de reputação do merchant.
-   * Formato valueSingle: "minScore" (ex: "70" = score mínimo)
+   * MERCHANT_REPUTATION_SCORE: Score de reputação do merchant. Formato valueSingle: "minScore" (ex:
+   * "70" = score mínimo)
    */
-  private boolean evaluateMerchantReputationScore(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantReputationScore(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double minScore = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object scoreObj = payload.get("merchant_reputation_score");
       if (scoreObj == null) {
         scoreObj = payload.get("merchantReputationScore");
       }
-      
+
       if (scoreObj == null) return true; // No score = suspicious
       double score = scoreObj instanceof Number ? ((Number) scoreObj).doubleValue() : 0.0;
       return score < minScore;
@@ -6635,21 +6768,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_AGE_CHECK: Verificação de idade do merchant.
-   * Formato valueSingle: "minAgeDays" (ex: "30" = mínimo 30 dias)
+   * MERCHANT_AGE_CHECK: Verificação de idade do merchant. Formato valueSingle: "minAgeDays" (ex:
+   * "30" = mínimo 30 dias)
    */
   private boolean evaluateMerchantAgeCheck(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int minAge = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object ageObj = payload.get("merchant_age_days");
       if (ageObj == null) {
         ageObj = payload.get("merchantAgeDays");
       }
-      
+
       if (ageObj == null) return true; // No age = new merchant = suspicious
       int age = ageObj instanceof Number ? ((Number) ageObj).intValue() : 0;
       return age < minAge;
@@ -6660,23 +6793,24 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_TRANSACTION_VOLUME: Volume de transações do merchant.
-   * Formato valueSingle: "minVolume|maxVolume" (ex: "100|10000")
+   * MERCHANT_TRANSACTION_VOLUME: Volume de transações do merchant. Formato valueSingle:
+   * "minVolume|maxVolume" (ex: "100|10000")
    */
-  private boolean evaluateMerchantTransactionVolume(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantTransactionVolume(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int minVolume = Integer.parseInt(parts[0].trim());
       int maxVolume = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : Integer.MAX_VALUE;
-      
+
       Object volumeObj = payload.get("merchant_transaction_volume");
       if (volumeObj == null) {
         volumeObj = payload.get("merchantTransactionVolume");
       }
-      
+
       if (volumeObj == null) return false;
       int volume = volumeObj instanceof Number ? ((Number) volumeObj).intValue() : 0;
       return volume < minVolume || volume > maxVolume;
@@ -6687,21 +6821,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_CHARGEBACK_HISTORY: Histórico de chargeback do merchant.
-   * Formato valueSingle: "maxChargebackRate" (ex: "0.02" = 2%)
+   * MERCHANT_CHARGEBACK_HISTORY: Histórico de chargeback do merchant. Formato valueSingle:
+   * "maxChargebackRate" (ex: "0.02" = 2%)
    */
-  private boolean evaluateMerchantChargebackHistory(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantChargebackHistory(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double maxRate = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object rateObj = payload.get("merchant_chargeback_rate");
       if (rateObj == null) {
         rateObj = payload.get("merchantChargebackRate");
       }
-      
+
       if (rateObj == null) return false;
       double rate = rateObj instanceof Number ? ((Number) rateObj).doubleValue() : 0.0;
       return rate > maxRate;
@@ -6712,21 +6847,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_FRAUD_RATE_CHECK: Verificação de taxa de fraude do merchant.
-   * Formato valueSingle: "maxFraudRate" (ex: "0.01" = 1%)
+   * MERCHANT_FRAUD_RATE_CHECK: Verificação de taxa de fraude do merchant. Formato valueSingle:
+   * "maxFraudRate" (ex: "0.01" = 1%)
    */
-  private boolean evaluateMerchantFraudRateCheck(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantFraudRateCheck(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double maxRate = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object rateObj = payload.get("merchant_fraud_rate");
       if (rateObj == null) {
         rateObj = payload.get("merchantFraudRate");
       }
-      
+
       if (rateObj == null) return false;
       double rate = rateObj instanceof Number ? ((Number) rateObj).doubleValue() : 0.0;
       return rate > maxRate;
@@ -6737,21 +6873,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_GEOGRAPHIC_SPREAD: Dispersão geográfica do merchant.
-   * Formato valueSingle: "maxCountries" (ex: "10")
+   * MERCHANT_GEOGRAPHIC_SPREAD: Dispersão geográfica do merchant. Formato valueSingle:
+   * "maxCountries" (ex: "10")
    */
-  private boolean evaluateMerchantGeographicSpread(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantGeographicSpread(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int maxCountries = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object countObj = payload.get("merchant_country_count");
       if (countObj == null) {
         countObj = payload.get("merchantCountryCount");
       }
-      
+
       if (countObj == null) return false;
       int count = countObj instanceof Number ? ((Number) countObj).intValue() : 0;
       return count > maxCountries;
@@ -6762,21 +6899,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_CUSTOMER_CONCENTRATION: Concentração de clientes do merchant.
-   * Formato valueSingle: "concentrationThreshold" (ex: "0.5" = 50%)
+   * MERCHANT_CUSTOMER_CONCENTRATION: Concentração de clientes do merchant. Formato valueSingle:
+   * "concentrationThreshold" (ex: "0.5" = 50%)
    */
-  private boolean evaluateMerchantCustomerConcentration(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantCustomerConcentration(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double threshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object concObj = payload.get("merchant_customer_concentration");
       if (concObj == null) {
         concObj = payload.get("merchantCustomerConcentration");
       }
-      
+
       if (concObj == null) return false;
       double concentration = concObj instanceof Number ? ((Number) concObj).doubleValue() : 0.0;
       return concentration > threshold;
@@ -6787,21 +6925,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_AMOUNT_DISTRIBUTION: Distribuição de valores do merchant.
-   * Formato valueSingle: "stdDevThreshold" (ex: "1000")
+   * MERCHANT_AMOUNT_DISTRIBUTION: Distribuição de valores do merchant. Formato valueSingle:
+   * "stdDevThreshold" (ex: "1000")
    */
-  private boolean evaluateMerchantAmountDistribution(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantAmountDistribution(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double threshold = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object stdObj = payload.get("merchant_amount_stddev");
       if (stdObj == null) {
         stdObj = payload.get("merchantAmountStddev");
       }
-      
+
       if (stdObj == null) return false;
       double stdDev = stdObj instanceof Number ? ((Number) stdObj).doubleValue() : 0.0;
       return stdDev > threshold;
@@ -6811,19 +6950,17 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /**
-   * MERCHANT_TIME_PATTERN: Padrão temporal do merchant.
-   */
+  /** MERCHANT_TIME_PATTERN: Padrão temporal do merchant. */
   private boolean evaluateMerchantTimePattern(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       Object anomalyObj = payload.get("merchant_time_pattern_anomaly");
       if (anomalyObj == null) {
         anomalyObj = payload.get("merchantTimePatternAnomaly");
       }
-      
+
       return Boolean.TRUE.equals(anomalyObj) || "true".equalsIgnoreCase(String.valueOf(anomalyObj));
     } catch (Exception e) {
       log.error("Erro ao avaliar MERCHANT_TIME_PATTERN: {}", e.getMessage());
@@ -6832,23 +6969,24 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_DEVICE_DIVERSITY: Diversidade de dispositivos do merchant.
-   * Formato valueSingle: "minDiversity|maxDiversity" (ex: "10|1000")
+   * MERCHANT_DEVICE_DIVERSITY: Diversidade de dispositivos do merchant. Formato valueSingle:
+   * "minDiversity|maxDiversity" (ex: "10|1000")
    */
-  private boolean evaluateMerchantDeviceDiversity(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantDeviceDiversity(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       int minDiversity = Integer.parseInt(parts[0].trim());
       int maxDiversity = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : Integer.MAX_VALUE;
-      
+
       Object diversityObj = payload.get("merchant_device_diversity");
       if (diversityObj == null) {
         diversityObj = payload.get("merchantDeviceDiversity");
       }
-      
+
       if (diversityObj == null) return false;
       int diversity = diversityObj instanceof Number ? ((Number) diversityObj).intValue() : 0;
       return diversity < minDiversity || diversity > maxDiversity;
@@ -6859,21 +6997,21 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_REFUND_RATIO: Razão de reembolso do merchant.
-   * Formato valueSingle: "maxRefundRatio" (ex: "0.1" = 10%)
+   * MERCHANT_REFUND_RATIO: Razão de reembolso do merchant. Formato valueSingle: "maxRefundRatio"
+   * (ex: "0.1" = 10%)
    */
   private boolean evaluateMerchantRefundRatio(RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double maxRatio = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object ratioObj = payload.get("merchant_refund_ratio");
       if (ratioObj == null) {
         ratioObj = payload.get("merchantRefundRatio");
       }
-      
+
       if (ratioObj == null) return false;
       double ratio = ratioObj instanceof Number ? ((Number) ratioObj).doubleValue() : 0.0;
       return ratio > maxRatio;
@@ -6884,21 +7022,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_NEW_CUSTOMER_RATIO: Razão de novos clientes do merchant.
-   * Formato valueSingle: "maxNewCustomerRatio" (ex: "0.8" = 80%)
+   * MERCHANT_NEW_CUSTOMER_RATIO: Razão de novos clientes do merchant. Formato valueSingle:
+   * "maxNewCustomerRatio" (ex: "0.8" = 80%)
    */
-  private boolean evaluateMerchantNewCustomerRatio(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantNewCustomerRatio(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double maxRatio = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object ratioObj = payload.get("merchant_new_customer_ratio");
       if (ratioObj == null) {
         ratioObj = payload.get("merchantNewCustomerRatio");
       }
-      
+
       if (ratioObj == null) return false;
       double ratio = ratioObj instanceof Number ? ((Number) ratioObj).doubleValue() : 0.0;
       return ratio > maxRatio;
@@ -6909,21 +7048,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_DORMANT_REACTIVATION: Reativação de merchant dormente.
-   * Formato valueSingle: "dormantDays" (ex: "90" = 90 dias de inatividade)
+   * MERCHANT_DORMANT_REACTIVATION: Reativação de merchant dormente. Formato valueSingle:
+   * "dormantDays" (ex: "90" = 90 dias de inatividade)
    */
-  private boolean evaluateMerchantDormantReactivation(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantDormantReactivation(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       int dormantThreshold = Integer.parseInt(condition.getValueSingle().trim());
-      
+
       Object daysObj = payload.get("merchant_days_since_last_tx");
       if (daysObj == null) {
         daysObj = payload.get("merchantDaysSinceLastTx");
       }
-      
+
       if (daysObj == null) return false;
       int daysSinceLastTx = daysObj instanceof Number ? ((Number) daysObj).intValue() : 0;
       return daysSinceLastTx > dormantThreshold;
@@ -6934,21 +7074,22 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_CROSS_BORDER_RATIO: Razão cross-border do merchant.
-   * Formato valueSingle: "maxCrossBorderRatio" (ex: "0.3" = 30%)
+   * MERCHANT_CROSS_BORDER_RATIO: Razão cross-border do merchant. Formato valueSingle:
+   * "maxCrossBorderRatio" (ex: "0.3" = 30%)
    */
-  private boolean evaluateMerchantCrossBorderRatio(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantCrossBorderRatio(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       double maxRatio = Double.parseDouble(condition.getValueSingle().trim());
-      
+
       Object ratioObj = payload.get("merchant_cross_border_ratio");
       if (ratioObj == null) {
         ratioObj = payload.get("merchantCrossBorderRatio");
       }
-      
+
       if (ratioObj == null) return false;
       double ratio = ratioObj instanceof Number ? ((Number) ratioObj).doubleValue() : 0.0;
       return ratio > maxRatio;
@@ -6959,29 +7100,385 @@ public class ComplexRuleEvaluator {
   }
 
   /**
-   * MERCHANT_HIGH_VALUE_FREQUENCY: Frequência de alto valor do merchant.
-   * Formato valueSingle: "threshold|percentage" (ex: "1000|0.5" = 50% acima de 1000)
+   * MERCHANT_HIGH_VALUE_FREQUENCY: Frequência de alto valor do merchant. Formato valueSingle:
+   * "threshold|percentage" (ex: "1000|0.5" = 50% acima de 1000)
    */
-  private boolean evaluateMerchantHighValueFrequency(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMerchantHighValueFrequency(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
-      
+
       String[] parts = condition.getValueSingle().split("\\|");
       double amountThreshold = Double.parseDouble(parts[0].trim());
       double percentageThreshold = parts.length > 1 ? Double.parseDouble(parts[1].trim()) : 0.5;
-      
+
       Object percentageObj = payload.get("merchant_high_value_percentage");
       if (percentageObj == null) {
         percentageObj = payload.get("merchantHighValuePercentage");
       }
-      
+
       if (percentageObj == null) return false;
-      double percentage = percentageObj instanceof Number ? ((Number) percentageObj).doubleValue() : 0.0;
+      double percentage =
+          percentageObj instanceof Number ? ((Number) percentageObj).doubleValue() : 0.0;
       return percentage > percentageThreshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar MERCHANT_HIGH_VALUE_FREQUENCY: {}", e.getMessage());
       return false;
     }
+  }
+
+  // ========== STUB METHODS - FATF Compliance ==========
+
+  private boolean evaluateFatfBlackMarketExchange(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_BLACK_MARKET_EXCHANGE: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfCorrespondentLayering(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_CORRESPONDENT_LAYERING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfCryptoAtmCashout(RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_CRYPTO_ATM_CASHOUT: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfCryptoMixing(RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_CRYPTO_MIXING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfHawalaInformal(RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_HAWALA_INFORMAL: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfInsuranceCashValue(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_INSURANCE_CASH_VALUE: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfIntegrationLuxuryGoods(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_INTEGRATION_LUXURY_GOODS: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfIntegrationRealEstate(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_INTEGRATION_REAL_ESTATE: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfLayeringOffshore(RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_LAYERING_OFFSHORE: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfLayeringRapidMovement(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_LAYERING_RAPID_MOVEMENT: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfLayeringShellCompany(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_LAYERING_SHELL_COMPANY: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfLayeringWireChains(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_LAYERING_WIRE_CHAINS: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfNewPaymentExploitation(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_NEW_PAYMENT_EXPLOITATION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfPepTransaction(RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_PEP_TRANSACTION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfPlacementCashIntensive(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_PLACEMENT_CASH_INTENSIVE: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfPlacementSmurfing(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_PLACEMENT_SMURFING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfPlacementStructuring(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_PLACEMENT_STRUCTURING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfRoundTripping(RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_ROUND_TRIPPING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfTbmlFalseDescription(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_TBML_FALSE_DESCRIPTION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfTbmlMultipleInvoicing(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_TBML_MULTIPLE_INVOICING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfTbmlOverInvoicing(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_TBML_OVER_INVOICING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfTbmlPhantomShipping(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_TBML_PHANTOM_SHIPPING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfTbmlUnderInvoicing(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_TBML_UNDER_INVOICING: stub - retornando false");
+    return false;
+  }
+
+  // ========== STUB METHODS - Platform Integration ==========
+
+  private boolean evaluatePltBacktestingLabeling(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_BACKTESTING_LABELING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltBadEntityNetwork(RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_BAD_ENTITY_NETWORK: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltBehaviorSortedLists(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_BEHAVIOR_SORTED_LISTS: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltBehavioralProfiling(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_BEHAVIORAL_PROFILING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltBusinessRulesScenario(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_BUSINESS_RULES_SCENARIO: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltCompromiseManager(RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_COMPROMISE_MANAGER: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltConsortiumDataCheck(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_CONSORTIUM_DATA_CHECK: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltCustomRuleBuilder(RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_CUSTOM_RULE_BUILDER: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltDs2RuleEngine(RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_DS2_RULE_ENGINE: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltIdentityResolution(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_IDENTITY_RESOLUTION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltIntelligenceNetwork(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_INTELLIGENCE_NETWORK: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltLinkingVelocity(RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_LINKING_VELOCITY: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltMlFraudRiskOutcome(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_ML_FRAUD_RISK_OUTCOME: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltNetworkAnalytics(RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_NETWORK_ANALYTICS: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltNetworkEntityResolution(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_NETWORK_ENTITY_RESOLUTION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltRadarComplexConditions(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_RADAR_COMPLEX_CONDITIONS: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltRadarInlineLists(RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_RADAR_INLINE_LISTS: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltRadarMetadataMatching(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_RADAR_METADATA_MATCHING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltRadarRuleBacktesting(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_RADAR_RULE_BACKTESTING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltRealTimeDetection(RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_REAL_TIME_DETECTION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltReviewlistQueue(RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_REVIEWLIST_QUEUE: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltRiskListComparison(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_RISK_LIST_COMPARISON: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltRiskProfileAssignment(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_RISK_PROFILE_ASSIGNMENT: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltRiskScoreCalculation(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_RISK_SCORE_CALCULATION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltRulesModelsHybrid(RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_RULES_MODELS_HYBRID: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltSarAutomated(RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_SAR_AUTOMATED: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltScenarioScorecard(RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_SCENARIO_SCORECARD: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluatePltVelocityFilters(RuleCondition condition, EvaluationContext context) {
+    log.debug("PLT_VELOCITY_FILTERS: stub - retornando false");
+    return false;
+  }
+
+  // ========== STUB METHODS - SCA Compliance ==========
+
+  private boolean evaluateScaChallengeMandatory(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("SCA_CHALLENGE_MANDATORY: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateScaContactlessExemption(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("SCA_CONTACTLESS_EXEMPTION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateScaCorporatePayment(RuleCondition condition, EvaluationContext context) {
+    log.debug("SCA_CORPORATE_PAYMENT: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateScaFraudRateMonitoring(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("SCA_FRAUD_RATE_MONITORING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateScaLiabilityShift(RuleCondition condition, EvaluationContext context) {
+    log.debug("SCA_LIABILITY_SHIFT: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateScaLowValueExemption(RuleCondition condition, EvaluationContext context) {
+    log.debug("SCA_LOW_VALUE_EXEMPTION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateScaMerchantInitiated(RuleCondition condition, EvaluationContext context) {
+    log.debug("SCA_MERCHANT_INITIATED: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateScaRecurringTransaction(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("SCA_RECURRING_TRANSACTION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateScaSecureCorporateProtocol(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("SCA_SECURE_CORPORATE_PROTOCOL: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateScaTraExemption(RuleCondition condition, EvaluationContext context) {
+    log.debug("SCA_TRA_EXEMPTION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateScaTrustedBeneficiary(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("SCA_TRUSTED_BENEFICIARY: stub - retornando false");
+    return false;
   }
 }

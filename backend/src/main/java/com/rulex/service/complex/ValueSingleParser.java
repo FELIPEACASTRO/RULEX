@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
  * Parser unificado e seguro para os formatos de valueSingle.
  *
  * <p>Formatos suportados:
+ *
  * <ul>
  *   <li>PIPE: "field|nDays|threshold|op" ou "threshold|hours"
  *   <li>COMMA: "value1,value2,value3"
@@ -27,22 +28,22 @@ import org.springframework.stereotype.Component;
 public class ValueSingleParser {
 
   /** Padrão seguro para valueSingle - previne ReDoS e injection */
-  private static final Pattern SAFE_VALUE_PATTERN = 
-      Pattern.compile("^[\\w\\-:|,\\.\\s]{0,500}$");
+  private static final Pattern SAFE_VALUE_PATTERN = Pattern.compile("^[\\w\\-:|,\\.\\s]{0,500}$");
 
   /** Padrões pré-compilados para split (evita recompilação) */
   private static final Pattern PIPE_PATTERN = Pattern.compile("\\|");
+
   private static final Pattern COMMA_PATTERN = Pattern.compile(",");
   private static final Pattern COLON_PATTERN = Pattern.compile(":");
 
   /** Formato do valueSingle */
   public enum ValueFormat {
-    PIPE,    // field|nDays|threshold|op
-    COMMA,   // value1,value2,value3
-    COLON,   // threshold:hours
-    SIMPLE,  // threshold
+    PIPE, // field|nDays|threshold|op
+    COMMA, // value1,value2,value3
+    COLON, // threshold:hours
+    SIMPLE, // threshold
     MIN_MAX, // usa valueMin + valueMax
-    EMPTY    // null ou vazio
+    EMPTY // null ou vazio
   }
 
   /** Resultado do parsing */
@@ -57,6 +58,7 @@ public class ValueSingleParser {
 
     /**
      * Obtém o threshold como inteiro.
+     *
      * @param defaultValue valor padrão se parsing falhar
      * @return threshold ou defaultValue
      */
@@ -74,6 +76,7 @@ public class ValueSingleParser {
 
     /**
      * Obtém o threshold como double.
+     *
      * @param defaultValue valor padrão se parsing falhar
      * @return threshold ou defaultValue
      */
@@ -91,6 +94,7 @@ public class ValueSingleParser {
 
     /**
      * Obtém o valor de tempo (horas ou dias).
+     *
      * @param defaultValue valor padrão
      * @return time value ou defaultValue
      */
@@ -107,6 +111,7 @@ public class ValueSingleParser {
 
     /**
      * Obtém o operador de comparação.
+     *
      * @param defaultValue operador padrão
      * @return operador ou defaultValue
      */
@@ -119,6 +124,7 @@ public class ValueSingleParser {
 
     /**
      * Obtém como lista de strings.
+     *
      * @return lista ou lista vazia
      */
     public List<String> getList() {
@@ -130,6 +136,7 @@ public class ValueSingleParser {
 
     /**
      * Obtém a parte no índice especificado.
+     *
      * @param index índice
      * @param defaultValue valor padrão
      * @return parte ou defaultValue
@@ -230,7 +237,7 @@ public class ValueSingleParser {
     // Formato simples
     return ParsedValue.builder()
         .format(ValueFormat.SIMPLE)
-        .parts(new String[]{trimmed})
+        .parts(new String[] {trimmed})
         .raw(trimmed)
         .valid(true)
         .build();

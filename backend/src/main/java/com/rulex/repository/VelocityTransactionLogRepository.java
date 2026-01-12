@@ -100,11 +100,11 @@ public interface VelocityTransactionLogRepository
   // =====================================================
 
   /**
-   * Query única agregada que retorna todas as estatísticas de velocity por PAN.
-   * Elimina o problema N+1 ao calcular COUNT, SUM, AVG, DISTINCT em uma query.
+   * Query única agregada que retorna todas as estatísticas de velocity por PAN. Elimina o problema
+   * N+1 ao calcular COUNT, SUM, AVG, DISTINCT em uma query.
    *
-   * @return Object[] com: [0]=count, [1]=sum, [2]=avg, [3]=distinctMerchants,
-   *                       [4]=distinctMccs, [5]=distinctCountries, [6]=fraudCount
+   * @return Object[] com: [0]=count, [1]=sum, [2]=avg, [3]=distinctMerchants, [4]=distinctMccs,
+   *     [5]=distinctCountries, [6]=fraudCount
    */
   @Query(
       value =
@@ -129,11 +129,11 @@ public interface VelocityTransactionLogRepository
       @Param("panHash") String panHash, @Param("since") OffsetDateTime since);
 
   /**
-   * Query única agregada que retorna todas as estatísticas de velocity por customerId.
-   * Elimina o problema N+1 ao calcular COUNT, SUM, AVG, DISTINCT em uma query.
+   * Query única agregada que retorna todas as estatísticas de velocity por customerId. Elimina o
+   * problema N+1 ao calcular COUNT, SUM, AVG, DISTINCT em uma query.
    *
-   * @return Object[] com: [0]=count, [1]=sum, [2]=avg, [3]=distinctMerchants,
-   *                       [4]=distinctMccs, [5]=distinctCountries, [6]=fraudCount
+   * @return Object[] com: [0]=count, [1]=sum, [2]=avg, [3]=distinctMerchants, [4]=distinctMccs,
+   *     [5]=distinctCountries, [6]=fraudCount
    */
   @Query(
       value =
@@ -159,8 +159,8 @@ public interface VelocityTransactionLogRepository
       @Param("customerId") String customerId, @Param("since") OffsetDateTime since);
 
   /**
-   * Conta devices distintos usados pelo customer em janela temporal.
-   * Usado para detectar device hopping.
+   * Conta devices distintos usados pelo customer em janela temporal. Usado para detectar device
+   * hopping.
    */
   @Query(
       value =
@@ -172,8 +172,8 @@ public interface VelocityTransactionLogRepository
       @Param("customerId") String customerId, @Param("since") OffsetDateTime since);
 
   /**
-   * Conta IPs distintos usados pelo customer em janela temporal.
-   * Usado para detectar IP hopping ou uso de VPN/proxies.
+   * Conta IPs distintos usados pelo customer em janela temporal. Usado para detectar IP hopping ou
+   * uso de VPN/proxies.
    */
   @Query(
       value =
@@ -184,9 +184,7 @@ public interface VelocityTransactionLogRepository
   long countDistinctIpsByCustomerIdSince(
       @Param("customerId") String customerId, @Param("since") OffsetDateTime since);
 
-  /**
-   * Conta beneficiários distintos para detectar money mule patterns.
-   */
+  /** Conta beneficiários distintos para detectar money mule patterns. */
   @Query(
       value =
           "SELECT COUNT(DISTINCT beneficiary_id) FROM velocity_transaction_log "
@@ -196,9 +194,7 @@ public interface VelocityTransactionLogRepository
   long countDistinctBeneficiariesByCustomerIdSince(
       @Param("customerId") String customerId, @Param("since") OffsetDateTime since);
 
-  /**
-   * Conta transações crypto (MCCs 6051, 6012, 6211) em janela temporal.
-   */
+  /** Conta transações crypto (MCCs 6051, 6012, 6211) em janela temporal. */
   @Query(
       value =
           "SELECT COUNT(*) FROM velocity_transaction_log "
@@ -208,9 +204,7 @@ public interface VelocityTransactionLogRepository
   long countCryptoTransactionsByCustomerIdSince(
       @Param("customerId") String customerId, @Param("since") OffsetDateTime since);
 
-  /**
-   * Soma valores de transações crypto em janela temporal.
-   */
+  /** Soma valores de transações crypto em janela temporal. */
   @Query(
       value =
           "SELECT COALESCE(SUM(amount), 0) FROM velocity_transaction_log "
@@ -220,9 +214,7 @@ public interface VelocityTransactionLogRepository
   BigDecimal sumCryptoAmountByCustomerIdSince(
       @Param("customerId") String customerId, @Param("since") OffsetDateTime since);
 
-  /**
-   * Conta chargebacks em janela temporal.
-   */
+  /** Conta chargebacks em janela temporal. */
   @Query(
       value =
           "SELECT COUNT(*) FROM velocity_transaction_log "
@@ -233,8 +225,8 @@ public interface VelocityTransactionLogRepository
       @Param("panHash") String panHash, @Param("since") OffsetDateTime since);
 
   /**
-   * Verifica se device mudou na sessão atual.
-   * Retorna TRUE se o device_fingerprint atual é diferente do último usado.
+   * Verifica se device mudou na sessão atual. Retorna TRUE se o device_fingerprint atual é
+   * diferente do último usado.
    */
   @Query(
       value =
@@ -245,9 +237,7 @@ public interface VelocityTransactionLogRepository
       nativeQuery = true)
   Optional<String> findLastDeviceFingerprintByCustomerId(@Param("customerId") String customerId);
 
-  /**
-   * Busca última atividade do customer para calcular days_since_last_activity.
-   */
+  /** Busca última atividade do customer para calcular days_since_last_activity. */
   @Query(
       value =
           "SELECT MAX(transaction_at) FROM velocity_transaction_log "
@@ -256,8 +246,8 @@ public interface VelocityTransactionLogRepository
   Optional<OffsetDateTime> findLastActivityByCustomerId(@Param("customerId") String customerId);
 
   /**
-   * Calcula outflow rate (saída vs entrada) em janela temporal.
-   * Retorna a razão de valor de saída sobre entrada.
+   * Calcula outflow rate (saída vs entrada) em janela temporal. Retorna a razão de valor de saída
+   * sobre entrada.
    */
   @Query(
       value =

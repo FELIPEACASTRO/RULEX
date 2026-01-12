@@ -6,6 +6,7 @@
  */
 
 import { getAccessToken, getBasicAuthRaw } from "@/_core/auth/tokens";
+import type { ConditionOperatorType } from "./operatorTypes";
 
 // ========================================
 // CONFIG
@@ -153,74 +154,7 @@ export interface DashboardMetrics {
 
 export interface RuleCondition {
   field: string;
-  operator:
-    // Canonical ops (preferidas; alinhadas ao backend ConditionDTO.OperatorType)
-    | "EQ"
-    | "NEQ"  // Alinhado com backend (NE é legacy)
-    | "GT"
-    | "LT"
-    | "GTE"
-    | "LTE"
-    | "IN"
-    | "NOT_IN"
-    | "BETWEEN"
-    | "NOT_BETWEEN"
-    | "CONTAINS"
-    | "NOT_CONTAINS"
-    | "STARTS_WITH"
-    | "ENDS_WITH"
-    | "REGEX"      // Alinhado com backend (MATCHES_REGEX é legacy)
-    | "NOT_REGEX"
-    | "IS_NULL"
-    | "NOT_NULL"   // Alinhado com backend (IS_NOT_NULL é legacy)
-    | "IS_TRUE"
-    | "IS_FALSE"
-    // Comparação entre campos
-    | "FIELD_EQ"
-    | "FIELD_NEQ"
-    | "FIELD_GT"
-    | "FIELD_GTE"
-    | "FIELD_LT"
-    | "FIELD_LTE"
-    // Data/Hora
-    | "DATE_BEFORE"
-    | "DATE_AFTER"
-    | "DATE_BETWEEN"
-    | "TIME_BEFORE"
-    | "TIME_AFTER"
-    | "TIME_BETWEEN"
-    // Array
-    | "ARRAY_CONTAINS"
-    | "ARRAY_NOT_CONTAINS"
-    | "ARRAY_SIZE_EQ"
-    | "ARRAY_SIZE_GT"
-    | "ARRAY_SIZE_LT"
-    // Matemáticos
-    | "MOD_EQ"
-    | "MOD_NEQ"
-    // Geolocalização
-    | "GEO_DISTANCE_LT"
-    | "GEO_DISTANCE_GT"
-    | "GEO_IN_POLYGON"
-    // Velocity (agregações temporais)
-    | "VELOCITY_COUNT_GT"
-    | "VELOCITY_COUNT_LT"
-    | "VELOCITY_SUM_GT"
-    | "VELOCITY_SUM_LT"
-    | "VELOCITY_AVG_GT"
-    | "VELOCITY_AVG_LT"
-    | "VELOCITY_DISTINCT_GT"
-    | "VELOCITY_DISTINCT_LT"
-    // Legado/compatibilidade (aceitos pelo backend via normalização)
-    | "NE"
-    | "MATCHES_REGEX"
-    | "IS_NOT_NULL"
-    | "=="
-    | "!="
-    | ">"
-    | "<"
-    | ">="
-    | "<=";
+  operator: ConditionOperatorType;
   value: string;
 }
 

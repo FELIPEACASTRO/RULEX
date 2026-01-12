@@ -40,15 +40,15 @@ public class VelocityService {
   private final Cache<String, VelocityStats> statsCache;
 
   public VelocityService(
-      VelocityCounterRepository counterRepository,
-      VelocityTransactionLogRepository logRepository) {
+      VelocityCounterRepository counterRepository, VelocityTransactionLogRepository logRepository) {
     this.counterRepository = counterRepository;
     this.logRepository = logRepository;
-    this.statsCache = Caffeine.newBuilder()
-        .expireAfterWrite(30, TimeUnit.SECONDS)
-        .maximumSize(10_000)
-        .recordStats()
-        .build();
+    this.statsCache =
+        Caffeine.newBuilder()
+            .expireAfterWrite(30, TimeUnit.SECONDS)
+            .maximumSize(10_000)
+            .recordStats()
+            .build();
   }
 
   /** Estatísticas de velocidade. */
