@@ -41,35 +41,35 @@ ADD COLUMN IF NOT EXISTS transaction_status VARCHAR(20) DEFAULT 'APPROVED';
 -- =====================================================
 
 -- Índice principal para queries de velocity por customer
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_vtl_customer_created_desc 
+CREATE INDEX IF NOT EXISTS idx_vtl_customer_created_desc 
 ON velocity_transaction_log(customer_id, created_at DESC);
 
 -- Índice para queries por PAN hash
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_vtl_pan_hash_created_desc 
+CREATE INDEX IF NOT EXISTS idx_vtl_pan_hash_created_desc 
 ON velocity_transaction_log(pan_hash, created_at DESC);
 
 -- Índice para device fingerprint
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_vtl_device_fingerprint 
+CREATE INDEX IF NOT EXISTS idx_vtl_device_fingerprint 
 ON velocity_transaction_log(device_fingerprint) 
 WHERE device_fingerprint IS NOT NULL;
 
 -- Índice para IP address
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_vtl_ip_address 
+CREATE INDEX IF NOT EXISTS idx_vtl_ip_address 
 ON velocity_transaction_log(ip_address) 
 WHERE ip_address IS NOT NULL;
 
 -- Índice para beneficiary (money mule detection)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_vtl_beneficiary 
+CREATE INDEX IF NOT EXISTS idx_vtl_beneficiary 
 ON velocity_transaction_log(beneficiary_id, created_at DESC) 
 WHERE beneficiary_id IS NOT NULL;
 
 -- Índice parcial para transações crypto (MCCs de crypto)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_vtl_crypto_transactions 
+CREATE INDEX IF NOT EXISTS idx_vtl_crypto_transactions 
 ON velocity_transaction_log(customer_id, created_at) 
 WHERE mcc IN ('6051', '6012', '6211') OR is_crypto_transaction = TRUE;
 
 -- Índice para status de transação
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_vtl_status 
+CREATE INDEX IF NOT EXISTS idx_vtl_status 
 ON velocity_transaction_log(transaction_status, created_at DESC);
 
 -- =====================================================

@@ -710,9 +710,10 @@ public class ComplexRuleEvaluator {
       case PLT_REVIEWLIST_QUEUE -> evaluatePltReviewlistQueue(condition, context);
       case PLT_CONSORTIUM_DATA_CHECK -> evaluatePltConsortiumDataCheck(condition, context);
 
-      // ========== Basel III Operational Risk (BSL001-BSL014) ==========
+        // ========== Basel III Operational Risk (BSL001-BSL014) ==========
       case BSL_BUSINESS_INDICATOR -> evaluateBslBusinessIndicator(condition, context);
-      case BSL_BUSINESS_INDICATOR_COMPONENT -> evaluateBslBusinessIndicatorComponent(condition, context);
+      case BSL_BUSINESS_INDICATOR_COMPONENT ->
+          evaluateBslBusinessIndicatorComponent(condition, context);
       case BSL_INTERNAL_LOSS_MULTIPLIER -> evaluateBslInternalLossMultiplier(condition, context);
       case BSL_LOSS_DATA_COLLECTION -> evaluateBslLossDataCollection(condition, context);
       case BSL_LOSS_EXCLUSION_APPROVAL -> evaluateBslLossExclusionApproval(condition, context);
@@ -726,12 +727,12 @@ public class ComplexRuleEvaluator {
       case BSL_KRI_MONITORING -> evaluateBslKriMonitoring(condition, context);
       case BSL_SCENARIO_ANALYSIS -> evaluateBslScenarioAnalysis(condition, context);
 
-      // ========== Rule Mining Determinístico (APRIORI, FPGROWTH, ECLAT) ==========
+        // ========== Rule Mining Determinístico (APRIORI, FPGROWTH, ECLAT) ==========
       case APRIORI_ASSOCIATION -> evaluateAprioriAssociation(condition, context);
       case FPGROWTH_FREQUENT_PATTERNS -> evaluateFpgrowthFrequentPatterns(condition, context);
       case ECLAT_ITEMSET -> evaluateEclatItemset(condition, context);
 
-      // ========== Fuzzy Logic (FUZZY001, FUZZY002) ==========
+        // ========== Fuzzy Logic (FUZZY001, FUZZY002) ==========
       case FUZZY_MEMBERSHIP -> evaluateFuzzyMembership(condition, context);
       case FUZZY_ADAPTIVE_THRESHOLD -> evaluateFuzzyAdaptiveThreshold(condition, context);
 
@@ -7539,6 +7540,117 @@ public class ComplexRuleEvaluator {
 
   private boolean evaluateScaDynamic3dsRouting(RuleCondition condition, EvaluationContext context) {
     log.debug("SCA_DYNAMIC_3DS_ROUTING: stub - retornando false");
+    return false;
+  }
+
+  // ========== STUB METHODS - Association Rules ==========
+
+  private boolean evaluateAprioriAssociation(RuleCondition condition, EvaluationContext context) {
+    log.debug("APRIORI_ASSOCIATION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateEclatItemset(RuleCondition condition, EvaluationContext context) {
+    log.debug("ECLAT_ITEMSET: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFpgrowthFrequentPatterns(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FPGROWTH_FREQUENT_PATTERNS: stub - retornando false");
+    return false;
+  }
+
+  // ========== STUB METHODS - Fuzzy Logic ==========
+
+  private boolean evaluateFuzzyMembership(RuleCondition condition, EvaluationContext context) {
+    log.debug("FUZZY_MEMBERSHIP: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFuzzyAdaptiveThreshold(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FUZZY_ADAPTIVE_THRESHOLD: stub - retornando false");
+    return false;
+  }
+
+  // ========== STUB METHODS - Basel SL (Operational Risk) ==========
+
+  private boolean evaluateBslBucketClassification(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_BUCKET_CLASSIFICATION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateBslBusinessIndicator(RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_BUSINESS_INDICATOR: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateBslBusinessIndicatorComponent(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_BUSINESS_INDICATOR_COMPONENT: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateBslControlDeficiency(RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_CONTROL_DEFICIENCY: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateBslInternalLossMultiplier(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_INTERNAL_LOSS_MULTIPLIER: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateBslKriMonitoring(RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_KRI_MONITORING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateBslLossDataCollection(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_LOSS_DATA_COLLECTION: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateBslLossEventReporting(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_LOSS_EVENT_REPORTING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateBslLossExclusionApproval(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_LOSS_EXCLUSION_APPROVAL: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateBslLossThresholdSetting(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_LOSS_THRESHOLD_SETTING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateBslMarginalCoefficient(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_MARGINAL_COEFFICIENT: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateBslRetentionPeriod(RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_RETENTION_PERIOD: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateBslRiskGovernance(RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_RISK_GOVERNANCE: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateBslScenarioAnalysis(RuleCondition condition, EvaluationContext context) {
+    log.debug("BSL_SCENARIO_ANALYSIS: stub - retornando false");
     return false;
   }
 }
