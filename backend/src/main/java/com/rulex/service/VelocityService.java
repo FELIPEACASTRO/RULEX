@@ -1,5 +1,7 @@
 package com.rulex.service;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.VelocityTransactionLog;
 import com.rulex.repository.VelocityCounterRepository;
@@ -11,10 +13,9 @@ import java.security.MessageDigest;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,15 +29,27 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>Janelas temporais suportadas: 5min, 15min, 30min, 1h, 6h, 12h, 24h, 7d, 30d
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class VelocityService {
 
   private final VelocityCounterRepository counterRepository;
   private final VelocityTransactionLogRepository logRepository;
 
-  // Cache simples para evitar queries repetidas na mesma transação
-  private final Map<String, VelocityStats> statsCache = new ConcurrentHashMap<>();
+  // Cache Caffeine com TTL de 30 segundos e máximo de 10.000 entradas
+  // Resolve o problema de memory leak do ConcurrentHashMap sem eviction
+  private final Cache<String, VelocityStats> statsCache;
+
+  public VelocityService(
+      VelocityCounterRepository counterRepository,
+      VelocityTransactionLogRepository logRepository) {
+    this.counterRepository = counterRepository;
+    this.logRepository = logRepository;
+    this.statsCache = Caffeine.newBuilder()
+        .expireAfterWrite(30, TimeUnit.SECONDS)
+        .maximumSize(10_000)
+        .recordStats()
+        .build();
+  }
 
   /** Estatísticas de velocidade. */
   @Data
@@ -133,7 +146,7 @@ public class VelocityService {
 
     // Verificar cache
     String cacheKey = String.format("%s|%s|%d", keyType, keyValue, window.getMinutes());
-    VelocityStats cached = statsCache.get(cacheKey);
+    VelocityStats cached = statsCache.getIfPresent(cacheKey);
     if (cached != null) {
       return cached;
     }

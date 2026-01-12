@@ -373,6 +373,43 @@ public class ComplexRuleEvaluator {
       case IS_NEW -> evaluateIsNew(condition, context);
       case DISTANCE_FROM_LAST_GT -> evaluateDistanceFromLastGt(condition, context);
 
+        // ========== OPERADORES V28-V30 (17 novos) ==========
+        // Implementados conforme Triple-Check de Especialistas
+
+      case IN_LIST -> evaluateInList(fieldValue, condition);
+
+      case HAS_FAILED_3DS_LAST_N_MINUTES -> evaluateHasFailed3dsLastNMinutes(condition, context);
+
+      case COUNT_MFA_ABANDONMENTS -> evaluateCountMfaAbandonments(condition, context);
+
+      case HAS_INCOMING_TRANSFER_LAST_N_HOURS -> evaluateHasIncomingTransferLastNHours(condition, context);
+
+      case IS_IMPOSSIBLE_COMBINATION -> evaluateIsImpossibleCombination(condition, context);
+
+      case PIX_KEY_CHANGED_LAST_N_DAYS -> evaluatePixKeyChangedLastNDays(condition, context);
+
+      case CONTAINS_SUSPICIOUS_KEYWORDS -> evaluateContainsSuspiciousKeywords(fieldValue, condition);
+
+      case COUNT_CRYPTO_TXN_LAST_N_DAYS -> evaluateCountCryptoTxnLastNDays(condition, context);
+
+      case COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS -> evaluateCountDistinctInstrumentsLastNDays(condition, context);
+
+      case COUNT_DISTINCT_PAYERS_LAST_N_DAYS -> evaluateCountDistinctPayersLastNDays(condition, context);
+
+      case COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS -> evaluateCountDistinctUserAgentsLastNHours(condition, context);
+
+      case COUNT_LAST_N_DAYS -> evaluateCountLastNDays(condition, context);
+
+      case COUNT_MFA_DENIALS_LAST_N_HOURS -> evaluateCountMfaDenialsLastNHours(condition, context);
+
+      case DAYS_SINCE_LAST_ACTIVITY -> evaluateDaysSinceLastActivity(condition, context);
+
+      case DEVICE_CHANGED_IN_SESSION -> evaluateDeviceChangedInSession(condition, context);
+
+      case IS_CRYPTO_RANSOM_AMOUNT -> evaluateIsCryptoRansomAmount(condition, context);
+
+      case OUTFLOW_RATE_LAST_N_DAYS -> evaluateOutflowRateLastNDays(condition, context);
+
       default -> {
         log.warn("Operador não implementado: {}", operator);
         yield false;
@@ -414,6 +451,37 @@ public class ComplexRuleEvaluator {
         if (fieldStr.equalsIgnoreCase(value)) return true;
       } else {
         if (fieldStr.equals(value)) return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Avalia IN_LIST com suporte a valueArray ou valueSingle com delimitador pipe.
+   */
+  private boolean evaluateInList(Object fieldValue, RuleCondition condition) {
+    if (fieldValue == null) return false;
+
+    List<String> values;
+    if (condition.getValueArray() != null && !condition.getValueArray().isEmpty()) {
+      values = condition.getValueArray();
+    } else if (condition.getValueSingle() != null && !condition.getValueSingle().isEmpty()) {
+      // Suporte a valueSingle com delimitador pipe
+      values = java.util.Arrays.asList(condition.getValueSingle().split("\\|"));
+    } else {
+      return false;
+    }
+
+    String fieldStr = String.valueOf(fieldValue);
+    Boolean caseSensitive = condition.getCaseSensitive();
+
+    for (String value : values) {
+      String trimmedValue = value.trim();
+      if (Boolean.FALSE.equals(caseSensitive)) {
+        if (fieldStr.equalsIgnoreCase(trimmedValue)) return true;
+      } else {
+        // Default: case-insensitive for IN_LIST
+        if (fieldStr.equalsIgnoreCase(trimmedValue)) return true;
       }
     }
     return false;
@@ -2216,6 +2284,634 @@ public class ComplexRuleEvaluator {
     } catch (Exception e) {
       log.error("Erro ao avaliar DISTANCE_FROM_LAST_GT: {}", e.getMessage());
       return false;
+    }
+  }
+
+  // ========== OPERADORES V28-V30 (17 novos métodos) ==========
+  // Implementados conforme recomendação do Triple-Check de Especialistas
+
+  /**
+   * Helper seguro para parsing de inteiros.
+   * Evita NumberFormatException retornando valor default.
+   */
+  private int parseIntSafe(String value, int defaultValue) {
+    if (value == null || value.isBlank()) {
+      return defaultValue;
+    }
+    try {
+      return Integer.parseInt(value.trim());
+    } catch (NumberFormatException e) {
+      log.warn("Valor inválido para parse int: '{}', usando default: {}", 
+          maskSensitiveData(value), defaultValue);
+      return defaultValue;
+    }
+  }
+
+  /**
+   * Helper seguro para parsing de doubles.
+   */
+  private double parseDoubleSafe(String value, double defaultValue) {
+    if (value == null || value.isBlank()) {
+      return defaultValue;
+    }
+    try {
+      return Double.parseDouble(value.trim());
+    } catch (NumberFormatException e) {
+      log.warn("Valor inválido para parse double: '{}', usando default: {}", 
+          maskSensitiveData(value), defaultValue);
+      return defaultValue;
+    }
+  }
+
+  /**
+   * Mascara dados sensíveis para logging seguro.
+   */
+  private String maskSensitiveData(String data) {
+    if (data == null || data.length() < 4) {
+      return "****";
+    }
+    return "****" + data.substring(Math.max(0, data.length() - 4));
+  }
+
+  /**
+   * HAS_FAILED_3DS_LAST_N_MINUTES: Verifica se houve falha 3DS nos últimos N minutos.
+   * Formato valueSingle: "minutes" (ex: "30")
+   */
+  private boolean evaluateHasFailed3dsLastNMinutes(RuleCondition condition, EvaluationContext context) {
+    try {
+      int minutes = parseIntSafe(condition.getValueSingle(), 30);
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      // Verificar campos de AuthEnrichment
+      Boolean failed3ds = (Boolean) payload.get("auth_has_failed_3ds_recently");
+      Integer lastFailureMinutes = (Integer) payload.get("auth_last_3ds_failure_minutes_ago");
+
+      if (Boolean.TRUE.equals(failed3ds) && lastFailureMinutes != null) {
+        return lastFailureMinutes <= minutes;
+      }
+
+      // Fallback: verificar campo derivado genérico
+      Boolean hasRecentFailure = (Boolean) payload.get("has_3ds_failure_" + minutes + "min");
+      return Boolean.TRUE.equals(hasRecentFailure);
+    } catch (Exception e) {
+      log.error("Erro ao avaliar HAS_FAILED_3DS_LAST_N_MINUTES: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * COUNT_MFA_ABANDONMENTS: Contagem de abandonos de MFA.
+   * Formato valueSingle: "threshold:hours" (ex: "3:24")
+   */
+  private boolean evaluateCountMfaAbandonments(RuleCondition condition, EvaluationContext context) {
+    try {
+      String valueSingle = condition.getValueSingle();
+      if (valueSingle == null || valueSingle.isBlank()) {
+        return false;
+      }
+
+      String[] parts = valueSingle.split(":");
+      int threshold = parseIntSafe(parts[0], 3);
+      int hours = parts.length > 1 ? parseIntSafe(parts[1], 24) : 24;
+
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      Integer count = (Integer) payload.get("auth_mfa_abandonment_count_" + hours + "h");
+      if (count == null) {
+        count = (Integer) payload.get("mfa_abandonment_count");
+      }
+
+      return count != null && count >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_MFA_ABANDONMENTS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * HAS_INCOMING_TRANSFER_LAST_N_HOURS: Verifica se houve transferência de entrada.
+   * Formato valueSingle: "hours" (ex: "24")
+   */
+  private boolean evaluateHasIncomingTransferLastNHours(RuleCondition condition, EvaluationContext context) {
+    try {
+      int hours = parseIntSafe(condition.getValueSingle(), 24);
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      Boolean hasIncoming = (Boolean) payload.get("velocity_has_incoming_transfer_" + hours + "h");
+      if (hasIncoming == null) {
+        hasIncoming = (Boolean) payload.get("has_incoming_transfer_last_" + hours + "h");
+      }
+
+      return Boolean.TRUE.equals(hasIncoming);
+    } catch (Exception e) {
+      log.error("Erro ao avaliar HAS_INCOMING_TRANSFER_LAST_N_HOURS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * IS_IMPOSSIBLE_COMBINATION: Verifica combinações impossíveis de dados.
+   * Formato valueSingle: tipo de combinação (ex: "age_corporate", "country_currency")
+   */
+  private boolean evaluateIsImpossibleCombination(RuleCondition condition, EvaluationContext context) {
+    try {
+      String combinationType = condition.getValueSingle();
+      if (combinationType == null || combinationType.isBlank()) {
+        return false;
+      }
+
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      return switch (combinationType.toLowerCase().trim()) {
+        case "age_corporate" -> {
+          Object ageObj = payload.get("customer_age");
+          String accountType = (String) payload.get("account_type");
+          int age = ageObj instanceof Number ? ((Number) ageObj).intValue() : -1;
+          yield age >= 0 && age < 18 && "CORPORATE".equalsIgnoreCase(accountType);
+        }
+        case "country_currency" -> {
+          String country = (String) payload.get("merchantCountryCode");
+          String currency = (String) payload.get("transactionCurrencyCode");
+          yield !isValidCurrencyForCountry(country, currency);
+        }
+        case "deceased_active" -> {
+          Boolean isDeceased = (Boolean) payload.get("customer_is_deceased");
+          yield Boolean.TRUE.equals(isDeceased);
+        }
+        case "minor_high_value" -> {
+          Object ageObj = payload.get("customer_age");
+          Object amountObj = payload.get("transactionAmount");
+          int age = ageObj instanceof Number ? ((Number) ageObj).intValue() : 99;
+          BigDecimal amount = getBigDecimal(amountObj);
+          yield age < 18 && amount != null && amount.compareTo(new BigDecimal("5000")) > 0;
+        }
+        default -> false;
+      };
+    } catch (Exception e) {
+      log.error("Erro ao avaliar IS_IMPOSSIBLE_COMBINATION: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Verifica se a moeda é válida para o país.
+   */
+  private boolean isValidCurrencyForCountry(String country, String currency) {
+    if (country == null || currency == null) return true;
+    
+    Map<String, List<String>> validCurrencies = Map.of(
+      "BR", List.of("BRL"),
+      "US", List.of("USD"),
+      "GB", List.of("GBP"),
+      "DE", List.of("EUR"),
+      "FR", List.of("EUR"),
+      "IT", List.of("EUR"),
+      "ES", List.of("EUR"),
+      "PT", List.of("EUR"),
+      "JP", List.of("JPY"),
+      "CN", List.of("CNY", "CNH")
+    );
+    
+    List<String> valid = validCurrencies.get(country.toUpperCase());
+    return valid == null || valid.contains(currency.toUpperCase());
+  }
+
+  /**
+   * PIX_KEY_CHANGED_LAST_N_DAYS: Verifica se chave PIX foi alterada recentemente.
+   * Formato valueSingle: "days" (ex: "7")
+   */
+  private boolean evaluatePixKeyChangedLastNDays(RuleCondition condition, EvaluationContext context) {
+    try {
+      int days = parseIntSafe(condition.getValueSingle(), 7);
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      Integer daysSinceChange = (Integer) payload.get("customer_pix_key_changed_days_ago");
+      if (daysSinceChange == null) {
+        daysSinceChange = (Integer) payload.get("pix_key_age_days");
+      }
+
+      return daysSinceChange != null && daysSinceChange <= days;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar PIX_KEY_CHANGED_LAST_N_DAYS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * CONTAINS_SUSPICIOUS_KEYWORDS: Detecta palavras suspeitas em texto.
+   * Formato valueArray: lista de keywords, ou usa lista padrão
+   */
+  private boolean evaluateContainsSuspiciousKeywords(Object fieldValue, RuleCondition condition) {
+    try {
+      if (fieldValue == null) return false;
+
+      String text = String.valueOf(fieldValue).toLowerCase();
+      List<String> keywords = condition.getValueArray();
+
+      // Suporte a valueSingle com delimitador pipe
+      if ((keywords == null || keywords.isEmpty()) && condition.getValueSingle() != null) {
+        keywords = java.util.Arrays.asList(condition.getValueSingle().split("\\|"));
+      }
+
+      if (keywords == null || keywords.isEmpty()) {
+        // Keywords padrao para fraude brasileira
+        keywords = List.of(
+          "urgente", "transferir agora", "bloqueio", "seguranca",
+          "atualizar dados", "conta suspensa", "premio", "heranca",
+          "emprestimo aprovado", "divida", "spc", "serasa",
+          "banco central", "pix devolvido", "comprovante falso"
+        );
+      }
+
+      return keywords.stream()
+          .map(String::toLowerCase)
+          .map(String::trim)
+          .anyMatch(text::contains);
+    } catch (Exception e) {
+      log.error("Erro ao avaliar CONTAINS_SUSPICIOUS_KEYWORDS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * COUNT_CRYPTO_TXN_LAST_N_DAYS: Conta transações crypto nos últimos N dias.
+   * Formato valueSingle: "threshold|days" (ex: "5|30")
+   */
+  private boolean evaluateCountCryptoTxnLastNDays(RuleCondition condition, EvaluationContext context) {
+    try {
+      String valueSingle = condition.getValueSingle();
+      if (valueSingle == null || valueSingle.isBlank()) {
+        return false;
+      }
+
+      String[] parts = valueSingle.split("\\|");
+      int threshold = parseIntSafe(parts[0], 5);
+      int days = parts.length > 1 ? parseIntSafe(parts[1], 30) : 30;
+
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      Object countObj = payload.get("velocity_crypto_txn_count_" + days + "d");
+      if (countObj == null) {
+        countObj = payload.get("crypto_transaction_count");
+      }
+
+      long count = countObj instanceof Number ? ((Number) countObj).longValue() : 0;
+      return count >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_CRYPTO_TXN_LAST_N_DAYS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS: Instrumentos distintos nos últimos N dias.
+   * Formato valueSingle: "threshold|days" (ex: "10|30")
+   */
+  private boolean evaluateCountDistinctInstrumentsLastNDays(RuleCondition condition, EvaluationContext context) {
+    try {
+      String valueSingle = condition.getValueSingle();
+      if (valueSingle == null || valueSingle.isBlank()) {
+        return false;
+      }
+
+      String[] parts = valueSingle.split("\\|");
+      int threshold = parseIntSafe(parts[0], 10);
+      int days = parts.length > 1 ? parseIntSafe(parts[1], 30) : 30;
+
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      Object countObj = payload.get("velocity_distinct_instruments_" + days + "d");
+      if (countObj == null) {
+        countObj = payload.get("distinct_payment_instruments");
+      }
+
+      long count = countObj instanceof Number ? ((Number) countObj).longValue() : 0;
+      return count >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * COUNT_DISTINCT_PAYERS_LAST_N_DAYS: Pagadores distintos nos últimos N dias.
+   * Formato valueSingle: "threshold|days" (ex: "5|7")
+   */
+  private boolean evaluateCountDistinctPayersLastNDays(RuleCondition condition, EvaluationContext context) {
+    try {
+      String valueSingle = condition.getValueSingle();
+      if (valueSingle == null || valueSingle.isBlank()) {
+        return false;
+      }
+
+      String[] parts = valueSingle.split("\\|");
+      int threshold = parseIntSafe(parts[0], 5);
+      int days = parts.length > 1 ? parseIntSafe(parts[1], 7) : 7;
+
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      Object countObj = payload.get("velocity_distinct_payers_" + days + "d");
+      if (countObj == null) {
+        countObj = payload.get("distinct_payers_count");
+      }
+
+      long count = countObj instanceof Number ? ((Number) countObj).longValue() : 0;
+      return count >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_DISTINCT_PAYERS_LAST_N_DAYS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS: User agents distintos nas últimas N horas.
+   * Formato valueSingle: "threshold|hours" (ex: "5|24")
+   */
+  private boolean evaluateCountDistinctUserAgentsLastNHours(RuleCondition condition, EvaluationContext context) {
+    try {
+      String valueSingle = condition.getValueSingle();
+      if (valueSingle == null || valueSingle.isBlank()) {
+        return false;
+      }
+
+      String[] parts = valueSingle.split("\\|");
+      int threshold = parseIntSafe(parts[0], 5);
+      int hours = parts.length > 1 ? parseIntSafe(parts[1], 24) : 24;
+
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      Object countObj = payload.get("device_distinct_user_agents_" + hours + "h");
+      if (countObj == null) {
+        countObj = payload.get("distinct_user_agents");
+      }
+
+      long count = countObj instanceof Number ? ((Number) countObj).longValue() : 0;
+      return count >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * COUNT_LAST_N_DAYS: Contagem genérica nos últimos N dias.
+   * Formato valueSingle: "threshold|days" ou "keyType|threshold|days"
+   */
+  private boolean evaluateCountLastNDays(RuleCondition condition, EvaluationContext context) {
+    try {
+      String valueSingle = condition.getValueSingle();
+      if (valueSingle == null || valueSingle.isBlank()) {
+        return false;
+      }
+
+      String[] parts = valueSingle.split("\\|");
+      
+      String keyType = "PAN";
+      int threshold;
+      int days;
+
+      if (parts.length == 3) {
+        keyType = parts[0].toUpperCase();
+        threshold = parseIntSafe(parts[1], 10);
+        days = parseIntSafe(parts[2], 30);
+      } else if (parts.length == 2) {
+        threshold = parseIntSafe(parts[0], 10);
+        days = parseIntSafe(parts[1], 30);
+      } else {
+        threshold = parseIntSafe(parts[0], 10);
+        days = 30;
+      }
+
+      // Usar VelocityService se disponível
+      if (context.getTransactionRequest() != null) {
+        VelocityService.TimeWindow window = parseTimeWindowFromDays(days);
+        VelocityService.KeyType kt = parseKeyType(keyType);
+        VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+            context.getTransactionRequest(), kt, window);
+        return stats.getTransactionCount() >= threshold;
+      }
+
+      // Fallback: verificar no payload
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      Object countObj = payload.get("velocity_count_" + days + "d");
+      long count = countObj instanceof Number ? ((Number) countObj).longValue() : 0;
+      return count >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_LAST_N_DAYS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Converte string para KeyType.
+   */
+  private VelocityService.KeyType parseKeyType(String keyType) {
+    try {
+      return VelocityService.KeyType.valueOf(keyType.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      return VelocityService.KeyType.PAN;
+    }
+  }
+
+  /**
+   * COUNT_MFA_DENIALS_LAST_N_HOURS: Negações de MFA nas últimas N horas.
+   * Formato valueSingle: "threshold:hours" (ex: "3:24")
+   */
+  private boolean evaluateCountMfaDenialsLastNHours(RuleCondition condition, EvaluationContext context) {
+    try {
+      String valueSingle = condition.getValueSingle();
+      if (valueSingle == null || valueSingle.isBlank()) {
+        return false;
+      }
+
+      String[] parts = valueSingle.split(":");
+      int threshold = parseIntSafe(parts[0], 3);
+      int hours = parts.length > 1 ? parseIntSafe(parts[1], 24) : 24;
+
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      Integer count = (Integer) payload.get("auth_mfa_denial_count_" + hours + "h");
+      if (count == null) {
+        count = (Integer) payload.get("mfa_denial_count");
+      }
+
+      return count != null && count >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_MFA_DENIALS_LAST_N_HOURS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * DAYS_SINCE_LAST_ACTIVITY: Dias desde última atividade.
+   * Formato valueSingle: "threshold|operator" (ex: "30|GT" = mais de 30 dias)
+   */
+  private boolean evaluateDaysSinceLastActivity(RuleCondition condition, EvaluationContext context) {
+    try {
+      String valueSingle = condition.getValueSingle();
+      if (valueSingle == null || valueSingle.isBlank()) {
+        return false;
+      }
+
+      String[] parts = valueSingle.split("\\|");
+      int threshold = parseIntSafe(parts[0], 30);
+      String operator = parts.length > 1 ? parts[1].toUpperCase() : "GT";
+
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      Object daysObj = payload.get("customer_days_since_last_activity");
+      if (daysObj == null) {
+        daysObj = payload.get("days_since_last_transaction");
+      }
+
+      if (daysObj == null) return false;
+      int days = daysObj instanceof Number ? ((Number) daysObj).intValue() : -1;
+      if (days < 0) return false;
+
+      return switch (operator) {
+        case "GT" -> days > threshold;
+        case "GTE" -> days >= threshold;
+        case "LT" -> days < threshold;
+        case "LTE" -> days <= threshold;
+        case "EQ" -> days == threshold;
+        default -> days > threshold;
+      };
+    } catch (Exception e) {
+      log.error("Erro ao avaliar DAYS_SINCE_LAST_ACTIVITY: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * DEVICE_CHANGED_IN_SESSION: Verifica se device mudou durante a sessão.
+   */
+  private boolean evaluateDeviceChangedInSession(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      Boolean changed = (Boolean) payload.get("device_changed_in_session");
+      if (changed == null) {
+        changed = (Boolean) payload.get("session_device_changed");
+      }
+
+      return Boolean.TRUE.equals(changed);
+    } catch (Exception e) {
+      log.error("Erro ao avaliar DEVICE_CHANGED_IN_SESSION: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * IS_CRYPTO_RANSOM_AMOUNT: Detecta valores típicos de ransomware.
+   * Verifica se o valor está próximo de quantias típicas de ransom.
+   */
+  private boolean evaluateIsCryptoRansomAmount(RuleCondition condition, EvaluationContext context) {
+    try {
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      Object amountObj = payload.get("transactionAmount");
+      if (amountObj == null) {
+        amountObj = payload.get("amount");
+      }
+
+      BigDecimal amount = getBigDecimal(amountObj);
+      if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) return false;
+
+      // Valores tipicos de ransom (em BRL ou USD)
+      // Convertidos de valores comuns em BTC: 0.05, 0.1, 0.25, 0.5, 1, 2, 5 BTC
+      // Considerando BTC entre R$ 300.000 - R$ 400.000
+      List<BigDecimal> typicalRansomAmounts = List.of(
+          new BigDecimal("500"),       // ~0.001 BTC
+          new BigDecimal("1000"),      // ~0.003 BTC
+          new BigDecimal("2500"),      // ~0.007 BTC
+          new BigDecimal("5000"),      // ~0.015 BTC
+          new BigDecimal("10000"),     // ~0.03 BTC
+          new BigDecimal("15000"),     // ~0.05 BTC
+          new BigDecimal("25000"),     // ~0.08 BTC
+          new BigDecimal("35000"),     // ~0.1 BTC
+          new BigDecimal("50000"),     // ~0.15 BTC
+          new BigDecimal("75000"),     // ~0.25 BTC
+          new BigDecimal("100000"),    // ~0.3 BTC
+          new BigDecimal("150000"),    // ~0.5 BTC
+          new BigDecimal("175000"),    // ~0.5 BTC
+          new BigDecimal("200000"),    // ~0.6 BTC
+          new BigDecimal("350000"),    // ~1 BTC
+          new BigDecimal("500000")     // ~1.5 BTC
+      );
+
+      // Verificar se valor esta proximo (±10%) de valores tipicos
+      for (BigDecimal typical : typicalRansomAmounts) {
+        BigDecimal lower = typical.multiply(new BigDecimal("0.9"));
+        BigDecimal upper = typical.multiply(new BigDecimal("1.1"));
+        if (amount.compareTo(lower) >= 0 && amount.compareTo(upper) <= 0) {
+          return true;
+        }
+      }
+
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar IS_CRYPTO_RANSOM_AMOUNT: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * OUTFLOW_RATE_LAST_N_DAYS: Taxa de saída nos últimos N dias.
+   * Formato valueSingle: "threshold|days" (threshold em percentual)
+   */
+  private boolean evaluateOutflowRateLastNDays(RuleCondition condition, EvaluationContext context) {
+    try {
+      String valueSingle = condition.getValueSingle();
+      if (valueSingle == null || valueSingle.isBlank()) {
+        return false;
+      }
+
+      String[] parts = valueSingle.split("\\|");
+      double threshold = parseDoubleSafe(parts[0], 80.0);
+      int days = parts.length > 1 ? parseIntSafe(parts[1], 30) : 30;
+
+      Map<String, Object> payload = context.getPayload();
+      if (payload == null) return false;
+
+      Object rateObj = payload.get("velocity_outflow_rate_" + days + "d");
+      if (rateObj == null) {
+        rateObj = payload.get("outflow_rate_percentage");
+      }
+
+      double rate = rateObj instanceof Number ? ((Number) rateObj).doubleValue() : 0.0;
+      return rate >= threshold;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar OUTFLOW_RATE_LAST_N_DAYS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Converte objeto para BigDecimal de forma segura.
+   */
+  private BigDecimal getBigDecimal(Object value) {
+    if (value == null) return null;
+    if (value instanceof BigDecimal) return (BigDecimal) value;
+    if (value instanceof Number) return BigDecimal.valueOf(((Number) value).doubleValue());
+    try {
+      return new BigDecimal(String.valueOf(value));
+    } catch (NumberFormatException e) {
+      return null;
     }
   }
 }

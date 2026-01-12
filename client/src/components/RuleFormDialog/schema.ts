@@ -11,29 +11,81 @@ import { validateRegex, getRegexValidationError } from '@/lib/validators/regexVa
 // SCHEMA DE CONDIÇÃO
 // ============================================
 
+/**
+ * Lista completa de operadores sincronizada com ConditionOperator.java (110 operadores)
+ * Última sincronização: Atualização Triple-Check V36 + V28-V30
+ */
 const conditionOperators = [
-  // Básicos
-  'EQ', 'NEQ', 'GT', 'LT', 'GTE', 'LTE',
-  // Listas
-  'IN', 'NOT_IN', 'BETWEEN', 'NOT_BETWEEN',
-  // Strings
+  // Comparação básica (6)
+  'EQ', 'NEQ', 'GT', 'GTE', 'LT', 'LTE',
+  
+  // Listas (2)
+  'IN', 'NOT_IN',
+  
+  // Strings (6)
   'CONTAINS', 'NOT_CONTAINS', 'STARTS_WITH', 'ENDS_WITH', 'REGEX', 'NOT_REGEX',
-  // Nulos/Booleanos
-  'IS_NULL', 'NOT_NULL', 'IS_TRUE', 'IS_FALSE',
-  // Comparação entre campos
+  
+  // Nulos (2)
+  'IS_NULL', 'NOT_NULL',
+  
+  // Booleanos (2)
+  'IS_TRUE', 'IS_FALSE',
+  
+  // Range (2)
+  'BETWEEN', 'NOT_BETWEEN',
+  
+  // Comparação entre campos (6)
   'FIELD_EQ', 'FIELD_NEQ', 'FIELD_GT', 'FIELD_GTE', 'FIELD_LT', 'FIELD_LTE',
-  // Data/Hora
+  
+  // Funções de data/tempo (6)
   'DATE_BEFORE', 'DATE_AFTER', 'DATE_BETWEEN', 'TIME_BEFORE', 'TIME_AFTER', 'TIME_BETWEEN',
-  // Array
+  
+  // Funções de lista/array (5)
   'ARRAY_CONTAINS', 'ARRAY_NOT_CONTAINS', 'ARRAY_SIZE_EQ', 'ARRAY_SIZE_GT', 'ARRAY_SIZE_LT',
-  // Matemáticos
+  
+  // Funções matemáticas (2)
   'MOD_EQ', 'MOD_NEQ',
-  // Geolocalização
+  
+  // Geolocalização (3)
   'GEO_DISTANCE_LT', 'GEO_DISTANCE_GT', 'GEO_IN_POLYGON',
-  // Velocity
+  
+  // Velocity (agregações temporais) (8)
   'VELOCITY_COUNT_GT', 'VELOCITY_COUNT_LT', 'VELOCITY_SUM_GT', 'VELOCITY_SUM_LT',
   'VELOCITY_AVG_GT', 'VELOCITY_AVG_LT', 'VELOCITY_DISTINCT_GT', 'VELOCITY_DISTINCT_LT',
-  // Legacy
+  
+  // Agregações temporais avançadas DSL expandida (7)
+  'SUM_LAST_N_DAYS', 'COUNT_LAST_N_HOURS', 'AVG_LAST_N_DAYS',
+  'COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS', 'COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS',
+  'MAX_AMOUNT_LAST_N_DAYS', 'MIN_AMOUNT_LAST_N_DAYS',
+  
+  // Operadores avançados de fraude Triple Check V36 (29)
+  'GT_FIELD_MULTIPLIER', 'DECIMAL_PLACES_GT', 'EXPIRES_WITHIN_DAYS',
+  'IS_NEW', 'IS_FIRST', 'LT_CURRENT_DATE', 'GT_CURRENT_DATE',
+  'NOT_IN_CUSTOMER_HISTORY', 'IN_CUSTOMER_HISTORY',
+  'NOT_IN_CUSTOMER_USUAL_HOURS', 'IN_CUSTOMER_USUAL_HOURS',
+  'IN_CUSTOMER_CHARGEBACK_MERCHANTS', 'PERCENTAGE_OF_FIELD',
+  'HOUR_BETWEEN', 'DAY_OF_WEEK_IN', 'IS_WEEKEND', 'IS_HOLIDAY',
+  'DISTANCE_FROM_LAST_GT', 'TIME_SINCE_LAST_LT',
+  'COUNT_FAILURES_LAST_N_HOURS', 'SUM_LAST_N_HOURS',
+  'COUNT_DISTINCT_MERCHANTS_LAST_N_HOURS', 'VELOCITY_SPIKE', 'AMOUNT_SPIKE',
+  'PATTERN_ESCALATION', 'PATTERN_ROUND_NUMBERS', 'PATTERN_SPLIT_TRANSACTION',
+  'NOT_IN_HISTORICAL', 'NAME_SIMILARITY_LT',
+  
+  // Operadores críticos para regras de fraude avançadas (9)
+  'GTE_PERCENT_OF_LAST_INCOMING', 'DOMAIN_IN_LIST', 'CHARGEBACK_RATE_GT',
+  'ACCOUNT_AGE_LT_MINUTES', 'IS_VOIP', 'COUNT_DISTINCT_PANS_LAST_N_HOURS',
+  'COUNT_DISTINCT_ACCOUNTS',
+  
+  // Operadores V28-V30 migrações de fraude brasileira (17)
+  'IN_LIST', 'HAS_FAILED_3DS_LAST_N_MINUTES', 'COUNT_MFA_ABANDONMENTS',
+  'HAS_INCOMING_TRANSFER_LAST_N_HOURS', 'IS_IMPOSSIBLE_COMBINATION',
+  'PIX_KEY_CHANGED_LAST_N_DAYS', 'CONTAINS_SUSPICIOUS_KEYWORDS',
+  'COUNT_CRYPTO_TXN_LAST_N_DAYS', 'COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS',
+  'COUNT_DISTINCT_PAYERS_LAST_N_DAYS', 'COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS',
+  'COUNT_LAST_N_DAYS', 'COUNT_MFA_DENIALS_LAST_N_HOURS', 'DAYS_SINCE_LAST_ACTIVITY',
+  'DEVICE_CHANGED_IN_SESSION', 'IS_CRYPTO_RANSOM_AMOUNT', 'OUTFLOW_RATE_LAST_N_DAYS',
+  
+  // Legacy (compatibilidade) (6)
   'NE', 'MATCHES_REGEX', 'IS_NOT_NULL',
   '==', '!=', '>', '<', '>=', '<=',
 ] as const;

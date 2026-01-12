@@ -27,6 +27,25 @@ services:
     volumes:
       - rulex_redis:/data
 
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-rulex123}
+      NEO4J_PLUGINS: '["apoc", "graph-data-science"]'
+      NEO4J_dbms_memory_heap_initial__size: 512m
+      NEO4J_dbms_memory_heap_max__size: 1G
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:7474"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - rulex_neo4j_data:/data
+      - rulex_neo4j_logs:/logs
+
   backend:
     build:
       context: ./backend
@@ -70,3 +89,5 @@ services:
 volumes:
   rulex_pgdata:
   rulex_redis:
+  rulex_neo4j_data:
+  rulex_neo4j_logs:
