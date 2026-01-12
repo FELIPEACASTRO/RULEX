@@ -7481,4 +7481,39 @@ public class ComplexRuleEvaluator {
     log.debug("SCA_TRUSTED_BENEFICIARY: stub - retornando false");
     return false;
   }
+
+  private boolean evaluateFatfPlacementCurrencyExchange(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_PLACEMENT_CURRENCY_EXCHANGE: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfPlacementCasinoGambling(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_PLACEMENT_CASINO_GAMBLING: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfLayeringConvertibleInstruments(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_LAYERING_CONVERTIBLE_INSTRUMENTS: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfIntegrationBusinessInvestment(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_INTEGRATION_BUSINESS_INVESTMENT: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateFatfIntegrationLoanRepayment(
+      RuleCondition condition, EvaluationContext context) {
+    log.debug("FATF_INTEGRATION_LOAN_REPAYMENT: stub - retornando false");
+    return false;
+  }
+
+  private boolean evaluateScaDynamic3dsRouting(RuleCondition condition, EvaluationContext context) {
+    log.debug("SCA_DYNAMIC_3DS_ROUTING: stub - retornando false");
+    return false;
+  }
 }
