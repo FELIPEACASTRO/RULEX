@@ -580,7 +580,24 @@ public class RuleCondition {
     FACE_TO_ID_PHOTO_MATCHING, // SYN012: Matching de face com foto de ID
     ADAPTIVE_BEHAVIORAL_ANALYTICS, // SYN013: Analytics comportamental adaptativo
     SYNTHETIC_ID_LABEL_CORRECTION, // SYN014: Correção de label de ID sintético
-    MULTI_LAYERED_SYNTHETIC_ID_CONTROLS // SYN015: Controles multicamada para ID sintético
+    MULTI_LAYERED_SYNTHETIC_ID_CONTROLS, // SYN015: Controles multicamada para ID sintético
+
+    // ========== OPERADORES V4.0 PHASE 6 (15 novos) - Estatísticos Avançados Pure Rules ==========
+    STAT_KRUSKAL_WALLIS_TEST, // STAT001: Teste Kruskal-Wallis (não-paramétrico ANOVA)
+    STAT_ANOVA_F_TEST, // STAT002: Teste F ANOVA para comparação de grupos
+    STAT_ISOLATION_FOREST_SCORE, // STAT003: Score de Isolation Forest (anomalia)
+    STAT_LOCAL_OUTLIER_FACTOR, // STAT004: Local Outlier Factor (LOF)
+    STAT_ONE_CLASS_SVM_BOUNDARY, // STAT005: One-Class SVM boundary detection
+    STAT_KMEANS_CLUSTER_DISTANCE, // STAT006: Distância do centróide K-Means
+    STAT_DBSCAN_NOISE_DETECTION, // STAT007: Detecção de ruído DBSCAN
+    STAT_GMM_PROBABILITY, // STAT008: Probabilidade Gaussian Mixture Model
+    STAT_MAHALANOBIS_DISTANCE, // STAT009: Distância de Mahalanobis multivariada
+    STAT_GRUBBS_TEST, // STAT010: Teste de Grubbs para outliers
+    STAT_DIXON_Q_TEST, // STAT011: Teste Q de Dixon para outliers
+    STAT_SHAPIRO_WILK_TEST, // STAT012: Teste Shapiro-Wilk de normalidade
+    STAT_LEVENE_TEST, // STAT013: Teste de Levene para homogeneidade de variância
+    STAT_WELCH_T_TEST, // STAT014: Teste t de Welch (variâncias desiguais)
+    STAT_BOOTSTRAP_CONFIDENCE_INTERVAL // STAT015: Intervalo de confiança Bootstrap
   }
 
   /** Tipos de valor suportados */

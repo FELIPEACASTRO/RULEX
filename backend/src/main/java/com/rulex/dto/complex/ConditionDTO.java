@@ -471,7 +471,22 @@ public class ConditionDTO {
     FACE_TO_ID_PHOTO_MATCHING("Face To Id Photo Matching"),
     ADAPTIVE_BEHAVIORAL_ANALYTICS("Adaptive Behavioral Analytics"),
     SYNTHETIC_ID_LABEL_CORRECTION("Synthetic Id Label Correction"),
-    MULTI_LAYERED_SYNTHETIC_ID_CONTROLS("SYN015: Controles multicamada para ID sintético");
+    MULTI_LAYERED_SYNTHETIC_ID_CONTROLS("Multi Layered Synthetic Id Controls"),
+    STAT_KRUSKAL_WALLIS_TEST("Stat Kruskal Wallis Test"),
+    STAT_ANOVA_F_TEST("Stat Anova F Test"),
+    STAT_ISOLATION_FOREST_SCORE("Stat Isolation Forest Score"),
+    STAT_LOCAL_OUTLIER_FACTOR("Stat Local Outlier Factor"),
+    STAT_ONE_CLASS_SVM_BOUNDARY("Stat One Class Svm Boundary"),
+    STAT_KMEANS_CLUSTER_DISTANCE("Stat Kmeans Cluster Distance"),
+    STAT_DBSCAN_NOISE_DETECTION("Stat Dbscan Noise Detection"),
+    STAT_GMM_PROBABILITY("Stat Gmm Probability"),
+    STAT_MAHALANOBIS_DISTANCE("Stat Mahalanobis Distance"),
+    STAT_GRUBBS_TEST("Stat Grubbs Test"),
+    STAT_DIXON_Q_TEST("Stat Dixon Q Test"),
+    STAT_SHAPIRO_WILK_TEST("Stat Shapiro Wilk Test"),
+    STAT_LEVENE_TEST("Stat Levene Test"),
+    STAT_WELCH_T_TEST("Stat Welch T Test"),
+    STAT_BOOTSTRAP_CONFIDENCE_INTERVAL("STAT015: Intervalo de confiança Bootstrap");
 
     private final String description;
 

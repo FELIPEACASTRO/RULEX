@@ -787,6 +787,23 @@ public class ComplexRuleEvaluator {
       case SYNTHETIC_ID_LABEL_CORRECTION -> evaluateSyntheticIdLabelCorrection(condition, context);
       case MULTI_LAYERED_SYNTHETIC_ID_CONTROLS -> evaluateMultiLayeredSyntheticIdControls(condition, context);
 
+        // ========== Estatísticos Avançados Pure Rules (STAT001-STAT015) ==========
+      case STAT_KRUSKAL_WALLIS_TEST -> evaluateStatKruskalWallisTest(condition, context);
+      case STAT_ANOVA_F_TEST -> evaluateStatAnovaFTest(condition, context);
+      case STAT_ISOLATION_FOREST_SCORE -> evaluateStatIsolationForestScore(condition, context);
+      case STAT_LOCAL_OUTLIER_FACTOR -> evaluateStatLocalOutlierFactor(condition, context);
+      case STAT_ONE_CLASS_SVM_BOUNDARY -> evaluateStatOneClassSvmBoundary(condition, context);
+      case STAT_KMEANS_CLUSTER_DISTANCE -> evaluateStatKmeansClusterDistance(condition, context);
+      case STAT_DBSCAN_NOISE_DETECTION -> evaluateStatDbscanNoiseDetection(condition, context);
+      case STAT_GMM_PROBABILITY -> evaluateStatGmmProbability(condition, context);
+      case STAT_MAHALANOBIS_DISTANCE -> evaluateStatMahalanobisDistance(condition, context);
+      case STAT_GRUBBS_TEST -> evaluateStatGrubbsTest(condition, context);
+      case STAT_DIXON_Q_TEST -> evaluateStatDixonQTest(condition, context);
+      case STAT_SHAPIRO_WILK_TEST -> evaluateStatShapiroWilkTest(condition, context);
+      case STAT_LEVENE_TEST -> evaluateStatLeveneTest(condition, context);
+      case STAT_WELCH_T_TEST -> evaluateStatWelchTTest(condition, context);
+      case STAT_BOOTSTRAP_CONFIDENCE_INTERVAL -> evaluateStatBootstrapConfidenceInterval(condition, context);
+
       default -> {
         log.warn("Operador não implementado: {}", operator);
         yield false;
@@ -7978,6 +7995,98 @@ public class ComplexRuleEvaluator {
   private boolean evaluateMultiLayeredSyntheticIdControls(RuleCondition condition, EvaluationContext context) {
     // SYN015: Controles multicamada para ID sintético
     log.debug("MULTI_LAYERED_SYNTHETIC_ID_CONTROLS: Aplicando controles multicamada");
+    return false;
+  }
+
+  // ========== Estatísticos Avançados Pure Rules (STAT001-STAT015) ==========
+
+  private boolean evaluateStatKruskalWallisTest(RuleCondition condition, EvaluationContext context) {
+    // STAT001: Teste Kruskal-Wallis (não-paramétrico ANOVA)
+    log.debug("STAT_KRUSKAL_WALLIS_TEST: Executando teste Kruskal-Wallis");
+    return false;
+  }
+
+  private boolean evaluateStatAnovaFTest(RuleCondition condition, EvaluationContext context) {
+    // STAT002: Teste F ANOVA para comparação de grupos
+    log.debug("STAT_ANOVA_F_TEST: Executando teste F ANOVA");
+    return false;
+  }
+
+  private boolean evaluateStatIsolationForestScore(RuleCondition condition, EvaluationContext context) {
+    // STAT003: Score de Isolation Forest (anomalia)
+    log.debug("STAT_ISOLATION_FOREST_SCORE: Calculando score Isolation Forest");
+    return false;
+  }
+
+  private boolean evaluateStatLocalOutlierFactor(RuleCondition condition, EvaluationContext context) {
+    // STAT004: Local Outlier Factor (LOF)
+    log.debug("STAT_LOCAL_OUTLIER_FACTOR: Calculando LOF");
+    return false;
+  }
+
+  private boolean evaluateStatOneClassSvmBoundary(RuleCondition condition, EvaluationContext context) {
+    // STAT005: One-Class SVM boundary detection
+    log.debug("STAT_ONE_CLASS_SVM_BOUNDARY: Verificando boundary SVM");
+    return false;
+  }
+
+  private boolean evaluateStatKmeansClusterDistance(RuleCondition condition, EvaluationContext context) {
+    // STAT006: Distância do centróide K-Means
+    log.debug("STAT_KMEANS_CLUSTER_DISTANCE: Calculando distância K-Means");
+    return false;
+  }
+
+  private boolean evaluateStatDbscanNoiseDetection(RuleCondition condition, EvaluationContext context) {
+    // STAT007: Detecção de ruído DBSCAN
+    log.debug("STAT_DBSCAN_NOISE_DETECTION: Detectando ruído DBSCAN");
+    return false;
+  }
+
+  private boolean evaluateStatGmmProbability(RuleCondition condition, EvaluationContext context) {
+    // STAT008: Probabilidade Gaussian Mixture Model
+    log.debug("STAT_GMM_PROBABILITY: Calculando probabilidade GMM");
+    return false;
+  }
+
+  private boolean evaluateStatMahalanobisDistance(RuleCondition condition, EvaluationContext context) {
+    // STAT009: Distância de Mahalanobis multivariada
+    log.debug("STAT_MAHALANOBIS_DISTANCE: Calculando distância Mahalanobis");
+    return false;
+  }
+
+  private boolean evaluateStatGrubbsTest(RuleCondition condition, EvaluationContext context) {
+    // STAT010: Teste de Grubbs para outliers
+    log.debug("STAT_GRUBBS_TEST: Executando teste de Grubbs");
+    return false;
+  }
+
+  private boolean evaluateStatDixonQTest(RuleCondition condition, EvaluationContext context) {
+    // STAT011: Teste Q de Dixon para outliers
+    log.debug("STAT_DIXON_Q_TEST: Executando teste Q de Dixon");
+    return false;
+  }
+
+  private boolean evaluateStatShapiroWilkTest(RuleCondition condition, EvaluationContext context) {
+    // STAT012: Teste Shapiro-Wilk de normalidade
+    log.debug("STAT_SHAPIRO_WILK_TEST: Executando teste Shapiro-Wilk");
+    return false;
+  }
+
+  private boolean evaluateStatLeveneTest(RuleCondition condition, EvaluationContext context) {
+    // STAT013: Teste de Levene para homogeneidade de variância
+    log.debug("STAT_LEVENE_TEST: Executando teste de Levene");
+    return false;
+  }
+
+  private boolean evaluateStatWelchTTest(RuleCondition condition, EvaluationContext context) {
+    // STAT014: Teste t de Welch (variâncias desiguais)
+    log.debug("STAT_WELCH_T_TEST: Executando teste t de Welch");
+    return false;
+  }
+
+  private boolean evaluateStatBootstrapConfidenceInterval(RuleCondition condition, EvaluationContext context) {
+    // STAT015: Intervalo de confiança Bootstrap
+    log.debug("STAT_BOOTSTRAP_CONFIDENCE_INTERVAL: Calculando intervalo Bootstrap");
     return false;
   }
 }

@@ -1,4 +1,4 @@
-// Auto-generated from RuleCondition.java - 407 operators
+// Auto-generated from RuleCondition.java - 422 operators
 // DO NOT EDIT MANUALLY - Run generate_operators.py to update
 
 export interface OperatorDefinition {
@@ -416,7 +416,22 @@ export const OPERATORS: OperatorDefinition[] = [
   { value: 'FACE_TO_ID_PHOTO_MATCHING', label: 'Face To Id Photo Matching', description: 'Operador Face To Id Photo Matching', requiresValue: true, category: 'Behavioral Phase 1B' },
   { value: 'ADAPTIVE_BEHAVIORAL_ANALYTICS', label: 'Adaptive Behavioral Analytics', description: 'Operador Adaptive Behavioral Analytics', requiresValue: true, category: 'Behavioral Phase 1B' },
   { value: 'SYNTHETIC_ID_LABEL_CORRECTION', label: 'Synthetic Id Label Correction', description: 'Operador Synthetic Id Label Correction', requiresValue: true, category: 'Behavioral Phase 1B' },
-  { value: 'MULTI_LAYERED_SYNTHETIC_ID_CONTROLS', label: 'Multi Layered Synthetic Id Controls', description: 'SYN015: Controles multicamada para ID sintético', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'MULTI_LAYERED_SYNTHETIC_ID_CONTROLS', label: 'Multi Layered Synthetic Id Controls', description: 'Operador Multi Layered Synthetic Id Controls', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_KRUSKAL_WALLIS_TEST', label: 'Stat Kruskal Wallis Test', description: 'Operador Stat Kruskal Wallis Test', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_ANOVA_F_TEST', label: 'Stat Anova F Test', description: 'Operador Stat Anova F Test', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_ISOLATION_FOREST_SCORE', label: 'Stat Isolation Forest Score', description: 'Operador Stat Isolation Forest Score', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_LOCAL_OUTLIER_FACTOR', label: 'Stat Local Outlier Factor', description: 'Operador Stat Local Outlier Factor', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_ONE_CLASS_SVM_BOUNDARY', label: 'Stat One Class Svm Boundary', description: 'Operador Stat One Class Svm Boundary', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_KMEANS_CLUSTER_DISTANCE', label: 'Stat Kmeans Cluster Distance', description: 'Operador Stat Kmeans Cluster Distance', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_DBSCAN_NOISE_DETECTION', label: 'Stat Dbscan Noise Detection', description: 'Operador Stat Dbscan Noise Detection', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_GMM_PROBABILITY', label: 'Stat Gmm Probability', description: 'Operador Stat Gmm Probability', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_MAHALANOBIS_DISTANCE', label: 'Stat Mahalanobis Distance', description: 'Operador Stat Mahalanobis Distance', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_GRUBBS_TEST', label: 'Stat Grubbs Test', description: 'Operador Stat Grubbs Test', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_DIXON_Q_TEST', label: 'Stat Dixon Q Test', description: 'Operador Stat Dixon Q Test', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_SHAPIRO_WILK_TEST', label: 'Stat Shapiro Wilk Test', description: 'Operador Stat Shapiro Wilk Test', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_LEVENE_TEST', label: 'Stat Levene Test', description: 'Operador Stat Levene Test', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_WELCH_T_TEST', label: 'Stat Welch T Test', description: 'Operador Stat Welch T Test', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_BOOTSTRAP_CONFIDENCE_INTERVAL', label: 'Stat Bootstrap Confidence Interval', description: 'STAT015: Intervalo de confiança Bootstrap', requiresValue: true, category: 'Behavioral Phase 1B' },
 ];
 
-export const OPERATOR_COUNT = 407;
+export const OPERATOR_COUNT = 422;
