@@ -1448,6 +1448,10 @@
       },
       "headers": [
         {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
           "name": "X-XSRF-TOKEN",
           "value": "{{ _.xsrf_token }}"
         }
