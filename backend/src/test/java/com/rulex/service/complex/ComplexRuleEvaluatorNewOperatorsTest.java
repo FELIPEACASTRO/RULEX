@@ -10,6 +10,10 @@ import com.rulex.service.GeoService;
 import com.rulex.service.OperatorDataService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
+import com.rulex.service.Neo4jGraphService;
+import com.rulex.service.StatisticalAnalysisService;
+import com.rulex.service.FuzzyLogicService;
+import com.rulex.service.StringSimilarityService;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +38,10 @@ class ComplexRuleEvaluatorNewOperatorsTest {
   private VelocityService velocityService;
   private VelocityServiceFacade velocityServiceFacade;
   private OperatorDataService operatorDataService;
+  private Neo4jGraphService neo4jGraphService;
+  private StatisticalAnalysisService statisticalAnalysisService;
+  private FuzzyLogicService fuzzyLogicService;
+  private StringSimilarityService stringSimilarityService;
   private ComplexRuleEvaluator evaluator;
 
   @BeforeEach
@@ -42,9 +50,14 @@ class ComplexRuleEvaluatorNewOperatorsTest {
     velocityService = Mockito.mock(VelocityService.class);
     velocityServiceFacade = Mockito.mock(VelocityServiceFacade.class);
     operatorDataService = Mockito.mock(OperatorDataService.class);
+    neo4jGraphService = Mockito.mock(Neo4jGraphService.class);
+    statisticalAnalysisService = Mockito.mock(StatisticalAnalysisService.class);
+    fuzzyLogicService = Mockito.mock(FuzzyLogicService.class);
+    stringSimilarityService = Mockito.mock(StringSimilarityService.class);
     evaluator =
         new ComplexRuleEvaluator(
-            geoService, velocityService, velocityServiceFacade, operatorDataService);
+            geoService, velocityService, velocityServiceFacade, operatorDataService,
+            neo4jGraphService, statisticalAnalysisService, fuzzyLogicService, stringSimilarityService);
   }
 
   // =====================================================

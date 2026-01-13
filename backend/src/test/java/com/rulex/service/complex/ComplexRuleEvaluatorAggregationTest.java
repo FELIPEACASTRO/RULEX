@@ -11,6 +11,10 @@ import com.rulex.service.GeoService;
 import com.rulex.service.OperatorDataService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
+import com.rulex.service.Neo4jGraphService;
+import com.rulex.service.StatisticalAnalysisService;
+import com.rulex.service.FuzzyLogicService;
+import com.rulex.service.StringSimilarityService;
 import java.math.BigDecimal;
 import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +33,10 @@ class ComplexRuleEvaluatorAggregationTest {
   @Mock private VelocityService velocityService;
   @Mock private VelocityServiceFacade velocityServiceFacade;
   @Mock private OperatorDataService operatorDataService;
+  @Mock private Neo4jGraphService neo4jGraphService;
+  @Mock private StatisticalAnalysisService statisticalAnalysisService;
+  @Mock private FuzzyLogicService fuzzyLogicService;
+  @Mock private StringSimilarityService stringSimilarityService;
 
   private ComplexRuleEvaluator evaluator;
 
@@ -36,7 +44,8 @@ class ComplexRuleEvaluatorAggregationTest {
   void setUp() {
     evaluator =
         new ComplexRuleEvaluator(
-            geoService, velocityService, velocityServiceFacade, operatorDataService);
+            geoService, velocityService, velocityServiceFacade, operatorDataService,
+            neo4jGraphService, statisticalAnalysisService, fuzzyLogicService, stringSimilarityService);
   }
 
   @Test
