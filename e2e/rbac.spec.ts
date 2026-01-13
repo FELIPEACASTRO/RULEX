@@ -17,8 +17,8 @@ async function loginAsAdmin(page: Page) {
 // Helper to login as analyst (read-only)
 async function loginAsAnalyst(page: Page) {
   await page.goto("/login");
-  await page.getByLabel("Usuário").fill("analyst");
-  await page.getByLabel("Senha").fill("analyst123");
+  await page.getByLabel("Usuário").fill(process.env.E2E_ANALYST_USERNAME || "analyst");
+  await page.getByLabel("Senha").fill(process.env.E2E_ANALYST_PASSWORD || "rulex");
   await page.getByRole("button", { name: "Entrar" }).click();
   await expect(page.getByRole("button", { name: "Transações" })).toBeVisible();
 }
