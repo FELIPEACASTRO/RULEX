@@ -4,8 +4,12 @@ import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.complex.RuleCondition;
 import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleExecutionDetail;
+import com.rulex.service.FuzzyLogicService;
 import com.rulex.service.GeoService;
+import com.rulex.service.Neo4jGraphService;
 import com.rulex.service.OperatorDataService;
+import com.rulex.service.StatisticalAnalysisService;
+import com.rulex.service.StringSimilarityService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
 import com.rulex.util.RegexValidator;
@@ -37,6 +41,10 @@ public class ComplexRuleEvaluator {
   private final VelocityService velocityService;
   private final VelocityServiceFacade velocityServiceFacade;
   private final OperatorDataService operatorDataService;
+  private final Neo4jGraphService neo4jGraphService;
+  private final StatisticalAnalysisService statisticalAnalysisService;
+  private final FuzzyLogicService fuzzyLogicService;
+  private final StringSimilarityService stringSimilarityService;
 
   /** Resultado da avaliação de uma regra */
   @Data
@@ -2969,6 +2977,25 @@ public class ComplexRuleEvaluator {
       return "****";
     }
     return "****" + data.substring(Math.max(0, data.length() - 4));
+  }
+
+  /** Obtém o ID da conta do contexto da transação. */
+  private String getAccountId(EvaluationContext context) {
+    if (context == null || context.getTransactionRequest() == null) {
+      return null;
+    }
+    TransactionRequest req = context.getTransactionRequest();
+    // Prioridade: customerAcctNumber > customerIdFromHeader > pan (hash)
+    if (req.getCustomerAcctNumber() != null) {
+      return String.valueOf(req.getCustomerAcctNumber());
+    }
+    if (req.getCustomerIdFromHeader() != null && !req.getCustomerIdFromHeader().isBlank()) {
+      return req.getCustomerIdFromHeader();
+    }
+    if (req.getPan() != null && !req.getPan().isBlank()) {
+      return "PAN_" + req.getPan().hashCode();
+    }
+    return null;
   }
 
   /**
@@ -8060,120 +8087,205 @@ public class ComplexRuleEvaluator {
   private boolean evaluateNeo4jWeaklyConnectedComponents(
       RuleCondition condition, EvaluationContext context) {
     // NEO001: Componentes fracamente conectados (WCC)
-    log.debug("NEO4J_WEAKLY_CONNECTED_COMPONENTS: Analisando componentes conectados");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    int componentId = neo4jGraphService.getWeaklyConnectedComponentId(accountId);
+    int threshold = parseIntSafe(condition.getValueSingle(), 0);
+    log.debug(
+        "NEO4J_WCC: accountId={}, componentId={}, threshold={}", accountId, componentId, threshold);
+    return componentId >= threshold;
   }
 
   private boolean evaluateNeo4jDegreeCentrality(
       RuleCondition condition, EvaluationContext context) {
     // NEO002: Centralidade de grau
-    log.debug("NEO4J_DEGREE_CENTRALITY: Calculando centralidade de grau");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    int degree = neo4jGraphService.getDegreeCentrality(accountId);
+    int threshold = parseIntSafe(condition.getValueSingle(), 5);
+    log.debug("NEO4J_DEGREE: accountId={}, degree={}, threshold={}", accountId, degree, threshold);
+    return degree > threshold;
   }
 
   private boolean evaluateNeo4jPagerankFraudScore(
       RuleCondition condition, EvaluationContext context) {
     // NEO003: Score de fraude via PageRank
-    log.debug("NEO4J_PAGERANK_FRAUD_SCORE: Calculando PageRank para fraude");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    double score = neo4jGraphService.getPageRankScore(accountId);
+    double threshold = parseDoubleSafe(condition.getValueSingle(), 0.5);
+    log.debug("NEO4J_PAGERANK: accountId={}, score={}, threshold={}", accountId, score, threshold);
+    return score > threshold;
   }
 
   private boolean evaluateNeo4jLouvainCommunityDetection(
       RuleCondition condition, EvaluationContext context) {
     // NEO004: Detecção de comunidade Louvain
-    log.debug("NEO4J_LOUVAIN_COMMUNITY_DETECTION: Detectando comunidades");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    int communityId = neo4jGraphService.getLouvainCommunityId(accountId);
+    log.debug("NEO4J_LOUVAIN: accountId={}, communityId={}", accountId, communityId);
+    return communityId >= 0; // Está em alguma comunidade
   }
 
   private boolean evaluateNeo4jPairwiseSimilarityPii(
       RuleCondition condition, EvaluationContext context) {
     // NEO005: Similaridade de PII entre pares
-    log.debug("NEO4J_PAIRWISE_SIMILARITY_PII: Calculando similaridade de PII");
-    return false;
+    String accountId = getAccountId(context);
+    String otherAccountId = condition.getValueSingle();
+    if (accountId == null || otherAccountId == null) return false;
+
+    double similarity = neo4jGraphService.getPairwiseSimilarity(accountId, otherAccountId);
+    double threshold = 0.7;
+    log.debug(
+        "NEO4J_PII_SIMILARITY: {} vs {}, similarity={}", accountId, otherAccountId, similarity);
+    return similarity > threshold;
   }
 
   private boolean evaluateNeo4jEntityResolutionSharedPii(
       RuleCondition condition, EvaluationContext context) {
     // NEO006: Resolução de entidade por PII compartilhado
-    log.debug("NEO4J_ENTITY_RESOLUTION_SHARED_PII: Resolvendo entidades");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    List<String> sharedAccounts = neo4jGraphService.findAccountsWithSharedPii(accountId);
+    int threshold = parseIntSafe(condition.getValueSingle(), 1);
+    log.debug("NEO4J_SHARED_PII: accountId={}, sharedCount={}", accountId, sharedAccounts.size());
+    return sharedAccounts.size() >= threshold;
   }
 
   private boolean evaluateNeo4jFraudRingDetection(
       RuleCondition condition, EvaluationContext context) {
     // NEO007: Detecção de anel de fraude
-    log.debug("NEO4J_FRAUD_RING_DETECTION: Detectando anéis de fraude");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    int minRingSize = parseIntSafe(condition.getValueSingle(), 3);
+    boolean inRing = neo4jGraphService.isInFraudRing(accountId, minRingSize);
+    log.debug("NEO4J_FRAUD_RING: accountId={}, inRing={}", accountId, inRing);
+    return inRing;
   }
 
   private boolean evaluateNeo4jMoneyMuleNetworkAnalysis(
       RuleCondition condition, EvaluationContext context) {
     // NEO008: Análise de rede de money mules
-    log.debug("NEO4J_MONEY_MULE_NETWORK_ANALYSIS: Analisando rede de mules");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    int maxHops = parseIntSafe(condition.getValueSingle(), 5);
+    Map<String, Object> analysis = neo4jGraphService.analyzeMoneyMuleNetwork(accountId, maxHops);
+    int suspiciousCount = (int) analysis.getOrDefault("suspiciousDestinations", 0);
+    log.debug("NEO4J_MULE_NETWORK: accountId={}, suspicious={}", accountId, suspiciousCount);
+    return suspiciousCount > 0;
   }
 
   private boolean evaluateNeo4jCircularTransactionDetection(
       RuleCondition condition, EvaluationContext context) {
     // NEO009: Detecção de transação circular
-    log.debug("NEO4J_CIRCULAR_TRANSACTION_DETECTION: Detectando transações circulares");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    int minCycleLength = parseIntSafe(condition.getValueSingle(), 3);
+    boolean hasCircular = neo4jGraphService.hasCircularTransactions(accountId, minCycleLength);
+    log.debug("NEO4J_CIRCULAR: accountId={}, hasCircular={}", accountId, hasCircular);
+    return hasCircular;
   }
 
   private boolean evaluateNeo4jFirstPartyFraudClustering(
       RuleCondition condition, EvaluationContext context) {
     // NEO010: Clustering de fraude de primeira parte
-    log.debug("NEO4J_FIRST_PARTY_FRAUD_CLUSTERING: Clustering de fraude");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    int clusterId = neo4jGraphService.getFirstPartyFraudClusterId(accountId);
+    log.debug("NEO4J_FPF_CLUSTER: accountId={}, clusterId={}", accountId, clusterId);
+    return clusterId >= 0;
   }
 
   private boolean evaluateNeo4jSecondLevelFraudsterId(
       RuleCondition condition, EvaluationContext context) {
     // NEO011: Identificação de fraudador de segundo nível
-    log.debug("NEO4J_SECOND_LEVEL_FRAUDSTER_ID: Identificando fraudador de segundo nível");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    boolean isSecondLevel = neo4jGraphService.isSecondLevelFraudster(accountId);
+    log.debug("NEO4J_2ND_LEVEL: accountId={}, isSecondLevel={}", accountId, isSecondLevel);
+    return isSecondLevel;
   }
 
   private boolean evaluateNeo4jBetweennessCentralityMule(
       RuleCondition condition, EvaluationContext context) {
     // NEO012: Centralidade de intermediação para mules
-    log.debug("NEO4J_BETWEENNESS_CENTRALITY_MULE: Calculando centralidade de intermediação");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    double centrality = neo4jGraphService.getBetweennessCentrality(accountId);
+    double threshold = parseDoubleSafe(condition.getValueSingle(), 0.1);
+    log.debug("NEO4J_BETWEENNESS: accountId={}, centrality={}", accountId, centrality);
+    return centrality > threshold;
   }
 
   private boolean evaluateNeo4jLabelPropagationFraudSpread(
       RuleCondition condition, EvaluationContext context) {
     // NEO013: Propagação de label de fraude
-    log.debug("NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD: Propagando labels de fraude");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    String label = neo4jGraphService.getFraudLabel(accountId);
+    log.debug("NEO4J_LABEL_PROP: accountId={}, label={}", accountId, label);
+    return "FRAUD".equalsIgnoreCase(label) || "HIGH_RISK".equalsIgnoreCase(label);
   }
 
   private boolean evaluateNeo4jShortestPathAmlTracking(
       RuleCondition condition, EvaluationContext context) {
     // NEO014: Rastreamento AML via caminho mais curto
-    log.debug("NEO4J_SHORTEST_PATH_AML_TRACKING: Rastreando caminho AML");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    int pathLength = neo4jGraphService.getShortestPathToHighRisk(accountId);
+    int threshold = parseIntSafe(condition.getValueSingle(), 3);
+    log.debug("NEO4J_AML_PATH: accountId={}, pathLength={}", accountId, pathLength);
+    return pathLength >= 0 && pathLength <= threshold;
   }
 
   private boolean evaluateNeo4jTriangleCountCollusion(
       RuleCondition condition, EvaluationContext context) {
     // NEO015: Contagem de triângulos para colusão
-    log.debug("NEO4J_TRIANGLE_COUNT_COLLUSION: Contando triângulos para colusão");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    int triangles = neo4jGraphService.getTriangleCount(accountId);
+    int threshold = parseIntSafe(condition.getValueSingle(), 2);
+    log.debug("NEO4J_TRIANGLES: accountId={}, count={}", accountId, triangles);
+    return triangles >= threshold;
   }
 
   private boolean evaluateNeo4jNodeSimilaritySyntheticId(
       RuleCondition condition, EvaluationContext context) {
     // NEO016: Similaridade de nó para ID sintético
-    log.debug("NEO4J_NODE_SIMILARITY_SYNTHETIC_ID: Calculando similaridade de nó");
-    return false;
+    String accountId = getAccountId(context);
+    String otherAccountId = condition.getValueSingle();
+    if (accountId == null || otherAccountId == null) return false;
+
+    double similarity = neo4jGraphService.getNodeSimilarity(accountId, otherAccountId);
+    log.debug("NEO4J_NODE_SIM: {} vs {}, similarity={}", accountId, otherAccountId, similarity);
+    return similarity > 0.8;
   }
 
   private boolean evaluateNeo4jGraphEmbeddingFraudPrediction(
       RuleCondition condition, EvaluationContext context) {
     // NEO017: Predição de fraude via embedding de grafo
-    log.debug("NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION: Predição via embedding");
-    return false;
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    double probability = neo4jGraphService.getFraudProbabilityFromEmbedding(accountId);
+    double threshold = parseDoubleSafe(condition.getValueSingle(), 0.7);
+    log.debug("NEO4J_EMBEDDING: accountId={}, probability={}", accountId, probability);
+    return probability > threshold;
   }
 
   private boolean evaluateNeo4jTemporalMotifPattern(
