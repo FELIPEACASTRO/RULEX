@@ -1,10 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Trash2, ToggleRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, ToggleRight, Loader2, AlertTriangle, Filter, Layers, Search } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -13,16 +20,35 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  validateValueByOperator,
+  getPlaceholderForOperator,
+  MAX_CONDITIONS,
+} from '@/components/RuleFormDialog/schema';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   FieldDictionaryItem,
   RuleConfiguration,
+  ComplexRuleDTO,
   createRule,
   deleteRule,
   listFieldDictionary,
   listRules,
+  listComplexRules,
   toggleRuleStatus,
+  toggleComplexRuleStatus,
   updateRule,
+  deleteComplexRule,
 } from '@/lib/javaApi';
 import { toast } from 'sonner';
 
@@ -44,7 +70,91 @@ export default function Rules() {
     retry: 1,
   });
 
-  const rules = useMemo(() => data ?? [], [data]);
+  // Query para regras complexas
+  const { data: complexRulesData, isLoading: isLoadingComplex } = useQuery({
+    queryKey: ['complexRules'],
+    queryFn: () => listComplexRules(),
+    retry: 1,
+  });
+
+  // Estado para filtro de tipo de regra
+  const [ruleTypeFilter, setRuleTypeFilter] = useState<'all' | 'simple' | 'complex'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const simpleRules = useMemo(() => data ?? [], [data]);
+  const complexRules = useMemo(() => complexRulesData ?? [], [complexRulesData]);
+
+  // Interface unificada para exibição
+  type UnifiedRule = {
+    id: string | number;
+    name: string;
+    description: string;
+    type: 'simple' | 'complex';
+    ruleType?: string;
+    classification?: string;
+    decision?: string;
+    enabled: boolean;
+    weight?: number;
+    priority?: number;
+    threshold?: number;
+    severity?: number;
+    conditionsCount: number;
+    original: RuleConfiguration | ComplexRuleDTO;
+  };
+
+  // Combinar regras simples e complexas em uma lista unificada
+  const unifiedRules = useMemo((): UnifiedRule[] => {
+    const simple: UnifiedRule[] = simpleRules.map((r: RuleConfiguration) => ({
+      id: r.id,
+      name: r.ruleName,
+      description: r.description ?? '',
+      type: 'simple' as const,
+      ruleType: r.ruleType,
+      classification: r.classification,
+      enabled: r.enabled,
+      weight: r.weight,
+      threshold: r.threshold,
+      conditionsCount: r.conditions?.length ?? 0,
+      original: r,
+    }));
+
+    const complex: UnifiedRule[] = complexRules.map((r: ComplexRuleDTO) => ({
+      id: r.id ?? r.key,
+      name: r.title || r.key,
+      description: r.description ?? '',
+      type: 'complex' as const,
+      decision: r.decision,
+      enabled: r.enabled,
+      priority: r.priority,
+      severity: r.severity,
+      conditionsCount: r.rootConditionGroup?.conditions?.length ?? 0,
+      original: r,
+    }));
+
+    return [...simple, ...complex];
+  }, [simpleRules, complexRules]);
+
+  // Filtrar regras baseado no filtro de tipo e busca
+  const filteredRules = useMemo(() => {
+    return unifiedRules.filter((rule) => {
+      // Filtro por tipo
+      if (ruleTypeFilter !== 'all' && rule.type !== ruleTypeFilter) {
+        return false;
+      }
+      // Filtro por busca
+      if (searchTerm) {
+        const search = searchTerm.toLowerCase();
+        return (
+          rule.name.toLowerCase().includes(search) ||
+          rule.description.toLowerCase().includes(search)
+        );
+      }
+      return true;
+    });
+  }, [unifiedRules, ruleTypeFilter, searchTerm]);
+
+  // Manter compatibilidade com código existente
+  const rules = simpleRules;
   const [editingRule, setEditingRule] = useState<RuleConfiguration | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState({
@@ -60,11 +170,61 @@ export default function Rules() {
     conditions: [] as RuleConfiguration['conditions'],
   });
 
-  const invalidateRules = () => queryClient.invalidateQueries({ queryKey: ['rules'] });
+  // P0-04: Estado para unsaved changes warning
+  const [isDirty, setIsDirty] = useState(false);
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
+  const [pendingClose, setPendingClose] = useState(false);
+
+  // P1-09: Estado para confirmação de delete
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
+  // P1-02: Estado para erros de validação
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  const invalidateRules = () => {
+    queryClient.invalidateQueries({ queryKey: ['rules'] });
+    queryClient.invalidateQueries({ queryKey: ['complexRules'] });
+  };
+
+  // P0-04: Marcar como dirty quando formData muda
+  const updateFormData = useCallback((updates: Partial<typeof formData>) => {
+    setFormData(prev => ({ ...prev, ...updates }));
+    setIsDirty(true);
+  }, []);
+
+  // P0-04: Handler para fechar dialog com verificação de unsaved changes
+  const handleDialogClose = useCallback((open: boolean) => {
+    if (!open && isDirty) {
+      setShowUnsavedWarning(true);
+      setPendingClose(true);
+      return;
+    }
+    setShowDialog(open);
+    if (!open) {
+      setIsDirty(false);
+      setValidationErrors({});
+    }
+  }, [isDirty]);
+
+  // P0-04: Confirmar descarte de alterações
+  const confirmDiscard = useCallback(() => {
+    setShowUnsavedWarning(false);
+    setPendingClose(false);
+    setShowDialog(false);
+    setIsDirty(false);
+    setValidationErrors({});
+    setEditingRule(null);
+  }, []);
+
+  // P0-04: Cancelar descarte
+  const cancelDiscard = useCallback(() => {
+    setShowUnsavedWarning(false);
+    setPendingClose(false);
+  }, []);
 
   const saveRule = useMutation({
     mutationFn: async () => {
-      const payload: Omit<RuleConfiguration, 'id' | 'version'> = {
+      const payload: Omit<RuleConfiguration, 'id' | 'version'> & { version?: number } = {
         ruleName: formData.ruleName,
         description: formData.description,
         ruleType: formData.ruleType,
@@ -74,21 +234,23 @@ export default function Rules() {
         classification: formData.classification,
         parameters: formData.parameters?.trim() ? formData.parameters : null,
         // Backend exige: conditions + logicOperator.
-        // - Para regras "genéricas": preencha conditions + logicOperator.
-        // - Para regras "legadas por nome": conditions pode ficar vazio e o engine cai no switch(ruleName).
         conditions: formData.conditions ?? [],
         logicOperator: formData.logicOperator ?? 'AND',
       };
 
       if (editingRule) {
+        // P0-05: Enviar version para optimistic locking
+        payload.version = editingRule.version;
         return updateRule(editingRule.id, payload);
       }
       return createRule(payload);
     },
     onSuccess: () => {
-      toast.success('Regra salva com sucesso');
+      toast.success(editingRule ? 'Regra atualizada com sucesso!' : 'Regra criada com sucesso!');
       setShowDialog(false);
       setEditingRule(null);
+      setIsDirty(false);
+      setValidationErrors({});
       setFormData({
         ruleName: '',
         description: '',
@@ -103,7 +265,24 @@ export default function Rules() {
       });
       invalidateRules();
     },
-    onError: () => toast.error('Falha ao salvar regra'),
+    onError: (error: Error) => {
+      // P0-05: Tratar conflito de versão
+      if (error.message.includes('409') || error.message.toLowerCase().includes('conflict')) {
+        toast.error('Esta regra foi modificada por outro usuário. Recarregue a página e tente novamente.');
+        invalidateRules();
+        return;
+      }
+      // P1-07: Mensagens de erro amigáveis
+      if (error.message.includes('400')) {
+        toast.error('Dados inválidos. Verifique os campos e tente novamente.');
+      } else if (error.message.includes('401') || error.message.includes('403')) {
+        toast.error('Você não tem permissão para realizar esta ação.');
+      } else if (error.message.includes('500')) {
+        toast.error('Erro interno do servidor. Tente novamente mais tarde.');
+      } else {
+        toast.error(`Erro ao salvar regra: ${error.message}`);
+      }
+    },
   });
 
   const deleteMutation = useMutation({
@@ -124,6 +303,25 @@ export default function Rules() {
     onError: () => toast.error('Falha ao alternar regra'),
   });
 
+  // Mutations para regras complexas
+  const deleteComplexMutation = useMutation({
+    mutationFn: (id: string) => deleteComplexRule(id),
+    onSuccess: () => {
+      toast.success('Regra complexa deletada');
+      invalidateRules();
+    },
+    onError: () => toast.error('Não foi possível deletar a regra complexa'),
+  });
+
+  const toggleComplexMutation = useMutation({
+    mutationFn: (id: string) => {
+      const current = complexRules.find((r: ComplexRuleDTO) => r.id === id);
+      return toggleComplexRuleStatus(id, !(current?.enabled ?? false));
+    },
+    onSuccess: () => invalidateRules(),
+    onError: () => toast.error('Falha ao alternar regra complexa'),
+  });
+
   const handleEdit = (rule: RuleConfiguration) => {
     setEditingRule(rule);
     setFormData({
@@ -141,14 +339,80 @@ export default function Rules() {
     setShowDialog(true);
   };
 
+  // P1-01/P1-02: Validação antes de salvar
+  const validateForm = useCallback((): boolean => {
+    const errors: Record<string, string> = {};
+
+    // Validar ruleName
+    if (!formData.ruleName.trim()) {
+      errors.ruleName = 'Nome da regra é obrigatório';
+    } else if (formData.ruleName.length < 3) {
+      errors.ruleName = 'Nome deve ter pelo menos 3 caracteres';
+    } else if (!/^[A-Z][A-Z0-9_]*$/.test(formData.ruleName)) {
+      errors.ruleName = 'Nome deve começar com letra maiúscula e conter apenas letras maiúsculas, números e underscores';
+    }
+
+    // Validar threshold
+    if (formData.threshold < 0 || formData.threshold > 1000) {
+      errors.threshold = 'Threshold deve ser entre 0 e 1000';
+    }
+
+    // Validar weight
+    if (formData.weight < 0 || formData.weight > 100) {
+      errors.weight = 'Peso deve ser entre 0 e 100';
+    }
+
+    // Validar condições
+    formData.conditions.forEach((c, idx) => {
+      if (!c.field.trim()) {
+        errors[`condition_${idx}_field`] = 'Campo é obrigatório';
+      }
+      const valueError = validateValueByOperator(c.operator, c.value);
+      if (valueError) {
+        errors[`condition_${idx}_value`] = valueError;
+      }
+    });
+
+    // P1-03: Limite de condições
+    if (formData.conditions.length > MAX_CONDITIONS) {
+      errors.conditions = `Máximo de ${MAX_CONDITIONS} condições permitidas`;
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [formData]);
+
   const handleSave = async () => {
+    if (!validateForm()) {
+      // Mostrar mensagem mais específica sobre os erros
+      const errorKeys = Object.keys(validationErrors);
+      const errorMessages = Object.values(validationErrors);
+      if (errorMessages.length === 1) {
+        toast.error(errorMessages[0]);
+      } else if (errorMessages.length > 1) {
+        toast.error(`Corrija ${errorMessages.length} erros no formulário: ${errorMessages.slice(0, 2).join(', ')}${errorMessages.length > 2 ? '...' : ''}`);
+      } else {
+        toast.error('Corrija os erros no formulário antes de salvar');
+      }
+      return;
+    }
     saveRule.mutate();
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Tem certeza que deseja deletar esta regra?')) return;
+  // P1-09: Usar AlertDialog em vez de confirm()
+  const handleDeleteClick = (id: number) => {
+    setDeleteConfirmId(id);
+  };
 
-    deleteMutation.mutate(id);
+  const confirmDelete = () => {
+    if (deleteConfirmId !== null) {
+      deleteMutation.mutate(deleteConfirmId);
+      setDeleteConfirmId(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmId(null);
   };
 
   const handleToggle = async (id: number) => {
@@ -186,16 +450,21 @@ export default function Rules() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Configuração de Regras</h1>
-          <p className="text-muted-foreground mt-1">Gerenciar regras de detecção de fraude</p>
-        </div>
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Configuração de Regras</h1>
+            <p className="text-muted-foreground mt-1">
+              Gerenciar regras de detecção de fraude ({filteredRules.length} de {unifiedRules.length} regras)
+            </p>
+          </div>
+          <Dialog open={showDialog} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
             <Button
               onClick={() => {
                 setEditingRule(null);
+                setIsDirty(false);
+                setValidationErrors({});
                 setFormData({
                   ruleName: '',
                   description: '',
@@ -224,15 +493,26 @@ export default function Rules() {
             <div className="space-y-4">
               <div>
                 <label htmlFor="ruleName" className="block text-sm font-medium text-foreground mb-2">
-                  Nome da Regra
+                  Nome da Regra <span className="text-red-500">*</span>
                 </label>
                 <Input
                   id="ruleName"
                   value={formData.ruleName}
-                  onChange={(e) => setFormData({ ...formData, ruleName: e.target.value })}
-                  placeholder="Ex: RULE_GENERIC_001 (ou LOW_AUTHENTICATION_SCORE para regra legada)"
+                  onChange={(e) => updateFormData({ ruleName: e.target.value.toUpperCase() })}
+                  placeholder="Ex: HIGH_AMOUNT_RULE"
                   disabled={!!editingRule}
+                  aria-invalid={!!validationErrors.ruleName}
+                  aria-describedby={validationErrors.ruleName ? 'ruleName-error' : undefined}
+                  className={validationErrors.ruleName ? 'border-red-500 focus:ring-red-500' : ''}
                 />
+                {validationErrors.ruleName && (
+                  <p id="ruleName-error" className="mt-1 text-xs text-red-500" role="alert">
+                    {validationErrors.ruleName}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Use UPPER_SNAKE_CASE (ex: HIGH_AMOUNT_RULE)
+                </p>
               </div>
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-foreground mb-2">
@@ -241,7 +521,7 @@ export default function Rules() {
                 <Input
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) => updateFormData({ description: e.target.value })}
                   placeholder="Descrição da regra"
                 />
               </div>
@@ -328,7 +608,14 @@ export default function Rules() {
                       })
                     }
                     placeholder="0"
+                    aria-invalid={!!validationErrors.threshold}
+                    className={validationErrors.threshold ? 'border-red-500 focus:ring-red-500' : ''}
                   />
+                  {validationErrors.threshold && (
+                    <p className="mt-1 text-xs text-red-500" role="alert">
+                      {validationErrors.threshold}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="weight" className="block text-sm font-medium text-foreground mb-2">
@@ -347,7 +634,14 @@ export default function Rules() {
                       })
                     }
                     placeholder="0"
+                    aria-invalid={!!validationErrors.weight}
+                    className={validationErrors.weight ? 'border-red-500 focus:ring-red-500' : ''}
                   />
+                  {validationErrors.weight && (
+                    <p className="mt-1 text-xs text-red-500" role="alert">
+                      {validationErrors.weight}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -485,7 +779,14 @@ export default function Rules() {
                             }}
                             placeholder="Ex: consumerAuthenticationScore"
                             list="rule-condition-fields"
+                            aria-invalid={!!validationErrors[`condition_${idx}_field`]}
+                            className={validationErrors[`condition_${idx}_field`] ? 'border-red-500 focus:ring-red-500' : ''}
                           />
+                          {validationErrors[`condition_${idx}_field`] && (
+                            <p className="mt-1 text-xs text-red-500" role="alert">
+                              {validationErrors[`condition_${idx}_field`]}
+                            </p>
+                          )}
                           <datalist id="rule-condition-fields">
                             {fieldOptions.map((f) => (
                               <option key={f} value={f} />
@@ -545,7 +846,14 @@ export default function Rules() {
                                     ? 'Ex: 10,20 (ou 10..20)'
                                     : 'Ex: 10'
                               }
+                              aria-invalid={!!validationErrors[`condition_${idx}_value`]}
+                              className={validationErrors[`condition_${idx}_value`] ? 'border-red-500 focus:ring-red-500' : ''}
                             />
+                          )}
+                          {validationErrors[`condition_${idx}_value`] && (
+                            <p className="mt-1 text-xs text-red-500" role="alert">
+                              {validationErrors[`condition_${idx}_value`]}
+                            </p>
                           )}
                         </div>
                         <div className="sm:col-span-1 flex sm:justify-end">
@@ -596,23 +904,52 @@ export default function Rules() {
                 </label>
               </div>
               <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setShowDialog(false)}>
+                <Button variant="outline" onClick={() => handleDialogClose(false)} disabled={saveRule.isPending}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSave}>
+                <Button onClick={handleSave} disabled={saveRule.isPending}>
+                  {saveRule.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   {editingRule ? 'Atualizar' : 'Criar'}
                 </Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
+        </div>
+
+        {/* Filtros */}
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="relative flex-1 min-w-[200px] max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar regras..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={ruleTypeFilter} onValueChange={(v) => setRuleTypeFilter(v as 'all' | 'simple' | 'complex')}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filtrar por tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas ({unifiedRules.length})</SelectItem>
+              <SelectItem value="simple">Simples ({simpleRules.length})</SelectItem>
+              <SelectItem value="complex">Complexas ({complexRules.length})</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Tabela de Regras */}
       <Card>
         <CardHeader>
           <CardTitle>Regras Configuradas</CardTitle>
-          <CardDescription>Total: {rules.length} regras</CardDescription>
+          <CardDescription>
+            Mostrando {filteredRules.length} de {unifiedRules.length} regras
+            {ruleTypeFilter !== 'all' && ` (filtro: ${ruleTypeFilter === 'simple' ? 'Simples' : 'Complexas'})`}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {isError && (
@@ -620,16 +957,20 @@ export default function Rules() {
               Erro ao carregar regras: {error instanceof Error ? error.message : 'erro inesperado'}
             </div>
           )}
-          {isLoading ? (
+          {(isLoading || isLoadingComplex) ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
                 <p className="text-muted-foreground">Carregando regras...</p>
               </div>
             </div>
-          ) : rules.length === 0 ? (
+          ) : filteredRules.length === 0 ? (
             <div className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">Nenhuma regra configurada</p>
+              <p className="text-muted-foreground">
+                {searchTerm || ruleTypeFilter !== 'all'
+                  ? 'Nenhuma regra encontrada com os filtros aplicados'
+                  : 'Nenhuma regra configurada'}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -637,29 +978,62 @@ export default function Rules() {
                 <thead className="border-b border-border">
                   <tr>
                     <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Nome da Regra</th>
-                    <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Tipo</th>
-                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Threshold</th>
-                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Peso</th>
+                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Categoria</th>
+                    <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Tipo/Decisão</th>
+                    <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Peso/Prioridade</th>
                     <th className="text-left py-3 px-4 font-semibold text-sm text-foreground">Classificação</th>
                     <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Status</th>
                     <th className="text-center py-3 px-4 font-semibold text-sm text-foreground">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rules.map((rule) => (
-                    <tr key={rule.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                      <td className="py-3 px-4 text-sm font-medium text-foreground">{rule.ruleName}</td>
-                      <td className="py-3 px-4 text-sm">
-                        <Badge className={getRuleTypeColor(rule.ruleType)}>
-                          {rule.ruleType}
+                  {filteredRules.map((rule) => (
+                    <tr key={`${rule.type}-${rule.id}`} className="border-b border-border hover:bg-muted/50 transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-foreground">{rule.name}</span>
+                          {rule.description && (
+                            <span className="text-xs text-muted-foreground truncate max-w-[300px]" title={rule.description}>
+                              {rule.description}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-center">
+                        <Badge
+                          variant="outline"
+                          className={rule.type === 'complex'
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                            : 'bg-slate-50 text-slate-700 border-slate-200'}
+                        >
+                          <Layers className="h-3 w-3 mr-1" />
+                          {rule.type === 'complex' ? 'Complexa' : 'Simples'}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-sm text-center text-foreground">{rule.threshold}</td>
-                      <td className="py-3 px-4 text-sm text-center text-foreground">{rule.weight}%</td>
                       <td className="py-3 px-4 text-sm">
-                        <Badge className={getClassificationColor(rule.classification)}>
-                          {rule.classification}
-                        </Badge>
+                        {rule.type === 'simple' ? (
+                          <Badge className={getRuleTypeColor(rule.ruleType ?? '')}>
+                            {rule.ruleType}
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-emerald-100 text-emerald-800">
+                            {rule.decision}
+                          </Badge>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-center text-foreground">
+                        {rule.type === 'simple' ? `${rule.weight}%` : `P${rule.priority}`}
+                      </td>
+                      <td className="py-3 px-4 text-sm">
+                        {rule.type === 'simple' ? (
+                          <Badge className={getClassificationColor(rule.classification ?? '')}>
+                            {rule.classification}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            Severidade: {rule.severity}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-sm text-center">
                         <Badge variant={rule.enabled ? 'default' : 'secondary'}>
@@ -670,23 +1044,37 @@ export default function Rules() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleToggle(rule.id)}
+                          onClick={() => {
+                            if (rule.type === 'simple') {
+                              handleToggle(rule.id as number);
+                            } else {
+                              toggleComplexMutation.mutate(rule.id as string);
+                            }
+                          }}
                           title={rule.enabled ? 'Desativar' : 'Ativar'}
                         >
                           <ToggleRight className="h-4 w-4" />
                         </Button>
+                        {rule.type === 'simple' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(rule.original as RuleConfiguration)}
+                            title="Editar"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleEdit(rule)}
-                          title="Editar"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(rule.id)}
+                          onClick={() => {
+                            if (rule.type === 'simple') {
+                              handleDeleteClick(rule.id as number);
+                            } else {
+                              deleteComplexMutation.mutate(rule.id as string);
+                            }
+                          }}
                           title="Deletar"
                           className="text-red-600 hover:text-red-700"
                         >
@@ -701,6 +1089,45 @@ export default function Rules() {
           )}
         </CardContent>
       </Card>
+
+      {/* P1-09: AlertDialog para confirmação de delete */}
+      <AlertDialog open={deleteConfirmId !== null} onOpenChange={(open) => !open && cancelDelete()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deletar esta regra? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+              Deletar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* P0-04: AlertDialog para unsaved changes warning */}
+      <AlertDialog open={showUnsavedWarning} onOpenChange={(open) => !open && cancelDiscard()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Alterações não salvas
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem alterações não salvas. Deseja descartá-las?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDiscard}>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDiscard} className="bg-amber-600 hover:bg-amber-700">
+              Descartar alterações
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

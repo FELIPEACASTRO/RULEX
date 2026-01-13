@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Entidade que armazena configurações dinâmicas de regras. Permite ajustar pesos, thresholds e
@@ -63,7 +65,8 @@ public class RuleConfiguration {
   private String parameters;
 
   /** Condições genéricas da regra (JSON array de {field, operator, value}). */
-  @Column(columnDefinition = "TEXT")
+  @Column(columnDefinition = "jsonb")
+  @JdbcTypeCode(SqlTypes.JSON)
   private String conditionsJson;
 
   /** Operador lógico para combinar condições. */
@@ -71,7 +74,19 @@ public class RuleConfiguration {
   @Enumerated(EnumType.STRING)
   private LogicOperator logicOperator;
 
-  /** Versão da configuração */
+  /**
+   * Shadow mode: DISABLED (active), SHADOW (evaluate but don't act), CANARY (percentage rollout)
+   */
+  @Column(length = 20)
+  @Enumerated(EnumType.STRING)
+  @Builder.Default
+  private ShadowMode shadowMode = ShadowMode.DISABLED;
+
+  /** Percentage of traffic to evaluate when in CANARY mode (0-100) */
+  @Column @Builder.Default private Integer canaryPercentage = 0;
+
+  /** Versão da configuração (usado para optimistic locking) */
+  @Version
   @Column(nullable = false)
   private Integer version;
 
@@ -90,7 +105,7 @@ public class RuleConfiguration {
     if (updatedAt == null) {
       updatedAt = createdAt;
     }
-    version = 1;
+    // version é gerenciado automaticamente pelo @Version do JPA
     if (logicOperator == null) {
       logicOperator = LogicOperator.AND;
     }
@@ -123,5 +138,15 @@ public class RuleConfiguration {
   public enum LogicOperator {
     AND,
     OR
+  }
+
+  /** Shadow mode for safe rule testing in production */
+  public enum ShadowMode {
+    /** Rule is active and affects decisions */
+    DISABLED,
+    /** Rule is evaluated but doesn't affect decisions */
+    SHADOW,
+    /** Rule is evaluated for a percentage of traffic */
+    CANARY
   }
 }

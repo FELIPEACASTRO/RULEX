@@ -446,7 +446,7 @@ components:
         secondFactorAuthCode: { type: string }
         cryptogramValid: { type: string }
         cvv2Response: { type: string }
-        cvv2Present: { type: integer }
+        cvv2Present: { type: string }
         pinVerifyCode: { type: string }
         cvvVerifyCode: { type: string }
         cvrofflinePinVerificationPerformed: { type: integer }
@@ -553,19 +553,94 @@ components:
       required: [field, operator, value]
       properties:
         field: { type: string }
-        operator: { type: string, enum: ['==','!=','>','<','>=','<=','IN','NOT_IN','CONTAINS','NOT_CONTAINS'] }
+        operator:
+          type: string
+          description: |
+            Comparison operators. Basic: EQ, NEQ, GT, GTE, LT, LTE.
+            Lists: IN, NOT_IN. Strings: CONTAINS, NOT_CONTAINS, STARTS_WITH, ENDS_WITH, REGEX.
+            Nulls: IS_NULL, NOT_NULL. Range: BETWEEN, NOT_BETWEEN.
+            Field comparison: FIELD_EQ, FIELD_NEQ, FIELD_GT, FIELD_GTE, FIELD_LT, FIELD_LTE.
+            Date/Time: DATE_BEFORE, DATE_AFTER, DATE_BETWEEN, TIME_BEFORE, TIME_AFTER, TIME_BETWEEN.
+            Geolocation: GEO_DISTANCE_LT, GEO_DISTANCE_GT, GEO_IN_POLYGON.
+            Velocity: VELOCITY_COUNT_GT, VELOCITY_COUNT_LT, VELOCITY_SUM_GT, VELOCITY_SUM_LT,
+                      VELOCITY_AVG_GT, VELOCITY_AVG_LT, VELOCITY_DISTINCT_GT, VELOCITY_DISTINCT_LT.
+            Legacy aliases accepted: '==', '!=', '>', '<', '>=', '<=', NE, MATCHES_REGEX, IS_NOT_NULL.
+          enum:
+            # Basic comparison
+            - EQ
+            - NEQ
+            - GT
+            - GTE
+            - LT
+            - LTE
+            # Lists
+            - IN
+            - NOT_IN
+            # Strings
+            - CONTAINS
+            - NOT_CONTAINS
+            - STARTS_WITH
+            - ENDS_WITH
+            - REGEX
+            - NOT_REGEX
+            # Nulls
+            - IS_NULL
+            - NOT_NULL
+            # Booleans
+            - IS_TRUE
+            - IS_FALSE
+            # Range
+            - BETWEEN
+            - NOT_BETWEEN
+            # Field comparison
+            - FIELD_EQ
+            - FIELD_NEQ
+            - FIELD_GT
+            - FIELD_GTE
+            - FIELD_LT
+            - FIELD_LTE
+            # Date/Time
+            - DATE_BEFORE
+            - DATE_AFTER
+            - DATE_BETWEEN
+            - TIME_BEFORE
+            - TIME_AFTER
+            - TIME_BETWEEN
+            # Array
+            - ARRAY_CONTAINS
+            - ARRAY_NOT_CONTAINS
+            - ARRAY_SIZE_EQ
+            - ARRAY_SIZE_GT
+            - ARRAY_SIZE_LT
+            # Math
+            - MOD_EQ
+            - MOD_NEQ
+            # Geolocation
+            - GEO_DISTANCE_LT
+            - GEO_DISTANCE_GT
+            - GEO_IN_POLYGON
+            # Velocity
+            - VELOCITY_COUNT_GT
+            - VELOCITY_COUNT_LT
+            - VELOCITY_SUM_GT
+            - VELOCITY_SUM_LT
+            - VELOCITY_AVG_GT
+            - VELOCITY_AVG_LT
+            - VELOCITY_DISTINCT_GT
+            - VELOCITY_DISTINCT_LT
         value: { type: string }
     Rule:
       type: object
-      required: [ruleName, ruleType, weight, enabled, classification, conditions, logicOperator]
+      required: [ruleName, ruleType, weight, threshold, enabled, classification, conditions, logicOperator]
       properties:
         id: { type: integer, format: int64 }
         ruleName: { type: string }
         description: { type: string }
         ruleType: { type: string, enum: [SECURITY, CONTEXT, VELOCITY, ANOMALY] }
         weight: { type: integer, minimum: 0, maximum: 100 }
+        threshold: { type: integer, minimum: 0, maximum: 100, description: 'Risk score threshold for rule triggering' }
         enabled: { type: boolean }
-        classification: { type: string, enum: [APPROVED, SUSPICIOUS, FRAUD] }
+        classification: { type: string, enum: [APPROVED, SUSPICIOUS, FRAUD, UNKNOWN] }
         conditions:
           type: array
           items: { $ref: '#/components/schemas/RuleCondition' }

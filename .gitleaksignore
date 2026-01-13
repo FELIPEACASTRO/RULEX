@@ -1,2 +1,6 @@
-# Ignore example/placeholder secrets in documentation
-README.md:sidekiq-secret:42
+# Gitleaks ignore file for RULEX
+# These are false positives - rule key names, not actual secrets
+
+# Rule key names in EXTREME_RULES.md (not API keys, just rule identifiers)
+docs/rules/EXTREME_RULES.md:generic-api-key:41
+docs/rules/EXTREME_RULES.md:generic-api-key:192

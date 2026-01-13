@@ -50,6 +50,18 @@ class RuleEngineServiceTest {
   private final RuleExecutionLogService ruleExecutionLogService =
       Mockito.mock(RuleExecutionLogService.class);
 
+  private final EnrichmentService enrichmentService = Mockito.mock(EnrichmentService.class);
+
+  private final RuleOrderingService ruleOrderingService = Mockito.mock(RuleOrderingService.class);
+
+  private final BloomFilterService bloomFilterService = Mockito.mock(BloomFilterService.class);
+  private final ShadowModeService shadowModeService = Mockito.mock(ShadowModeService.class);
+  private final ImpossibleTravelService impossibleTravelService =
+      Mockito.mock(ImpossibleTravelService.class);
+  private final GeoService geoService = Mockito.mock(GeoService.class);
+  private final RedisVelocityService redisVelocityService =
+      Mockito.mock(RedisVelocityService.class);
+
   private final RuleEngineService service =
       new RuleEngineService(
           transactionRepository,
@@ -60,7 +72,14 @@ class RuleEngineServiceTest {
           clock,
           payloadHashService,
           rawStoreService,
-          ruleExecutionLogService);
+          ruleExecutionLogService,
+          enrichmentService,
+          ruleOrderingService,
+          bloomFilterService,
+          shadowModeService,
+          impossibleTravelService,
+          geoService,
+          redisVelocityService);
 
   @Test
   void returnsApproved_whenNoEnabledRules() {
@@ -127,6 +146,9 @@ class RuleEngineServiceTest {
         .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
     doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
     doNothing().when(auditService).logError(any(), any());
+    // Mock EnrichmentService for HIGH_RISK_MCC
+    when(enrichmentService.isHighRiskMcc(7995)).thenReturn(true);
+    when(enrichmentService.isHighRiskMcc(5411)).thenReturn(false);
 
     TransactionRequest req = minimalRequest();
     // Configure request fields to trigger each legacy rule deterministically.
@@ -382,6 +404,304 @@ class RuleEngineServiceTest {
     assertThat(response.getTransactionId()).isEqualTo("txn-1");
     assertThat(decisionCaptor.getValue().getTransaction()).isNotNull();
     assertThat(decisionCaptor.getValue().getTransaction().getId()).isEqualTo(99L);
+  }
+
+  // ========== GAP-FIX #3: Testes adicionais para aumentar cobertura ==========
+
+  @Test
+  void handlesNullTransactionAmount_gracefully() {
+    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of());
+    when(transactionRepository.save(any(Transaction.class)))
+        .thenAnswer(
+            invocation -> {
+              Transaction t = invocation.getArgument(0, Transaction.class);
+              t.setId(1L);
+              return t;
+            });
+    when(decisionRepository.save(any(TransactionDecision.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
+    doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
+
+    TransactionRequest req = minimalRequest();
+    req.setTransactionAmount(null);
+
+    TransactionResponse response = service.analyzeTransaction(req);
+
+    assertThat(response.getClassification()).isEqualTo("APPROVED");
+  }
+
+  @Test
+  void handlesNullPan_gracefully() {
+    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of());
+    when(transactionRepository.save(any(Transaction.class)))
+        .thenAnswer(
+            invocation -> {
+              Transaction t = invocation.getArgument(0, Transaction.class);
+              t.setId(1L);
+              return t;
+            });
+    when(decisionRepository.save(any(TransactionDecision.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
+    doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
+
+    TransactionRequest req = minimalRequest();
+    req.setPan(null);
+
+    TransactionResponse response = service.analyzeTransaction(req);
+
+    assertThat(response.getClassification()).isEqualTo("APPROVED");
+  }
+
+  @Test
+  void evaluatesOrLogicOperator_triggersWhenAnyConditionMatches() throws Exception {
+    String conditionsJson =
+        objectMapper.writeValueAsString(
+            List.of(
+                java.util.Map.of("field", "mcc", "operator", "==", "value", "7995"),
+                java.util.Map.of("field", "mcc", "operator", "==", "value", "5967")));
+
+    RuleConfiguration rule =
+        RuleConfiguration.builder()
+            .ruleName("GENERIC_OR")
+            .ruleType(RuleConfiguration.RuleType.CONTEXT)
+            .threshold(0)
+            .weight(30)
+            .enabled(true)
+            .classification(TransactionDecision.TransactionClassification.SUSPICIOUS)
+            .conditionsJson(conditionsJson)
+            .logicOperator(RuleConfiguration.LogicOperator.OR)
+            .build();
+
+    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(rule));
+    when(transactionRepository.save(any(Transaction.class)))
+        .thenAnswer(
+            invocation -> {
+              Transaction t = invocation.getArgument(0, Transaction.class);
+              t.setId(1L);
+              return t;
+            });
+    when(decisionRepository.save(any(TransactionDecision.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
+    doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
+
+    TransactionRequest req = minimalRequest();
+    req.setMcc(5967); // Matches second condition
+
+    TransactionResponse response = service.analyzeTransaction(req);
+
+    assertThat(response.getClassification()).isEqualTo("SUSPICIOUS");
+    assertThat(response.getTriggeredRules()).hasSize(1);
+    assertThat(response.getTriggeredRules().getFirst().getName()).isEqualTo("GENERIC_OR");
+  }
+
+  @Test
+  void doesNotTrigger_whenAndConditionsPartiallyMatch() throws Exception {
+    String conditionsJson =
+        objectMapper.writeValueAsString(
+            List.of(
+                java.util.Map.of("field", "mcc", "operator", "==", "value", "7995"),
+                java.util.Map.of("field", "transactionAmount", "operator", ">", "value", "1000")));
+
+    RuleConfiguration rule =
+        RuleConfiguration.builder()
+            .ruleName("GENERIC_AND_PARTIAL")
+            .ruleType(RuleConfiguration.RuleType.CONTEXT)
+            .threshold(0)
+            .weight(40)
+            .enabled(true)
+            .classification(TransactionDecision.TransactionClassification.SUSPICIOUS)
+            .conditionsJson(conditionsJson)
+            .logicOperator(RuleConfiguration.LogicOperator.AND)
+            .build();
+
+    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(rule));
+    when(transactionRepository.save(any(Transaction.class)))
+        .thenAnswer(
+            invocation -> {
+              Transaction t = invocation.getArgument(0, Transaction.class);
+              t.setId(1L);
+              return t;
+            });
+    when(decisionRepository.save(any(TransactionDecision.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
+    doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
+
+    TransactionRequest req = minimalRequest();
+    req.setMcc(7995); // Matches first condition
+    req.setTransactionAmount(new BigDecimal("500")); // Does NOT match second condition
+
+    TransactionResponse response = service.analyzeTransaction(req);
+
+    assertThat(response.getClassification()).isEqualTo("APPROVED");
+    assertThat(response.getTriggeredRules()).isEmpty();
+  }
+
+  @Test
+  void evaluatesNotEqualsOperator() throws Exception {
+    String conditionsJson =
+        objectMapper.writeValueAsString(
+            List.of(
+                java.util.Map.of(
+                    "field", "merchantCountryCode", "operator", "!=", "value", "076")));
+
+    RuleConfiguration rule =
+        RuleConfiguration.builder()
+            .ruleName("NOT_BRAZIL")
+            .ruleType(RuleConfiguration.RuleType.CONTEXT)
+            .threshold(0)
+            .weight(20)
+            .enabled(true)
+            .classification(TransactionDecision.TransactionClassification.SUSPICIOUS)
+            .conditionsJson(conditionsJson)
+            .logicOperator(RuleConfiguration.LogicOperator.AND)
+            .build();
+
+    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(rule));
+    when(transactionRepository.save(any(Transaction.class)))
+        .thenAnswer(
+            invocation -> {
+              Transaction t = invocation.getArgument(0, Transaction.class);
+              t.setId(1L);
+              return t;
+            });
+    when(decisionRepository.save(any(TransactionDecision.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
+    doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
+
+    TransactionRequest req = minimalRequest();
+    req.setMerchantCountryCode("840"); // USA, not Brazil
+
+    TransactionResponse response = service.analyzeTransaction(req);
+
+    assertThat(response.getClassification()).isEqualTo("SUSPICIOUS");
+    assertThat(response.getTriggeredRules()).hasSize(1);
+  }
+
+  @Test
+  void evaluatesLessThanOperator() throws Exception {
+    String conditionsJson =
+        objectMapper.writeValueAsString(
+            List.of(
+                java.util.Map.of(
+                    "field", "consumerAuthenticationScore", "operator", "<", "value", "100")));
+
+    RuleConfiguration rule =
+        RuleConfiguration.builder()
+            .ruleName("LOW_AUTH_SCORE_LT")
+            .ruleType(RuleConfiguration.RuleType.SECURITY)
+            .threshold(0)
+            .weight(35)
+            .enabled(true)
+            .classification(TransactionDecision.TransactionClassification.SUSPICIOUS)
+            .conditionsJson(conditionsJson)
+            .logicOperator(RuleConfiguration.LogicOperator.AND)
+            .build();
+
+    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(rule));
+    when(transactionRepository.save(any(Transaction.class)))
+        .thenAnswer(
+            invocation -> {
+              Transaction t = invocation.getArgument(0, Transaction.class);
+              t.setId(1L);
+              return t;
+            });
+    when(decisionRepository.save(any(TransactionDecision.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
+    doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
+
+    TransactionRequest req = minimalRequest();
+    req.setConsumerAuthenticationScore(50);
+
+    TransactionResponse response = service.analyzeTransaction(req);
+
+    assertThat(response.getClassification()).isEqualTo("SUSPICIOUS");
+  }
+
+  @Test
+  void multipleRules_mostSevereClassificationWins() {
+    RuleConfiguration suspiciousRule =
+        RuleConfiguration.builder()
+            .ruleName("SUSPICIOUS_RULE")
+            .ruleType(RuleConfiguration.RuleType.SECURITY)
+            .threshold(0)
+            .weight(30)
+            .enabled(true)
+            .classification(TransactionDecision.TransactionClassification.SUSPICIOUS)
+            .conditionsJson("[{\"field\":\"mcc\",\"operator\":\"==\",\"value\":\"5411\"}]")
+            .logicOperator(RuleConfiguration.LogicOperator.AND)
+            .build();
+
+    RuleConfiguration fraudRule =
+        RuleConfiguration.builder()
+            .ruleName("FRAUD_RULE")
+            .ruleType(RuleConfiguration.RuleType.SECURITY)
+            .threshold(0)
+            .weight(50)
+            .enabled(true)
+            .classification(TransactionDecision.TransactionClassification.FRAUD)
+            .conditionsJson("[{\"field\":\"mcc\",\"operator\":\"==\",\"value\":\"5411\"}]")
+            .logicOperator(RuleConfiguration.LogicOperator.AND)
+            .build();
+
+    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of(suspiciousRule, fraudRule));
+    when(transactionRepository.save(any(Transaction.class)))
+        .thenAnswer(
+            invocation -> {
+              Transaction t = invocation.getArgument(0, Transaction.class);
+              t.setId(1L);
+              return t;
+            });
+    when(decisionRepository.save(any(TransactionDecision.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
+    doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
+
+    TransactionRequest req = minimalRequest();
+    req.setMcc(5411);
+
+    TransactionResponse response = service.analyzeTransaction(req);
+
+    // FRAUD is more severe than SUSPICIOUS
+    assertThat(response.getClassification()).isEqualTo("FRAUD");
+    assertThat(response.getTriggeredRules()).hasSize(2);
+  }
+
+  @Test
+  void responseContainsProcessingTime() {
+    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of());
+    when(transactionRepository.save(any(Transaction.class)))
+        .thenAnswer(
+            invocation -> {
+              Transaction t = invocation.getArgument(0, Transaction.class);
+              t.setId(1L);
+              return t;
+            });
+    when(decisionRepository.save(any(TransactionDecision.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
+    doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
+
+    TransactionResponse response = service.analyzeTransaction(minimalRequest());
+
+    assertThat(response.getProcessingTimeMs()).isNotNull();
+    assertThat(response.getProcessingTimeMs()).isGreaterThanOrEqualTo(0);
+  }
+
+  @Test
+  void responseContainsTimestamp() {
+    when(ruleConfigRepository.findByEnabled(true)).thenReturn(List.of());
+    when(transactionRepository.save(any(Transaction.class)))
+        .thenAnswer(
+            invocation -> {
+              Transaction t = invocation.getArgument(0, Transaction.class);
+              t.setId(1L);
+              return t;
+            });
+    when(decisionRepository.save(any(TransactionDecision.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0, TransactionDecision.class));
+    doNothing().when(auditService).logTransactionProcessed(any(), any(), any());
+
+    TransactionResponse response = service.analyzeTransaction(minimalRequest());
+
+    assertThat(response.getTimestamp()).isNotNull();
   }
 
   private static TransactionRequest minimalRequest() {

@@ -14,6 +14,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -67,27 +69,47 @@ public class SecurityConfig {
   SecurityFilterChain securityFilterChain(HttpSecurity http, RulexSecurityProperties props)
       throws Exception {
 
-    http.csrf(csrf -> csrf.disable());
-
     if (!props.enabled()) {
+      // When security is disabled, disable CSRF as well
+      http.csrf(csrf -> csrf.disable());
       http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
       return http.build();
     }
 
+    // Configure CSRF with cookie-based token repository
+    // The token is stored in a cookie (XSRF-TOKEN) and must be sent back
+    // in the X-XSRF-TOKEN header for state-changing requests
+    CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+    CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+    // Set the name of the attribute to use for the CSRF token
+    requestHandler.setCsrfRequestAttributeName("_csrf");
+
+    http.csrf(
+        csrf ->
+            csrf.csrfTokenRepository(csrfTokenRepository)
+                .csrfTokenRequestHandler(requestHandler)
+                // Ignore CSRF for stateless API endpoints (they use Basic Auth)
+                .ignoringRequestMatchers(
+                    "/transactions/analyze",
+                    "/transactions/analyze-advanced",
+                    "/evaluate",
+                    "/actuator/**"));
+
     http.authorizeHttpRequests(
             auth ->
                 auth
-                    // Public endpoints (kept open for demos / tests)
-                    .requestMatchers(HttpMethod.POST, "/transactions/analyze")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/transactions/analyze-advanced")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/evaluate")
-                    .permitAll()
-
-                    // Health probes (K8s / Container Apps / HML ops)
+                    // Health probes (K8s / Container Apps / HML ops) - only health endpoints are
+                    // public
                     .requestMatchers("/actuator/health/**")
                     .permitAll()
+
+                    // Transaction analysis endpoints - require at least ANALYST role
+                    .requestMatchers(HttpMethod.POST, "/transactions/analyze")
+                    .hasAnyRole("ANALYST", "ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/transactions/analyze-advanced")
+                    .hasAnyRole("ANALYST", "ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/evaluate")
+                    .hasAnyRole("ANALYST", "ADMIN")
 
                     // Read-only access for analysts
                     .requestMatchers(HttpMethod.GET, "/transactions/**")
@@ -99,6 +121,8 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/metrics/**")
                     .hasAnyRole("ANALYST", "ADMIN")
                     .requestMatchers(HttpMethod.GET, "/field-dictionary/**")
+                    .hasAnyRole("ANALYST", "ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/complex-rules/**")
                     .hasAnyRole("ANALYST", "ADMIN")
 
                     // V31 rules tools: validate/lint for analysts; simulate admin-only
@@ -113,6 +137,8 @@ public class SecurityConfig {
                     .requestMatchers("/homolog/**")
                     .hasRole("ADMIN")
                     .requestMatchers("/rules/**")
+                    .hasRole("ADMIN")
+                    .requestMatchers("/complex-rules/**")
                     .hasRole("ADMIN")
                     .anyRequest()
                     .authenticated())

@@ -24,7 +24,8 @@ import {
   RotateCcw
 } from "lucide-react";
 import { 
-  TransactionRequest, 
+  TransactionRequest,
+  TransactionRequestPartial, 
   TransactionResponse,
   analyzeTransaction,
   analyzeTransactionAdvanced 
@@ -194,7 +195,7 @@ const TRANSACTION_TEMPLATES = {
 };
 
 export default function TransactionSimulator() {
-  const [formData, setFormData] = useState<TransactionRequest>({});
+  const [formData, setFormData] = useState<TransactionRequestPartial>({});
   const [result, setResult] = useState<TransactionResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [useAdvancedRules, setUseAdvancedRules] = useState(true);
@@ -217,7 +218,7 @@ export default function TransactionSimulator() {
   // Aplicar template
   const applyTemplate = (templateKey: keyof typeof TRANSACTION_TEMPLATES) => {
     const template = TRANSACTION_TEMPLATES[templateKey];
-    setFormData(template.data as TransactionRequest);
+    setFormData(template.data as TransactionRequestPartial);
     toast.success(`Template "${template.name}" aplicado`);
   };
 
@@ -246,8 +247,8 @@ export default function TransactionSimulator() {
 
     try {
       const response = useAdvancedRules 
-        ? await analyzeTransactionAdvanced(formData)
-        : await analyzeTransaction(formData);
+        ? await analyzeTransactionAdvanced(formData as TransactionRequest)
+        : await analyzeTransaction(formData as TransactionRequest);
       
       setResult(response);
       
@@ -263,7 +264,7 @@ export default function TransactionSimulator() {
       toast.error("Erro ao analisar transação. Verifique se a API Java está ativa.");
       
       // Simular resultado para demonstração quando API não está disponível
-      const simulatedResult = simulateAnalysis(formData);
+      const simulatedResult = simulateAnalysis(formData as TransactionRequest);
       setResult({
         ...simulatedResult,
         reason: `${simulatedResult.reason} (resultado simulado; API indisponível)`
@@ -275,7 +276,7 @@ export default function TransactionSimulator() {
   };
 
   // Simulação local quando API não está disponível
-  const simulateAnalysis = (request: TransactionRequest): TransactionResponse => {
+  const simulateAnalysis = (request: TransactionRequestPartial): TransactionResponse => {
     const triggeredRules: { name: string; weight: number; contribution: number; detail?: string }[] = [];
     let riskScore = 0;
 

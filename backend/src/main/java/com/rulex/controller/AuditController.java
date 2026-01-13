@@ -2,6 +2,10 @@ package com.rulex.controller;
 
 import com.rulex.dto.AuditLogDTO;
 import com.rulex.service.AuditQueryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +29,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 @RequestMapping("/audit")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Auditoria", description = "Consulta e exportação de logs de auditoria")
 public class AuditController {
 
   private final AuditQueryService auditQueryService;
@@ -32,6 +37,8 @@ public class AuditController {
   /**
    * Lista logs de auditoria com filtros. GET /api/audit?actionType=...&result=...&page=0&size=20
    */
+  @Operation(summary = "Listar logs", description = "Lista logs de auditoria com filtros opcionais")
+  @ApiResponse(responseCode = "200", description = "Lista de logs retornada")
   @GetMapping
   public ResponseEntity<Page<AuditLogDTO>> listAuditLogs(
       @RequestParam(required = false) String actionType,
@@ -67,6 +74,8 @@ public class AuditController {
   }
 
   /** Exporta logs de auditoria. GET /api/audit/export?format=csv|json&... */
+  @Operation(summary = "Exportar logs", description = "Exporta logs em CSV ou JSON")
+  @ApiResponse(responseCode = "200", description = "Arquivo exportado")
   @GetMapping("/export")
   public ResponseEntity<?> exportAudit(
       @RequestParam(defaultValue = "csv") String format,
@@ -128,9 +137,11 @@ public class AuditController {
    * Obtém logs de auditoria para uma transação específica. GET
    * /api/audit/transaction/{transactionId}
    */
+  @Operation(summary = "Logs por transação", description = "Obtém logs de uma transação específica")
+  @ApiResponse(responseCode = "200", description = "Logs da transação")
   @GetMapping("/transaction/{transactionId}")
   public ResponseEntity<Page<AuditLogDTO>> getTransactionAuditLogs(
-      @PathVariable Long transactionId,
+      @Parameter(description = "ID da transação") @PathVariable Long transactionId,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size) {
 

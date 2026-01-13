@@ -6,6 +6,7 @@
  */
 
 import { getAccessToken, getBasicAuthRaw } from "@/_core/auth/tokens";
+import type { ConditionOperatorType } from "./operatorTypes";
 
 // ========================================
 // CONFIG
@@ -22,27 +23,34 @@ const BASIC_AUTH_RAW = import.meta.env.VITE_API_BASIC_AUTH as string | undefined
 // TYPES
 // ========================================
 
+/**
+ * Transaction request DTO.
+ * Required fields are marked as non-optional per OpenAPI spec.
+ * Optional fields use the '?' modifier.
+ */
 export interface TransactionRequest {
-  externalTransactionId?: string;
-  customerIdFromHeader?: string;
-  customerAcctNumber?: number;
-  pan?: string;
-  transactionAmount?: number;
-  transactionDate?: number; // YYYYMMDD
-  transactionTime?: number; // HHMMSS
-  transactionCurrencyCode?: number;
-  mcc?: number;
-  consumerAuthenticationScore?: number;
-  externalScore3?: number;
-  cavvResult?: number;
-  eciIndicator?: number;
-  atcCard?: number;
-  atcHost?: number;
-  tokenAssuranceLevel?: number;
-  availableCredit?: number;
-  cardCashBalance?: number;
-  cardDelinquentAmount?: number;
+  // === REQUIRED FIELDS (per OpenAPI AnalyzeTransactionRequest) ===
+  externalTransactionId: string;
+  customerIdFromHeader: string;
+  customerAcctNumber: number;
+  pan: string;
+  transactionAmount: number;
+  transactionDate: number; // YYYYMMDD
+  transactionTime: number; // HHMMSS
+  transactionCurrencyCode: number;
+  mcc: number;
+  consumerAuthenticationScore: number;
+  externalScore3: number;
+  cavvResult: number;
+  eciIndicator: number;
+  atcCard: number;
+  atcHost: number;
+  tokenAssuranceLevel: number;
+  availableCredit: number;
+  cardCashBalance: number;
+  cardDelinquentAmount: number;
 
+  // === OPTIONAL FIELDS ===
   // extras usados por regras/filtros
   merchantId?: string;
   merchantName?: string;
@@ -70,6 +78,12 @@ export interface TransactionRequest {
   cardMediaType?: string;
   transactionCurrencyConversionRate?: number;
 }
+
+/**
+ * Partial transaction request for forms and simulators.
+ * All fields are optional to allow incremental form filling.
+ */
+export type TransactionRequestPartial = Partial<TransactionRequest>;
 
 export interface TriggeredRule {
   name: string;
@@ -140,34 +154,7 @@ export interface DashboardMetrics {
 
 export interface RuleCondition {
   field: string;
-  operator:
-    // Canonical ops (preferidas; alinhadas ao field-dictionary)
-    | "EQ"
-    | "NE"
-    | "GT"
-    | "LT"
-    | "GTE"
-    | "LTE"
-    | "IN"
-    | "NOT_IN"
-    | "BETWEEN"
-    | "NOT_BETWEEN"
-    | "CONTAINS"
-    | "NOT_CONTAINS"
-    | "STARTS_WITH"
-    | "ENDS_WITH"
-    | "MATCHES_REGEX"
-    | "IS_NULL"
-    | "IS_NOT_NULL"
-    | "IS_TRUE"
-    | "IS_FALSE"
-    // Legado/compatibilidade (aceitos pelo backend via normalização)
-    | "=="
-    | "!="
-    | ">"
-    | "<"
-    | ">="
-    | "<=";
+  operator: ConditionOperatorType;
   value: string;
 }
 
@@ -403,7 +390,8 @@ export async function getMetricsByMerchant(
 // ========================================
 
 export async function listRules(): Promise<RuleConfiguration[]> {
-  const response = await apiRequest<any>("/api/rules");
+  // Buscar todas as regras com paginação grande para garantir que todas sejam retornadas
+  const response = await apiRequest<any>("/api/rules?page=0&size=1000");
   if (Array.isArray(response)) return response;
   if (response && Array.isArray(response.content)) return response.content;
   return [];
@@ -550,6 +538,157 @@ export async function checkApiHealth(): Promise<{
   }
 }
 
+// ========================================
+// COMPLEX RULES API
+// ========================================
+
+export interface ComplexRuleCondition {
+  id?: string;
+  fieldName: string;
+  fieldPath?: string;
+  operator: string;
+  valueType: string;
+  valueSingle?: string;
+  valueArray?: string[];
+  valueMin?: string;
+  valueMax?: string;
+  valueFieldRef?: string;
+  valueExpression?: string;
+  caseSensitive?: boolean;
+  negate?: boolean;
+  enabled?: boolean;
+}
+
+export interface ComplexRuleConditionGroup {
+  id?: string;
+  logicOperator: 'AND' | 'OR' | 'NOT' | 'XOR' | 'NAND' | 'NOR';
+  name?: string;
+  description?: string;
+  position?: number;
+  enabled?: boolean;
+  conditions: ComplexRuleCondition[];
+  children: ComplexRuleConditionGroup[];
+}
+
+export interface ComplexRuleDTO {
+  id?: string;
+  key: string;
+  title: string;
+  description?: string;
+  version?: number;
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'TESTING';
+  priority: number;
+  severity: number;
+  decision: 'APROVADO' | 'SUSPEITA_DE_FRAUDE' | 'FRAUDE';
+  reasonTemplate?: string;
+  enabled: boolean;
+  rootConditionGroup: ComplexRuleConditionGroup;
+  expressions?: Array<{
+    id?: string;
+    name: string;
+    expression: string;
+    resultType: string;
+    description?: string;
+  }>;
+  contextVariables?: Array<{
+    id?: string;
+    name: string;
+    source: string;
+    path?: string;
+    defaultValue?: string;
+    description?: string;
+  }>;
+  actions?: Array<{
+    id?: string;
+    type: string;
+    config: Record<string, unknown>;
+    enabled?: boolean;
+  }>;
+  tags?: string[];
+  fieldsUsed?: string[];
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Lista todas as regras complexas
+ */
+export async function listComplexRules(): Promise<ComplexRuleDTO[]> {
+  return apiRequest<ComplexRuleDTO[]>('/api/complex-rules');
+}
+
+/**
+ * Busca uma regra complexa por ID
+ */
+export async function getComplexRule(id: string): Promise<ComplexRuleDTO> {
+  return apiRequest<ComplexRuleDTO>(`/api/complex-rules/${id}`);
+}
+
+/**
+ * Busca uma regra complexa por chave
+ */
+export async function getComplexRuleByKey(key: string): Promise<ComplexRuleDTO> {
+  return apiRequest<ComplexRuleDTO>(`/api/complex-rules/key/${key}`);
+}
+
+/**
+ * Cria uma nova regra complexa
+ */
+export async function createComplexRule(rule: Omit<ComplexRuleDTO, 'id' | 'version' | 'createdAt' | 'updatedAt'>): Promise<ComplexRuleDTO> {
+  return apiRequest<ComplexRuleDTO>('/api/complex-rules', {
+    method: 'POST',
+    body: JSON.stringify(rule),
+  });
+}
+
+/**
+ * Atualiza uma regra complexa existente
+ */
+export async function updateComplexRule(id: string, rule: Partial<ComplexRuleDTO>): Promise<ComplexRuleDTO> {
+  return apiRequest<ComplexRuleDTO>(`/api/complex-rules/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(rule),
+  });
+}
+
+/**
+ * Deleta uma regra complexa
+ */
+export async function deleteComplexRule(id: string): Promise<void> {
+  await apiRequest<void>(`/api/complex-rules/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Alterna o status de uma regra complexa
+ */
+export async function toggleComplexRuleStatus(id: string, enabled: boolean): Promise<ComplexRuleDTO> {
+  return apiRequest<ComplexRuleDTO>(`/api/complex-rules/${id}/toggle?enabled=${enabled}`, {
+    method: 'PATCH',
+  });
+}
+
+/**
+ * Duplica uma regra complexa
+ */
+export async function duplicateComplexRule(id: string, newKey: string): Promise<ComplexRuleDTO> {
+  return apiRequest<ComplexRuleDTO>(`/api/complex-rules/${id}/duplicate?newKey=${encodeURIComponent(newKey)}`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * Valida uma regra complexa sem salvar
+ */
+export async function validateComplexRule(rule: Partial<ComplexRuleDTO>): Promise<{ valid: boolean; errors: string[] }> {
+  return apiRequest<{ valid: boolean; errors: string[] }>('/api/complex-rules/validate', {
+    method: 'POST',
+    body: JSON.stringify(rule),
+  });
+}
+
 export const javaApi = {
   analyzeTransaction,
   analyzeTransactionAdvanced,
@@ -572,6 +711,16 @@ export const javaApi = {
   exportAuditLogs,
   listFieldDictionary,
   checkApiHealth,
+  // Complex Rules
+  listComplexRules,
+  getComplexRule,
+  getComplexRuleByKey,
+  createComplexRule,
+  updateComplexRule,
+  deleteComplexRule,
+  toggleComplexRuleStatus,
+  duplicateComplexRule,
+  validateComplexRule,
 };
 
 export default javaApi;

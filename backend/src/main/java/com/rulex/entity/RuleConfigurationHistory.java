@@ -43,6 +43,15 @@ public class RuleConfigurationHistory {
   @Column(name = "performed_by", length = 100)
   private String performedBy;
 
+  @Column(name = "client_ip", length = 45)
+  private String clientIp;
+
+  @Column(name = "user_agent", length = 500)
+  private String userAgent;
+
+  @Column(name = "action_type", length = 20)
+  private String actionType;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
@@ -50,6 +59,15 @@ public class RuleConfigurationHistory {
   protected void onCreate() {
     if (createdAt == null) {
       createdAt = LocalDateTime.now();
+    }
+    if (actionType == null) {
+      if (previousJson == null && currentJson != null) {
+        actionType = "CREATE";
+      } else if (previousJson != null && currentJson == null) {
+        actionType = "DELETE";
+      } else {
+        actionType = "UPDATE";
+      }
     }
   }
 }

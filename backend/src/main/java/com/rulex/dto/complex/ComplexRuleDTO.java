@@ -83,6 +83,7 @@ public class ComplexRuleDTO {
   public enum RuleStatusType {
     DRAFT, // Rascunho - não é executada
     PUBLISHED, // Publicada - em execução
+    DEPRECATED, // Descontinuada - mantida para histórico
     ARCHIVED, // Arquivada - não é executada
     TESTING // Em teste - executa mas não afeta decisão final
   }

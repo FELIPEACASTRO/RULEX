@@ -2,12 +2,12 @@
 
 exports[`Rules popup (Rules.tsx) > snapshot: popup visual regression (modal content) 1`] = `
 <div
-  aria-describedby="radix-_r_b_"
-  aria-labelledby="radix-_r_a_"
+  aria-describedby="radix-_r_19_"
+  aria-labelledby="radix-_r_18_"
   class="bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] max-h-[calc(100vh-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto overscroll-contain rounded-lg border p-6 shadow-lg duration-200 sm:max-w-2xl"
   data-slot="dialog-content"
   data-state="open"
-  id="radix-_r_9_"
+  id="radix-_r_17_"
   role="dialog"
   style="pointer-events: auto;"
   tabindex="-1"
@@ -19,14 +19,14 @@ exports[`Rules popup (Rules.tsx) > snapshot: popup visual regression (modal cont
     <h2
       class="text-lg leading-none font-semibold"
       data-slot="dialog-title"
-      id="radix-_r_a_"
+      id="radix-_r_18_"
     >
       Nova Regra
     </h2>
     <p
       class="text-muted-foreground text-sm"
       data-slot="dialog-description"
-      id="radix-_r_b_"
+      id="radix-_r_19_"
     >
       Configure os parâmetros da regra de detecção de fraude
     </p>
@@ -39,15 +39,26 @@ exports[`Rules popup (Rules.tsx) > snapshot: popup visual regression (modal cont
         class="block text-sm font-medium text-foreground mb-2"
         for="ruleName"
       >
-        Nome da Regra
+        Nome da Regra 
+        <span
+          class="text-red-500"
+        >
+          *
+        </span>
       </label>
       <input
+        aria-invalid="false"
         class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
         data-slot="input"
         id="ruleName"
-        placeholder="Ex: RULE_GENERIC_001 (ou LOW_AUTHENTICATION_SCORE para regra legada)"
+        placeholder="Ex: HIGH_AMOUNT_RULE"
         value=""
       />
+      <p
+        class="mt-1 text-xs text-muted-foreground"
+      >
+        Use UPPER_SNAKE_CASE (ex: HIGH_AMOUNT_RULE)
+      </p>
     </div>
     <div>
       <label
@@ -155,6 +166,7 @@ exports[`Rules popup (Rules.tsx) > snapshot: popup visual regression (modal cont
           Threshold
         </label>
         <input
+          aria-invalid="false"
           class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
           data-slot="input"
           id="threshold"
@@ -171,6 +183,7 @@ exports[`Rules popup (Rules.tsx) > snapshot: popup visual regression (modal cont
           Peso (0-100)
         </label>
         <input
+          aria-invalid="false"
           class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
           data-slot="input"
           id="weight"

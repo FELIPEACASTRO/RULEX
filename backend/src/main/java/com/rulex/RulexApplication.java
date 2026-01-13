@@ -3,6 +3,7 @@ package com.rulex;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * Aplicação principal do RULEX - Sistema de Regras Duras para Transações de Crédito.
@@ -12,6 +13,7 @@ import org.springframework.context.annotation.ComponentScan;
  */
 @SpringBootApplication
 @ComponentScan(basePackages = "com.rulex")
+@EnableAsync
 public class RulexApplication {
 
   public static void main(String[] args) {

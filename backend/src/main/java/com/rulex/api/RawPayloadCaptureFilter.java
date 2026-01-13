@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -17,8 +18,18 @@ public class RawPayloadCaptureFilter extends OncePerRequestFilter {
 
   public static final String RAW_BYTES_ATTR = "RAW_PAYLOAD_BYTES";
 
+  private final boolean enabled;
+
+  public RawPayloadCaptureFilter(
+      @Value("${rulex.rawPayloadCapture.enabled:true}") boolean enabled) {
+    this.enabled = enabled;
+  }
+
   @Override
   protected boolean shouldNotFilter(@org.springframework.lang.NonNull HttpServletRequest request) {
+    if (!enabled) {
+      return true;
+    }
     if (!"POST".equalsIgnoreCase(request.getMethod())) {
       return true;
     }

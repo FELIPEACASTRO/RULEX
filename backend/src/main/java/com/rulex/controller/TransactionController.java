@@ -7,6 +7,11 @@ import com.rulex.dto.TriggeredRuleDTO;
 import com.rulex.service.AdvancedRuleEngineService;
 import com.rulex.service.RuleEngineService;
 import com.rulex.service.TransactionQueryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.io.OutputStreamWriter;
@@ -35,6 +40,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 @RequestMapping("/transactions")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Transações", description = "Processamento e consulta de transações")
 public class TransactionController {
 
   private final RuleEngineService ruleEngineService;
@@ -43,11 +49,18 @@ public class TransactionController {
   private final Clock clock;
 
   /** Analisa uma transação e retorna a classificação de fraude. POST /api/transactions/analyze */
+  @Operation(
+      summary = "Analisar transação",
+      description = "Analisa uma transação e retorna classificação de risco")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Análise realizada"),
+    @ApiResponse(responseCode = "400", description = "Dados inválidos")
+  })
   @PostMapping("/analyze")
   public ResponseEntity<TransactionResponse> analyzeTransaction(
       @Valid @RequestBody TransactionRequest request, HttpServletRequest httpRequest) {
 
-    log.info("Analisando transação: {}", request.getExternalTransactionId());
+    log.debug("Analisando transação: {}", request.getExternalTransactionId());
 
     byte[] rawBytes = (byte[]) httpRequest.getAttribute(RawPayloadCaptureFilter.RAW_BYTES_ATTR);
     String contentType = httpRequest.getContentType();
@@ -60,6 +73,8 @@ public class TransactionController {
    * Lista transações com filtros opcionais. GET
    * /api/transactions?customerId=...&merchantId=...&page=0&size=20
    */
+  @Operation(summary = "Listar transações", description = "Lista transações com filtros opcionais")
+  @ApiResponse(responseCode = "200", description = "Lista de transações")
   @GetMapping
   public ResponseEntity<Page<TransactionResponse>> listTransactions(
       @RequestParam(required = false) String customerId,
@@ -73,7 +88,7 @@ public class TransactionController {
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size) {
 
-    log.info(
+    log.debug(
         "Listando transações com filtros: customerId={}, merchantId={}, page={}, size={}",
         customerId,
         merchantId,
@@ -124,6 +139,8 @@ public class TransactionController {
    *
    * <p>GET /api/transactions/export?format=csv|json&...filtros...
    */
+  @Operation(summary = "Exportar transações", description = "Exporta transações em CSV ou JSON")
+  @ApiResponse(responseCode = "200", description = "Arquivo exportado")
   @GetMapping("/export")
   public ResponseEntity<?> exportTransactions(
       @RequestParam(defaultValue = "csv") String format,
@@ -207,8 +224,14 @@ public class TransactionController {
   }
 
   /** Obtém detalhes de uma transação específica. GET /api/transactions/{id} */
+  @Operation(summary = "Obter transação", description = "Retorna detalhes de uma transação pelo ID")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Transação encontrada"),
+    @ApiResponse(responseCode = "404", description = "Transação não encontrada")
+  })
   @GetMapping("/{id}")
-  public ResponseEntity<TransactionResponse> getTransaction(@PathVariable Long id) {
+  public ResponseEntity<TransactionResponse> getTransaction(
+      @Parameter(description = "ID da transação") @PathVariable Long id) {
     log.info("Obtendo detalhes da transação: {}", id);
 
     TransactionResponse transaction = transactionQueryService.getTransactionById(id);
@@ -218,9 +241,11 @@ public class TransactionController {
   /**
    * Obtém detalhes de uma transação pelo ID externo. GET /api/transactions/external/{externalId}
    */
+  @Operation(summary = "Obter por ID externo", description = "Retorna transação pelo ID externo")
+  @ApiResponse(responseCode = "200", description = "Transação encontrada")
   @GetMapping("/external/{externalId}")
   public ResponseEntity<TransactionResponse> getTransactionByExternalId(
-      @PathVariable String externalId) {
+      @Parameter(description = "ID externo da transação") @PathVariable String externalId) {
     log.info("Obtendo transação pelo ID externo: {}", externalId);
 
     TransactionResponse transaction =
@@ -231,6 +256,10 @@ public class TransactionController {
   /**
    * Analisa uma transação com as 28 novas regras avançadas. POST /api/transactions/analyze-advanced
    */
+  @Operation(
+      summary = "Análise avançada",
+      description = "Analisa transação com 28 regras avançadas")
+  @ApiResponse(responseCode = "200", description = "Análise avançada realizada")
   @PostMapping("/analyze-advanced")
   public ResponseEntity<TransactionResponse> analyzeTransactionAdvanced(
       @Valid @RequestBody TransactionRequest request) {

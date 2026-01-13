@@ -38,6 +38,26 @@ public class ConditionGroupDTO {
   /** Grupos filhos (aninhados) - permite criar estruturas complexas */
   @Valid private List<ConditionGroupDTO> children;
 
+  /** Alias para children - compatibilidade */
+  public List<ConditionGroupDTO> getSubGroups() {
+    return children;
+  }
+
+  /** Alias para children - compatibilidade */
+  public void setSubGroups(List<ConditionGroupDTO> subGroups) {
+    this.children = subGroups;
+  }
+
+  /** Alias para logicOperator - compatibilidade com frontend */
+  public LogicOperatorType getOperator() {
+    return logicOperator;
+  }
+
+  /** Alias para logicOperator - compatibilidade com frontend */
+  public void setOperator(LogicOperatorType operator) {
+    this.logicOperator = operator;
+  }
+
   /** Operadores lógicos suportados */
   public enum LogicOperatorType {
     AND, // Todas as condições devem ser verdadeiras

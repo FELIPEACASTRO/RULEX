@@ -8,9 +8,11 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardProfessional from "./pages/DashboardProfessional";
 import TransactionsProfessional from "./pages/TransactionsProfessional";
-import Rules from "./pages/Rules";
+import ComplexRules from "./pages/ComplexRules";
 import Audit from "./pages/Audit";
 import TransactionSimulator from "./pages/TransactionSimulator";
+import Monitoring from "./pages/Monitoring";
+import Settings from "./pages/Settings";
 
 function Router() {
   // Login é uma rota pública (não deve passar pelo DashboardLayout/useAuth gate).
@@ -24,9 +26,11 @@ function Router() {
             <Route path={"/"} component={DashboardProfessional} />
             <Route path={"/dashboard"} component={DashboardProfessional} />
             <Route path={"/transactions"} component={TransactionsProfessional} />
-            <Route path="/rules" component={Rules} />
+            <Route path="/rules" component={ComplexRules} />
             <Route path={"/audit"} component={Audit} />
             <Route path={"/simulator"} component={TransactionSimulator} />
+            <Route path={"/monitoring"} component={Monitoring} />
+            <Route path={"/settings"} component={Settings} />
             <Route path={"/404"} component={NotFound} />
             <Route component={NotFound} />
           </Switch>

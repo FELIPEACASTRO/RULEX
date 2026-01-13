@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -18,6 +19,9 @@ import org.springframework.stereotype.Component;
 public class PayloadHashService {
 
   private final ObjectMapper objectMapper;
+
+  // Cached canonical mapper built once using non-deprecated builder API
+  private volatile ObjectMapper cachedCanonicalMapper;
 
   public CanonicalPayload canonicalize(Object payload) {
     try {
@@ -45,14 +49,28 @@ public class PayloadHashService {
     return sha256Hex(raw.getBytes(charset));
   }
 
-  @SuppressWarnings("deprecation")
+  /**
+   * Creates a canonical ObjectMapper using the non-deprecated JsonMapper.builder() API. Uses
+   * double-checked locking for thread-safe lazy initialization.
+   */
   private ObjectMapper canonicalMapper() {
-    return objectMapper
-        .copy()
-        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        .configure(SerializationFeature.INDENT_OUTPUT, false)
-        .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
-        .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
+    ObjectMapper result = cachedCanonicalMapper;
+    if (result == null) {
+      synchronized (this) {
+        result = cachedCanonicalMapper;
+        if (result == null) {
+          result =
+              JsonMapper.builder()
+                  .serializationInclusion(JsonInclude.Include.NON_NULL)
+                  .disable(SerializationFeature.INDENT_OUTPUT)
+                  .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+                  .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                  .build();
+          cachedCanonicalMapper = result;
+        }
+      }
+    }
+    return result;
   }
 
   private String sha256Hex(String value) {

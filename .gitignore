@@ -109,3 +109,20 @@ temp/
 *.db
 *.sqlite
 *.sqlite3
+
+# Temporary development artifacts
+DEVIN_*.md
+SOLUTION_INDEX.csv
+Prompt/
+info/
+reports/
+evidence/
+research_output/
+*.docx
+
+# QA temporary artifacts
+docs/qa/DEVIN_*.md
+docs/qa/DEVIN_*.json
+docs/qa/*_BACKUP*.md
+docs/qa/*_SCORECARD*.md
+docs/qa/*_GAPS*.md

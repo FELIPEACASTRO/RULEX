@@ -48,6 +48,11 @@ function mockRulesApi(initialContent: any[] = []) {
       return okJson([]);
     }
 
+    // Complex rules (must be checked BEFORE /api/rules to avoid false match)
+    if (url.includes('/api/complex-rules') && method === 'GET') {
+      return okJson([]);
+    }
+
     // GET list
     if (url.includes('/api/rules') && method === 'GET') {
       return okJson(rules);
@@ -147,7 +152,7 @@ describe('Rules popup (Rules.tsx)', () => {
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByRole('heading', { name: 'Nova Regra' })).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText('Nome da Regra'), 'LOW_AUTHENTICATION_SCORE');
+    await user.type(screen.getByLabelText(/Nome da Regra/), 'LOW_AUTHENTICATION_SCORE');
     await user.type(screen.getByPlaceholderText('Descrição da regra'), 'Score baixo de autenticação');
 
     // threshold + weight
@@ -208,7 +213,7 @@ describe('Rules popup (Rules.tsx)', () => {
     await user.click(screen.getByTitle('Editar'));
     await screen.findByText('Editar Regra');
 
-    const ruleNameInput = screen.getByLabelText('Nome da Regra') as HTMLInputElement;
+    const ruleNameInput = screen.getByLabelText(/Nome da Regra/) as HTMLInputElement;
     expect(ruleNameInput).toBeDisabled();
     expect(ruleNameInput.value).toBe('LOW_EXTERNAL_SCORE');
 

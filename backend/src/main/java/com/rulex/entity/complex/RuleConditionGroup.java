@@ -14,12 +14,16 @@ import org.hibernate.annotations.CreationTimestamp;
 /**
  * Entidade para grupos de condições com suporte a aninhamento. Permite criar estruturas complexas
  * como: (A AND B) OR (C AND D)
+ *
+ * <p>Pode pertencer a uma rule_version (via ruleVersionId) OU a uma complex_rule (via
+ * complexRuleId). Pelo menos um dos dois deve estar preenchido (constraint CHECK no banco).
  */
 @Entity
 @Table(
     name = "rule_condition_groups",
     indexes = {
       @Index(name = "idx_condition_groups_rule_version", columnList = "rule_version_id"),
+      @Index(name = "idx_condition_groups_complex_rule", columnList = "complex_rule_id"),
       @Index(name = "idx_condition_groups_parent", columnList = "parent_group_id")
     })
 @Data
@@ -32,8 +36,18 @@ public class RuleConditionGroup {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(name = "rule_version_id", nullable = false)
+  /**
+   * FK para rule_versions (nullable desde V12). Usado quando o grupo pertence a uma versão de regra
+   * tradicional.
+   */
+  @Column(name = "rule_version_id")
   private UUID ruleVersionId;
+
+  /**
+   * FK para complex_rules (adicionado em V12). Usado quando o grupo pertence a uma regra complexa.
+   */
+  @Column(name = "complex_rule_id")
+  private UUID complexRuleId;
 
   @Column(name = "parent_group_id")
   private UUID parentGroupId;

@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -72,11 +73,34 @@ class SecurityRbacTest {
 
   @Test
   void actuatorHealth_isPublicBySecurityMatcher() throws Exception {
-    mockMvc.perform(get("/api/actuator/health").contextPath("/api")).andExpect(status().isOk());
+    // Health endpoint should be publicly accessible (no 401/403)
+    // It may return 503 if dependencies are down, but that's OK for security test
+    mockMvc
+        .perform(get("/api/actuator/health").contextPath("/api"))
+        .andExpect(
+            result -> {
+              int status = result.getResponse().getStatus();
+              // Accept 200 (healthy) or 503 (unhealthy but accessible)
+              if (status != 200 && status != 503) {
+                throw new AssertionError("Expected status 200 or 503 but was " + status);
+              }
+            });
   }
 
   @Test
-  void evaluate_isPublic() throws Exception {
+  void evaluate_requiresAuth() throws Exception {
+    // Endpoint /evaluate agora requer autenticação (correção de segurança)
+    mockMvc
+        .perform(
+            post("/api/evaluate")
+                .contextPath("/api")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"payload\":{\"test\":\"value\"}}"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void evaluate_allowsAnalyst() throws Exception {
     when(ruleEngineService.evaluateRaw(any(), any(), any())).thenReturn(new EvaluateResponse());
 
     mockMvc
@@ -84,7 +108,22 @@ class SecurityRbacTest {
             post("/api/evaluate")
                 .contextPath("/api")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
+                .content("{\"payload\":{\"test\":\"value\"}}")
+                .with(httpBasic("analyst", "analystpw")))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void evaluate_allowsAdmin() throws Exception {
+    when(ruleEngineService.evaluateRaw(any(), any(), any())).thenReturn(new EvaluateResponse());
+
+    mockMvc
+        .perform(
+            post("/api/evaluate")
+                .contextPath("/api")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"payload\":{\"test\":\"value\"}}")
+                .with(httpBasic("admin", "adminpw")))
         .andExpect(status().isOk());
   }
 
@@ -112,6 +151,7 @@ class SecurityRbacTest {
                 .contextPath("/api")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"enabled\":true}")
+                .with(csrf())
                 .with(httpBasic("analyst", "analystpw")))
         .andExpect(status().isForbidden());
   }
@@ -138,6 +178,7 @@ class SecurityRbacTest {
                 .contextPath("/api")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"enabled\":true}")
+                .with(csrf())
                 .with(httpBasic("admin", "adminpw")))
         .andExpect(status().isOk());
   }

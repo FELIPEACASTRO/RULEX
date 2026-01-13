@@ -15,6 +15,38 @@ services:
     volumes:
       - rulex_pgdata:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - rulex_redis:/data
+
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-rulex123}
+      NEO4J_PLUGINS: '["apoc", "graph-data-science"]'
+      NEO4J_dbms_memory_heap_initial__size: 512m
+      NEO4J_dbms_memory_heap_max__size: 1G
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 && cypher-shell -u neo4j -p ${NEO4J_PASSWORD:-rulex123} 'RETURN 1' || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
+    volumes:
+      - rulex_neo4j_data:/data
+      - rulex_neo4j_logs:/logs
+
   backend:
     build:
       context: ./backend
@@ -24,16 +56,30 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/rulex_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      # Neo4j configuration (rulex.neo4j.* properties)
+      RULEX_NEO4J_URI: bolt://neo4j:7687
+      RULEX_NEO4J_USERNAME: neo4j
+      RULEX_NEO4J_PASSWORD: ${NEO4J_PASSWORD:-rulex123}
+      RULEX_NEO4J_ENABLED: ${RULEX_NEO4J_ENABLED:-true}
       RULEX_SECURITY_ENABLED: ${RULEX_SECURITY_ENABLED:-true}
       RULEX_ADMIN_USERNAME: ${RULEX_ADMIN_USERNAME:-admin}
       RULEX_ADMIN_PASSWORD: ${RULEX_ADMIN_PASSWORD:-rulex}
       RULEX_ANALYST_USERNAME: ${RULEX_ANALYST_USERNAME:-analyst}
       RULEX_ANALYST_PASSWORD: ${RULEX_ANALYST_PASSWORD:-rulex}
+      # Rate limiting (disable for load testing with RULEX_RATE_LIMIT_ENABLED=false)
+      RULEX_RATE_LIMIT_ENABLED: ${RULEX_RATE_LIMIT_ENABLED:-true}
+      RULEX_RATE_LIMIT_RPM: ${RULEX_RATE_LIMIT_RPM:-100}
       # Flyway is on by default; keep startup resilient.
     ports:
       - "8080:8080"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
         condition: service_healthy
 
   web:
@@ -50,3 +96,6 @@ services:
 
 volumes:
   rulex_pgdata:
+  rulex_redis:
+  rulex_neo4j_data:
+  rulex_neo4j_logs:

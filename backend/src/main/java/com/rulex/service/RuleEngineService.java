@@ -15,7 +15,9 @@ import com.rulex.entity.TransactionRawStore;
 import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
+import com.rulex.util.PanHashUtil;
 import com.rulex.util.PanMaskingUtil;
+import com.rulex.util.RegexValidator;
 import com.rulex.v31.execlog.ExecutionEventType;
 import com.rulex.v31.execlog.RuleExecutionLogService;
 import java.beans.PropertyDescriptor;
@@ -29,6 +31,7 @@ import java.util.*;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -53,6 +56,38 @@ public class RuleEngineService {
   private final PayloadHashService payloadHashService;
   private final TransactionRawStoreService rawStoreService;
   private final RuleExecutionLogService ruleExecutionLogService;
+  private final EnrichmentService enrichmentService;
+  private final RuleOrderingService ruleOrderingService;
+
+  // V4.0: advanced hard-rule services (opt-in via config)
+  private final BloomFilterService bloomFilterService;
+  private final ShadowModeService shadowModeService;
+  private final ImpossibleTravelService impossibleTravelService;
+  private final GeoService geoService;
+  private final RedisVelocityService redisVelocityService;
+
+  /**
+   * When enabled, rules are evaluated in an optimized (cheap-first / hit-rate) order.
+   *
+   * <p>Default is false to preserve historical auditing semantics (triggeredRules/scoreDetails
+   * ordering) unless explicitly enabled.
+   */
+  @Value("${rulex.engine.optimizedRuleOrder:false}")
+  private boolean optimizedRuleOrder;
+
+  @Value("${rulex.engine.bloomFilter.enabled:true}")
+  private boolean bloomFilterEnabled;
+
+  @Value("${rulex.engine.shadowMode.enabled:true}")
+  private boolean shadowModeEnabled;
+
+  @Value("${rulex.engine.impossibleTravel.enabled:false}")
+  private boolean impossibleTravelEnabled;
+
+  @Value("${rulex.engine.velocity.redis.enabled:false}")
+  private boolean redisVelocityEnabled;
+
+  private volatile CandidateIndexCache candidateIndexCache;
 
   /** Processa uma transação e retorna a classificação de fraude. */
   public TransactionResponse analyzeTransaction(TransactionRequest request) {
@@ -158,6 +193,15 @@ public class RuleEngineService {
       decision.setExternalTransactionId(transaction.getExternalTransactionId());
       decision.setPayloadRawHash(payloadHash);
       decisionRepository.save(decision);
+
+      // V4.0: record transaction into high-performance velocity trackers (best-effort)
+      if (redisVelocityEnabled) {
+        try {
+          redisVelocityService.recordTransaction(request);
+        } catch (Exception ignored) {
+          // best-effort; never break fraud decisions
+        }
+      }
 
       safeLogEvaluate(
           ExecutionEventType.EVALUATE,
@@ -279,6 +323,15 @@ public class RuleEngineService {
       decision.setExternalTransactionId(transaction.getExternalTransactionId());
       decision.setPayloadRawHash(payloadHash);
       decisionRepository.save(decision);
+
+      // V4.0: record transaction into high-performance velocity trackers (best-effort)
+      if (redisVelocityEnabled) {
+        try {
+          redisVelocityService.recordTransaction(request);
+        } catch (Exception ignored) {
+          // best-effort; never break fraud decisions
+        }
+      }
 
       safeLogEvaluate(
           ExecutionEventType.EVALUATE,
@@ -447,7 +500,20 @@ public class RuleEngineService {
   /** Avalia as regras configuradas contra a transação. */
   private RuleEvaluationResult evaluateRules(Transaction transaction, TransactionRequest request) {
     RuleEvaluationResult result = new RuleEvaluationResult();
-    List<RuleConfiguration> enabledRules = ruleConfigRepository.findByEnabled(true);
+    List<RuleConfiguration> enabledRules =
+        optimizedRuleOrder
+            ? ruleOrderingService.getOptimizedRuleOrder()
+            : ruleConfigRepository.findByEnabled(true);
+
+    CandidateIndex index = buildOrReuseCandidateIndex(enabledRules);
+
+    // V3.2: Derivar tipos ricos do payload sem alterar o payload original
+    DerivedContext derivedContext = DerivedContext.from(request);
+    log.debug(
+        "DerivedContext criado: transactionTs={}, bin={}, maskedPan={}",
+        derivedContext.getTransactionTimestamp(),
+        derivedContext.getBin(),
+        derivedContext.getMaskedPan());
 
     int totalScore = 0;
     List<TriggeredRuleDTO> triggeredRules = new ArrayList<>();
@@ -455,8 +521,61 @@ public class RuleEngineService {
     TransactionDecision.TransactionClassification maxByRule =
         TransactionDecision.TransactionClassification.APPROVED;
 
+    // V4.0: cheap deterministic pre-checks (short-circuit on FRAUD)
+    TransactionDecision.TransactionClassification preClassification =
+        runPreChecks(request, derivedContext, triggeredRules, scoreDetails);
+    maxByRule = maxSeverity(maxByRule, preClassification);
+    if (maxByRule == TransactionDecision.TransactionClassification.FRAUD) {
+      result.setRiskScore(100);
+      result.setTriggeredRules(triggeredRules);
+      result.setScoreDetails(scoreDetails);
+      result.setClassification(maxByRule);
+      result.setReason(generateReason(maxByRule, triggeredRules));
+      return result;
+    }
+
+    // V4.0: separate decision rules from shadow rules
+    List<RuleConfiguration> decisionRules = new ArrayList<>();
+    List<RuleConfiguration> shadowRules = new ArrayList<>();
     for (RuleConfiguration rule : enabledRules) {
+      if (!shadowModeEnabled || rule.getShadowMode() == null) {
+        decisionRules.add(rule);
+        continue;
+      }
+
+      switch (rule.getShadowMode()) {
+        case DISABLED -> decisionRules.add(rule);
+        case SHADOW -> shadowRules.add(rule);
+        case CANARY -> {
+          int pct = rule.getCanaryPercentage() != null ? rule.getCanaryPercentage() : 0;
+          String stableKey = request.getExternalTransactionId() + ":" + rule.getRuleName();
+          if (isInCanary(stableKey, pct)) {
+            decisionRules.add(rule);
+          } else {
+            shadowRules.add(rule);
+          }
+        }
+      }
+    }
+
+    for (RuleConfiguration rule : decisionRules) {
+      RulePreconditions pre = index.byRuleName.get(rule.getRuleName());
+      if (pre != null && pre.canSkipWithMissingFields && !hasAllRequiredFields(request, pre)) {
+        // Maintain parity with existing scoreDetails shape.
+        scoreDetails.put(rule.getRuleName(), Map.of("triggered", false));
+        continue;
+      }
+
+      long startNanos = optimizedRuleOrder ? System.nanoTime() : 0L;
       RuleMatch ruleMatch = evaluateRuleGeneric(transaction, request, rule);
+      if (optimizedRuleOrder) {
+        long elapsed = System.nanoTime() - startNanos;
+        try {
+          ruleOrderingService.recordExecution(rule.getRuleName(), elapsed, ruleMatch.triggered);
+        } catch (Exception ignored) {
+          // ordering is best-effort; never break fraud decisions
+        }
+      }
 
       if (ruleMatch.triggered) {
         int contribution = clampScore(rule.getWeight());
@@ -503,7 +622,191 @@ public class RuleEngineService {
     result.setClassification(maxByRule);
     result.setReason(generateReason(maxByRule, triggeredRules));
 
+    // V4.0: evaluate SHADOW/CANARY-not-selected rules asynchronously (never impacts decision)
+    if (shadowModeEnabled && !shadowRules.isEmpty()) {
+      String actualDecision = maxByRule.name();
+      ShadowModeService.RuleEvaluator evaluator =
+          (rule, tx) -> {
+            RuleMatch rm = evaluateRuleGeneric(transaction, request, rule);
+            if (!rm.triggered) {
+              return ShadowModeService.RuleEvaluationResult.notTriggered();
+            }
+            int score = clampScore(rule.getWeight());
+            String action =
+                rule.getClassification() == TransactionDecision.TransactionClassification.FRAUD
+                    ? "BLOCK"
+                    : (rule.getClassification()
+                            == TransactionDecision.TransactionClassification.SUSPICIOUS
+                        ? "FLAG"
+                        : "ALLOW");
+            return ShadowModeService.RuleEvaluationResult.triggered(score, action, rm.detail);
+          };
+
+      for (RuleConfiguration shadowRule : shadowRules) {
+        shadowModeService.executeShadow(shadowRule, request, evaluator, actualDecision);
+      }
+    }
+
     return result;
+  }
+
+  private boolean isInCanary(String stableKey, int percentage) {
+    if (percentage <= 0) return false;
+    if (percentage >= 100) return true;
+    int bucket = Math.floorMod(stableKey.hashCode(), 100);
+    return bucket < percentage;
+  }
+
+  private TransactionDecision.TransactionClassification runPreChecks(
+      TransactionRequest request,
+      DerivedContext derivedContext,
+      List<TriggeredRuleDTO> triggeredRules,
+      Map<String, Object> scoreDetails) {
+    TransactionDecision.TransactionClassification max =
+        TransactionDecision.TransactionClassification.APPROVED;
+
+    if (bloomFilterEnabled) {
+      try {
+        if (request.getPan() != null && !request.getPan().isBlank()) {
+          var r =
+              bloomFilterService.isBlacklisted(
+                  com.rulex.entity.RuleList.EntityType.PAN, request.getPan());
+          if (r.inList()) {
+            triggeredRules.add(
+                TriggeredRuleDTO.builder()
+                    .name("BLOCKLIST_PAN")
+                    .weight(100)
+                    .contribution(100)
+                    .detail("PAN encontrado em blacklist")
+                    .build());
+            scoreDetails.put("BLOCKLIST_PAN", Map.of("triggered", true, "source", r.source()));
+            return TransactionDecision.TransactionClassification.FRAUD;
+          }
+        }
+
+        if (request.getMerchantId() != null && !request.getMerchantId().isBlank()) {
+          var r =
+              bloomFilterService.isBlacklisted(
+                  com.rulex.entity.RuleList.EntityType.MERCHANT_ID, request.getMerchantId());
+          if (r.inList()) {
+            triggeredRules.add(
+                TriggeredRuleDTO.builder()
+                    .name("BLOCKLIST_MERCHANT")
+                    .weight(100)
+                    .contribution(100)
+                    .detail("MerchantId encontrado em blacklist")
+                    .build());
+            scoreDetails.put("BLOCKLIST_MERCHANT", Map.of("triggered", true, "source", r.source()));
+            return TransactionDecision.TransactionClassification.FRAUD;
+          }
+        }
+
+        if (request.getCustomerIdFromHeader() != null
+            && !request.getCustomerIdFromHeader().isBlank()) {
+          var r =
+              bloomFilterService.isBlacklisted(
+                  com.rulex.entity.RuleList.EntityType.CUSTOMER_ID,
+                  request.getCustomerIdFromHeader());
+          if (r.inList()) {
+            triggeredRules.add(
+                TriggeredRuleDTO.builder()
+                    .name("BLOCKLIST_CUSTOMER")
+                    .weight(100)
+                    .contribution(100)
+                    .detail("CustomerId encontrado em blacklist")
+                    .build());
+            scoreDetails.put("BLOCKLIST_CUSTOMER", Map.of("triggered", true, "source", r.source()));
+            return TransactionDecision.TransactionClassification.FRAUD;
+          }
+        }
+
+        // Use terminalId as a proxy for device id if present.
+        if (request.getTerminalId() != null && !request.getTerminalId().isBlank()) {
+          var r =
+              bloomFilterService.isBlacklisted(
+                  com.rulex.entity.RuleList.EntityType.DEVICE_ID, request.getTerminalId());
+          if (r.inList()) {
+            triggeredRules.add(
+                TriggeredRuleDTO.builder()
+                    .name("BLOCKLIST_DEVICE")
+                    .weight(100)
+                    .contribution(100)
+                    .detail("DeviceId (terminalId) encontrado em blacklist")
+                    .build());
+            scoreDetails.put("BLOCKLIST_DEVICE", Map.of("triggered", true, "source", r.source()));
+            return TransactionDecision.TransactionClassification.FRAUD;
+          }
+        }
+      } catch (Exception ignored) {
+        // best-effort
+      }
+    }
+
+    if (impossibleTravelEnabled
+        && request.getPan() != null
+        && !request.getPan().isBlank()
+        && derivedContext.getTransactionTimestamp() != null) {
+      try {
+        GeoService.GeoCoordinates coords = geoService.deriveCoordinates(request);
+        if (coords != null && coords.isFound()) {
+          String panHash = PanHashUtil.sha256Hex(request.getPan());
+          boolean cardPresent = "Y".equals(request.getCustomerPresent());
+
+          var analysis =
+              impossibleTravelService.analyzeTravel(
+                  panHash,
+                  coords.getLatitude(),
+                  coords.getLongitude(),
+                  request.getMerchantCity(),
+                  derivedContext.getNormalizedCountryCode(),
+                  derivedContext.getTransactionTimestamp().toLocalDateTime(),
+                  request.getExternalTransactionId(),
+                  cardPresent);
+
+          if (analysis.riskLevel() == ImpossibleTravelService.TravelRisk.IMPOSSIBLE) {
+            triggeredRules.add(
+                TriggeredRuleDTO.builder()
+                    .name("IMPOSSIBLE_TRAVEL")
+                    .weight(100)
+                    .contribution(100)
+                    .detail(
+                        String.format(
+                            "Viagem impossível: %.0fkm em %.0fmin (%.0f km/h)",
+                            analysis.distanceKm(), analysis.elapsedMinutes(), analysis.speedKmh()))
+                    .build());
+            scoreDetails.put(
+                "IMPOSSIBLE_TRAVEL",
+                Map.of(
+                    "triggered",
+                    true,
+                    "distanceKm",
+                    analysis.distanceKm(),
+                    "speedKmh",
+                    analysis.speedKmh(),
+                    "elapsedMinutes",
+                    analysis.elapsedMinutes()));
+            return TransactionDecision.TransactionClassification.FRAUD;
+          }
+
+          if (analysis.riskLevel() == ImpossibleTravelService.TravelRisk.HIGH) {
+            triggeredRules.add(
+                TriggeredRuleDTO.builder()
+                    .name("SUSPICIOUS_TRAVEL")
+                    .weight(60)
+                    .contribution(60)
+                    .detail(String.format("Viagem suspeita: %.0f km/h", analysis.speedKmh()))
+                    .build());
+            scoreDetails.put(
+                "SUSPICIOUS_TRAVEL", Map.of("triggered", true, "speedKmh", analysis.speedKmh()));
+            max = maxSeverity(max, TransactionDecision.TransactionClassification.SUSPICIOUS);
+          }
+        }
+      } catch (Exception ignored) {
+        // best-effort
+      }
+    }
+
+    return max;
   }
 
   /** Avalia uma regra específica contra a transação. */
@@ -591,18 +894,9 @@ public class RuleEngineService {
     return new RuleMatch(legacy, legacy ? "regra legada por nome" : null);
   }
 
-  /** Verifica se o MCC é de alto risco. */
+  /** Verifica se o MCC é de alto risco usando EnrichmentService com fallback. */
   private boolean isHighRiskMcc(Integer mcc) {
-    // MCCs de alto risco: Jogos, Criptomoedas, Transferências de dinheiro, etc.
-    Set<Integer> highRiskMccs =
-        Set.of(
-            7995, // Gambling
-            6211, // Securities Brokers
-            6051, // Crypto
-            7273, // Dating Services
-            7994 // Video Amusement
-            );
-    return highRiskMccs.contains(mcc);
+    return enrichmentService.isHighRiskMcc(mcc);
   }
 
   /** Verifica se é uma transação internacional. */
@@ -1217,6 +1511,169 @@ public class RuleEngineService {
     }
   }
 
+  private boolean hasAllRequiredFields(TransactionRequest request, RulePreconditions pre) {
+    if (pre.requiredFields.isEmpty()) {
+      return true;
+    }
+    for (String f : pre.requiredFields) {
+      Object v = readFieldValue(request, TransactionRequest.class, f);
+      if (v == null) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private CandidateIndex buildOrReuseCandidateIndex(List<RuleConfiguration> enabledRules) {
+    if (enabledRules == null || enabledRules.isEmpty()) {
+      return CandidateIndex.EMPTY;
+    }
+
+    LocalDateTime maxUpdatedAt = null;
+    int size = enabledRules.size();
+    for (RuleConfiguration r : enabledRules) {
+      if (r != null && r.getUpdatedAt() != null) {
+        if (maxUpdatedAt == null || r.getUpdatedAt().isAfter(maxUpdatedAt)) {
+          maxUpdatedAt = r.getUpdatedAt();
+        }
+      }
+    }
+    CandidateIndexSignature sig = new CandidateIndexSignature(size, maxUpdatedAt);
+
+    CandidateIndexCache cached = candidateIndexCache;
+    if (cached != null && cached.signature.equals(sig)) {
+      return cached.index;
+    }
+
+    CandidateIndex built = buildCandidateIndex(enabledRules);
+    candidateIndexCache = new CandidateIndexCache(sig, built);
+    return built;
+  }
+
+  private CandidateIndex buildCandidateIndex(List<RuleConfiguration> enabledRules) {
+    Map<String, RulePreconditions> out = new HashMap<>();
+    for (RuleConfiguration rule : enabledRules) {
+      if (rule == null || rule.getRuleName() == null) continue;
+
+      String cj = rule.getConditionsJson();
+      if (cj == null || cj.isBlank()) {
+        continue;
+      }
+
+      List<RuleConditionDTO> conditions = readConditions(cj);
+      if (conditions.isEmpty()) {
+        continue;
+      }
+
+      RuleConfiguration.LogicOperator op =
+          rule.getLogicOperator() != null
+              ? rule.getLogicOperator()
+              : RuleConfiguration.LogicOperator.AND;
+
+      Set<String> required = new HashSet<>();
+      boolean hasIsNull = false;
+
+      for (RuleConditionDTO c : conditions) {
+        if (c == null) continue;
+        String operator = normalizeOperator(c.getOperator());
+        if ("IS_NULL".equals(operator)) {
+          hasIsNull = true;
+          continue;
+        }
+        required.addAll(extractFieldDependencies(c.getField()));
+      }
+
+      // Conservative skipping:
+      // - AND rules: safe to skip when any required field is missing (would evaluate to false)
+      // - OR rules: do not skip (could still trigger via IS_NULL or any present condition)
+      boolean canSkip = (op == RuleConfiguration.LogicOperator.AND);
+      if (op == RuleConfiguration.LogicOperator.OR && hasIsNull) {
+        canSkip = false;
+      }
+
+      out.put(rule.getRuleName(), new RulePreconditions(required, canSkip));
+    }
+    return new CandidateIndex(Collections.unmodifiableMap(out));
+  }
+
+  private Set<String> extractFieldDependencies(String fieldExpr) {
+    if (fieldExpr == null) return Set.of();
+    String raw = fieldExpr.trim();
+    if (raw.isEmpty()) return Set.of();
+
+    java.util.regex.Matcher unary =
+        java.util.regex.Pattern.compile("^(ABS|LEN|LOWER|UPPER|TRIM)\\(([A-Za-z0-9_]+)\\)$")
+            .matcher(raw);
+    if (unary.matches()) {
+      return Set.of(unary.group(2));
+    }
+
+    java.util.regex.Matcher absExpr =
+        java.util.regex.Pattern.compile("^ABS\\((.+)\\)$").matcher(raw);
+    if (absExpr.matches()) {
+      return extractDepsFromNumericExpr(absExpr.group(1));
+    }
+
+    java.util.regex.Matcher absDiff =
+        java.util.regex.Pattern.compile("^ABS_DIFF\\(([A-Za-z0-9_]+)\\s*,\\s*([A-Za-z0-9_]+)\\)$")
+            .matcher(raw);
+    if (absDiff.matches()) {
+      return Set.of(absDiff.group(1), absDiff.group(2));
+    }
+
+    java.util.regex.Matcher coalesce =
+        java.util.regex.Pattern.compile("^COALESCE\\(([A-Za-z0-9_]+)\\s*,\\s*(.+)\\)$")
+            .matcher(raw);
+    if (coalesce.matches()) {
+      return Set.of(coalesce.group(1));
+    }
+
+    return Set.of(raw);
+  }
+
+  private Set<String> extractDepsFromNumericExpr(String expr) {
+    if (expr == null) return Set.of();
+    String e = expr.trim();
+    if (e.isEmpty()) return Set.of();
+
+    int minus = indexOfTopLevelMinus(e);
+    if (minus > 0) {
+      String left = e.substring(0, minus).trim();
+      String right = e.substring(minus + 1).trim();
+      Set<String> out = new HashSet<>();
+      String a = depToken(left);
+      String b = depToken(right);
+      if (a != null) out.add(a);
+      if (b != null) out.add(b);
+      return out;
+    }
+
+    String single = depToken(e);
+    return single == null ? Set.of() : Set.of(single);
+  }
+
+  private String depToken(String token) {
+    if (token == null) return null;
+    String t = token.trim();
+    if (t.isEmpty()) return null;
+    try {
+      new BigDecimal(t);
+      return null;
+    } catch (Exception ignored) {
+      return t;
+    }
+  }
+
+  private record CandidateIndex(Map<String, RulePreconditions> byRuleName) {
+    static final CandidateIndex EMPTY = new CandidateIndex(Map.of());
+  }
+
+  private record RulePreconditions(Set<String> requiredFields, boolean canSkipWithMissingFields) {}
+
+  private record CandidateIndexSignature(int ruleCount, LocalDateTime maxUpdatedAt) {}
+
+  private record CandidateIndexCache(CandidateIndexSignature signature, CandidateIndex index) {}
+
   private boolean evaluateCondition(TransactionRequest request, RuleConditionDTO condition) {
     String operatorRaw = condition.getOperator() == null ? "" : condition.getOperator().trim();
     String operator = normalizeOperator(operatorRaw);
@@ -1327,11 +1784,8 @@ public class RuleEngineService {
   }
 
   private boolean matchesRegex(String left, String rawRegex) {
-    try {
-      return java.util.regex.Pattern.compile(rawRegex).matcher(left).find();
-    } catch (Exception e) {
-      return false;
-    }
+    // Usa RegexValidator para proteção contra ReDoS
+    return RegexValidator.safeFind(rawRegex, left);
   }
 
   private boolean inListNumberFlexible(BigDecimal left, String rawList) {
