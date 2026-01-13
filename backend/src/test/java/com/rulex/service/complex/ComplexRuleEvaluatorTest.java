@@ -8,6 +8,7 @@ import com.rulex.entity.complex.RuleCondition.ConditionOperator;
 import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleConditionGroup.GroupLogicOperator;
 import com.rulex.service.GeoService;
+import com.rulex.service.OperatorDataService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
 import java.math.BigDecimal;
@@ -30,6 +31,7 @@ class ComplexRuleEvaluatorTest {
   private GeoService geoService;
   private VelocityService velocityService;
   private VelocityServiceFacade velocityServiceFacade;
+  private OperatorDataService operatorDataService;
   private ComplexRuleEvaluator evaluator;
 
   @BeforeEach
@@ -37,7 +39,8 @@ class ComplexRuleEvaluatorTest {
     geoService = Mockito.mock(GeoService.class);
     velocityService = Mockito.mock(VelocityService.class);
     velocityServiceFacade = Mockito.mock(VelocityServiceFacade.class);
-    evaluator = new ComplexRuleEvaluator(geoService, velocityService, velocityServiceFacade);
+    operatorDataService = Mockito.mock(OperatorDataService.class);
+    evaluator = new ComplexRuleEvaluator(geoService, velocityService, velocityServiceFacade, operatorDataService);
   }
 
   @Nested

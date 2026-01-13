@@ -5,6 +5,7 @@ import com.rulex.entity.complex.RuleCondition;
 import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleExecutionDetail;
 import com.rulex.service.GeoService;
+import com.rulex.service.OperatorDataService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
 import com.rulex.util.RegexValidator;
@@ -35,6 +36,7 @@ public class ComplexRuleEvaluator {
   private final GeoService geoService;
   private final VelocityService velocityService;
   private final VelocityServiceFacade velocityServiceFacade;
+  private final OperatorDataService operatorDataService;
 
   /** Resultado da avaliação de uma regra */
   @Data
@@ -1753,8 +1755,8 @@ public class ComplexRuleEvaluator {
         return false;
       }
 
-      String sourceField = parts[0].trim();
-      String targetField = parts[1].trim();
+      String sourceField = parts[0].trim(); // Ex: customerIdFromHeader
+      String targetField = parts[1].trim(); // Ex: beneficiaryId
       int days = Integer.parseInt(parts[2].trim());
 
       Object sourceValue = getFieldValue(sourceField, null, context);
@@ -1764,11 +1766,14 @@ public class ComplexRuleEvaluator {
         return false;
       }
 
-      // Consulta ao VelocityService para verificar histórico
-      // Por enquanto, retorna true (beneficiário novo) se não houver dados históricos
-      // TODO: Implementar consulta real ao histórico de transações
-      log.debug("NOT_IN_HISTORICAL: source={}, target={}, days={}", sourceValue, targetValue, days);
-      return true; // Placeholder - assumir novo beneficiário
+      String customerId = sourceValue.toString();
+      String beneficiaryId = targetValue.toString();
+
+      // Consultar histórico de beneficiários
+      boolean isNew = operatorDataService.isNewBeneficiary(customerId, beneficiaryId);
+      log.debug("NOT_IN_HISTORICAL: customerId={}, beneficiaryId={}, days={}, isNew={}",
+          customerId, beneficiaryId, days, isNew);
+      return isNew;
     } catch (Exception e) {
       log.error("Erro ao avaliar NOT_IN_HISTORICAL: {}", e.getMessage());
       return false;
@@ -1846,13 +1851,33 @@ public class ComplexRuleEvaluator {
 
       BigDecimal currentAmount = new BigDecimal(String.valueOf(fieldValue));
 
-      // TODO: Implementar consulta ao último depósito/crédito do cliente
-      // Por enquanto, usa um valor placeholder
-      BigDecimal lastIncoming = BigDecimal.valueOf(1000); // Placeholder
+      // Obter ID do cliente
+      Object customerIdObj = getFieldValue("customerIdFromHeader", null, context);
+      if (customerIdObj == null) {
+        customerIdObj = getFieldValue("customerId", null, context);
+      }
+
+      BigDecimal lastIncoming = BigDecimal.valueOf(1000); // Default fallback
+
+      if (customerIdObj != null) {
+        String customerId = customerIdObj.toString();
+        Optional<BigDecimal> lastIncomingOpt = operatorDataService.getLastIncomingAmount(customerId);
+        if (lastIncomingOpt.isPresent()) {
+          lastIncoming = lastIncomingOpt.get();
+        }
+      }
+
+      if (lastIncoming.compareTo(BigDecimal.ZERO) == 0) {
+        return false; // Evitar divisão por zero
+      }
 
       BigDecimal threshold =
-          lastIncoming.multiply(BigDecimal.valueOf(percentage)).divide(BigDecimal.valueOf(100));
-      return currentAmount.compareTo(threshold) >= 0;
+          lastIncoming.multiply(BigDecimal.valueOf(percentage)).divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP);
+      boolean result = currentAmount.compareTo(threshold) >= 0;
+
+      log.debug("GTE_PERCENT_OF_LAST_INCOMING: current={}, lastIncoming={}, percentage={}%, threshold={}, result={}",
+          currentAmount, lastIncoming, percentage, threshold, result);
+      return result;
     } catch (Exception e) {
       log.error("Erro ao avaliar GTE_PERCENT_OF_LAST_INCOMING: {}", e.getMessage());
       return false;
@@ -1900,17 +1925,20 @@ public class ComplexRuleEvaluator {
       double rateThreshold = Double.parseDouble(parts[0].trim());
       int days = Integer.parseInt(parts[1].trim());
 
-      Object merchantId = getFieldValue(condition.getFieldName(), null, context);
-      if (merchantId == null) {
+      Object merchantIdObj = getFieldValue(condition.getFieldName(), null, context);
+      if (merchantIdObj == null) {
         return false;
       }
+      String merchantId = merchantIdObj.toString();
 
-      // TODO: Implementar consulta real à taxa de chargeback do merchant
-      // Por enquanto, retorna false (merchant OK)
+      // Consulta real à taxa de chargeback do merchant
+      BigDecimal threshold = BigDecimal.valueOf(rateThreshold / 100.0); // Converter % para decimal
+      boolean result = operatorDataService.hasHighChargebackRate(merchantId, threshold);
+
       log.debug(
-          "CHARGEBACK_RATE_GT: merchantId={}, threshold={}%, days={}",
-          merchantId, rateThreshold, days);
-      return false; // Placeholder
+          "CHARGEBACK_RATE_GT: merchantId={}, threshold={}%, days={}, result={}",
+          merchantId, rateThreshold, days, result);
+      return result;
     } catch (Exception e) {
       log.error("Erro ao avaliar CHARGEBACK_RATE_GT: {}", e.getMessage());
       return false;
@@ -1923,23 +1951,51 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateAccountAgeLtMinutes(RuleCondition condition, EvaluationContext context) {
     try {
-      int minutes = Integer.parseInt(condition.getValueSingle().trim());
+      int thresholdMinutes = Integer.parseInt(condition.getValueSingle().trim());
 
-      // Verificar se há campo de data de criação da conta no contexto
+      // Obter ID do cliente
+      Object customerIdObj = getFieldValue("customerIdFromHeader", null, context);
+      if (customerIdObj == null) {
+        customerIdObj = getFieldValue("customerId", null, context);
+      }
+
+      if (customerIdObj != null) {
+        String customerId = customerIdObj.toString();
+        long accountAgeMinutes = operatorDataService.getAccountAgeInMinutes(customerId);
+
+        if (accountAgeMinutes >= 0) {
+          boolean result = accountAgeMinutes < thresholdMinutes;
+          log.debug("ACCOUNT_AGE_LT_MINUTES: customerId={}, age={}min, threshold={}min, result={}",
+              customerId, accountAgeMinutes, thresholdMinutes, result);
+          return result;
+        }
+      }
+
+      // Fallback: verificar campo de data de criação no payload
       Object createdAt = getFieldValue("accountCreatedAt", null, context);
       if (createdAt == null) {
         createdAt = getFieldValue("customerCreatedAt", null, context);
       }
 
-      if (createdAt == null) {
-        // Se não há informação de idade da conta, assumir conta antiga (segura)
-        return false;
+      if (createdAt != null) {
+        java.time.OffsetDateTime createdDateTime;
+        if (createdAt instanceof java.time.OffsetDateTime) {
+          createdDateTime = (java.time.OffsetDateTime) createdAt;
+        } else if (createdAt instanceof String) {
+          createdDateTime = java.time.OffsetDateTime.parse((String) createdAt);
+        } else {
+          return false;
+        }
+
+        long ageMinutes = java.time.Duration.between(createdDateTime, java.time.OffsetDateTime.now()).toMinutes();
+        boolean result = ageMinutes < thresholdMinutes;
+        log.debug("ACCOUNT_AGE_LT_MINUTES: age={}min, threshold={}min, result={}",
+            ageMinutes, thresholdMinutes, result);
+        return result;
       }
 
-      // TODO: Implementar parsing da data e cálculo de idade
-      // Por enquanto, retorna false (conta antiga)
-      log.debug("ACCOUNT_AGE_LT_MINUTES: minutes={}, createdAt={}", minutes, createdAt);
-      return false; // Placeholder
+      // Se não há informação de idade da conta, assumir conta antiga (segura)
+      return false;
     } catch (Exception e) {
       log.error("Erro ao avaliar ACCOUNT_AGE_LT_MINUTES: {}", e.getMessage());
       return false;
@@ -1957,16 +2013,25 @@ public class ComplexRuleEvaluator {
 
     String phone = String.valueOf(fieldValue).replaceAll("[^0-9]", "");
 
-    // Lista de prefixos conhecidos de VoIP no Brasil
-    String[] voipPrefixes = {"0800", "0300", "0500", "0900"};
+    // Verificar na tabela de ranges VoIP
+    String countryCode = "55"; // Brasil por padrão
+    if (phone.startsWith("55")) {
+      phone = phone.substring(2);
+    }
+
+    // Consultar banco de dados de VoIP
+    if (operatorDataService.isVoipNumber(phone, countryCode)) {
+      return true;
+    }
+
+    // Fallback: Lista de prefixos conhecidos de VoIP no Brasil
+    String[] voipPrefixes = {"0800", "0300", "0303", "0500", "0900", "4000", "4003", "4004", "4020", "4062"};
     for (String prefix : voipPrefixes) {
       if (phone.startsWith(prefix)) {
         return true;
       }
     }
 
-    // TODO: Integrar com serviço externo de verificação de VoIP (ex: Twilio Lookup)
-    // Por enquanto, usa heurística básica
     return false;
   }
 
@@ -2065,9 +2130,30 @@ public class ComplexRuleEvaluator {
 
   /** IS_HOLIDAY: Verifica se a transação é em feriado (placeholder) */
   private boolean evaluateIsHoliday(EvaluationContext context) {
-    // TODO: Implementar consulta a tabela de feriados
-    // Por enquanto, retorna false
-    return false;
+    try {
+      // Obter data da transação
+      Object dateValue = getFieldValue("transactionDate", null, context);
+      LocalDate transactionDate;
+
+      if (dateValue instanceof LocalDate) {
+        transactionDate = (LocalDate) dateValue;
+      } else if (dateValue instanceof LocalDateTime) {
+        transactionDate = ((LocalDateTime) dateValue).toLocalDate();
+      } else if (dateValue instanceof String) {
+        transactionDate = LocalDate.parse((String) dateValue);
+      } else {
+        transactionDate = LocalDate.now();
+      }
+
+      // Obter país da transação
+      Object countryValue = getFieldValue("merchantCountryCode", null, context);
+      String countryCode = countryValue != null ? countryValue.toString() : "BRA";
+
+      return operatorDataService.isHoliday(transactionDate, countryCode);
+    } catch (Exception e) {
+      log.warn("Erro ao verificar feriado: {}", e.getMessage());
+      return false;
+    }
   }
 
   /** HOUR_BETWEEN: Verifica se a hora está entre dois valores. Formato: "startHour:endHour" */
@@ -2310,15 +2396,27 @@ public class ComplexRuleEvaluator {
       int hours = Integer.parseInt(parts[0].trim());
       int threshold = Integer.parseInt(parts[1].trim());
 
-      // TODO: Implementar consulta real a falhas
-      // Por enquanto, usa contagem de transações suspeitas como proxy
-      VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
+      // Obter ID do cliente
+      Object customerIdObj = getFieldValue("customerIdFromHeader", null, context);
+      if (customerIdObj == null) {
+        customerIdObj = getFieldValue("customerId", null, context);
+      }
 
+      if (customerIdObj != null) {
+        String customerId = customerIdObj.toString();
+        long failureCount = operatorDataService.countAuthFailuresLastNHours(customerId, hours);
+        boolean result = failureCount > threshold;
+        log.debug("COUNT_FAILURES_LAST_N_HOURS: customerId={}, hours={}, failures={}, threshold={}, result={}",
+            customerId, hours, failureCount, threshold, result);
+        return result;
+      }
+
+      // Fallback: usar velocity service
+      VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
       if (context.getTransactionRequest() != null) {
         VelocityService.VelocityStats stats =
             velocityServiceFacade.getStats(
                 context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
-        // Usar suspicious_count como proxy para falhas
         return stats.getFraudCount() > threshold;
       }
       return false;
@@ -2358,12 +2456,28 @@ public class ComplexRuleEvaluator {
   /** TIME_SINCE_LAST_LT: Tempo desde última transação menor que N minutos */
   private boolean evaluateTimeSinceLastLt(RuleCondition condition, EvaluationContext context) {
     try {
-      int minutes = Integer.parseInt(condition.getValueSingle().trim());
+      int thresholdMinutes = Integer.parseInt(condition.getValueSingle().trim());
 
-      // TODO: Implementar consulta real ao timestamp da última transação
-      // Por enquanto, verifica se há muitas transações na janela de tempo
+      // Obter ID do cliente
+      Object customerIdObj = getFieldValue("customerIdFromHeader", null, context);
+      if (customerIdObj == null) {
+        customerIdObj = getFieldValue("customerId", null, context);
+      }
+
+      if (customerIdObj != null) {
+        String customerId = customerIdObj.toString();
+        long minutesSinceLast = operatorDataService.getMinutesSinceLastTransaction(customerId);
+
+        if (minutesSinceLast >= 0) {
+          boolean result = minutesSinceLast < thresholdMinutes;
+          log.debug("TIME_SINCE_LAST_LT: customerId={}, minutesSinceLast={}, threshold={}, result={}",
+              customerId, minutesSinceLast, thresholdMinutes, result);
+          return result;
+        }
+      }
+
+      // Fallback: usar velocity service
       VelocityService.TimeWindow window = parseTimeWindowFromHours(1);
-
       if (context.getTransactionRequest() != null) {
         VelocityService.VelocityStats stats =
             velocityServiceFacade.getStats(
@@ -2447,11 +2561,44 @@ public class ComplexRuleEvaluator {
 
   /** PATTERN_ESCALATION: Detecta padrão de valores crescentes (escada) */
   private boolean evaluatePatternEscalation(RuleCondition condition, EvaluationContext context) {
-    // TODO: Implementar detecção de padrão de escada
-    // Requer análise de histórico de transações recentes
-    // Por enquanto, retorna false
-    log.debug("PATTERN_ESCALATION não implementado completamente");
-    return false;
+    try {
+      // Formato: "minTransactions:escalationFactor" (ex: "3:1.5" = 3+ transações com fator 1.5x)
+      String[] parts = condition.getValueSingle().split(":");
+      int minTransactions = parts.length > 0 ? Integer.parseInt(parts[0].trim()) : 3;
+      double escalationFactor = parts.length > 1 ? Double.parseDouble(parts[1].trim()) : 1.5;
+
+      if (context.getTransactionRequest() == null) {
+        return false;
+      }
+
+      // Usar velocity service para obter transações recentes
+      VelocityService.TimeWindow window = VelocityService.TimeWindow.HOUR_1;
+      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
+          context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
+
+      // Se não há transações suficientes, não pode haver padrão de escada
+      if (stats.getTransactionCount() < minTransactions) {
+        return false;
+      }
+
+      // Verificar se o valor atual é significativamente maior que a média
+      BigDecimal currentAmount = context.getTransactionRequest().getTransactionAmount();
+      BigDecimal avgAmount = stats.getAvgAmount();
+
+      if (avgAmount != null && avgAmount.compareTo(BigDecimal.ZERO) > 0) {
+        double ratio = currentAmount.doubleValue() / avgAmount.doubleValue();
+        boolean isEscalating = ratio >= escalationFactor;
+
+        log.debug("PATTERN_ESCALATION: txCount={}, currentAmount={}, avgAmount={}, ratio={}, factor={}, result={}",
+            stats.getTransactionCount(), currentAmount, avgAmount, ratio, escalationFactor, isEscalating);
+        return isEscalating;
+      }
+
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar PATTERN_ESCALATION: {}", e.getMessage());
+      return false;
+    }
   }
 
   /**
@@ -2569,15 +2716,27 @@ public class ComplexRuleEvaluator {
   private boolean evaluateInCustomerChargebackMerchants(
       RuleCondition condition, EvaluationContext context) {
     try {
-      Object merchantId = getFieldValue("merchantId", null, context);
-      if (merchantId == null) {
+      Object merchantIdObj = getFieldValue("merchantId", null, context);
+      if (merchantIdObj == null) {
         return false;
       }
+      String merchantId = merchantIdObj.toString();
 
-      // TODO: Implementar consulta real à tabela de chargebacks
-      // Por enquanto, retorna false (merchant não tem chargeback)
-      log.debug("IN_CUSTOMER_CHARGEBACK_MERCHANTS: merchantId={}", merchantId);
-      return false;
+      // Obter ID do cliente
+      Object customerIdObj = getFieldValue("customerIdFromHeader", null, context);
+      if (customerIdObj == null) {
+        customerIdObj = getFieldValue("customerId", null, context);
+      }
+      if (customerIdObj == null) {
+        return false;
+      }
+      String customerId = customerIdObj.toString();
+
+      // Consultar histórico de chargebacks
+      boolean result = operatorDataService.hasChargebackWithMerchant(customerId, merchantId);
+      log.debug("IN_CUSTOMER_CHARGEBACK_MERCHANTS: customerId={}, merchantId={}, result={}",
+          customerId, merchantId, result);
+      return result;
     } catch (Exception e) {
       log.error("Erro ao avaliar IN_CUSTOMER_CHARGEBACK_MERCHANTS: {}", e.getMessage());
       return false;

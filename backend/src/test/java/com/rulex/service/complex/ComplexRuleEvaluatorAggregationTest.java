@@ -8,6 +8,7 @@ import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.complex.RuleCondition;
 import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.service.GeoService;
+import com.rulex.service.OperatorDataService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
 import java.math.BigDecimal;
@@ -27,12 +28,13 @@ class ComplexRuleEvaluatorAggregationTest {
   @Mock private GeoService geoService;
   @Mock private VelocityService velocityService;
   @Mock private VelocityServiceFacade velocityServiceFacade;
+  @Mock private OperatorDataService operatorDataService;
 
   private ComplexRuleEvaluator evaluator;
 
   @BeforeEach
   void setUp() {
-    evaluator = new ComplexRuleEvaluator(geoService, velocityService, velocityServiceFacade);
+    evaluator = new ComplexRuleEvaluator(geoService, velocityService, velocityServiceFacade, operatorDataService);
   }
 
   @Test
