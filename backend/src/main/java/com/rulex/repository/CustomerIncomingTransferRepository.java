@@ -29,9 +29,11 @@ public interface CustomerIncomingTransferRepository
   Optional<BigDecimal> findLastIncomingAmount(@Param("customerId") String customerId);
 
   @Query(
-      "SELECT COALESCE(SUM(t.transferAmount), 0) FROM CustomerIncomingTransfer t "
-          + "WHERE t.customerId = :customerId "
-          + "AND t.transferDate >= CURRENT_TIMESTAMP - :days * INTERVAL '1 day'")
+      value =
+          "SELECT COALESCE(SUM(t.transfer_amount), 0) FROM customer_incoming_transfers t "
+              + "WHERE t.customer_id = :customerId "
+              + "AND t.transfer_date >= CURRENT_TIMESTAMP - CAST(:days || ' days' AS INTERVAL)",
+      nativeQuery = true)
   BigDecimal sumIncomingAmountLastNDays(
       @Param("customerId") String customerId, @Param("days") int days);
 }

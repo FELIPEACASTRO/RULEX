@@ -9,12 +9,12 @@ CREATE TABLE IF NOT EXISTS holidays (
     holiday_date DATE NOT NULL,
     holiday_name VARCHAR(255) NOT NULL,
     country_code VARCHAR(3) NOT NULL DEFAULT 'BRA',
-    state_code VARCHAR(2), -- NULL = feriado nacional
-    city_code VARCHAR(10), -- NULL = feriado estadual/nacional
+    state_code VARCHAR(2) NOT NULL DEFAULT '', -- '' = feriado nacional
+    city_code VARCHAR(10) NOT NULL DEFAULT '', -- '' = feriado estadual/nacional
     holiday_type VARCHAR(50) NOT NULL DEFAULT 'NATIONAL', -- NATIONAL, STATE, MUNICIPAL, BANK
     is_bank_holiday BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE(holiday_date, country_code, COALESCE(state_code, ''), COALESCE(city_code, ''))
+    UNIQUE(holiday_date, country_code, state_code, city_code)
 );
 
 -- Índices para consulta rápida

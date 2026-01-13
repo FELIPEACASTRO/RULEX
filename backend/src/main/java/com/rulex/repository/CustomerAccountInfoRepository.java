@@ -25,7 +25,9 @@ public interface CustomerAccountInfoRepository extends JpaRepository<CustomerAcc
       @Param("customerId") String customerId, @Param("threshold") OffsetDateTime threshold);
 
   @Query(
-      "SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - a.accountCreatedAt)) / 60 "
-          + "FROM CustomerAccountInfo a WHERE a.customerId = :customerId")
+      value =
+          "SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - a.account_created_at)) / 60 "
+              + "FROM customer_account_info a WHERE a.customer_id = :customerId",
+      nativeQuery = true)
   Optional<Long> getAccountAgeInMinutes(@Param("customerId") String customerId);
 }
