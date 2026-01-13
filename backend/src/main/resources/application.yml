@@ -86,6 +86,9 @@ management:
       probes:
         enabled: true
       show-details: when_authorized
+  health:
+    neo4j:
+      enabled: false
   metrics:
     export:
       prometheus:

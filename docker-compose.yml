@@ -38,10 +38,11 @@ services:
       - "7474:7474"  # HTTP
       - "7687:7687"  # Bolt
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:7474"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 && cypher-shell -u neo4j -p ${NEO4J_PASSWORD:-rulex123} 'RETURN 1' || exit 1"]
       interval: 10s
-      timeout: 5s
-      retries: 10
+      timeout: 10s
+      retries: 30
+      start_period: 30s
     volumes:
       - rulex_neo4j_data:/data
       - rulex_neo4j_logs:/logs
