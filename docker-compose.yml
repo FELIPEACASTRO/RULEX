@@ -57,6 +57,11 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      # Neo4j configuration
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USERNAME: neo4j
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-rulex123}
+      RULEX_NEO4J_ENABLED: ${RULEX_NEO4J_ENABLED:-true}
       RULEX_SECURITY_ENABLED: ${RULEX_SECURITY_ENABLED:-true}
       RULEX_ADMIN_USERNAME: ${RULEX_ADMIN_USERNAME:-admin}
       RULEX_ADMIN_PASSWORD: ${RULEX_ADMIN_PASSWORD:-rulex}
@@ -72,6 +77,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      neo4j:
         condition: service_healthy
 
   web:
