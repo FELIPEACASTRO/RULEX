@@ -109,6 +109,8 @@ jobs:
       VITE_API_BASIC_AUTH: admin:rulex
       E2E_USERNAME: admin
       E2E_PASSWORD: rulex
+      E2E_ANALYST_USERNAME: analyst
+      E2E_ANALYST_PASSWORD: rulex
       PLAYWRIGHT_BASE_URL: http://localhost:5173
     steps:
       - uses: actions/checkout@v4
