@@ -2076,7 +2076,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-FRAUDE-TEST-001\",\n  \"customerIdFromHeader\": \"CUST-FRAUD-001\",\n  \"customerAcctNumber\": 9999999999999999,\n  \"pan\": \"411111******9999\",\n  \"transactionAmount\": 150000.0,\n  \"transactionCurrencyCode\": 986,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 30000,\n  \"mcc\": 7995,\n  \"merchantId\": \"FRAUD-MERCHANT\",\n  \"merchantName\": \"Casino Online Suspeito\",\n  \"merchantCountryCode\": \"RUS\",\n  \"consumerAuthenticationScore\": 0,\n  \"cavvResult\": 0,\n  \"eciIndicator\": 7,\n  \"cryptogramValid\": false,\n  \"atcCard\": 500,\n  \"atcHost\": 100,\n  \"cvv2Present\": true,\n  \"cvv2Response\": \"N\",\n  \"cvvVerifyCode\": \"N\",\n  \"cvrofflinePinVerificationPerformed\": true,\n  \"cvrofflinePinVerificationFailed\": true,\n  \"cvvPinTryLimitExceeded\": true,\n  \"tokenAssuranceLevel\": 0,\n  \"externalScore3\": 95,\n  \"availableCredit\": 100.0,\n  \"cardDelinquentAmount\": 50000.0,\n  \"ipAddress\": \"185.220.101.1\",\n  \"ipReputationScore\": 95,\n  \"mfaRequested\": false,\n  \"mfaCompleted\": false,\n  \"deepfakeScore\": 90,\n  \"livenessCheckPassed\": false,\n  \"shippingMethod\": \"EXPRESS\",\n  \"shippingAddress\": \"Endereço diferente do billing\",\n  \"workflow\": \"BRZLCREDIT\",\n  \"recordType\": \"CRTRAN25\",\n  \"portfolio\": \"DEFAULT\"\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-FRAUDE-TEST-001\",\n  \"customerIdFromHeader\": \"CUST-FRAUD-001\",\n  \"customerAcctNumber\": 9999999999999999,\n  \"pan\": \"411111******9999\",\n  \"transactionAmount\": 150000.0,\n  \"transactionCurrencyCode\": 986,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 30000,\n  \"mcc\": 7995,\n  \"merchantId\": \"FRAUD-MERCHANT\",\n  \"merchantName\": \"Casino Online Suspeito\",\n  \"merchantCountryCode\": \"RUS\",\n  \"consumerAuthenticationScore\": 0,\n  \"cavvResult\": 0,\n  \"eciIndicator\": 7,\n  \"cryptogramValid\": false,\n  \"atcCard\": 500,\n  \"atcHost\": 100,\n  \"cvv2Present\": true,\n  \"cvv2Response\": \"N\",\n  \"cvvVerifyCode\": \"N\",\n  \"cvrofflinePinVerificationPerformed\": true,\n  \"cvrofflinePinVerificationFailed\": true,\n  \"cvvPinTryLimitExceeded\": true,\n  \"tokenAssuranceLevel\": 0,\n  \"externalScore3\": 95,\n  \"availableCredit\": 100.0,\n  \"cardDelinquentAmount\": 50000.0,\n  \"ipAddress\": \"185.220.101.1\",\n  \"ipReputationScore\": 95,\n  \"mfaRequested\": false,\n  \"mfaCompleted\": false,\n  \"deepfakeScore\": 90,\n  \"livenessCheckPassed\": false,\n  \"shippingMethod\": \"EXPRESS\",\n  \"shippingAddress\": \"Endereço diferente do billing\",\n  \"workflow\": \"BRZLCREDIT\",\n  \"recordType\": \"CRTRAN25\",\n  \"portfolio\": \"DEFAULT\",\n  \"cardCashBalance\": 1000.0\n}"
       }
     },
     {
@@ -2100,7 +2100,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-SUSPEITA-TEST-001\",\n  \"customerIdFromHeader\": \"CUST-SUSPECT-001\",\n  \"customerAcctNumber\": 5555555555555555,\n  \"pan\": \"411111******5555\",\n  \"transactionAmount\": 15000.0,\n  \"transactionCurrencyCode\": 986,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"mcc\": 6051,\n  \"merchantId\": \"CRYPTO-EXCHANGE\",\n  \"merchantName\": \"Crypto Exchange BR\",\n  \"merchantCountryCode\": \"BRA\",\n  \"consumerAuthenticationScore\": 40,\n  \"cavvResult\": 1,\n  \"eciIndicator\": 6,\n  \"cryptogramValid\": true,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"cvv2Present\": true,\n  \"cvv2Response\": \"M\",\n  \"cvvVerifyCode\": \"M\",\n  \"cvrofflinePinVerificationPerformed\": true,\n  \"cvrofflinePinVerificationFailed\": false,\n  \"cvvPinTryLimitExceeded\": false,\n  \"tokenAssuranceLevel\": 1,\n  \"externalScore3\": 50,\n  \"availableCredit\": 5000.0,\n  \"cardDelinquentAmount\": 0.0,\n  \"ipAddress\": \"189.100.50.25\",\n  \"ipReputationScore\": 45,\n  \"mfaRequested\": true,\n  \"mfaCompleted\": false,\n  \"deepfakeScore\": 30,\n  \"livenessCheckPassed\": true,\n  \"identityVerificationScore\": 60,\n  \"workflow\": \"BRZLCREDIT\",\n  \"recordType\": \"CRTRAN25\",\n  \"portfolio\": \"DEFAULT\"\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-SUSPEITA-TEST-001\",\n  \"customerIdFromHeader\": \"CUST-SUSPECT-001\",\n  \"customerAcctNumber\": 5555555555555555,\n  \"pan\": \"411111******5555\",\n  \"transactionAmount\": 15000.0,\n  \"transactionCurrencyCode\": 986,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"mcc\": 6051,\n  \"merchantId\": \"CRYPTO-EXCHANGE\",\n  \"merchantName\": \"Crypto Exchange BR\",\n  \"merchantCountryCode\": \"BRA\",\n  \"consumerAuthenticationScore\": 40,\n  \"cavvResult\": 1,\n  \"eciIndicator\": 6,\n  \"cryptogramValid\": true,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"cvv2Present\": true,\n  \"cvv2Response\": \"M\",\n  \"cvvVerifyCode\": \"M\",\n  \"cvrofflinePinVerificationPerformed\": true,\n  \"cvrofflinePinVerificationFailed\": false,\n  \"cvvPinTryLimitExceeded\": false,\n  \"tokenAssuranceLevel\": 1,\n  \"externalScore3\": 50,\n  \"availableCredit\": 5000.0,\n  \"cardDelinquentAmount\": 0.0,\n  \"ipAddress\": \"189.100.50.25\",\n  \"ipReputationScore\": 45,\n  \"mfaRequested\": true,\n  \"mfaCompleted\": false,\n  \"deepfakeScore\": 30,\n  \"livenessCheckPassed\": true,\n  \"identityVerificationScore\": 60,\n  \"workflow\": \"BRZLCREDIT\",\n  \"recordType\": \"CRTRAN25\",\n  \"portfolio\": \"DEFAULT\",\n  \"cardCashBalance\": 1000.0\n}"
       }
     },
     {
@@ -2148,7 +2148,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-FRAUDE-001\",\n  \"customerIdFromHeader\": \"CUST-MIN-FRAUD\",\n  \"customerAcctNumber\": 9999999999999999,\n  \"pan\": \"411111******9999\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 150000.0,\n  \"mcc\": 7995\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-FRAUDE-001\",\n  \"customerIdFromHeader\": \"CUST-MIN-FRAUD\",\n  \"customerAcctNumber\": 9999999999999999,\n  \"pan\": \"411111******9999\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 150000.0,\n  \"mcc\": 7995,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"consumerAuthenticationScore\": 50,\n  \"externalScore3\": 10,\n  \"cavvResult\": 2,\n  \"eciIndicator\": 5,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"tokenAssuranceLevel\": 2,\n  \"availableCredit\": 5000.0,\n  \"cardCashBalance\": 1000.0,\n  \"cardDelinquentAmount\": 0.0\n}"
       }
     },
     {
@@ -2172,7 +2172,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-FRAUDE-ATC\",\n  \"customerIdFromHeader\": \"CUST-ATC-FRAUD\",\n  \"customerAcctNumber\": 8888888888888888,\n  \"pan\": \"411111******8888\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 5000.0,\n  \"mcc\": 5411,\n  \"atcCard\": 999,\n  \"atcHost\": 100\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-FRAUDE-ATC\",\n  \"customerIdFromHeader\": \"CUST-ATC-FRAUD\",\n  \"customerAcctNumber\": 8888888888888888,\n  \"pan\": \"411111******8888\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 5000.0,\n  \"mcc\": 5411,\n  \"atcCard\": 999,\n  \"atcHost\": 100,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"consumerAuthenticationScore\": 50,\n  \"externalScore3\": 10,\n  \"cavvResult\": 2,\n  \"eciIndicator\": 5,\n  \"tokenAssuranceLevel\": 2,\n  \"availableCredit\": 5000.0,\n  \"cardCashBalance\": 1000.0,\n  \"cardDelinquentAmount\": 0.0\n}"
       }
     },
     {
@@ -2196,7 +2196,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-FRAUDE-CVV\",\n  \"customerIdFromHeader\": \"CUST-CVV-FRAUD\",\n  \"customerAcctNumber\": 7777777777777777,\n  \"pan\": \"411111******7777\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 3000.0,\n  \"mcc\": 5411,\n  \"cvv2Response\": \"N\",\n  \"cvrofflinePinVerificationFailed\": true,\n  \"cvvPinTryLimitExceeded\": true\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-FRAUDE-CVV\",\n  \"customerIdFromHeader\": \"CUST-CVV-FRAUD\",\n  \"customerAcctNumber\": 7777777777777777,\n  \"pan\": \"411111******7777\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 3000.0,\n  \"mcc\": 5411,\n  \"cvv2Response\": \"N\",\n  \"cvrofflinePinVerificationFailed\": true,\n  \"cvvPinTryLimitExceeded\": true,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"consumerAuthenticationScore\": 50,\n  \"externalScore3\": 10,\n  \"cavvResult\": 2,\n  \"eciIndicator\": 5,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"tokenAssuranceLevel\": 2,\n  \"availableCredit\": 5000.0,\n  \"cardCashBalance\": 1000.0,\n  \"cardDelinquentAmount\": 0.0\n}"
       }
     },
     {
@@ -2220,7 +2220,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-FRAUDE-NO3DS\",\n  \"customerIdFromHeader\": \"CUST-NO3DS-FRAUD\",\n  \"customerAcctNumber\": 6666666666666666,\n  \"pan\": \"411111******6666\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 25000.0,\n  \"mcc\": 5411,\n  \"eciIndicator\": 7,\n  \"consumerAuthenticationScore\": 0\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-FRAUDE-NO3DS\",\n  \"customerIdFromHeader\": \"CUST-NO3DS-FRAUD\",\n  \"customerAcctNumber\": 6666666666666666,\n  \"pan\": \"411111******6666\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 25000.0,\n  \"mcc\": 5411,\n  \"eciIndicator\": 7,\n  \"consumerAuthenticationScore\": 0,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"externalScore3\": 10,\n  \"cavvResult\": 2,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"tokenAssuranceLevel\": 2,\n  \"availableCredit\": 5000.0,\n  \"cardCashBalance\": 1000.0,\n  \"cardDelinquentAmount\": 0.0\n}"
       }
     },
     {
@@ -2244,7 +2244,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-SUSPEITA-001\",\n  \"customerIdFromHeader\": \"CUST-MIN-SUSPECT\",\n  \"customerAcctNumber\": 5555555555555555,\n  \"pan\": \"411111******5555\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 15000.0,\n  \"mcc\": 6051\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-SUSPEITA-001\",\n  \"customerIdFromHeader\": \"CUST-MIN-SUSPECT\",\n  \"customerAcctNumber\": 5555555555555555,\n  \"pan\": \"411111******5555\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 15000.0,\n  \"mcc\": 6051,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"consumerAuthenticationScore\": 50,\n  \"externalScore3\": 10,\n  \"cavvResult\": 2,\n  \"eciIndicator\": 5,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"tokenAssuranceLevel\": 2,\n  \"availableCredit\": 5000.0,\n  \"cardCashBalance\": 1000.0,\n  \"cardDelinquentAmount\": 0.0\n}"
       }
     },
     {
@@ -2268,7 +2268,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-SUSPEITA-TOKEN\",\n  \"customerIdFromHeader\": \"CUST-TOKEN-SUSPECT\",\n  \"customerAcctNumber\": 4444444444444444,\n  \"pan\": \"411111******4444\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 8000.0,\n  \"mcc\": 5411,\n  \"tokenAssuranceLevel\": 0\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-SUSPEITA-TOKEN\",\n  \"customerIdFromHeader\": \"CUST-TOKEN-SUSPECT\",\n  \"customerAcctNumber\": 4444444444444444,\n  \"pan\": \"411111******4444\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 8000.0,\n  \"mcc\": 5411,\n  \"tokenAssuranceLevel\": 0,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"consumerAuthenticationScore\": 50,\n  \"externalScore3\": 10,\n  \"cavvResult\": 2,\n  \"eciIndicator\": 5,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"availableCredit\": 5000.0,\n  \"cardCashBalance\": 1000.0,\n  \"cardDelinquentAmount\": 0.0\n}"
       }
     },
     {
@@ -2292,7 +2292,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-SUSPEITA-SCORE\",\n  \"customerIdFromHeader\": \"CUST-SCORE-SUSPECT\",\n  \"customerAcctNumber\": 3333333333333333,\n  \"pan\": \"411111******3333\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 5000.0,\n  \"mcc\": 5411,\n  \"consumerAuthenticationScore\": 20,\n  \"externalScore3\": 70\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-SUSPEITA-SCORE\",\n  \"customerIdFromHeader\": \"CUST-SCORE-SUSPECT\",\n  \"customerAcctNumber\": 3333333333333333,\n  \"pan\": \"411111******3333\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 5000.0,\n  \"mcc\": 5411,\n  \"consumerAuthenticationScore\": 20,\n  \"externalScore3\": 70,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"cavvResult\": 2,\n  \"eciIndicator\": 5,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"tokenAssuranceLevel\": 2,\n  \"availableCredit\": 5000.0,\n  \"cardCashBalance\": 1000.0,\n  \"cardDelinquentAmount\": 0.0\n}"
       }
     },
     {
@@ -2316,7 +2316,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-SUSPEITA-WIRE\",\n  \"customerIdFromHeader\": \"CUST-WIRE-SUSPECT\",\n  \"customerAcctNumber\": 2222222222222222,\n  \"pan\": \"411111******2222\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 10000.0,\n  \"mcc\": 4829\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-SUSPEITA-WIRE\",\n  \"customerIdFromHeader\": \"CUST-WIRE-SUSPECT\",\n  \"customerAcctNumber\": 2222222222222222,\n  \"pan\": \"411111******2222\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 10000.0,\n  \"mcc\": 4829,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"consumerAuthenticationScore\": 50,\n  \"externalScore3\": 10,\n  \"cavvResult\": 2,\n  \"eciIndicator\": 5,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"tokenAssuranceLevel\": 2,\n  \"availableCredit\": 5000.0,\n  \"cardCashBalance\": 1000.0,\n  \"cardDelinquentAmount\": 0.0\n}"
       }
     },
     {
@@ -2340,7 +2340,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-APROVADO-001\",\n  \"customerIdFromHeader\": \"CUST-MIN-LEGIT\",\n  \"customerAcctNumber\": 1234567890123456,\n  \"pan\": \"411111******1111\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 150.0,\n  \"mcc\": 5411\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-APROVADO-001\",\n  \"customerIdFromHeader\": \"CUST-MIN-LEGIT\",\n  \"customerAcctNumber\": 1234567890123456,\n  \"pan\": \"411111******1111\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 150.0,\n  \"mcc\": 5411,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"consumerAuthenticationScore\": 50,\n  \"externalScore3\": 10,\n  \"cavvResult\": 2,\n  \"eciIndicator\": 5,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"tokenAssuranceLevel\": 2,\n  \"availableCredit\": 5000.0,\n  \"cardCashBalance\": 1000.0,\n  \"cardDelinquentAmount\": 0.0\n}"
       }
     },
     {
@@ -2364,7 +2364,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-APROVADO-CHIP\",\n  \"customerIdFromHeader\": \"CUST-CHIP-LEGIT\",\n  \"customerAcctNumber\": 1111111111111111,\n  \"pan\": \"411111******1111\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 89.9,\n  \"mcc\": 5411,\n  \"customerPresent\": true,\n  \"posEntryMode\": \"051\"\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-APROVADO-CHIP\",\n  \"customerIdFromHeader\": \"CUST-CHIP-LEGIT\",\n  \"customerAcctNumber\": 1111111111111111,\n  \"pan\": \"411111******1111\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 89.9,\n  \"mcc\": 5411,\n  \"customerPresent\": true,\n  \"posEntryMode\": \"051\",\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"consumerAuthenticationScore\": 50,\n  \"externalScore3\": 10,\n  \"cavvResult\": 2,\n  \"eciIndicator\": 5,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"tokenAssuranceLevel\": 2,\n  \"availableCredit\": 5000.0,\n  \"cardCashBalance\": 1000.0,\n  \"cardDelinquentAmount\": 0.0\n}"
       }
     },
     {
@@ -2388,7 +2388,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-APROVADO-3DS\",\n  \"customerIdFromHeader\": \"CUST-3DS-LEGIT\",\n  \"customerAcctNumber\": 1234123412341234,\n  \"pan\": \"411111******1234\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 499.0,\n  \"mcc\": 5411,\n  \"eciIndicator\": 5,\n  \"consumerAuthenticationScore\": 95,\n  \"cavvResult\": 2\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-APROVADO-3DS\",\n  \"customerIdFromHeader\": \"CUST-3DS-LEGIT\",\n  \"customerAcctNumber\": 1234123412341234,\n  \"pan\": \"411111******1234\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 499.0,\n  \"mcc\": 5411,\n  \"eciIndicator\": 5,\n  \"consumerAuthenticationScore\": 95,\n  \"cavvResult\": 2,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"externalScore3\": 10,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"tokenAssuranceLevel\": 2,\n  \"availableCredit\": 5000.0,\n  \"cardCashBalance\": 1000.0,\n  \"cardDelinquentAmount\": 0.0\n}"
       }
     },
     {
@@ -2412,7 +2412,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-APROVADO-TOKEN\",\n  \"customerIdFromHeader\": \"CUST-TOKEN-LEGIT\",\n  \"customerAcctNumber\": 5678567856785678,\n  \"pan\": \"411111******5678\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 299.0,\n  \"mcc\": 5411,\n  \"tokenAssuranceLevel\": 3\n}"
+        "text": "{\n  \"externalTransactionId\": \"TXN-MIN-APROVADO-TOKEN\",\n  \"customerIdFromHeader\": \"CUST-TOKEN-LEGIT\",\n  \"customerAcctNumber\": 5678567856785678,\n  \"pan\": \"411111******5678\",\n  \"transactionCurrencyCode\": 986,\n  \"transactionAmount\": 299.0,\n  \"mcc\": 5411,\n  \"tokenAssuranceLevel\": 3,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"consumerAuthenticationScore\": 50,\n  \"externalScore3\": 10,\n  \"cavvResult\": 2,\n  \"eciIndicator\": 5,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"availableCredit\": 5000.0,\n  \"cardCashBalance\": 1000.0,\n  \"cardDelinquentAmount\": 0.0\n}"
       }
     }
   ]
