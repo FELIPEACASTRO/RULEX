@@ -13,6 +13,7 @@ import {
   updateRule,
   listFieldDictionary,
   type RuleConfiguration,
+  type RuleCondition,
   type FieldDictionaryItem,
 } from '@/lib/javaApi';
 
@@ -21,6 +22,7 @@ import {
   defaultRuleFormValues,
   defaultConditionValues,
   type RuleFormData,
+  type ConditionFormData,
 } from './schema';
 
 import {
@@ -30,6 +32,26 @@ import {
   type ConditionFieldOption,
   type ConditionOperator,
 } from './types';
+
+// ============================================
+// HELPER PARA CONVERTER CONDIÇÕES
+// ============================================
+
+function mapRuleConditionsToFormData(conditions: RuleConfiguration['conditions']): ConditionFormData[] {
+  return conditions.map(c => ({
+    field: c.field,
+    operator: c.operator as ConditionFormData['operator'],
+    value: c.value,
+  }));
+}
+
+function mapFormDataToRuleConditions(conditions: ConditionFormData[]): RuleCondition[] {
+  return conditions.map(c => ({
+    field: c.field,
+    operator: c.operator as RuleCondition['operator'],
+    value: c.value,
+  }));
+}
 
 // ============================================
 // TIPOS DO HOOK
@@ -45,22 +67,22 @@ interface UseRuleFormReturn {
   // Form
   form: ReturnType<typeof useForm<RuleFormData>>;
   conditionsFieldArray: ReturnType<typeof useFieldArray<RuleFormData, 'conditions'>>;
-  
+
   // Estado
   isLoading: boolean;
   isSaving: boolean;
   isEditing: boolean;
-  
+
   // Campos disponíveis
   availableFields: ConditionFieldOption[];
   isLoadingFields: boolean;
-  
+
   // Ações
   handleSubmit: () => void;
   handleReset: () => void;
   addCondition: () => void;
   removeCondition: (index: number) => void;
-  
+
   // Helpers
   getOperatorsForField: (fieldName: string) => typeof OPERATORS;
   getFieldInfo: (fieldName: string) => ConditionFieldOption | undefined;
@@ -142,11 +164,7 @@ export function useRuleForm({
           weight: rule.weight,
           enabled: rule.enabled,
           parameters: rule.parameters || '',
-          conditions: rule.conditions.map(c => ({
-            field: c.field,
-            operator: c.operator,
-            value: c.value,
-          })),
+          conditions: mapRuleConditionsToFormData(rule.conditions),
           logicOperator: rule.logicOperator,
         }
       : defaultRuleFormValues,
@@ -171,11 +189,7 @@ export function useRuleForm({
         weight: rule.weight,
         enabled: rule.enabled,
         parameters: rule.parameters || '',
-        conditions: rule.conditions.map(c => ({
-          field: c.field,
-          operator: c.operator,
-          value: c.value,
-        })),
+        conditions: mapRuleConditionsToFormData(rule.conditions),
         logicOperator: rule.logicOperator,
       });
     } else {
@@ -231,7 +245,7 @@ export function useRuleForm({
         weight: data.weight,
         enabled: data.enabled,
         parameters: data.parameters?.trim() || null,
-        conditions: data.conditions,
+        conditions: mapFormDataToRuleConditions(data.conditions),
         logicOperator: data.logicOperator,
       };
 
@@ -253,11 +267,7 @@ export function useRuleForm({
       weight: rule.weight,
       enabled: rule.enabled,
       parameters: rule.parameters || '',
-      conditions: rule.conditions.map(c => ({
-        field: c.field,
-        operator: c.operator,
-        value: c.value,
-      })),
+      conditions: mapRuleConditionsToFormData(rule.conditions),
       logicOperator: rule.logicOperator,
     } : defaultRuleFormValues);
   }, [form, rule]);
@@ -276,12 +286,12 @@ export function useRuleForm({
 
   const getOperatorsForField = useCallback((fieldName: string) => {
     const field = availableFields.find(f => f.value === fieldName);
-    
+
     // Se o campo tem operadores específicos da API, usar esses
     if (field?.allowedOperators && field.allowedOperators.length > 0) {
       return OPERATORS.filter(op => field.allowedOperators!.includes(op.value));
     }
-    
+
     // Senão, usar operadores baseados no tipo
     const fieldType = field?.type || 'string';
     const allowedOps = OPERATORS_BY_TYPE[fieldType] || OPERATORS_BY_TYPE.string;
