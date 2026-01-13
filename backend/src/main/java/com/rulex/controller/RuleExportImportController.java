@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 /** Controller para exportação e importação de regras. Suporta formatos JSON e YAML. */
 @RestController
-@RequestMapping("/api/v1/rules/export-import")
+@RequestMapping("/v1/rules/export-import")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Rule Export/Import", description = "APIs para exportação e importação de regras")

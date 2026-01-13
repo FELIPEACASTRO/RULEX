@@ -636,7 +636,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"ruleId\": \"{{ _.rule_id }}\",\n  \"payload\": {\n    \"transactionAmount\": 1500,\n    \"mcc\": 5411,\n    \"transactionCurrencyCode\": 986\n  }\n}"
+        "text": "{\n  \"rule\": {\n    \"ruleName\": \"TEST_SIMULATION_RULE\",\n    \"ruleType\": \"SECURITY\",\n    \"threshold\": 10,\n    \"weight\": 50,\n    \"enabled\": true,\n    \"classification\": \"SUSPICIOUS\",\n    \"logicOperator\": \"AND\",\n    \"conditions\": [\n      {\n        \"field\": \"transactionAmount\",\n        \"operator\": \"GT\",\n        \"value\": \"1000\"\n      }\n    ]\n  },\n  \"testPayload\": {\n    \"externalTransactionId\": \"test-sim-001\",\n    \"customerIdFromHeader\": \"cust-001\",\n    \"customerAcctNumber\": 1234567890,\n    \"pan\": \"411111******1111\",\n    \"transactionAmount\": 1500,\n    \"transactionDate\": 20260113,\n    \"transactionTime\": 101530,\n    \"transactionCurrencyCode\": 986,\n    \"mcc\": 5411,\n    \"consumerAuthenticationScore\": 50,\n    \"externalScore3\": 10,\n    \"cavvResult\": 1,\n    \"eciIndicator\": 5,\n    \"atcCard\": 1,\n    \"atcHost\": 1,\n    \"tokenAssuranceLevel\": 2,\n    \"availableCredit\": 5000.0,\n    \"cardCashBalance\": 1200.0,\n    \"cardDelinquentAmount\": 0\n  }\n}"
       }
     },
     {
@@ -676,7 +676,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"key\": \"CR_SAMPLE\",\n  \"enabled\": true,\n  \"logicOperator\": \"AND\",\n  \"conditions\": []\n}"
+        "text": "{\n  \"key\": \"CR_TEST_RULE\",\n  \"title\": \"Test Complex Rule\",\n  \"description\": \"A test complex rule for validation\",\n  \"status\": \"DRAFT\",\n  \"priority\": 50,\n  \"severity\": 70,\n  \"decision\": \"SUSPEITA_DE_FRAUDE\",\n  \"enabled\": true,\n  \"rootConditionGroup\": {\n    \"logicOperator\": \"AND\",\n    \"name\": \"Root Group\",\n    \"enabled\": true,\n    \"conditions\": [\n      {\n        \"fieldName\": \"transactionAmount\",\n        \"operator\": \"GT\",\n        \"valueType\": \"NUMBER\",\n        \"valueSingle\": \"1000\",\n        \"enabled\": true\n      }\n    ]\n  }\n}"
       }
     },
     {
