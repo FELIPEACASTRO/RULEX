@@ -92,8 +92,8 @@ public class Transaction {
   @Column(nullable = false)
   private Integer mcc; // Merchant Category Code
 
-  @Column(length = 1)
-  private String posEntryMode; // E, C, etc.
+  @Column(length = 10)
+  private String posEntryMode; // POS entry mode code (e.g., 051, 071, etc.)
 
   @Column(length = 1)
   private String customerPresent; // Y/N
