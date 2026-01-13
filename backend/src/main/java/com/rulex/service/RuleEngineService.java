@@ -131,19 +131,22 @@ public class RuleEngineService {
         }
 
         // Idempotency: return same previous decision (no recomputation)
-        Transaction existingTx =
-            transactionRepository
-                .findByExternalTransactionId(externalTransactionId)
-                .orElseThrow(
-                    () ->
-                        new IllegalStateException(
-                            "Raw store exists but transaction row is missing for externalTransactionId="
-                                + externalTransactionId));
-        return buildResponseFromExisting(existingTx, startTime);
+        Optional<Transaction> existingTxOpt =
+            transactionRepository.findByExternalTransactionId(externalTransactionId);
+        if (existingTxOpt.isPresent()) {
+          return buildResponseFromExisting(existingTxOpt.get(), startTime);
+        }
+        // Raw store exists but transaction row is missing (partial failure recovery).
+        // Continue to create the transaction normally - raw store already validated hash match.
+        log.warn(
+            "Raw store exists but transaction row missing for externalTransactionId={}. Recovering by creating transaction.",
+            externalTransactionId);
       }
 
-      // Store raw payload in an independent transaction for auditability.
-      rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
+      // Store raw payload in an independent transaction for auditability (skip if already present from recovery case).
+      if (!existingRawOpt.isPresent()) {
+        rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
+      }
 
       // Backward compatibility: if transaction already exists (race), ensure hash matches.
       Optional<Transaction> existingTxOpt =
@@ -263,18 +266,22 @@ public class RuleEngineService {
           return buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
         }
 
-        Transaction existingTx =
-            transactionRepository
-                .findByExternalTransactionId(externalTransactionId)
-                .orElseThrow(
-                    () ->
-                        new IllegalStateException(
-                            "Raw store exists but transaction row is missing for externalTransactionId="
-                                + externalTransactionId));
-        return buildEvaluateResponseFromExisting(existingTx, startTime);
+        Optional<Transaction> existingTxOpt =
+            transactionRepository.findByExternalTransactionId(externalTransactionId);
+        if (existingTxOpt.isPresent()) {
+          return buildEvaluateResponseFromExisting(existingTxOpt.get(), startTime);
+        }
+        // Raw store exists but transaction row is missing (partial failure recovery).
+        // Continue to create the transaction normally - raw store already validated hash match.
+        log.warn(
+            "Raw store exists but transaction row missing for externalTransactionId={}. Recovering by creating transaction.",
+            externalTransactionId);
       }
 
-      rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
+      // Only store raw payload if not already present (recovery case skips this)
+      if (!existingRawOpt.isPresent()) {
+        rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
+      }
 
       Optional<Transaction> existingTxOpt =
           transactionRepository.findByExternalTransactionId(externalTransactionId);

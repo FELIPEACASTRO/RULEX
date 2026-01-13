@@ -38,23 +38,61 @@ public class AccessLogService {
   private static final int LOCKOUT_WINDOW_MINUTES = 15;
 
   /**
+   * DTO to capture request data before async execution.
+   * This prevents "request object has been recycled" errors.
+   */
+  public record RequestData(
+      String method,
+      String requestUri,
+      String sourceIp,
+      String userAgent,
+      String sessionId) {
+
+    public static RequestData from(HttpServletRequest request) {
+      return new RequestData(
+          request.getMethod(),
+          request.getRequestURI(),
+          getClientIpStatic(request),
+          request.getHeader("User-Agent"),
+          request.getSession(false) != null ? request.getSession().getId() : null);
+    }
+
+    private static String getClientIpStatic(HttpServletRequest request) {
+      String xForwardedFor = request.getHeader("X-Forwarded-For");
+      if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+        return xForwardedFor.split(",")[0].trim();
+      }
+      String xRealIp = request.getHeader("X-Real-IP");
+      if (xRealIp != null && !xRealIp.isEmpty()) {
+        return xRealIp;
+      }
+      return request.getRemoteAddr();
+    }
+  }
+
+  /**
    * Logs a successful login event.
    *
    * @param username the username
    * @param request the HTTP request
    */
+  public void logLoginSuccess(String username, HttpServletRequest request) {
+    RequestData requestData = RequestData.from(request);
+    logLoginSuccessAsync(username, requestData);
+  }
+
   @Async
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void logLoginSuccess(String username, HttpServletRequest request) {
+  public void logLoginSuccessAsync(String username, RequestData requestData) {
     AccessLog accessLog =
         AccessLog.builder()
             .username(username)
             .eventType(AccessEventType.LOGIN_SUCCESS)
-            .httpMethod(request.getMethod())
-            .requestUri(request.getRequestURI())
-            .sourceIp(getClientIp(request))
-            .userAgent(request.getHeader("User-Agent"))
-            .sessionId(request.getSession(false) != null ? request.getSession().getId() : null)
+            .httpMethod(requestData.method())
+            .requestUri(requestData.requestUri())
+            .sourceIp(requestData.sourceIp())
+            .userAgent(requestData.userAgent())
+            .sessionId(requestData.sessionId())
             .build();
 
     accessLogRepository.save(accessLog);
@@ -68,9 +106,14 @@ public class AccessLogService {
    * @param request the HTTP request
    * @param reason the reason for failure
    */
+  public void logLoginFailure(String username, HttpServletRequest request, String reason) {
+    RequestData requestData = RequestData.from(request);
+    logLoginFailureAsync(username, requestData, reason);
+  }
+
   @Async
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void logLoginFailure(String username, HttpServletRequest request, String reason) {
+  public void logLoginFailureAsync(String username, RequestData requestData, String reason) {
     Map<String, Object> details = new HashMap<>();
     details.put("reason", reason);
 
@@ -78,10 +121,10 @@ public class AccessLogService {
         AccessLog.builder()
             .username(username)
             .eventType(AccessEventType.LOGIN_FAILURE)
-            .httpMethod(request.getMethod())
-            .requestUri(request.getRequestURI())
-            .sourceIp(getClientIp(request))
-            .userAgent(request.getHeader("User-Agent"))
+            .httpMethod(requestData.method())
+            .requestUri(requestData.requestUri())
+            .sourceIp(requestData.sourceIp())
+            .userAgent(requestData.userAgent())
             .details(toJson(details))
             .build();
 
@@ -94,28 +137,39 @@ public class AccessLogService {
 
   /**
    * Logs an API access event.
+   * This method captures request data synchronously and delegates to async processing.
    *
    * @param username the authenticated username
    * @param request the HTTP request
    * @param responseStatus the HTTP response status
    * @param durationMs the request duration in milliseconds
    */
-  @Async
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void logApiAccess(
       String username, HttpServletRequest request, int responseStatus, long durationMs) {
+    // Capture request data synchronously before async execution
+    RequestData requestData = RequestData.from(request);
+    logApiAccessAsync(username, requestData, responseStatus, durationMs);
+  }
+
+  /**
+   * Async implementation of API access logging.
+   */
+  @Async
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void logApiAccessAsync(
+      String username, RequestData requestData, int responseStatus, long durationMs) {
     AccessEventType eventType = determineEventType(responseStatus);
 
     AccessLog accessLog =
         AccessLog.builder()
             .username(username)
             .eventType(eventType)
-            .httpMethod(request.getMethod())
-            .requestUri(request.getRequestURI())
+            .httpMethod(requestData.method())
+            .requestUri(requestData.requestUri())
             .responseStatus(responseStatus)
-            .sourceIp(getClientIp(request))
-            .userAgent(request.getHeader("User-Agent"))
-            .sessionId(request.getSession(false) != null ? request.getSession().getId() : null)
+            .sourceIp(requestData.sourceIp())
+            .userAgent(requestData.userAgent())
+            .sessionId(requestData.sessionId())
             .durationMs(durationMs)
             .build();
 
@@ -123,7 +177,7 @@ public class AccessLogService {
 
     if (eventType != AccessEventType.API_ACCESS) {
       log.warn(
-          "Security event {} for user: {} on {}", eventType, username, request.getRequestURI());
+          "Security event {} for user: {} on {}", eventType, username, requestData.requestUri());
     }
   }
 
@@ -133,18 +187,23 @@ public class AccessLogService {
    * @param username the username (may be null)
    * @param request the HTTP request
    */
+  public void logRateLimited(String username, HttpServletRequest request) {
+    RequestData requestData = RequestData.from(request);
+    logRateLimitedAsync(username, requestData);
+  }
+
   @Async
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void logRateLimited(String username, HttpServletRequest request) {
+  public void logRateLimitedAsync(String username, RequestData requestData) {
     AccessLog accessLog =
         AccessLog.builder()
             .username(username)
             .eventType(AccessEventType.RATE_LIMITED)
-            .httpMethod(request.getMethod())
-            .requestUri(request.getRequestURI())
+            .httpMethod(requestData.method())
+            .requestUri(requestData.requestUri())
             .responseStatus(429)
-            .sourceIp(getClientIp(request))
-            .userAgent(request.getHeader("User-Agent"))
+            .sourceIp(requestData.sourceIp())
+            .userAgent(requestData.userAgent())
             .build();
 
     accessLogRepository.save(accessLog);
@@ -152,7 +211,7 @@ public class AccessLogService {
         "Rate limit exceeded for user: {} from IP: {} on {}",
         username,
         accessLog.getSourceIp(),
-        request.getRequestURI());
+        requestData.requestUri());
   }
 
   /**
@@ -161,17 +220,22 @@ public class AccessLogService {
    * @param username the username
    * @param request the HTTP request
    */
+  public void logLogout(String username, HttpServletRequest request) {
+    RequestData requestData = RequestData.from(request);
+    logLogoutAsync(username, requestData);
+  }
+
   @Async
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void logLogout(String username, HttpServletRequest request) {
+  public void logLogoutAsync(String username, RequestData requestData) {
     AccessLog accessLog =
         AccessLog.builder()
             .username(username)
             .eventType(AccessEventType.LOGOUT)
-            .httpMethod(request.getMethod())
-            .requestUri(request.getRequestURI())
-            .sourceIp(getClientIp(request))
-            .userAgent(request.getHeader("User-Agent"))
+            .httpMethod(requestData.method())
+            .requestUri(requestData.requestUri())
+            .sourceIp(requestData.sourceIp())
+            .userAgent(requestData.userAgent())
             .build();
 
     accessLogRepository.save(accessLog);
