@@ -2030,6 +2030,30 @@
         "password": "{{ _.basic_pass }}"
       },
       "headers": []
+    },
+    {
+      "_id": "req_tx_analyze_full",
+      "_type": "request",
+      "parentId": "fld_transactions",
+      "name": "POST /transactions/analyze (FULL PAYLOAD - 118 campos)",
+      "description": "Teste com TODOS os 118 campos do TransactionRequest preenchidos. Use este request como referência completa para testes.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/transactions/analyze",
+      "authentication": {
+        "type": "basic",
+        "username": "{{ _.basic_user }}",
+        "password": "{{ _.basic_pass }}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"externalTransactionId\": \"TXN-2024-FULL-TEST-001\",\n  \"customerIdFromHeader\": \"CUST-BR-123456789\",\n  \"customerAcctNumber\": 1234567890123456,\n  \"pan\": \"411111******1111\",\n  \"merchantId\": \"MERCH-001-BR\",\n  \"merchantName\": \"Loja Exemplo LTDA\",\n  \"merchantCity\": \"São Paulo\",\n  \"merchantState\": \"SP\",\n  \"merchantCountryCode\": \"BRA\",\n  \"merchantPostalCode\": \"01310-100\",\n  \"mcc\": 5411,\n  \"onUsMerchantId\": \"ON-US-MERCH-001\",\n  \"transactionAmount\": 1599.99,\n  \"transactionCurrencyCode\": 986,\n  \"transactionCurrencyConversionRate\": 1.0,\n  \"transactionDate\": 20240115,\n  \"transactionTime\": 143052,\n  \"transactionType\": \"PURCHASE\",\n  \"transactionCategory\": \"RETAIL\",\n  \"tranCode\": \"00\",\n  \"cardSeqNum\": 1,\n  \"cardExpireDate\": \"12/2028\",\n  \"cardMediaType\": \"CHIP\",\n  \"cardholderName\": \"JOAO DA SILVA\",\n  \"expandedBIN\": \"41111100\",\n  \"paymentInstrumentId\": \"PI-001-2024\",\n  \"consumerAuthenticationScore\": 85,\n  \"cavvResult\": 2,\n  \"cavvKeyIndicator\": \"A\",\n  \"eciIndicator\": 5,\n  \"cryptogramValid\": true,\n  \"atcCard\": 100,\n  \"atcHost\": 100,\n  \"cvv2Present\": true,\n  \"cvv2Response\": \"M\",\n  \"cvvVerifyCode\": \"M\",\n  \"pinVerifyCode\": \"P\",\n  \"cardVerificationResults\": \"00000000\",\n  \"terminalVerificationResults\": \"0000000000\",\n  \"cardAipCombined\": \"1900\",\n  \"cardAipDynamic\": true,\n  \"cardAipIssuerAuthentication\": true,\n  \"cardAipRisk\": false,\n  \"cardAipStatic\": true,\n  \"cardAipVerify\": true,\n  \"cvrofflinePinVerificationFailed\": false,\n  \"cvrofflinePinVerificationPerformed\": true,\n  \"cvvPinTryLimitExceeded\": false,\n  \"terminalId\": \"TERM-001\",\n  \"terminalType\": \"POS\",\n  \"terminalEntryCapability\": \"05\",\n  \"posEntryMode\": \"051\",\n  \"posConditionCode\": \"00\",\n  \"posCardCapture\": false,\n  \"posOffPremises\": false,\n  \"posSecurity\": \"00\",\n  \"customerPresent\": true,\n  \"acquirerId\": \"ACQ-001\",\n  \"acquirerBin\": \"12345678\",\n  \"acquirerCountry\": \"BRA\",\n  \"authId\": \"AUTH-2024-001\",\n  \"authIndicator\": \"A\",\n  \"authDecisionCode\": \"00\",\n  \"authResponseCode\": \"00\",\n  \"processorAuthReasonCode\": \"000\",\n  \"standinAdvice\": false,\n  \"networkId\": \"VISA\",\n  \"tokenAssuranceLevel\": 3,\n  \"tokenId\": \"TOKEN-001-2024\",\n  \"tokenRequestorId\": \"TR-001\",\n  \"tokenizationIndicator\": \"Y\",\n  \"externalScore3\": 25,\n  \"availableCredit\": 15000.0,\n  \"cardCashBalance\": 5000.0,\n  \"cardDelinquentAmount\": 0.0,\n  \"declaredIncome\": 12000.0,\n  \"customerCountry\": \"BRA\",\n  \"customerEmail\": \"joao.silva@email.com\",\n  \"customerPhone\": \"+5511999999999\",\n  \"billingAddress\": \"Av. Paulista, 1000, São Paulo, SP, 01310-100\",\n  \"deviceId\": \"DEV-MOBILE-001-2024\",\n  \"ipAddress\": \"189.100.50.25\",\n  \"userAgent\": \"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)\",\n  \"ipReputationScore\": 15,\n  \"mfaRequested\": true,\n  \"mfaCompleted\": true,\n  \"livenessCheckPassed\": true,\n  \"identityVerificationScore\": 92,\n  \"deepfakeScore\": 5,\n  \"nameMatchScore\": 98,\n  \"idMethod\": \"BIOMETRIC\",\n  \"secondFactorAuthCode\": \"SMS\",\n  \"shippingMethod\": \"EXPRESS\",\n  \"shippingName\": \"João da Silva\",\n  \"shippingAddress\": \"Av. Paulista, 1000, São Paulo, SP, 01310-100\",\n  \"beneficiaryId\": \"BEN-001\",\n  \"beneficiaryCountry\": \"BRA\",\n  \"avsRequest\": \"Y\",\n  \"workflow\": \"BRZLCREDIT\",\n  \"recordType\": \"CRTRAN25\",\n  \"portfolio\": \"DEFAULT\",\n  \"dataSpecificationVersion\": 3.1,\n  \"authPostFlag\": \"A\",\n  \"gmtOffset\": -3,\n  \"recordCreationDate\": 20240115,\n  \"recordCreationTime\": 143052,\n  \"recordCreationMilliseconds\": 500,\n  \"clientIdFromHeader\": \"CLIENT-APP-001\",\n  \"userData01\": \"CUSTOM_DATA_1\",\n  \"userData02\": \"CUSTOM_DATA_2\",\n  \"userData03\": \"CUSTOM_DATA_3\",\n  \"userData04\": \"CUSTOM_DATA_4\",\n  \"userData05\": \"CUSTOM_DATA_5\",\n  \"userData06\": \"CUSTOM_DATA_6\",\n  \"userData06_2\": \"CUSTOM_DATA_6_2\",\n  \"userData09\": \"CUSTOM_DATA_9\",\n  \"userIndicator01\": true,\n  \"userIndicator03\": false,\n  \"userIndicator04\": true,\n  \"userIndicator05\": false,\n  \"userIndicator08\": true,\n  \"ageDifference\": 0\n}"
+      }
     }
   ]
 }
