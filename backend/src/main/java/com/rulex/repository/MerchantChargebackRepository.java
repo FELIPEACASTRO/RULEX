@@ -23,7 +23,8 @@ public interface MerchantChargebackRepository extends JpaRepository<MerchantChar
   boolean hasHighChargebackRate(
       @Param("merchantId") String merchantId, @Param("threshold") BigDecimal threshold);
 
-  @Query("SELECT CASE WHEN m.isBlocked = true THEN true ELSE false END "
-      + "FROM MerchantChargeback m WHERE m.merchantId = :merchantId")
+  @Query(
+      "SELECT CASE WHEN m.isBlocked = true THEN true ELSE false END "
+          + "FROM MerchantChargeback m WHERE m.merchantId = :merchantId")
   boolean isMerchantBlocked(@Param("merchantId") String merchantId);
 }

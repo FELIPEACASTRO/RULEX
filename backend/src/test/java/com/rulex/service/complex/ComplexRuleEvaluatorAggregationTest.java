@@ -34,7 +34,9 @@ class ComplexRuleEvaluatorAggregationTest {
 
   @BeforeEach
   void setUp() {
-    evaluator = new ComplexRuleEvaluator(geoService, velocityService, velocityServiceFacade, operatorDataService);
+    evaluator =
+        new ComplexRuleEvaluator(
+            geoService, velocityService, velocityServiceFacade, operatorDataService);
   }
 
   @Test

@@ -261,9 +261,7 @@ public class OperatorDataService {
       return -1;
     }
     try {
-      return customerAccountInfoRepository
-          .getAccountAgeInMinutes(customerId)
-          .orElse(-1L);
+      return customerAccountInfoRepository.getAccountAgeInMinutes(customerId).orElse(-1L);
     } catch (Exception e) {
       log.warn("Erro ao obter idade da conta: {}", e.getMessage());
       return -1;

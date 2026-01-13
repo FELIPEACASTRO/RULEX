@@ -739,44 +739,65 @@ public class ComplexRuleEvaluator {
       case FUZZY_ADAPTIVE_THRESHOLD -> evaluateFuzzyAdaptiveThreshold(condition, context);
 
         // ========== LLM & Generative AI Fraud Detection (LLM001-LLM012) ==========
-      case LLM_TRANSACTION_DESCRIPTION_ANALYSIS -> evaluateLlmTransactionDescriptionAnalysis(condition, context);
+      case LLM_TRANSACTION_DESCRIPTION_ANALYSIS ->
+          evaluateLlmTransactionDescriptionAnalysis(condition, context);
       case LLM_GENERATIVE_RULE_SYNTHESIS -> evaluateLlmGenerativeRuleSynthesis(condition, context);
-      case LLM_ANOMALY_EXPLANATION_GENERATION -> evaluateLlmAnomalyExplanationGeneration(condition, context);
+      case LLM_ANOMALY_EXPLANATION_GENERATION ->
+          evaluateLlmAnomalyExplanationGeneration(condition, context);
       case LLM_CHATBOT_FRAUD_DETECTION -> evaluateLlmChatbotFraudDetection(condition, context);
       case LLM_DEEPFAKE_VOICE_DETECTION -> evaluateLlmDeepfakeVoiceDetection(condition, context);
       case LLM_SYNTHETIC_IMAGE_DETECTION -> evaluateLlmSyntheticImageDetection(condition, context);
       case LLM_EMAIL_PHISHING_ANALYSIS -> evaluateLlmEmailPhishingAnalysis(condition, context);
-      case LLM_SOCIAL_ENGINEERING_CLASSIFICATION -> evaluateLlmSocialEngineeringClassification(condition, context);
-      case LLM_FRAUD_ALERT_PRIORITIZATION -> evaluateLlmFraudAlertPrioritization(condition, context);
-      case LLM_MULTI_MODAL_FRAUD_DETECTION -> evaluateLlmMultiModalFraudDetection(condition, context);
-      case LLM_ADVERSARIAL_ATTACK_RESISTANCE -> evaluateLlmAdversarialAttackResistance(condition, context);
-      case LLM_FRAUD_PATTERN_AUTODISCOVERY -> evaluateLlmFraudPatternAutodiscovery(condition, context);
+      case LLM_SOCIAL_ENGINEERING_CLASSIFICATION ->
+          evaluateLlmSocialEngineeringClassification(condition, context);
+      case LLM_FRAUD_ALERT_PRIORITIZATION ->
+          evaluateLlmFraudAlertPrioritization(condition, context);
+      case LLM_MULTI_MODAL_FRAUD_DETECTION ->
+          evaluateLlmMultiModalFraudDetection(condition, context);
+      case LLM_ADVERSARIAL_ATTACK_RESISTANCE ->
+          evaluateLlmAdversarialAttackResistance(condition, context);
+      case LLM_FRAUD_PATTERN_AUTODISCOVERY ->
+          evaluateLlmFraudPatternAutodiscovery(condition, context);
 
         // ========== Neo4j Graph Fraud Detection (NEO001-NEO018) ==========
-      case NEO4J_WEAKLY_CONNECTED_COMPONENTS -> evaluateNeo4jWeaklyConnectedComponents(condition, context);
+      case NEO4J_WEAKLY_CONNECTED_COMPONENTS ->
+          evaluateNeo4jWeaklyConnectedComponents(condition, context);
       case NEO4J_DEGREE_CENTRALITY -> evaluateNeo4jDegreeCentrality(condition, context);
       case NEO4J_PAGERANK_FRAUD_SCORE -> evaluateNeo4jPagerankFraudScore(condition, context);
-      case NEO4J_LOUVAIN_COMMUNITY_DETECTION -> evaluateNeo4jLouvainCommunityDetection(condition, context);
+      case NEO4J_LOUVAIN_COMMUNITY_DETECTION ->
+          evaluateNeo4jLouvainCommunityDetection(condition, context);
       case NEO4J_PAIRWISE_SIMILARITY_PII -> evaluateNeo4jPairwiseSimilarityPii(condition, context);
-      case NEO4J_ENTITY_RESOLUTION_SHARED_PII -> evaluateNeo4jEntityResolutionSharedPii(condition, context);
+      case NEO4J_ENTITY_RESOLUTION_SHARED_PII ->
+          evaluateNeo4jEntityResolutionSharedPii(condition, context);
       case NEO4J_FRAUD_RING_DETECTION -> evaluateNeo4jFraudRingDetection(condition, context);
-      case NEO4J_MONEY_MULE_NETWORK_ANALYSIS -> evaluateNeo4jMoneyMuleNetworkAnalysis(condition, context);
-      case NEO4J_CIRCULAR_TRANSACTION_DETECTION -> evaluateNeo4jCircularTransactionDetection(condition, context);
-      case NEO4J_FIRST_PARTY_FRAUD_CLUSTERING -> evaluateNeo4jFirstPartyFraudClustering(condition, context);
-      case NEO4J_SECOND_LEVEL_FRAUDSTER_ID -> evaluateNeo4jSecondLevelFraudsterId(condition, context);
-      case NEO4J_BETWEENNESS_CENTRALITY_MULE -> evaluateNeo4jBetweennessCentralityMule(condition, context);
-      case NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD -> evaluateNeo4jLabelPropagationFraudSpread(condition, context);
-      case NEO4J_SHORTEST_PATH_AML_TRACKING -> evaluateNeo4jShortestPathAmlTracking(condition, context);
-      case NEO4J_TRIANGLE_COUNT_COLLUSION -> evaluateNeo4jTriangleCountCollusion(condition, context);
-      case NEO4J_NODE_SIMILARITY_SYNTHETIC_ID -> evaluateNeo4jNodeSimilaritySyntheticId(condition, context);
-      case NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION -> evaluateNeo4jGraphEmbeddingFraudPrediction(condition, context);
+      case NEO4J_MONEY_MULE_NETWORK_ANALYSIS ->
+          evaluateNeo4jMoneyMuleNetworkAnalysis(condition, context);
+      case NEO4J_CIRCULAR_TRANSACTION_DETECTION ->
+          evaluateNeo4jCircularTransactionDetection(condition, context);
+      case NEO4J_FIRST_PARTY_FRAUD_CLUSTERING ->
+          evaluateNeo4jFirstPartyFraudClustering(condition, context);
+      case NEO4J_SECOND_LEVEL_FRAUDSTER_ID ->
+          evaluateNeo4jSecondLevelFraudsterId(condition, context);
+      case NEO4J_BETWEENNESS_CENTRALITY_MULE ->
+          evaluateNeo4jBetweennessCentralityMule(condition, context);
+      case NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD ->
+          evaluateNeo4jLabelPropagationFraudSpread(condition, context);
+      case NEO4J_SHORTEST_PATH_AML_TRACKING ->
+          evaluateNeo4jShortestPathAmlTracking(condition, context);
+      case NEO4J_TRIANGLE_COUNT_COLLUSION ->
+          evaluateNeo4jTriangleCountCollusion(condition, context);
+      case NEO4J_NODE_SIMILARITY_SYNTHETIC_ID ->
+          evaluateNeo4jNodeSimilaritySyntheticId(condition, context);
+      case NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION ->
+          evaluateNeo4jGraphEmbeddingFraudPrediction(condition, context);
       case NEO4J_TEMPORAL_MOTIF_PATTERN -> evaluateNeo4jTemporalMotifPattern(condition, context);
 
         // ========== Synthetic Identity Detection (SYN001-SYN015) ==========
       case BIOMETRIC_KEYSTROKE_DYNAMICS -> evaluateBiometricKeystrokeDynamics(condition, context);
       case BIOMETRIC_MOUSE_MOVEMENT -> evaluateBiometricMouseMovement(condition, context);
       case BIOMETRIC_SCROLL_VELOCITY -> evaluateBiometricScrollVelocity(condition, context);
-      case DEVICE_FINGERPRINT_CONSISTENCY_CHECK -> evaluateDeviceFingerprintConsistencyCheck(condition, context);
+      case DEVICE_FINGERPRINT_CONSISTENCY_CHECK ->
+          evaluateDeviceFingerprintConsistencyCheck(condition, context);
       case ECBSV_SSN_VALIDATION -> evaluateEcbsvSsnValidation(condition, context);
       case SYNTHETIC_FRAUD_SCORE -> evaluateSyntheticFraudScore(condition, context);
       case INJECTION_ATTACK_DETECTION -> evaluateInjectionAttackDetection(condition, context);
@@ -787,7 +808,8 @@ public class ComplexRuleEvaluator {
       case FACE_TO_ID_PHOTO_MATCHING -> evaluateFaceToIdPhotoMatching(condition, context);
       case ADAPTIVE_BEHAVIORAL_ANALYTICS -> evaluateAdaptiveBehavioralAnalytics(condition, context);
       case SYNTHETIC_ID_LABEL_CORRECTION -> evaluateSyntheticIdLabelCorrection(condition, context);
-      case MULTI_LAYERED_SYNTHETIC_ID_CONTROLS -> evaluateMultiLayeredSyntheticIdControls(condition, context);
+      case MULTI_LAYERED_SYNTHETIC_ID_CONTROLS ->
+          evaluateMultiLayeredSyntheticIdControls(condition, context);
 
         // ========== Estatísticos Avançados Pure Rules (STAT001-STAT015) ==========
       case STAT_KRUSKAL_WALLIS_TEST -> evaluateStatKruskalWallisTest(condition, context);
@@ -804,7 +826,8 @@ public class ComplexRuleEvaluator {
       case STAT_SHAPIRO_WILK_TEST -> evaluateStatShapiroWilkTest(condition, context);
       case STAT_LEVENE_TEST -> evaluateStatLeveneTest(condition, context);
       case STAT_WELCH_T_TEST -> evaluateStatWelchTTest(condition, context);
-      case STAT_BOOTSTRAP_CONFIDENCE_INTERVAL -> evaluateStatBootstrapConfidenceInterval(condition, context);
+      case STAT_BOOTSTRAP_CONFIDENCE_INTERVAL ->
+          evaluateStatBootstrapConfidenceInterval(condition, context);
 
         // ========== Fraud Patterns & Market Operators (Phase 7) ==========
       case CARD_TESTING_RING_DETECTION -> evaluateCardTestingRingDetection(condition, context);
@@ -820,7 +843,8 @@ public class ComplexRuleEvaluator {
       case SEGMENT_OF_ONE_PROFILING -> evaluateSegmentOfOneProfiling(condition, context);
       case ADAPTIVE_PARAMETRIC_THRESHOLD -> evaluateAdaptiveParametricThreshold(condition, context);
       case REAL_TIME_RISK_SCORING -> evaluateRealTimeRiskScoring(condition, context);
-      case CONSORTIUM_NEGATIVE_FILE_CHECK -> evaluateConsortiumNegativeFileCheck(condition, context);
+      case CONSORTIUM_NEGATIVE_FILE_CHECK ->
+          evaluateConsortiumNegativeFileCheck(condition, context);
       case PEER_GROUP_DEVIATION_SCORE -> evaluatePeerGroupDeviationScore(condition, context);
       case MICRO_DEPOSIT_VELOCITY -> evaluateMicroDepositVelocity(condition, context);
       case RAPID_SUCCESSION_PATTERN -> evaluateRapidSuccessionPattern(condition, context);
@@ -1771,8 +1795,12 @@ public class ComplexRuleEvaluator {
 
       // Consultar histórico de beneficiários
       boolean isNew = operatorDataService.isNewBeneficiary(customerId, beneficiaryId);
-      log.debug("NOT_IN_HISTORICAL: customerId={}, beneficiaryId={}, days={}, isNew={}",
-          customerId, beneficiaryId, days, isNew);
+      log.debug(
+          "NOT_IN_HISTORICAL: customerId={}, beneficiaryId={}, days={}, isNew={}",
+          customerId,
+          beneficiaryId,
+          days,
+          isNew);
       return isNew;
     } catch (Exception e) {
       log.error("Erro ao avaliar NOT_IN_HISTORICAL: {}", e.getMessage());
@@ -1861,7 +1889,8 @@ public class ComplexRuleEvaluator {
 
       if (customerIdObj != null) {
         String customerId = customerIdObj.toString();
-        Optional<BigDecimal> lastIncomingOpt = operatorDataService.getLastIncomingAmount(customerId);
+        Optional<BigDecimal> lastIncomingOpt =
+            operatorDataService.getLastIncomingAmount(customerId);
         if (lastIncomingOpt.isPresent()) {
           lastIncoming = lastIncomingOpt.get();
         }
@@ -1872,10 +1901,13 @@ public class ComplexRuleEvaluator {
       }
 
       BigDecimal threshold =
-          lastIncoming.multiply(BigDecimal.valueOf(percentage)).divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP);
+          lastIncoming
+              .multiply(BigDecimal.valueOf(percentage))
+              .divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP);
       boolean result = currentAmount.compareTo(threshold) >= 0;
 
-      log.debug("GTE_PERCENT_OF_LAST_INCOMING: current={}, lastIncoming={}, percentage={}%, threshold={}, result={}",
+      log.debug(
+          "GTE_PERCENT_OF_LAST_INCOMING: current={}, lastIncoming={}, percentage={}%, threshold={}, result={}",
           currentAmount, lastIncoming, percentage, threshold, result);
       return result;
     } catch (Exception e) {
@@ -1965,8 +1997,12 @@ public class ComplexRuleEvaluator {
 
         if (accountAgeMinutes >= 0) {
           boolean result = accountAgeMinutes < thresholdMinutes;
-          log.debug("ACCOUNT_AGE_LT_MINUTES: customerId={}, age={}min, threshold={}min, result={}",
-              customerId, accountAgeMinutes, thresholdMinutes, result);
+          log.debug(
+              "ACCOUNT_AGE_LT_MINUTES: customerId={}, age={}min, threshold={}min, result={}",
+              customerId,
+              accountAgeMinutes,
+              thresholdMinutes,
+              result);
           return result;
         }
       }
@@ -1987,10 +2023,14 @@ public class ComplexRuleEvaluator {
           return false;
         }
 
-        long ageMinutes = java.time.Duration.between(createdDateTime, java.time.OffsetDateTime.now()).toMinutes();
+        long ageMinutes =
+            java.time.Duration.between(createdDateTime, java.time.OffsetDateTime.now()).toMinutes();
         boolean result = ageMinutes < thresholdMinutes;
-        log.debug("ACCOUNT_AGE_LT_MINUTES: age={}min, threshold={}min, result={}",
-            ageMinutes, thresholdMinutes, result);
+        log.debug(
+            "ACCOUNT_AGE_LT_MINUTES: age={}min, threshold={}min, result={}",
+            ageMinutes,
+            thresholdMinutes,
+            result);
         return result;
       }
 
@@ -2025,7 +2065,9 @@ public class ComplexRuleEvaluator {
     }
 
     // Fallback: Lista de prefixos conhecidos de VoIP no Brasil
-    String[] voipPrefixes = {"0800", "0300", "0303", "0500", "0900", "4000", "4003", "4004", "4020", "4062"};
+    String[] voipPrefixes = {
+      "0800", "0300", "0303", "0500", "0900", "4000", "4003", "4004", "4020", "4062"
+    };
     for (String prefix : voipPrefixes) {
       if (phone.startsWith(prefix)) {
         return true;
@@ -2406,8 +2448,13 @@ public class ComplexRuleEvaluator {
         String customerId = customerIdObj.toString();
         long failureCount = operatorDataService.countAuthFailuresLastNHours(customerId, hours);
         boolean result = failureCount > threshold;
-        log.debug("COUNT_FAILURES_LAST_N_HOURS: customerId={}, hours={}, failures={}, threshold={}, result={}",
-            customerId, hours, failureCount, threshold, result);
+        log.debug(
+            "COUNT_FAILURES_LAST_N_HOURS: customerId={}, hours={}, failures={}, threshold={}, result={}",
+            customerId,
+            hours,
+            failureCount,
+            threshold,
+            result);
         return result;
       }
 
@@ -2470,8 +2517,12 @@ public class ComplexRuleEvaluator {
 
         if (minutesSinceLast >= 0) {
           boolean result = minutesSinceLast < thresholdMinutes;
-          log.debug("TIME_SINCE_LAST_LT: customerId={}, minutesSinceLast={}, threshold={}, result={}",
-              customerId, minutesSinceLast, thresholdMinutes, result);
+          log.debug(
+              "TIME_SINCE_LAST_LT: customerId={}, minutesSinceLast={}, threshold={}, result={}",
+              customerId,
+              minutesSinceLast,
+              thresholdMinutes,
+              result);
           return result;
         }
       }
@@ -2573,8 +2624,9 @@ public class ComplexRuleEvaluator {
 
       // Usar velocity service para obter transações recentes
       VelocityService.TimeWindow window = VelocityService.TimeWindow.HOUR_1;
-      VelocityService.VelocityStats stats = velocityServiceFacade.getStats(
-          context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
+      VelocityService.VelocityStats stats =
+          velocityServiceFacade.getStats(
+              context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
 
       // Se não há transações suficientes, não pode haver padrão de escada
       if (stats.getTransactionCount() < minTransactions) {
@@ -2589,8 +2641,14 @@ public class ComplexRuleEvaluator {
         double ratio = currentAmount.doubleValue() / avgAmount.doubleValue();
         boolean isEscalating = ratio >= escalationFactor;
 
-        log.debug("PATTERN_ESCALATION: txCount={}, currentAmount={}, avgAmount={}, ratio={}, factor={}, result={}",
-            stats.getTransactionCount(), currentAmount, avgAmount, ratio, escalationFactor, isEscalating);
+        log.debug(
+            "PATTERN_ESCALATION: txCount={}, currentAmount={}, avgAmount={}, ratio={}, factor={}, result={}",
+            stats.getTransactionCount(),
+            currentAmount,
+            avgAmount,
+            ratio,
+            escalationFactor,
+            isEscalating);
         return isEscalating;
       }
 
@@ -2734,8 +2792,11 @@ public class ComplexRuleEvaluator {
 
       // Consultar histórico de chargebacks
       boolean result = operatorDataService.hasChargebackWithMerchant(customerId, merchantId);
-      log.debug("IN_CUSTOMER_CHARGEBACK_MERCHANTS: customerId={}, merchantId={}, result={}",
-          customerId, merchantId, result);
+      log.debug(
+          "IN_CUSTOMER_CHARGEBACK_MERCHANTS: customerId={}, merchantId={}, result={}",
+          customerId,
+          merchantId,
+          result);
       return result;
     } catch (Exception e) {
       log.error("Erro ao avaliar IN_CUSTOMER_CHARGEBACK_MERCHANTS: {}", e.getMessage());
@@ -7910,73 +7971,85 @@ public class ComplexRuleEvaluator {
 
   // ========== LLM & Generative AI Fraud Detection (LLM001-LLM012) ==========
 
-  private boolean evaluateLlmTransactionDescriptionAnalysis(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLlmTransactionDescriptionAnalysis(
+      RuleCondition condition, EvaluationContext context) {
     // LLM001: Análise de descrição de transação via LLM para detectar padrões suspeitos
     log.debug("LLM_TRANSACTION_DESCRIPTION_ANALYSIS: Analisando descrição de transação");
     return false; // Stub - integração com API LLM necessária
   }
 
-  private boolean evaluateLlmGenerativeRuleSynthesis(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLlmGenerativeRuleSynthesis(
+      RuleCondition condition, EvaluationContext context) {
     // LLM002: Síntese automática de regras via LLM
     log.debug("LLM_GENERATIVE_RULE_SYNTHESIS: Gerando regras automaticamente");
     return false;
   }
 
-  private boolean evaluateLlmAnomalyExplanationGeneration(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLlmAnomalyExplanationGeneration(
+      RuleCondition condition, EvaluationContext context) {
     // LLM003: Geração de explicação de anomalia em linguagem natural
     log.debug("LLM_ANOMALY_EXPLANATION_GENERATION: Gerando explicação de anomalia");
     return false;
   }
 
-  private boolean evaluateLlmChatbotFraudDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLlmChatbotFraudDetection(
+      RuleCondition condition, EvaluationContext context) {
     // LLM004: Detecção de fraude em chatbot/conversação
     log.debug("LLM_CHATBOT_FRAUD_DETECTION: Analisando conversa para fraude");
     return false;
   }
 
-  private boolean evaluateLlmDeepfakeVoiceDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLlmDeepfakeVoiceDetection(
+      RuleCondition condition, EvaluationContext context) {
     // LLM005: Detecção de deepfake de voz
     log.debug("LLM_DEEPFAKE_VOICE_DETECTION: Verificando autenticidade de voz");
     return false;
   }
 
-  private boolean evaluateLlmSyntheticImageDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLlmSyntheticImageDetection(
+      RuleCondition condition, EvaluationContext context) {
     // LLM006: Detecção de imagem sintética/GAN
     log.debug("LLM_SYNTHETIC_IMAGE_DETECTION: Verificando imagem sintética");
     return false;
   }
 
-  private boolean evaluateLlmEmailPhishingAnalysis(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLlmEmailPhishingAnalysis(
+      RuleCondition condition, EvaluationContext context) {
     // LLM007: Análise de phishing em email
     log.debug("LLM_EMAIL_PHISHING_ANALYSIS: Analisando email para phishing");
     return false;
   }
 
-  private boolean evaluateLlmSocialEngineeringClassification(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLlmSocialEngineeringClassification(
+      RuleCondition condition, EvaluationContext context) {
     // LLM008: Classificação de engenharia social
     log.debug("LLM_SOCIAL_ENGINEERING_CLASSIFICATION: Classificando engenharia social");
     return false;
   }
 
-  private boolean evaluateLlmFraudAlertPrioritization(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLlmFraudAlertPrioritization(
+      RuleCondition condition, EvaluationContext context) {
     // LLM009: Priorização automática de alertas
     log.debug("LLM_FRAUD_ALERT_PRIORITIZATION: Priorizando alertas");
     return false;
   }
 
-  private boolean evaluateLlmMultiModalFraudDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLlmMultiModalFraudDetection(
+      RuleCondition condition, EvaluationContext context) {
     // LLM010: Detecção multimodal (texto+imagem+dados)
     log.debug("LLM_MULTI_MODAL_FRAUD_DETECTION: Detecção multimodal");
     return false;
   }
 
-  private boolean evaluateLlmAdversarialAttackResistance(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLlmAdversarialAttackResistance(
+      RuleCondition condition, EvaluationContext context) {
     // LLM011: Resistência a ataques adversariais
     log.debug("LLM_ADVERSARIAL_ATTACK_RESISTANCE: Verificando resistência adversarial");
     return false;
   }
 
-  private boolean evaluateLlmFraudPatternAutodiscovery(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLlmFraudPatternAutodiscovery(
+      RuleCondition condition, EvaluationContext context) {
     // LLM012: Autodescoberta de padrões de fraude
     log.debug("LLM_FRAUD_PATTERN_AUTODISCOVERY: Descobrindo padrões automaticamente");
     return false;
@@ -7984,109 +8057,127 @@ public class ComplexRuleEvaluator {
 
   // ========== Neo4j Graph Fraud Detection (NEO001-NEO018) ==========
 
-  private boolean evaluateNeo4jWeaklyConnectedComponents(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jWeaklyConnectedComponents(
+      RuleCondition condition, EvaluationContext context) {
     // NEO001: Componentes fracamente conectados (WCC)
     log.debug("NEO4J_WEAKLY_CONNECTED_COMPONENTS: Analisando componentes conectados");
     return false;
   }
 
-  private boolean evaluateNeo4jDegreeCentrality(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jDegreeCentrality(
+      RuleCondition condition, EvaluationContext context) {
     // NEO002: Centralidade de grau
     log.debug("NEO4J_DEGREE_CENTRALITY: Calculando centralidade de grau");
     return false;
   }
 
-  private boolean evaluateNeo4jPagerankFraudScore(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jPagerankFraudScore(
+      RuleCondition condition, EvaluationContext context) {
     // NEO003: Score de fraude via PageRank
     log.debug("NEO4J_PAGERANK_FRAUD_SCORE: Calculando PageRank para fraude");
     return false;
   }
 
-  private boolean evaluateNeo4jLouvainCommunityDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jLouvainCommunityDetection(
+      RuleCondition condition, EvaluationContext context) {
     // NEO004: Detecção de comunidade Louvain
     log.debug("NEO4J_LOUVAIN_COMMUNITY_DETECTION: Detectando comunidades");
     return false;
   }
 
-  private boolean evaluateNeo4jPairwiseSimilarityPii(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jPairwiseSimilarityPii(
+      RuleCondition condition, EvaluationContext context) {
     // NEO005: Similaridade de PII entre pares
     log.debug("NEO4J_PAIRWISE_SIMILARITY_PII: Calculando similaridade de PII");
     return false;
   }
 
-  private boolean evaluateNeo4jEntityResolutionSharedPii(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jEntityResolutionSharedPii(
+      RuleCondition condition, EvaluationContext context) {
     // NEO006: Resolução de entidade por PII compartilhado
     log.debug("NEO4J_ENTITY_RESOLUTION_SHARED_PII: Resolvendo entidades");
     return false;
   }
 
-  private boolean evaluateNeo4jFraudRingDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jFraudRingDetection(
+      RuleCondition condition, EvaluationContext context) {
     // NEO007: Detecção de anel de fraude
     log.debug("NEO4J_FRAUD_RING_DETECTION: Detectando anéis de fraude");
     return false;
   }
 
-  private boolean evaluateNeo4jMoneyMuleNetworkAnalysis(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jMoneyMuleNetworkAnalysis(
+      RuleCondition condition, EvaluationContext context) {
     // NEO008: Análise de rede de money mules
     log.debug("NEO4J_MONEY_MULE_NETWORK_ANALYSIS: Analisando rede de mules");
     return false;
   }
 
-  private boolean evaluateNeo4jCircularTransactionDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jCircularTransactionDetection(
+      RuleCondition condition, EvaluationContext context) {
     // NEO009: Detecção de transação circular
     log.debug("NEO4J_CIRCULAR_TRANSACTION_DETECTION: Detectando transações circulares");
     return false;
   }
 
-  private boolean evaluateNeo4jFirstPartyFraudClustering(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jFirstPartyFraudClustering(
+      RuleCondition condition, EvaluationContext context) {
     // NEO010: Clustering de fraude de primeira parte
     log.debug("NEO4J_FIRST_PARTY_FRAUD_CLUSTERING: Clustering de fraude");
     return false;
   }
 
-  private boolean evaluateNeo4jSecondLevelFraudsterId(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jSecondLevelFraudsterId(
+      RuleCondition condition, EvaluationContext context) {
     // NEO011: Identificação de fraudador de segundo nível
     log.debug("NEO4J_SECOND_LEVEL_FRAUDSTER_ID: Identificando fraudador de segundo nível");
     return false;
   }
 
-  private boolean evaluateNeo4jBetweennessCentralityMule(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jBetweennessCentralityMule(
+      RuleCondition condition, EvaluationContext context) {
     // NEO012: Centralidade de intermediação para mules
     log.debug("NEO4J_BETWEENNESS_CENTRALITY_MULE: Calculando centralidade de intermediação");
     return false;
   }
 
-  private boolean evaluateNeo4jLabelPropagationFraudSpread(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jLabelPropagationFraudSpread(
+      RuleCondition condition, EvaluationContext context) {
     // NEO013: Propagação de label de fraude
     log.debug("NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD: Propagando labels de fraude");
     return false;
   }
 
-  private boolean evaluateNeo4jShortestPathAmlTracking(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jShortestPathAmlTracking(
+      RuleCondition condition, EvaluationContext context) {
     // NEO014: Rastreamento AML via caminho mais curto
     log.debug("NEO4J_SHORTEST_PATH_AML_TRACKING: Rastreando caminho AML");
     return false;
   }
 
-  private boolean evaluateNeo4jTriangleCountCollusion(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jTriangleCountCollusion(
+      RuleCondition condition, EvaluationContext context) {
     // NEO015: Contagem de triângulos para colusão
     log.debug("NEO4J_TRIANGLE_COUNT_COLLUSION: Contando triângulos para colusão");
     return false;
   }
 
-  private boolean evaluateNeo4jNodeSimilaritySyntheticId(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jNodeSimilaritySyntheticId(
+      RuleCondition condition, EvaluationContext context) {
     // NEO016: Similaridade de nó para ID sintético
     log.debug("NEO4J_NODE_SIMILARITY_SYNTHETIC_ID: Calculando similaridade de nó");
     return false;
   }
 
-  private boolean evaluateNeo4jGraphEmbeddingFraudPrediction(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jGraphEmbeddingFraudPrediction(
+      RuleCondition condition, EvaluationContext context) {
     // NEO017: Predição de fraude via embedding de grafo
     log.debug("NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION: Predição via embedding");
     return false;
   }
 
-  private boolean evaluateNeo4jTemporalMotifPattern(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNeo4jTemporalMotifPattern(
+      RuleCondition condition, EvaluationContext context) {
     // NEO018: Padrão de motif temporal
     log.debug("NEO4J_TEMPORAL_MOTIF_PATTERN: Analisando padrão temporal");
     return false;
@@ -8094,25 +8185,29 @@ public class ComplexRuleEvaluator {
 
   // ========== Synthetic Identity Detection (SYN001-SYN015) ==========
 
-  private boolean evaluateBiometricKeystrokeDynamics(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateBiometricKeystrokeDynamics(
+      RuleCondition condition, EvaluationContext context) {
     // SYN001: Dinâmica de digitação biométrica
     log.debug("BIOMETRIC_KEYSTROKE_DYNAMICS: Analisando dinâmica de digitação");
     return false;
   }
 
-  private boolean evaluateBiometricMouseMovement(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateBiometricMouseMovement(
+      RuleCondition condition, EvaluationContext context) {
     // SYN002: Movimento de mouse biométrico
     log.debug("BIOMETRIC_MOUSE_MOVEMENT: Analisando movimento de mouse");
     return false;
   }
 
-  private boolean evaluateBiometricScrollVelocity(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateBiometricScrollVelocity(
+      RuleCondition condition, EvaluationContext context) {
     // SYN003: Velocidade de scroll biométrica
     log.debug("BIOMETRIC_SCROLL_VELOCITY: Analisando velocidade de scroll");
     return false;
   }
 
-  private boolean evaluateDeviceFingerprintConsistencyCheck(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateDeviceFingerprintConsistencyCheck(
+      RuleCondition condition, EvaluationContext context) {
     // SYN004: Verificação de consistência de fingerprint
     log.debug("DEVICE_FINGERPRINT_CONSISTENCY_CHECK: Verificando consistência de fingerprint");
     return false;
@@ -8130,55 +8225,64 @@ public class ComplexRuleEvaluator {
     return false;
   }
 
-  private boolean evaluateInjectionAttackDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateInjectionAttackDetection(
+      RuleCondition condition, EvaluationContext context) {
     // SYN007: Detecção de ataque de injeção
     log.debug("INJECTION_ATTACK_DETECTION: Detectando ataque de injeção");
     return false;
   }
 
-  private boolean evaluateLivenessDetectionFacial(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLivenessDetectionFacial(
+      RuleCondition condition, EvaluationContext context) {
     // SYN008: Detecção de liveness facial
     log.debug("LIVENESS_DETECTION_FACIAL: Verificando liveness facial");
     return false;
   }
 
-  private boolean evaluateLivenessDetectionVoice(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLivenessDetectionVoice(
+      RuleCondition condition, EvaluationContext context) {
     // SYN009: Detecção de liveness de voz
     log.debug("LIVENESS_DETECTION_VOICE: Verificando liveness de voz");
     return false;
   }
 
-  private boolean evaluateAntiDetectBrowserDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateAntiDetectBrowserDetection(
+      RuleCondition condition, EvaluationContext context) {
     // SYN010: Detecção de browser anti-detect
     log.debug("ANTI_DETECT_BROWSER_DETECTION: Detectando browser anti-detect");
     return false;
   }
 
-  private boolean evaluateDocumentForgeryDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateDocumentForgeryDetection(
+      RuleCondition condition, EvaluationContext context) {
     // SYN011: Detecção de falsificação de documento
     log.debug("DOCUMENT_FORGERY_DETECTION: Detectando falsificação de documento");
     return false;
   }
 
-  private boolean evaluateFaceToIdPhotoMatching(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateFaceToIdPhotoMatching(
+      RuleCondition condition, EvaluationContext context) {
     // SYN012: Matching de face com foto de ID
     log.debug("FACE_TO_ID_PHOTO_MATCHING: Comparando face com foto de ID");
     return false;
   }
 
-  private boolean evaluateAdaptiveBehavioralAnalytics(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateAdaptiveBehavioralAnalytics(
+      RuleCondition condition, EvaluationContext context) {
     // SYN013: Analytics comportamental adaptativo
     log.debug("ADAPTIVE_BEHAVIORAL_ANALYTICS: Analisando comportamento adaptativo");
     return false;
   }
 
-  private boolean evaluateSyntheticIdLabelCorrection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateSyntheticIdLabelCorrection(
+      RuleCondition condition, EvaluationContext context) {
     // SYN014: Correção de label de ID sintético
     log.debug("SYNTHETIC_ID_LABEL_CORRECTION: Corrigindo label de ID sintético");
     return false;
   }
 
-  private boolean evaluateMultiLayeredSyntheticIdControls(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateMultiLayeredSyntheticIdControls(
+      RuleCondition condition, EvaluationContext context) {
     // SYN015: Controles multicamada para ID sintético
     log.debug("MULTI_LAYERED_SYNTHETIC_ID_CONTROLS: Aplicando controles multicamada");
     return false;
@@ -8186,7 +8290,8 @@ public class ComplexRuleEvaluator {
 
   // ========== Estatísticos Avançados Pure Rules (STAT001-STAT015) ==========
 
-  private boolean evaluateStatKruskalWallisTest(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateStatKruskalWallisTest(
+      RuleCondition condition, EvaluationContext context) {
     // STAT001: Teste Kruskal-Wallis (não-paramétrico ANOVA)
     log.debug("STAT_KRUSKAL_WALLIS_TEST: Executando teste Kruskal-Wallis");
     return false;
@@ -8198,31 +8303,36 @@ public class ComplexRuleEvaluator {
     return false;
   }
 
-  private boolean evaluateStatIsolationForestScore(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateStatIsolationForestScore(
+      RuleCondition condition, EvaluationContext context) {
     // STAT003: Score de Isolation Forest (anomalia)
     log.debug("STAT_ISOLATION_FOREST_SCORE: Calculando score Isolation Forest");
     return false;
   }
 
-  private boolean evaluateStatLocalOutlierFactor(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateStatLocalOutlierFactor(
+      RuleCondition condition, EvaluationContext context) {
     // STAT004: Local Outlier Factor (LOF)
     log.debug("STAT_LOCAL_OUTLIER_FACTOR: Calculando LOF");
     return false;
   }
 
-  private boolean evaluateStatOneClassSvmBoundary(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateStatOneClassSvmBoundary(
+      RuleCondition condition, EvaluationContext context) {
     // STAT005: One-Class SVM boundary detection
     log.debug("STAT_ONE_CLASS_SVM_BOUNDARY: Verificando boundary SVM");
     return false;
   }
 
-  private boolean evaluateStatKmeansClusterDistance(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateStatKmeansClusterDistance(
+      RuleCondition condition, EvaluationContext context) {
     // STAT006: Distância do centróide K-Means
     log.debug("STAT_KMEANS_CLUSTER_DISTANCE: Calculando distância K-Means");
     return false;
   }
 
-  private boolean evaluateStatDbscanNoiseDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateStatDbscanNoiseDetection(
+      RuleCondition condition, EvaluationContext context) {
     // STAT007: Detecção de ruído DBSCAN
     log.debug("STAT_DBSCAN_NOISE_DETECTION: Detectando ruído DBSCAN");
     return false;
@@ -8234,7 +8344,8 @@ public class ComplexRuleEvaluator {
     return false;
   }
 
-  private boolean evaluateStatMahalanobisDistance(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateStatMahalanobisDistance(
+      RuleCondition condition, EvaluationContext context) {
     // STAT009: Distância de Mahalanobis multivariada
     log.debug("STAT_MAHALANOBIS_DISTANCE: Calculando distância Mahalanobis");
     return false;
@@ -8270,7 +8381,8 @@ public class ComplexRuleEvaluator {
     return false;
   }
 
-  private boolean evaluateStatBootstrapConfidenceInterval(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateStatBootstrapConfidenceInterval(
+      RuleCondition condition, EvaluationContext context) {
     // STAT015: Intervalo de confiança Bootstrap
     log.debug("STAT_BOOTSTRAP_CONFIDENCE_INTERVAL: Calculando intervalo Bootstrap");
     return false;
@@ -8278,27 +8390,32 @@ public class ComplexRuleEvaluator {
 
   // ========== Fraud Patterns & Market Operators (Phase 7) ==========
 
-  private boolean evaluateCardTestingRingDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCardTestingRingDetection(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("CARD_TESTING_RING_DETECTION: Detectando anel de teste de cartão");
     return false;
   }
 
-  private boolean evaluateBustOutPatternDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateBustOutPatternDetection(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("BUST_OUT_PATTERN_DETECTION: Detectando padrão bust-out");
     return false;
   }
 
-  private boolean evaluateCircularPaymentDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCircularPaymentDetection(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("CIRCULAR_PAYMENT_DETECTION: Detectando pagamento circular");
     return false;
   }
 
-  private boolean evaluateAccountTakeoverPattern(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateAccountTakeoverPattern(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("ACCOUNT_TAKEOVER_PATTERN: Detectando padrão de tomada de conta");
     return false;
   }
 
-  private boolean evaluateSyntheticIdentityRing(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateSyntheticIdentityRing(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("SYNTHETIC_IDENTITY_RING: Detectando anel de identidade sintética");
     return false;
   }
@@ -8313,7 +8430,8 @@ public class ComplexRuleEvaluator {
     return false;
   }
 
-  private boolean evaluateNestedCorrespondentCheck(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateNestedCorrespondentCheck(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("NESTED_CORRESPONDENT_CHECK: Verificando correspondente aninhado");
     return false;
   }
@@ -8323,17 +8441,20 @@ public class ComplexRuleEvaluator {
     return false;
   }
 
-  private boolean evaluateHighRiskCorridorCheck(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateHighRiskCorridorCheck(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("HIGH_RISK_CORRIDOR_CHECK: Verificando corredor de alto risco");
     return false;
   }
 
-  private boolean evaluateSegmentOfOneProfiling(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateSegmentOfOneProfiling(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("SEGMENT_OF_ONE_PROFILING: Aplicando perfil segment-of-one");
     return false;
   }
 
-  private boolean evaluateAdaptiveParametricThreshold(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateAdaptiveParametricThreshold(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("ADAPTIVE_PARAMETRIC_THRESHOLD: Aplicando threshold paramétrico adaptativo");
     return false;
   }
@@ -8343,12 +8464,14 @@ public class ComplexRuleEvaluator {
     return false;
   }
 
-  private boolean evaluateConsortiumNegativeFileCheck(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateConsortiumNegativeFileCheck(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("CONSORTIUM_NEGATIVE_FILE_CHECK: Verificando arquivo negativo de consórcio");
     return false;
   }
 
-  private boolean evaluatePeerGroupDeviationScore(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluatePeerGroupDeviationScore(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("PEER_GROUP_DEVIATION_SCORE: Calculando score de desvio de grupo de pares");
     return false;
   }
@@ -8358,12 +8481,14 @@ public class ComplexRuleEvaluator {
     return false;
   }
 
-  private boolean evaluateRapidSuccessionPattern(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateRapidSuccessionPattern(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("RAPID_SUCCESSION_PATTERN: Detectando padrão de sucessão rápida");
     return false;
   }
 
-  private boolean evaluateSplitTransactionDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateSplitTransactionDetection(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("SPLIT_TRANSACTION_DETECTION: Detectando transação dividida");
     return false;
   }
@@ -8373,7 +8498,8 @@ public class ComplexRuleEvaluator {
     return false;
   }
 
-  private boolean evaluateLayeredTransferPattern(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateLayeredTransferPattern(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("LAYERED_TRANSFER_PATTERN: Detectando padrão de transferência em camadas");
     return false;
   }
@@ -8388,17 +8514,20 @@ public class ComplexRuleEvaluator {
     return false;
   }
 
-  private boolean evaluateInvestmentScamPattern(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateInvestmentScamPattern(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("INVESTMENT_SCAM_PATTERN: Detectando padrão de golpe de investimento");
     return false;
   }
 
-  private boolean evaluateCryptoPumpDumpDetection(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluateCryptoPumpDumpDetection(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("CRYPTO_PUMP_DUMP_DETECTION: Detectando pump and dump crypto");
     return false;
   }
 
-  private boolean evaluatePigButcheringIndicator(RuleCondition condition, EvaluationContext context) {
+  private boolean evaluatePigButcheringIndicator(
+      RuleCondition condition, EvaluationContext context) {
     log.debug("PIG_BUTCHERING_INDICATOR: Verificando indicador de pig butchering scam");
     return false;
   }

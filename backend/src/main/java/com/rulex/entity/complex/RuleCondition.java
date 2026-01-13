@@ -531,10 +531,12 @@ public class RuleCondition {
     FUZZY_MEMBERSHIP, // FUZZY001: Fuzzy membership function evaluation
     FUZZY_ADAPTIVE_THRESHOLD, // FUZZY002: Adaptive fuzzy threshold adjustment
 
-    // ========== OPERADORES V4.0 PHASE 5A (12 novos) - LLM & Generative AI Fraud Detection ==========
+    // ========== OPERADORES V4.0 PHASE 5A (12 novos) - LLM & Generative AI Fraud Detection
+    // ==========
     LLM_TRANSACTION_DESCRIPTION_ANALYSIS, // LLM001: Análise de descrição de transação via LLM
     LLM_GENERATIVE_RULE_SYNTHESIS, // LLM002: Síntese automática de regras via LLM
-    LLM_ANOMALY_EXPLANATION_GENERATION, // LLM003: Geração de explicação de anomalia em linguagem natural
+    LLM_ANOMALY_EXPLANATION_GENERATION, // LLM003: Geração de explicação de anomalia em linguagem
+    // natural
     LLM_CHATBOT_FRAUD_DETECTION, // LLM004: Detecção de fraude em chatbot/conversação
     LLM_DEEPFAKE_VOICE_DETECTION, // LLM005: Detecção de deepfake de voz
     LLM_SYNTHETIC_IMAGE_DETECTION, // LLM006: Detecção de imagem sintética/GAN

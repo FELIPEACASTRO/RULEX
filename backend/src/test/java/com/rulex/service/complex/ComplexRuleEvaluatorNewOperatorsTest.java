@@ -42,7 +42,9 @@ class ComplexRuleEvaluatorNewOperatorsTest {
     velocityService = Mockito.mock(VelocityService.class);
     velocityServiceFacade = Mockito.mock(VelocityServiceFacade.class);
     operatorDataService = Mockito.mock(OperatorDataService.class);
-    evaluator = new ComplexRuleEvaluator(geoService, velocityService, velocityServiceFacade, operatorDataService);
+    evaluator =
+        new ComplexRuleEvaluator(
+            geoService, velocityService, velocityServiceFacade, operatorDataService);
   }
 
   // =====================================================
