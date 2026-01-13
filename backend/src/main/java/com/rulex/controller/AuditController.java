@@ -6,10 +6,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +25,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
 
 /** Controller REST para consulta de logs de auditoria. */
 @RestController
@@ -73,64 +76,78 @@ public class AuditController {
     return ResponseEntity.ok(logs);
   }
 
-  /** Exporta logs de auditoria. GET /api/audit/export?format=csv|json&... */
-  @Operation(summary = "Exportar logs", description = "Exporta logs em CSV ou JSON")
+  /** Exporta logs de auditoria em JSON. GET /api/audit/export?format=json&... */
+  @Operation(summary = "Exportar logs JSON", description = "Exporta logs em JSON")
   @ApiResponse(responseCode = "200", description = "Arquivo exportado")
-  @GetMapping("/export")
-  public ResponseEntity<?> exportAudit(
-      @RequestParam(defaultValue = "csv") String format,
+  @GetMapping(value = "/export", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<List<AuditLogDTO>> exportAuditJson(
+      @RequestParam(defaultValue = "json") String format,
       @RequestParam(required = false) String actionType,
       @RequestParam(required = false) String result,
       @RequestParam(required = false) String startDate,
       @RequestParam(required = false) String endDate,
       @RequestParam(defaultValue = "10000") int limit) {
 
+    if (!"json".equalsIgnoreCase(format)) {
+      throw new IllegalArgumentException("Use /export/csv para exportar em CSV");
+    }
+
     if (limit <= 0 || limit > 50000) {
       throw new IllegalArgumentException("limit deve estar entre 1 e 50000");
     }
 
-    LocalDateTime startDateTime = null;
-    LocalDateTime endDateTime = null;
-    if (startDate != null && !startDate.isEmpty()) {
-      startDateTime = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_DATE_TIME);
-    }
-    if (endDate != null && !endDate.isEmpty()) {
-      endDateTime = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_DATE_TIME);
-    }
+    LocalDateTime startDateTime = parseIsoToLocalDateTime(startDate);
+    LocalDateTime endDateTime = parseIsoToLocalDateTime(endDate);
 
     Pageable firstPage =
         PageRequest.of(0, Math.min(1000, limit), Sort.by(Sort.Direction.DESC, "createdAt"));
 
-    if ("json".equalsIgnoreCase(format)) {
-      List<AuditLogDTO> out =
-          auditQueryService.exportAsList(
-              actionType, result, startDateTime, endDateTime, firstPage, limit);
-      return ResponseEntity.ok(out);
+    List<AuditLogDTO> out =
+        auditQueryService.exportAsList(actionType, result, startDateTime, endDateTime, firstPage, limit);
+    return ResponseEntity.ok(out);
+  }
+
+  /** Exporta logs de auditoria em CSV. GET /api/audit/export/csv */
+  @Operation(summary = "Exportar logs CSV", description = "Exporta logs em CSV")
+  @ApiResponse(responseCode = "200", description = "Arquivo CSV exportado")
+  @GetMapping(value = "/export/csv", produces = "text/csv")
+  public void exportAuditCsv(
+      @RequestParam(required = false) String actionType,
+      @RequestParam(required = false) String result,
+      @RequestParam(required = false) String startDate,
+      @RequestParam(required = false) String endDate,
+      @RequestParam(defaultValue = "10000") int limit,
+      HttpServletResponse response) throws IOException {
+
+    if (limit <= 0 || limit > 50000) {
+      throw new IllegalArgumentException("limit deve estar entre 1 e 50000");
     }
 
-    if (!"csv".equalsIgnoreCase(format)) {
-      throw new IllegalArgumentException("format inválido (use csv ou json)");
+    LocalDateTime startDateTime = parseIsoToLocalDateTime(startDate);
+    LocalDateTime endDateTime = parseIsoToLocalDateTime(endDate);
+
+    Pageable firstPage =
+        PageRequest.of(0, Math.min(1000, limit), Sort.by(Sort.Direction.DESC, "createdAt"));
+
+    response.setContentType("text/csv; charset=UTF-8");
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"rulex-audit.csv\"");
+
+    try (Writer w = new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8)) {
+      w.write("id,transactionId,actionType,result,performedBy,createdAt,description,errorMessage,sourceIp,details\n");
+      auditQueryService.exportAsCsv(w, actionType, result, startDateTime, endDateTime, firstPage, limit);
+      w.flush();
     }
+  }
 
-    final LocalDateTime startDateFinal = startDateTime;
-    final LocalDateTime endDateFinal = endDateTime;
-
-    StreamingResponseBody body =
-        outputStream -> {
-          try (Writer w = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
-            w.write(
-                "id,transactionId,actionType,result,performedBy,createdAt,description,errorMessage,sourceIp,details\n");
-            auditQueryService.exportAsCsv(
-                w, actionType, result, startDateFinal, endDateFinal, firstPage, limit);
-            w.flush();
-          }
-        };
-
-    String filename = "rulex-audit.csv";
-    return ResponseEntity.ok()
-        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-        .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
-        .body(body);
+  private static LocalDateTime parseIsoToLocalDateTime(String raw) {
+    if (raw == null || raw.isBlank()) {
+      return null;
+    }
+    try {
+      return OffsetDateTime.parse(raw, DateTimeFormatter.ISO_DATE_TIME).toLocalDateTime();
+    } catch (Exception ignored) {
+      return LocalDateTime.parse(raw, DateTimeFormatter.ISO_DATE_TIME);
+    }
   }
 
   /**

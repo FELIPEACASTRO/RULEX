@@ -17,6 +17,12 @@ spring:
           max-idle: 8
           min-idle: 2
 
+  neo4j:
+    uri: ${RULEX_NEO4J_URI:bolt://localhost:7687}
+    authentication:
+      username: ${RULEX_NEO4J_USERNAME:neo4j}
+      password: ${RULEX_NEO4J_PASSWORD:rulex123}
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/rulex_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}

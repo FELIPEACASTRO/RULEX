@@ -13,9 +13,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -33,7 +35,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
 
 /** Controller REST para processamento e consulta de transações. */
 @RestController
@@ -141,9 +143,9 @@ public class TransactionController {
    */
   @Operation(summary = "Exportar transações", description = "Exporta transações em CSV ou JSON")
   @ApiResponse(responseCode = "200", description = "Arquivo exportado")
-  @GetMapping("/export")
-  public ResponseEntity<?> exportTransactions(
-      @RequestParam(defaultValue = "csv") String format,
+  @GetMapping(value = "/export", produces = {MediaType.APPLICATION_JSON_VALUE, "text/csv"})
+  public ResponseEntity<List<TransactionResponse>> exportTransactionsJson(
+      @RequestParam(defaultValue = "json") String format,
       @RequestParam(required = false) String customerId,
       @RequestParam(required = false) String merchantId,
       @RequestParam(required = false) String classification,
@@ -154,73 +156,62 @@ public class TransactionController {
       @RequestParam(required = false) String endDate,
       @RequestParam(defaultValue = "10000") int limit) {
 
+    if (!"json".equalsIgnoreCase(format)) {
+      throw new IllegalArgumentException("Use /export/csv para exportar em CSV");
+    }
+
     if (limit <= 0 || limit > 50000) {
       throw new IllegalArgumentException("limit deve estar entre 1 e 50000");
     }
 
-    LocalDateTime startDateTime = null;
-    LocalDateTime endDateTime = null;
-    if (startDate != null && !startDate.isEmpty()) {
-      startDateTime = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_DATE_TIME);
-    }
-    if (endDate != null && !endDate.isEmpty()) {
-      endDateTime = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_DATE_TIME);
-    }
+    LocalDateTime startDateTime = parseIsoToLocalDateTime(startDate);
+    LocalDateTime endDateTime = parseIsoToLocalDateTime(endDate);
 
-    // Ordenar por mais recentes
     Pageable firstPage =
         PageRequest.of(0, Math.min(1000, limit), Sort.by(Sort.Direction.DESC, "createdAt"));
 
-    if ("json".equalsIgnoreCase(format)) {
-      List<TransactionResponse> out =
-          transactionQueryService.exportAsList(
-              customerId,
-              merchantId,
-              classification,
-              mcc,
-              minAmount,
-              maxAmount,
-              startDateTime,
-              endDateTime,
-              firstPage,
-              limit);
-      return ResponseEntity.ok(out);
+    List<TransactionResponse> out =
+        transactionQueryService.exportAsList(
+            customerId, merchantId, classification, mcc, minAmount, maxAmount,
+            startDateTime, endDateTime, firstPage, limit);
+    return ResponseEntity.ok(out);
+  }
+
+  @Operation(summary = "Exportar transações CSV", description = "Exporta transações em CSV")
+  @ApiResponse(responseCode = "200", description = "Arquivo CSV exportado")
+  @GetMapping(value = "/export/csv", produces = "text/csv")
+  public void exportTransactionsCsv(
+      @RequestParam(required = false) String customerId,
+      @RequestParam(required = false) String merchantId,
+      @RequestParam(required = false) String classification,
+      @RequestParam(required = false) Integer mcc,
+      @RequestParam(required = false) BigDecimal minAmount,
+      @RequestParam(required = false) BigDecimal maxAmount,
+      @RequestParam(required = false) String startDate,
+      @RequestParam(required = false) String endDate,
+      @RequestParam(defaultValue = "10000") int limit,
+      HttpServletResponse response) throws IOException {
+
+    if (limit <= 0 || limit > 50000) {
+      throw new IllegalArgumentException("limit deve estar entre 1 e 50000");
     }
 
-    if (!"csv".equalsIgnoreCase(format)) {
-      throw new IllegalArgumentException("format inválido (use csv ou json)");
+    LocalDateTime startDateTime = parseIsoToLocalDateTime(startDate);
+    LocalDateTime endDateTime = parseIsoToLocalDateTime(endDate);
+
+    Pageable firstPage =
+        PageRequest.of(0, Math.min(1000, limit), Sort.by(Sort.Direction.DESC, "createdAt"));
+
+    response.setContentType("text/csv; charset=UTF-8");
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"rulex-transactions.csv\"");
+
+    try (Writer w = new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8)) {
+      w.write("id,transactionId,customerIdFromHeader,merchantId,merchantName,transactionAmount,transactionDate,transactionTime,classification,riskScore,timestamp,reason\n");
+      transactionQueryService.exportAsCsv(
+          w, customerId, merchantId, classification, mcc, minAmount, maxAmount,
+          startDateTime, endDateTime, firstPage, limit);
+      w.flush();
     }
-
-    final LocalDateTime startDateFinal = startDateTime;
-    final LocalDateTime endDateFinal = endDateTime;
-
-    StreamingResponseBody body =
-        outputStream -> {
-          try (Writer w = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
-            // Header
-            w.write(
-                "id,transactionId,customerIdFromHeader,merchantId,merchantName,transactionAmount,transactionDate,transactionTime,classification,riskScore,timestamp,reason\n");
-            transactionQueryService.exportAsCsv(
-                w,
-                customerId,
-                merchantId,
-                classification,
-                mcc,
-                minAmount,
-                maxAmount,
-                startDateFinal,
-                endDateFinal,
-                firstPage,
-                limit);
-            w.flush();
-          }
-        };
-
-    String filename = "rulex-transactions.csv";
-    return ResponseEntity.ok()
-        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-        .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
-        .body(body);
   }
 
   /** Obtém detalhes de uma transação específica. GET /api/transactions/{id} */
