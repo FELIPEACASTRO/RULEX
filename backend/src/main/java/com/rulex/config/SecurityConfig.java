@@ -88,11 +88,18 @@ public class SecurityConfig {
         csrf ->
             csrf.csrfTokenRepository(csrfTokenRepository)
                 .csrfTokenRequestHandler(requestHandler)
-                // Ignore CSRF for stateless API endpoints (they use Basic Auth)
+                // Ignore CSRF for all API endpoints (they use Basic Auth which is stateless)
+                // CSRF protection is primarily for browser-based sessions with cookies
                 .ignoringRequestMatchers(
-                    "/transactions/analyze",
-                    "/transactions/analyze-advanced",
-                    "/evaluate",
+                    "/transactions/**",
+                    "/evaluate/**",
+                    "/rules/**",
+                    "/complex-rules/**",
+                    "/audit/**",
+                    "/metrics/**",
+                    "/field-dictionary/**",
+                    "/homolog/**",
+                    "/api/**",
                     "/actuator/**"));
 
     http.authorizeHttpRequests(
