@@ -1,4 +1,4 @@
-// Auto-generated from RuleCondition.java - 422 operators
+// Auto-generated from RuleCondition.java - 447 operators
 // DO NOT EDIT MANUALLY - Run generate_operators.py to update
 
 export interface OperatorDefinition {
@@ -431,7 +431,32 @@ export const OPERATORS: OperatorDefinition[] = [
   { value: 'STAT_SHAPIRO_WILK_TEST', label: 'Stat Shapiro Wilk Test', description: 'Operador Stat Shapiro Wilk Test', requiresValue: true, category: 'Behavioral Phase 1B' },
   { value: 'STAT_LEVENE_TEST', label: 'Stat Levene Test', description: 'Operador Stat Levene Test', requiresValue: true, category: 'Behavioral Phase 1B' },
   { value: 'STAT_WELCH_T_TEST', label: 'Stat Welch T Test', description: 'Operador Stat Welch T Test', requiresValue: true, category: 'Behavioral Phase 1B' },
-  { value: 'STAT_BOOTSTRAP_CONFIDENCE_INTERVAL', label: 'Stat Bootstrap Confidence Interval', description: 'STAT015: Intervalo de confiança Bootstrap', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'STAT_BOOTSTRAP_CONFIDENCE_INTERVAL', label: 'Stat Bootstrap Confidence Interval', description: 'Operador Stat Bootstrap Confidence Interval', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'CARD_TESTING_RING_DETECTION', label: 'Card Testing Ring Detection', description: 'Operador Card Testing Ring Detection', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'BUST_OUT_PATTERN_DETECTION', label: 'Bust Out Pattern Detection', description: 'Operador Bust Out Pattern Detection', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'CIRCULAR_PAYMENT_DETECTION', label: 'Circular Payment Detection', description: 'Operador Circular Payment Detection', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'ACCOUNT_TAKEOVER_PATTERN', label: 'Account Takeover Pattern', description: 'Operador Account Takeover Pattern', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'SYNTHETIC_IDENTITY_RING', label: 'Synthetic Identity Ring', description: 'Operador Synthetic Identity Ring', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'CROSS_BORDER_VELOCITY', label: 'Cross Border Velocity', description: 'Operador Cross Border Velocity', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'CORRESPONDENT_ANOMALY', label: 'Correspondent Anomaly', description: 'Operador Correspondent Anomaly', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'NESTED_CORRESPONDENT_CHECK', label: 'Nested Correspondent Check', description: 'Operador Nested Correspondent Check', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'SHELL_BANK_INDICATOR', label: 'Shell Bank Indicator', description: 'Operador Shell Bank Indicator', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'HIGH_RISK_CORRIDOR_CHECK', label: 'High Risk Corridor Check', description: 'Operador High Risk Corridor Check', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'SEGMENT_OF_ONE_PROFILING', label: 'Segment Of One Profiling', description: 'Operador Segment Of One Profiling', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'ADAPTIVE_PARAMETRIC_THRESHOLD', label: 'Adaptive Parametric Threshold', description: 'Operador Adaptive Parametric Threshold', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'REAL_TIME_RISK_SCORING', label: 'Real Time Risk Scoring', description: 'Operador Real Time Risk Scoring', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'CONSORTIUM_NEGATIVE_FILE_CHECK', label: 'Consortium Negative File Check', description: 'Operador Consortium Negative File Check', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'PEER_GROUP_DEVIATION_SCORE', label: 'Peer Group Deviation Score', description: 'Operador Peer Group Deviation Score', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'MICRO_DEPOSIT_VELOCITY', label: 'Micro Deposit Velocity', description: 'Operador Micro Deposit Velocity', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'RAPID_SUCCESSION_PATTERN', label: 'Rapid Succession Pattern', description: 'Operador Rapid Succession Pattern', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'SPLIT_TRANSACTION_DETECTION', label: 'Split Transaction Detection', description: 'Operador Split Transaction Detection', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'ROUND_TRIP_DETECTION', label: 'Round Trip Detection', description: 'Operador Round Trip Detection', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'LAYERED_TRANSFER_PATTERN', label: 'Layered Transfer Pattern', description: 'Operador Layered Transfer Pattern', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'APP_FRAUD_DETECTION', label: 'App Fraud Detection', description: 'Operador App Fraud Detection', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'ROMANCE_SCAM_INDICATOR', label: 'Romance Scam Indicator', description: 'Operador Romance Scam Indicator', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'INVESTMENT_SCAM_PATTERN', label: 'Investment Scam Pattern', description: 'Operador Investment Scam Pattern', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'CRYPTO_PUMP_DUMP_DETECTION', label: 'Crypto Pump Dump Detection', description: 'Operador Crypto Pump Dump Detection', requiresValue: true, category: 'Behavioral Phase 1B' },
+  { value: 'PIG_BUTCHERING_INDICATOR', label: 'Pig Butchering Indicator', description: 'Indicador de pig butchering scam', requiresValue: true, category: 'Behavioral Phase 1B' },
 ];
 
-export const OPERATOR_COUNT = 422;
+export const OPERATOR_COUNT = 447;

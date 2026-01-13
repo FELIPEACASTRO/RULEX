@@ -486,7 +486,32 @@ public class ConditionDTO {
     STAT_SHAPIRO_WILK_TEST("Stat Shapiro Wilk Test"),
     STAT_LEVENE_TEST("Stat Levene Test"),
     STAT_WELCH_T_TEST("Stat Welch T Test"),
-    STAT_BOOTSTRAP_CONFIDENCE_INTERVAL("STAT015: Intervalo de confiança Bootstrap");
+    STAT_BOOTSTRAP_CONFIDENCE_INTERVAL("Stat Bootstrap Confidence Interval"),
+    CARD_TESTING_RING_DETECTION("Card Testing Ring Detection"),
+    BUST_OUT_PATTERN_DETECTION("Bust Out Pattern Detection"),
+    CIRCULAR_PAYMENT_DETECTION("Circular Payment Detection"),
+    ACCOUNT_TAKEOVER_PATTERN("Account Takeover Pattern"),
+    SYNTHETIC_IDENTITY_RING("Synthetic Identity Ring"),
+    CROSS_BORDER_VELOCITY("Cross Border Velocity"),
+    CORRESPONDENT_ANOMALY("Correspondent Anomaly"),
+    NESTED_CORRESPONDENT_CHECK("Nested Correspondent Check"),
+    SHELL_BANK_INDICATOR("Shell Bank Indicator"),
+    HIGH_RISK_CORRIDOR_CHECK("High Risk Corridor Check"),
+    SEGMENT_OF_ONE_PROFILING("Segment Of One Profiling"),
+    ADAPTIVE_PARAMETRIC_THRESHOLD("Adaptive Parametric Threshold"),
+    REAL_TIME_RISK_SCORING("Real Time Risk Scoring"),
+    CONSORTIUM_NEGATIVE_FILE_CHECK("Consortium Negative File Check"),
+    PEER_GROUP_DEVIATION_SCORE("Peer Group Deviation Score"),
+    MICRO_DEPOSIT_VELOCITY("Micro Deposit Velocity"),
+    RAPID_SUCCESSION_PATTERN("Rapid Succession Pattern"),
+    SPLIT_TRANSACTION_DETECTION("Split Transaction Detection"),
+    ROUND_TRIP_DETECTION("Round Trip Detection"),
+    LAYERED_TRANSFER_PATTERN("Layered Transfer Pattern"),
+    APP_FRAUD_DETECTION("App Fraud Detection"),
+    ROMANCE_SCAM_INDICATOR("Romance Scam Indicator"),
+    INVESTMENT_SCAM_PATTERN("Investment Scam Pattern"),
+    CRYPTO_PUMP_DUMP_DETECTION("Crypto Pump Dump Detection"),
+    PIG_BUTCHERING_INDICATOR("Indicador de pig butchering scam");
 
     private final String description;
 

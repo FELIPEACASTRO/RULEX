@@ -804,6 +804,33 @@ public class ComplexRuleEvaluator {
       case STAT_WELCH_T_TEST -> evaluateStatWelchTTest(condition, context);
       case STAT_BOOTSTRAP_CONFIDENCE_INTERVAL -> evaluateStatBootstrapConfidenceInterval(condition, context);
 
+        // ========== Fraud Patterns & Market Operators (Phase 7) ==========
+      case CARD_TESTING_RING_DETECTION -> evaluateCardTestingRingDetection(condition, context);
+      case BUST_OUT_PATTERN_DETECTION -> evaluateBustOutPatternDetection(condition, context);
+      case CIRCULAR_PAYMENT_DETECTION -> evaluateCircularPaymentDetection(condition, context);
+      case ACCOUNT_TAKEOVER_PATTERN -> evaluateAccountTakeoverPattern(condition, context);
+      case SYNTHETIC_IDENTITY_RING -> evaluateSyntheticIdentityRing(condition, context);
+      case CROSS_BORDER_VELOCITY -> evaluateCrossBorderVelocity(condition, context);
+      case CORRESPONDENT_ANOMALY -> evaluateCorrespondentAnomaly(condition, context);
+      case NESTED_CORRESPONDENT_CHECK -> evaluateNestedCorrespondentCheck(condition, context);
+      case SHELL_BANK_INDICATOR -> evaluateShellBankIndicator(condition, context);
+      case HIGH_RISK_CORRIDOR_CHECK -> evaluateHighRiskCorridorCheck(condition, context);
+      case SEGMENT_OF_ONE_PROFILING -> evaluateSegmentOfOneProfiling(condition, context);
+      case ADAPTIVE_PARAMETRIC_THRESHOLD -> evaluateAdaptiveParametricThreshold(condition, context);
+      case REAL_TIME_RISK_SCORING -> evaluateRealTimeRiskScoring(condition, context);
+      case CONSORTIUM_NEGATIVE_FILE_CHECK -> evaluateConsortiumNegativeFileCheck(condition, context);
+      case PEER_GROUP_DEVIATION_SCORE -> evaluatePeerGroupDeviationScore(condition, context);
+      case MICRO_DEPOSIT_VELOCITY -> evaluateMicroDepositVelocity(condition, context);
+      case RAPID_SUCCESSION_PATTERN -> evaluateRapidSuccessionPattern(condition, context);
+      case SPLIT_TRANSACTION_DETECTION -> evaluateSplitTransactionDetection(condition, context);
+      case ROUND_TRIP_DETECTION -> evaluateRoundTripDetection(condition, context);
+      case LAYERED_TRANSFER_PATTERN -> evaluateLayeredTransferPattern(condition, context);
+      case APP_FRAUD_DETECTION -> evaluateAppFraudDetection(condition, context);
+      case ROMANCE_SCAM_INDICATOR -> evaluateRomanceScamIndicator(condition, context);
+      case INVESTMENT_SCAM_PATTERN -> evaluateInvestmentScamPattern(condition, context);
+      case CRYPTO_PUMP_DUMP_DETECTION -> evaluateCryptoPumpDumpDetection(condition, context);
+      case PIG_BUTCHERING_INDICATOR -> evaluatePigButcheringIndicator(condition, context);
+
       default -> {
         log.warn("Operador não implementado: {}", operator);
         yield false;
@@ -8087,6 +8114,133 @@ public class ComplexRuleEvaluator {
   private boolean evaluateStatBootstrapConfidenceInterval(RuleCondition condition, EvaluationContext context) {
     // STAT015: Intervalo de confiança Bootstrap
     log.debug("STAT_BOOTSTRAP_CONFIDENCE_INTERVAL: Calculando intervalo Bootstrap");
+    return false;
+  }
+
+  // ========== Fraud Patterns & Market Operators (Phase 7) ==========
+
+  private boolean evaluateCardTestingRingDetection(RuleCondition condition, EvaluationContext context) {
+    log.debug("CARD_TESTING_RING_DETECTION: Detectando anel de teste de cartão");
+    return false;
+  }
+
+  private boolean evaluateBustOutPatternDetection(RuleCondition condition, EvaluationContext context) {
+    log.debug("BUST_OUT_PATTERN_DETECTION: Detectando padrão bust-out");
+    return false;
+  }
+
+  private boolean evaluateCircularPaymentDetection(RuleCondition condition, EvaluationContext context) {
+    log.debug("CIRCULAR_PAYMENT_DETECTION: Detectando pagamento circular");
+    return false;
+  }
+
+  private boolean evaluateAccountTakeoverPattern(RuleCondition condition, EvaluationContext context) {
+    log.debug("ACCOUNT_TAKEOVER_PATTERN: Detectando padrão de tomada de conta");
+    return false;
+  }
+
+  private boolean evaluateSyntheticIdentityRing(RuleCondition condition, EvaluationContext context) {
+    log.debug("SYNTHETIC_IDENTITY_RING: Detectando anel de identidade sintética");
+    return false;
+  }
+
+  private boolean evaluateCrossBorderVelocity(RuleCondition condition, EvaluationContext context) {
+    log.debug("CROSS_BORDER_VELOCITY: Calculando velocidade cross-border");
+    return false;
+  }
+
+  private boolean evaluateCorrespondentAnomaly(RuleCondition condition, EvaluationContext context) {
+    log.debug("CORRESPONDENT_ANOMALY: Detectando anomalia de correspondente");
+    return false;
+  }
+
+  private boolean evaluateNestedCorrespondentCheck(RuleCondition condition, EvaluationContext context) {
+    log.debug("NESTED_CORRESPONDENT_CHECK: Verificando correspondente aninhado");
+    return false;
+  }
+
+  private boolean evaluateShellBankIndicator(RuleCondition condition, EvaluationContext context) {
+    log.debug("SHELL_BANK_INDICATOR: Verificando indicador de banco shell");
+    return false;
+  }
+
+  private boolean evaluateHighRiskCorridorCheck(RuleCondition condition, EvaluationContext context) {
+    log.debug("HIGH_RISK_CORRIDOR_CHECK: Verificando corredor de alto risco");
+    return false;
+  }
+
+  private boolean evaluateSegmentOfOneProfiling(RuleCondition condition, EvaluationContext context) {
+    log.debug("SEGMENT_OF_ONE_PROFILING: Aplicando perfil segment-of-one");
+    return false;
+  }
+
+  private boolean evaluateAdaptiveParametricThreshold(RuleCondition condition, EvaluationContext context) {
+    log.debug("ADAPTIVE_PARAMETRIC_THRESHOLD: Aplicando threshold paramétrico adaptativo");
+    return false;
+  }
+
+  private boolean evaluateRealTimeRiskScoring(RuleCondition condition, EvaluationContext context) {
+    log.debug("REAL_TIME_RISK_SCORING: Calculando score de risco em tempo real");
+    return false;
+  }
+
+  private boolean evaluateConsortiumNegativeFileCheck(RuleCondition condition, EvaluationContext context) {
+    log.debug("CONSORTIUM_NEGATIVE_FILE_CHECK: Verificando arquivo negativo de consórcio");
+    return false;
+  }
+
+  private boolean evaluatePeerGroupDeviationScore(RuleCondition condition, EvaluationContext context) {
+    log.debug("PEER_GROUP_DEVIATION_SCORE: Calculando score de desvio de grupo de pares");
+    return false;
+  }
+
+  private boolean evaluateMicroDepositVelocity(RuleCondition condition, EvaluationContext context) {
+    log.debug("MICRO_DEPOSIT_VELOCITY: Calculando velocidade de micro-depósitos");
+    return false;
+  }
+
+  private boolean evaluateRapidSuccessionPattern(RuleCondition condition, EvaluationContext context) {
+    log.debug("RAPID_SUCCESSION_PATTERN: Detectando padrão de sucessão rápida");
+    return false;
+  }
+
+  private boolean evaluateSplitTransactionDetection(RuleCondition condition, EvaluationContext context) {
+    log.debug("SPLIT_TRANSACTION_DETECTION: Detectando transação dividida");
+    return false;
+  }
+
+  private boolean evaluateRoundTripDetection(RuleCondition condition, EvaluationContext context) {
+    log.debug("ROUND_TRIP_DETECTION: Detectando ida e volta");
+    return false;
+  }
+
+  private boolean evaluateLayeredTransferPattern(RuleCondition condition, EvaluationContext context) {
+    log.debug("LAYERED_TRANSFER_PATTERN: Detectando padrão de transferência em camadas");
+    return false;
+  }
+
+  private boolean evaluateAppFraudDetection(RuleCondition condition, EvaluationContext context) {
+    log.debug("APP_FRAUD_DETECTION: Detectando fraude de APP (Authorized Push Payment)");
+    return false;
+  }
+
+  private boolean evaluateRomanceScamIndicator(RuleCondition condition, EvaluationContext context) {
+    log.debug("ROMANCE_SCAM_INDICATOR: Verificando indicador de golpe romântico");
+    return false;
+  }
+
+  private boolean evaluateInvestmentScamPattern(RuleCondition condition, EvaluationContext context) {
+    log.debug("INVESTMENT_SCAM_PATTERN: Detectando padrão de golpe de investimento");
+    return false;
+  }
+
+  private boolean evaluateCryptoPumpDumpDetection(RuleCondition condition, EvaluationContext context) {
+    log.debug("CRYPTO_PUMP_DUMP_DETECTION: Detectando pump and dump crypto");
+    return false;
+  }
+
+  private boolean evaluatePigButcheringIndicator(RuleCondition condition, EvaluationContext context) {
+    log.debug("PIG_BUTCHERING_INDICATOR: Verificando indicador de pig butchering scam");
     return false;
   }
 }

@@ -597,7 +597,43 @@ public class RuleCondition {
     STAT_SHAPIRO_WILK_TEST, // STAT012: Teste Shapiro-Wilk de normalidade
     STAT_LEVENE_TEST, // STAT013: Teste de Levene para homogeneidade de variância
     STAT_WELCH_T_TEST, // STAT014: Teste t de Welch (variâncias desiguais)
-    STAT_BOOTSTRAP_CONFIDENCE_INTERVAL // STAT015: Intervalo de confiança Bootstrap
+    STAT_BOOTSTRAP_CONFIDENCE_INTERVAL, // STAT015: Intervalo de confiança Bootstrap
+
+    // ========== OPERADORES V4.0 PHASE 7 (25 novos) - Fraud Patterns & Market Operators ==========
+    // Fraud Ring Detection
+    CARD_TESTING_RING_DETECTION, // Detecção de anel de teste de cartão
+    BUST_OUT_PATTERN_DETECTION, // Detecção de padrão bust-out
+    CIRCULAR_PAYMENT_DETECTION, // Detecção de pagamento circular
+    ACCOUNT_TAKEOVER_PATTERN, // Padrão de tomada de conta
+    SYNTHETIC_IDENTITY_RING, // Anel de identidade sintética
+
+    // Cross-Border & Correspondent Banking
+    CROSS_BORDER_VELOCITY, // Velocidade cross-border
+    CORRESPONDENT_ANOMALY, // Anomalia de correspondente bancário
+    NESTED_CORRESPONDENT_CHECK, // Verificação de correspondente aninhado
+    SHELL_BANK_INDICATOR, // Indicador de banco shell
+    HIGH_RISK_CORRIDOR_CHECK, // Verificação de corredor de alto risco
+
+    // Behavioral Profiling Advanced
+    SEGMENT_OF_ONE_PROFILING, // Perfil segment-of-one (Feedzai)
+    ADAPTIVE_PARAMETRIC_THRESHOLD, // Threshold paramétrico adaptativo
+    REAL_TIME_RISK_SCORING, // Scoring de risco em tempo real
+    CONSORTIUM_NEGATIVE_FILE_CHECK, // Verificação de arquivo negativo de consórcio
+    PEER_GROUP_DEVIATION_SCORE, // Score de desvio de grupo de pares
+
+    // Advanced Velocity Patterns
+    MICRO_DEPOSIT_VELOCITY, // Velocidade de micro-depósitos
+    RAPID_SUCCESSION_PATTERN, // Padrão de sucessão rápida
+    SPLIT_TRANSACTION_DETECTION, // Detecção de transação dividida
+    ROUND_TRIP_DETECTION, // Detecção de ida e volta
+    LAYERED_TRANSFER_PATTERN, // Padrão de transferência em camadas
+
+    // Emerging Fraud Types
+    APP_FRAUD_DETECTION, // Detecção de fraude de APP (Authorized Push Payment)
+    ROMANCE_SCAM_INDICATOR, // Indicador de golpe romântico
+    INVESTMENT_SCAM_PATTERN, // Padrão de golpe de investimento
+    CRYPTO_PUMP_DUMP_DETECTION, // Detecção de pump and dump crypto
+    PIG_BUTCHERING_INDICATOR // Indicador de pig butchering scam
   }
 
   /** Tipos de valor suportados */
