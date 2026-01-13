@@ -223,6 +223,24 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
   }
 
+  /** Tratamento de recurso não encontrado (404). */
+  @ExceptionHandler(com.rulex.api.NotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleNotFoundException(
+      com.rulex.api.NotFoundException ex, HttpServletRequest request) {
+    log.warn("Recurso não encontrado: {}", ex.getMessage());
+
+    ErrorResponse error =
+        ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.NOT_FOUND.value())
+            .error("Not Found")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+  }
+
   /** Tratamento de exceções genéricas. */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleGenericException(
