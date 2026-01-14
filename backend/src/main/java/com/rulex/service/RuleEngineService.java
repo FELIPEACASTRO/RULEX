@@ -143,7 +143,8 @@ public class RuleEngineService {
             externalTransactionId);
       }
 
-      // Store raw payload in an independent transaction for auditability (skip if already present from recovery case).
+      // Store raw payload in an independent transaction for auditability (skip if already present
+      // from recovery case).
       if (!existingRawOpt.isPresent()) {
         rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
       }

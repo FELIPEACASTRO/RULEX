@@ -11,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import org.junit.jupiter.api.BeforeAll;
@@ -45,7 +44,8 @@ class GoldenMasterBaselineTest {
     // Entity operators
     ConditionOperator[] entityOperators = ConditionOperator.values();
     currentState.put("entityOperatorCount", entityOperators.length);
-    currentState.put("entityOperators", Arrays.stream(entityOperators).map(Enum::name).sorted().toList());
+    currentState.put(
+        "entityOperators", Arrays.stream(entityOperators).map(Enum::name).sorted().toList());
 
     // DTO operators
     OperatorType[] dtoOperators = OperatorType.values();

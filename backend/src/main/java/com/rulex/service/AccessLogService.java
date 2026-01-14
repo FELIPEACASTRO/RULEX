@@ -38,15 +38,11 @@ public class AccessLogService {
   private static final int LOCKOUT_WINDOW_MINUTES = 15;
 
   /**
-   * DTO to capture request data before async execution.
-   * This prevents "request object has been recycled" errors.
+   * DTO to capture request data before async execution. This prevents "request object has been
+   * recycled" errors.
    */
   public record RequestData(
-      String method,
-      String requestUri,
-      String sourceIp,
-      String userAgent,
-      String sessionId) {
+      String method, String requestUri, String sourceIp, String userAgent, String sessionId) {
 
     public static RequestData from(HttpServletRequest request) {
       return new RequestData(
@@ -136,8 +132,8 @@ public class AccessLogService {
   }
 
   /**
-   * Logs an API access event.
-   * This method captures request data synchronously and delegates to async processing.
+   * Logs an API access event. This method captures request data synchronously and delegates to
+   * async processing.
    *
    * @param username the authenticated username
    * @param request the HTTP request
@@ -151,9 +147,7 @@ public class AccessLogService {
     logApiAccessAsync(username, requestData, responseStatus, durationMs);
   }
 
-  /**
-   * Async implementation of API access logging.
-   */
+  /** Async implementation of API access logging. */
   @Async
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void logApiAccessAsync(

@@ -26,7 +26,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
 /** Controller REST para consulta de logs de auditoria. */
 @RestController
 @RequestMapping("/audit")
@@ -103,7 +102,8 @@ public class AuditController {
         PageRequest.of(0, Math.min(1000, limit), Sort.by(Sort.Direction.DESC, "createdAt"));
 
     List<AuditLogDTO> out =
-        auditQueryService.exportAsList(actionType, result, startDateTime, endDateTime, firstPage, limit);
+        auditQueryService.exportAsList(
+            actionType, result, startDateTime, endDateTime, firstPage, limit);
     return ResponseEntity.ok(out);
   }
 
@@ -117,7 +117,8 @@ public class AuditController {
       @RequestParam(required = false) String startDate,
       @RequestParam(required = false) String endDate,
       @RequestParam(defaultValue = "10000") int limit,
-      HttpServletResponse response) throws IOException {
+      HttpServletResponse response)
+      throws IOException {
 
     if (limit <= 0 || limit > 50000) {
       throw new IllegalArgumentException("limit deve estar entre 1 e 50000");
@@ -133,8 +134,10 @@ public class AuditController {
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"rulex-audit.csv\"");
 
     try (Writer w = new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8)) {
-      w.write("id,transactionId,actionType,result,performedBy,createdAt,description,errorMessage,sourceIp,details\n");
-      auditQueryService.exportAsCsv(w, actionType, result, startDateTime, endDateTime, firstPage, limit);
+      w.write(
+          "id,transactionId,actionType,result,performedBy,createdAt,description,errorMessage,sourceIp,details\n");
+      auditQueryService.exportAsCsv(
+          w, actionType, result, startDateTime, endDateTime, firstPage, limit);
       w.flush();
     }
   }

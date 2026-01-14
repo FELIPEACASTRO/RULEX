@@ -7,14 +7,14 @@ import static org.mockito.Mockito.*;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.complex.RuleCondition;
 import com.rulex.entity.complex.RuleConditionGroup;
+import com.rulex.service.FuzzyLogicService;
 import com.rulex.service.GeoService;
+import com.rulex.service.Neo4jGraphService;
 import com.rulex.service.OperatorDataService;
+import com.rulex.service.StatisticalAnalysisService;
+import com.rulex.service.StringSimilarityService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
-import com.rulex.service.Neo4jGraphService;
-import com.rulex.service.StatisticalAnalysisService;
-import com.rulex.service.FuzzyLogicService;
-import com.rulex.service.StringSimilarityService;
 import java.math.BigDecimal;
 import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,8 +44,14 @@ class ComplexRuleEvaluatorAggregationTest {
   void setUp() {
     evaluator =
         new ComplexRuleEvaluator(
-            geoService, velocityService, velocityServiceFacade, operatorDataService,
-            neo4jGraphService, statisticalAnalysisService, fuzzyLogicService, stringSimilarityService);
+            geoService,
+            velocityService,
+            velocityServiceFacade,
+            operatorDataService,
+            neo4jGraphService,
+            statisticalAnalysisService,
+            fuzzyLogicService,
+            stringSimilarityService);
   }
 
   @Test

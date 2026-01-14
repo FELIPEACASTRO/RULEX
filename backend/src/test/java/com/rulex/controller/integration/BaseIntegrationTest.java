@@ -1,5 +1,7 @@
 package com.rulex.controller.integration;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,11 +17,9 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-
 /**
- * 🔥 Base para testes integrados de APIs
- * Configura MockMvc, ObjectMapper e Testcontainers com PostgreSQL
+ * 🔥 Base para testes integrados de APIs Configura MockMvc, ObjectMapper e Testcontainers com
+ * PostgreSQL
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -27,53 +27,46 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @Testcontainers(disabledWithoutDocker = true)
 public abstract class BaseIntegrationTest {
 
-    @Container
-    @ServiceConnection
-    @SuppressWarnings("resource")
-    static final PostgreSQLContainer<?> postgres =
-        new PostgreSQLContainer<>("postgres:16-alpine")
-            .withDatabaseName("rulex_db")
-            .withUsername("postgres")
-            .withPassword("postgres");
+  @Container
+  @ServiceConnection
+  @SuppressWarnings("resource")
+  static final PostgreSQLContainer<?> postgres =
+      new PostgreSQLContainer<>("postgres:16-alpine")
+          .withDatabaseName("rulex_db")
+          .withUsername("postgres")
+          .withPassword("postgres");
 
-    @Autowired
-    protected MockMvc mockMvc;
+  @Autowired protected MockMvc mockMvc;
 
-    protected ObjectMapper objectMapper;
+  protected ObjectMapper objectMapper;
 
-    @BeforeEach
-    void setUp() {
-        objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-    }
+  @BeforeEach
+  void setUp() {
+    objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JavaTimeModule());
+  }
 
-    protected String toJson(Object obj) throws Exception {
-        return objectMapper.writeValueAsString(obj);
-    }
+  protected String toJson(Object obj) throws Exception {
+    return objectMapper.writeValueAsString(obj);
+  }
 
-    protected <T> T fromJson(String json, Class<T> clazz) throws Exception {
-        return objectMapper.readValue(json, clazz);
-    }
+  protected <T> T fromJson(String json, Class<T> clazz) throws Exception {
+    return objectMapper.readValue(json, clazz);
+  }
 
-    protected ResultActions performGet(String url) throws Exception {
-        return mockMvc.perform(get(url)
-                .contentType(MediaType.APPLICATION_JSON));
-    }
+  protected ResultActions performGet(String url) throws Exception {
+    return mockMvc.perform(get(url).contentType(MediaType.APPLICATION_JSON));
+  }
 
-    protected ResultActions performPost(String url, Object body) throws Exception {
-        return mockMvc.perform(post(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(body)));
-    }
+  protected ResultActions performPost(String url, Object body) throws Exception {
+    return mockMvc.perform(post(url).contentType(MediaType.APPLICATION_JSON).content(toJson(body)));
+  }
 
-    protected ResultActions performPut(String url, Object body) throws Exception {
-        return mockMvc.perform(put(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(body)));
-    }
+  protected ResultActions performPut(String url, Object body) throws Exception {
+    return mockMvc.perform(put(url).contentType(MediaType.APPLICATION_JSON).content(toJson(body)));
+  }
 
-    protected ResultActions performDelete(String url) throws Exception {
-        return mockMvc.perform(delete(url)
-                .contentType(MediaType.APPLICATION_JSON));
-    }
+  protected ResultActions performDelete(String url) throws Exception {
+    return mockMvc.perform(delete(url).contentType(MediaType.APPLICATION_JSON));
+  }
 }

@@ -6,14 +6,14 @@ import com.rulex.entity.complex.RuleCondition;
 import com.rulex.entity.complex.RuleCondition.ConditionOperator;
 import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleConditionGroup.GroupLogicOperator;
+import com.rulex.service.FuzzyLogicService;
 import com.rulex.service.GeoService;
+import com.rulex.service.Neo4jGraphService;
 import com.rulex.service.OperatorDataService;
+import com.rulex.service.StatisticalAnalysisService;
+import com.rulex.service.StringSimilarityService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
-import com.rulex.service.Neo4jGraphService;
-import com.rulex.service.StatisticalAnalysisService;
-import com.rulex.service.FuzzyLogicService;
-import com.rulex.service.StringSimilarityService;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -56,8 +56,14 @@ class ComplexRuleEvaluatorNewOperatorsTest {
     stringSimilarityService = Mockito.mock(StringSimilarityService.class);
     evaluator =
         new ComplexRuleEvaluator(
-            geoService, velocityService, velocityServiceFacade, operatorDataService,
-            neo4jGraphService, statisticalAnalysisService, fuzzyLogicService, stringSimilarityService);
+            geoService,
+            velocityService,
+            velocityServiceFacade,
+            operatorDataService,
+            neo4jGraphService,
+            statisticalAnalysisService,
+            fuzzyLogicService,
+            stringSimilarityService);
   }
 
   // =====================================================
