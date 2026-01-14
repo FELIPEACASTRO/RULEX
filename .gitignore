@@ -126,3 +126,6 @@ docs/qa/DEVIN_*.json
 docs/qa/*_BACKUP*.md
 docs/qa/*_SCORECARD*.md
 docs/qa/*_GAPS*.md
+
+# Audit artifacts (temporary reports)
+artifacts/
