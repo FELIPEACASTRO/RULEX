@@ -1,0 +1,93 @@
+Operador,FrontEnd,BackEnd,PostgreSQL,Redis,Neo4j,Status,Categoria,Notas
+EQ,OK,OK,OK,N/A,N/A,COMPLETO,Comparação Básica,Operador de igualdade
+NEQ,OK,OK,OK,N/A,N/A,COMPLETO,Comparação Básica,Operador de desigualdade
+GT,OK,OK,OK,N/A,N/A,COMPLETO,Comparação Básica,Maior que
+GTE,OK,OK,OK,N/A,N/A,COMPLETO,Comparação Básica,Maior ou igual
+LT,OK,OK,OK,N/A,N/A,COMPLETO,Comparação Básica,Menor que
+LTE,OK,OK,OK,N/A,N/A,COMPLETO,Comparação Básica,Menor ou igual
+IN,OK,OK,OK,N/A,N/A,COMPLETO,Listas,Valor está na lista
+NOT_IN,OK,OK,OK,N/A,N/A,COMPLETO,Listas,Valor não está na lista
+CONTAINS,OK,OK,OK,N/A,N/A,COMPLETO,Strings,String contém
+NOT_CONTAINS,OK,OK,OK,N/A,N/A,COMPLETO,Strings,String não contém
+STARTS_WITH,OK,OK,OK,N/A,N/A,COMPLETO,Strings,String começa com
+ENDS_WITH,OK,OK,OK,N/A,N/A,COMPLETO,Strings,String termina com
+REGEX,OK,OK,OK,N/A,N/A,COMPLETO,Strings,Expressão regular
+NOT_REGEX,OK,OK,OK,N/A,N/A,COMPLETO,Strings,Não match regex
+IS_NULL,OK,OK,OK,N/A,N/A,COMPLETO,Nulos,Valor é nulo
+NOT_NULL,OK,OK,OK,N/A,N/A,COMPLETO,Nulos,Valor não é nulo
+IS_TRUE,OK,OK,OK,N/A,N/A,COMPLETO,Booleanos,Valor é verdadeiro
+IS_FALSE,OK,OK,OK,N/A,N/A,COMPLETO,Booleanos,Valor é falso
+BETWEEN,OK,OK,OK,N/A,N/A,COMPLETO,Range,Valor entre dois limites
+NOT_BETWEEN,OK,OK,OK,N/A,N/A,COMPLETO,Range,Valor fora do range
+FIELD_EQ,OK,OK,OK,N/A,N/A,COMPLETO,Campos,Campo igual a outro campo
+FIELD_NEQ,OK,OK,OK,N/A,N/A,COMPLETO,Campos,Campo diferente de outro
+FIELD_GT,OK,OK,OK,N/A,N/A,COMPLETO,Campos,Campo maior que outro
+FIELD_GTE,OK,OK,OK,N/A,N/A,COMPLETO,Campos,Campo maior ou igual
+FIELD_LT,OK,OK,OK,N/A,N/A,COMPLETO,Campos,Campo menor que outro
+FIELD_LTE,OK,OK,OK,N/A,N/A,COMPLETO,Campos,Campo menor ou igual
+DATE_BEFORE,OK,OK,OK,N/A,N/A,COMPLETO,Data/Hora,Data antes de
+DATE_AFTER,OK,OK,OK,N/A,N/A,COMPLETO,Data/Hora,Data depois de
+DATE_BETWEEN,OK,OK,OK,N/A,N/A,COMPLETO,Data/Hora,Data entre
+TIME_BEFORE,OK,OK,OK,N/A,N/A,COMPLETO,Data/Hora,Hora antes de
+TIME_AFTER,OK,OK,OK,N/A,N/A,COMPLETO,Data/Hora,Hora depois de
+TIME_BETWEEN,OK,OK,OK,N/A,N/A,COMPLETO,Data/Hora,Hora entre
+ARRAY_CONTAINS,OK,OK,OK,N/A,N/A,COMPLETO,Arrays,Array contém valor
+ARRAY_NOT_CONTAINS,OK,OK,OK,N/A,N/A,COMPLETO,Arrays,Array não contém
+ARRAY_SIZE_EQ,OK,OK,OK,N/A,N/A,COMPLETO,Arrays,Tamanho do array igual
+ARRAY_SIZE_GT,OK,OK,OK,N/A,N/A,COMPLETO,Arrays,Tamanho maior que
+ARRAY_SIZE_LT,OK,OK,OK,N/A,N/A,COMPLETO,Arrays,Tamanho menor que
+MOD_EQ,OK,OK,OK,N/A,N/A,COMPLETO,Matemáticos,Módulo igual
+MOD_NEQ,OK,OK,OK,N/A,N/A,COMPLETO,Matemáticos,Módulo diferente
+GEO_DISTANCE_LT,OK,OK,OK,N/A,N/A,COMPLETO,Geolocalização,Distância menor que
+GEO_DISTANCE_GT,OK,OK,OK,N/A,N/A,COMPLETO,Geolocalização,Distância maior que
+GEO_IN_POLYGON,OK,OK,OK,N/A,N/A,COMPLETO,Geolocalização,Ponto dentro do polígono
+VELOCITY_COUNT_GT,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Contagem maior que threshold
+VELOCITY_COUNT_LT,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Contagem menor que threshold
+VELOCITY_SUM_GT,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Soma maior que threshold
+VELOCITY_SUM_LT,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Soma menor que threshold
+VELOCITY_AVG_GT,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Média maior que threshold
+VELOCITY_AVG_LT,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Média menor que threshold
+VELOCITY_DISTINCT_GT,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Distintos maior que
+VELOCITY_DISTINCT_LT,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Distintos menor que
+VELOCITY_SPIKE,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Detecção de pico
+VELOCITY_TREND,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Análise de tendência
+VELOCITY_ACCELERATION,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Aceleração de velocidade
+VELOCITY_CROSS_CHANNEL,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Cross-channel
+VELOCITY_PERCENTILE,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Percentil
+VELOCITY_RATIO_GT,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Ratio maior que
+VELOCITY_ROLLING_WINDOW,OK,OK,OK,OK,N/A,COMPLETO,Velocity,Janela deslizante
+NEO4J_WEAKLY_CONNECTED_COMPONENTS,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,WCC - Componentes conectados
+NEO4J_DEGREE_CENTRALITY,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Centralidade de grau
+NEO4J_PAGERANK_FRAUD_SCORE,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,PageRank para fraude
+NEO4J_LOUVAIN_COMMUNITY_DETECTION,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Detecção de comunidade
+NEO4J_PAIRWISE_SIMILARITY_PII,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Similaridade PII
+NEO4J_ENTITY_RESOLUTION_SHARED_PII,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Resolução de entidade
+NEO4J_FRAUD_RING_DETECTION,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Detecção de anel de fraude
+NEO4J_MONEY_MULE_NETWORK_ANALYSIS,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Análise money mule
+NEO4J_CIRCULAR_TRANSACTION_DETECTION,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Transação circular
+NEO4J_FIRST_PARTY_FRAUD_CLUSTERING,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Clustering 1ª parte
+NEO4J_SECOND_LEVEL_FRAUDSTER_ID,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Fraudador 2º nível
+NEO4J_BETWEENNESS_CENTRALITY_MULE,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Centralidade intermediação
+NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Propagação de label
+NEO4J_SHORTEST_PATH_AML_TRACKING,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Caminho mais curto AML
+NEO4J_TRIANGLE_COUNT_COLLUSION,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Contagem triângulos
+NEO4J_NODE_SIMILARITY_SYNTHETIC_ID,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Similaridade de nó
+NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Embedding de grafo
+NEO4J_TEMPORAL_MOTIF_PATTERN,OK,OK,OK,N/A,OK,COMPLETO,Neo4j Graph,Padrão temporal
+HAS_FAILED_3DS_LAST_N_MINUTES,FALTA,OK,OK,N/A,N/A,GAP,Fraude,Falta no FrontEnd
+PACS008_FIELD_VALIDATION,FALTA,OK,OK,N/A,N/A,GAP,Regulatory,Falta no FrontEnd
+PLT_DS2_RULE_ENGINE,FALTA,OK,OK,N/A,N/A,GAP,PLT,Falta no FrontEnd
+PSD3_COP_NAME_MATCH,FALTA,OK,OK,N/A,N/A,GAP,Regulatory,Falta no FrontEnd
+SCA_DYNAMIC_3DS_ROUTING,FALTA,OK,OK,N/A,N/A,GAP,SCA,Falta no FrontEnd
+PIG_BUTCHERING_INDICATOR,OK,FALTA,OK,N/A,N/A,GAP,Fraude,Falta no BackEnd Entity
+STRING,FALTA,OK,FALTA,N/A,N/A,TIPO,ValueType,É tipo de valor não operador
+NUMBER,FALTA,OK,FALTA,N/A,N/A,TIPO,ValueType,É tipo de valor não operador
+BOOLEAN,FALTA,OK,FALTA,N/A,N/A,TIPO,ValueType,É tipo de valor não operador
+DATE,FALTA,OK,FALTA,N/A,N/A,TIPO,ValueType,É tipo de valor não operador
+TIME,FALTA,OK,FALTA,N/A,N/A,TIPO,ValueType,É tipo de valor não operador
+DATETIME,FALTA,OK,FALTA,N/A,N/A,TIPO,ValueType,É tipo de valor não operador
+ARRAY_STRING,FALTA,OK,FALTA,N/A,N/A,TIPO,ValueType,É tipo de valor não operador
+ARRAY_NUMBER,FALTA,OK,FALTA,N/A,N/A,TIPO,ValueType,É tipo de valor não operador
+FIELD_REFERENCE,FALTA,OK,FALTA,N/A,N/A,TIPO,ValueType,É tipo de valor não operador
+EXPRESSION,FALTA,OK,FALTA,N/A,N/A,TIPO,ValueType,É tipo de valor não operador
+GEO_POINT,FALTA,OK,FALTA,N/A,N/A,TIPO,ValueType,É tipo de valor não operador

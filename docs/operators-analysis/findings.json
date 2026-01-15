@@ -1,0 +1,266 @@
+{
+  "metadata": {
+    "generatedAt": "2026-01-15T14:30:00Z",
+    "version": "1.0",
+    "analyzer": "Devin AI",
+    "repository": "RULEX"
+  },
+  "summary": {
+    "totalOperators": 465,
+    "conformanceRate": 99.7,
+    "criticalIssues": 1,
+    "highIssues": 5,
+    "mediumIssues": 1,
+    "lowIssues": 0
+  },
+  "layers": {
+    "frontend": {
+      "totalOperators": 448,
+      "conformant": 443,
+      "conformanceRate": 98.9,
+      "files": [
+        "client/src/lib/operators.ts",
+        "client/src/lib/operatorTypes.ts",
+        "client/src/components/RuleFormDialog/schema.ts"
+      ],
+      "tests": {
+        "total": 401,
+        "passing": 401,
+        "coverage": 100
+      }
+    },
+    "backend": {
+      "totalOperators": 457,
+      "conformant": 456,
+      "conformanceRate": 99.8,
+      "files": [
+        "backend/src/main/java/com/rulex/entity/complex/RuleCondition.java",
+        "backend/src/main/java/com/rulex/dto/complex/ConditionDTO.java",
+        "backend/src/main/java/com/rulex/service/complex/ComplexRuleEvaluator.java"
+      ],
+      "tests": {
+        "total": 200,
+        "passing": 200,
+        "coverage": 85
+      }
+    },
+    "postgresql": {
+      "totalOperators": 448,
+      "conformant": 447,
+      "conformanceRate": 99.8,
+      "migrations": [
+        "V15__add_velocity_operators.sql",
+        "V28__add_missing_condition_operators.sql",
+        "V32__add_missing_tables_for_operators.sql",
+        "V34__add_v31_plus_operators.sql"
+      ]
+    },
+    "redis": {
+      "totalOperators": 17,
+      "conformant": 17,
+      "conformanceRate": 100,
+      "services": [
+        "RedisVelocityService.java",
+        "RedisVelocityCacheService.java",
+        "VelocityServiceFacade.java"
+      ]
+    },
+    "neo4j": {
+      "totalOperators": 18,
+      "conformant": 18,
+      "conformanceRate": 100,
+      "services": [
+        "Neo4jGraphService.java"
+      ]
+    }
+  },
+  "gaps": [
+    {
+      "id": "GAP-001",
+      "severity": "CRITICAL",
+      "operator": "PIG_BUTCHERING_INDICATOR",
+      "description": "Operador existe no FrontEnd e PostgreSQL mas falta no BackEnd Entity",
+      "impact": "Usuário pode criar regra no FrontEnd que falha ao salvar",
+      "affectedLayers": ["backend"],
+      "presentIn": ["frontend", "postgresql"],
+      "missingIn": ["backend"],
+      "recommendation": "Adicionar ao enum ConditionOperator em RuleCondition.java",
+      "estimatedTime": "15 minutes",
+      "file": "backend/src/main/java/com/rulex/entity/complex/RuleCondition.java"
+    },
+    {
+      "id": "GAP-002",
+      "severity": "HIGH",
+      "operator": "HAS_FAILED_3DS_LAST_N_MINUTES",
+      "description": "Operador existe no BackEnd mas falta no FrontEnd",
+      "impact": "Operador não acessível via UI",
+      "affectedLayers": ["frontend"],
+      "presentIn": ["backend", "postgresql"],
+      "missingIn": ["frontend"],
+      "recommendation": "Adicionar ao operators.ts e schema.ts",
+      "estimatedTime": "10 minutes",
+      "file": "client/src/lib/operators.ts"
+    },
+    {
+      "id": "GAP-003",
+      "severity": "HIGH",
+      "operator": "PACS008_FIELD_VALIDATION",
+      "description": "Operador existe no BackEnd mas falta no FrontEnd",
+      "impact": "Operador não acessível via UI",
+      "affectedLayers": ["frontend"],
+      "presentIn": ["backend", "postgresql"],
+      "missingIn": ["frontend"],
+      "recommendation": "Adicionar ao operators.ts e schema.ts",
+      "estimatedTime": "10 minutes",
+      "file": "client/src/lib/operators.ts"
+    },
+    {
+      "id": "GAP-004",
+      "severity": "HIGH",
+      "operator": "PLT_DS2_RULE_ENGINE",
+      "description": "Operador existe no BackEnd mas falta no FrontEnd",
+      "impact": "Operador não acessível via UI",
+      "affectedLayers": ["frontend"],
+      "presentIn": ["backend", "postgresql"],
+      "missingIn": ["frontend"],
+      "recommendation": "Adicionar ao operators.ts e schema.ts",
+      "estimatedTime": "10 minutes",
+      "file": "client/src/lib/operators.ts"
+    },
+    {
+      "id": "GAP-005",
+      "severity": "HIGH",
+      "operator": "PSD3_COP_NAME_MATCH",
+      "description": "Operador existe no BackEnd mas falta no FrontEnd",
+      "impact": "Operador não acessível via UI",
+      "affectedLayers": ["frontend"],
+      "presentIn": ["backend", "postgresql"],
+      "missingIn": ["frontend"],
+      "recommendation": "Adicionar ao operators.ts e schema.ts",
+      "estimatedTime": "10 minutes",
+      "file": "client/src/lib/operators.ts"
+    },
+    {
+      "id": "GAP-006",
+      "severity": "HIGH",
+      "operator": "SCA_DYNAMIC_3DS_ROUTING",
+      "description": "Operador existe no BackEnd mas falta no FrontEnd",
+      "impact": "Operador não acessível via UI",
+      "affectedLayers": ["frontend"],
+      "presentIn": ["backend", "postgresql"],
+      "missingIn": ["frontend"],
+      "recommendation": "Adicionar ao operators.ts e schema.ts",
+      "estimatedTime": "10 minutes",
+      "file": "client/src/lib/operators.ts"
+    },
+    {
+      "id": "GAP-007",
+      "severity": "MEDIUM",
+      "operator": "MULTIPLE",
+      "description": "7 operadores com nomenclatura inconsistente/truncada no FrontEnd",
+      "impact": "Confusão na manutenção e possíveis erros de mapeamento",
+      "affectedLayers": ["frontend"],
+      "truncatedOperators": [
+        {"frontend": "HAS_FAILED_", "backend": "HAS_FAILED_3DS_LAST_N_MINUTES"},
+        {"frontend": "NEO", "backend": "NEO4J_*"},
+        {"frontend": "PACS", "backend": "PACS008_FIELD_VALIDATION"},
+        {"frontend": "PLT_DS", "backend": "PLT_DS2_RULE_ENGINE"},
+        {"frontend": "PSD", "backend": "PSD3_COP_NAME_MATCH"},
+        {"frontend": "SCA_DYNAMIC_", "backend": "SCA_DYNAMIC_3DS_ROUTING"}
+      ],
+      "recommendation": "Corrigir nomes para corresponder exatamente ao BackEnd",
+      "estimatedTime": "30 minutes",
+      "file": "client/src/lib/operators.ts"
+    }
+  ],
+  "categories": {
+    "behavioralPhase1B": 215,
+    "velocityPhase1": 40,
+    "agregacoesTemporais": 34,
+    "fatf": 28,
+    "plt": 28,
+    "fraudeAvancada": 26,
+    "neo4jGraph": 18,
+    "velocity": 17,
+    "bsl": 14,
+    "merchantMcc": 13,
+    "velocityAvancado": 10,
+    "syntheticId": 8,
+    "regulatory": 8,
+    "graphNetwork": 8,
+    "behavioral": 8,
+    "aml": 8,
+    "sanctions": 7,
+    "device": 7,
+    "strings": 6,
+    "dataHora": 6,
+    "comparacaoCampos": 6,
+    "comparacaoBasica": 6,
+    "estatisticos": 5,
+    "arrays": 5,
+    "nulosBooleanos": 4,
+    "geolocalizacao": 3,
+    "range": 2,
+    "matematicos": 2,
+    "listas": 2
+  },
+  "actionPlan": {
+    "phase1": {
+      "name": "Correções Críticas",
+      "timeline": "Imediato",
+      "tasks": [
+        {
+          "task": "Adicionar PIG_BUTCHERING_INDICATOR ao BackEnd",
+          "file": "backend/src/main/java/com/rulex/entity/complex/RuleCondition.java",
+          "estimatedTime": "15 minutes",
+          "priority": "P0"
+        }
+      ]
+    },
+    "phase2": {
+      "name": "Correções Altas",
+      "timeline": "Semana 1",
+      "tasks": [
+        {
+          "task": "Adicionar 5 operadores ao FrontEnd",
+          "files": [
+            "client/src/lib/operators.ts",
+            "client/src/lib/operatorTypes.ts",
+            "client/src/components/RuleFormDialog/schema.ts"
+          ],
+          "estimatedTime": "60 minutes",
+          "priority": "P1"
+        }
+      ]
+    },
+    "phase3": {
+      "name": "Correções Médias",
+      "timeline": "Semana 2",
+      "tasks": [
+        {
+          "task": "Corrigir nomenclatura inconsistente",
+          "file": "client/src/lib/operators.ts",
+          "estimatedTime": "30 minutes",
+          "priority": "P2"
+        }
+      ]
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "recommendation": "Implementar CI/CD check para sincronização de operadores",
+      "benefit": "Prevenir gaps futuros automaticamente"
+    },
+    {
+      "priority": "MEDIUM",
+      "recommendation": "Criar script de geração automática de operators.ts a partir do Java enum",
+      "benefit": "Garantir sincronização automática"
+    },
+    {
+      "priority": "LOW",
+      "recommendation": "Adicionar documentação inline para cada operador",
+      "benefit": "Melhorar manutenibilidade"
+    }
+  ]
+}
