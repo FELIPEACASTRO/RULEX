@@ -1,0 +1,124 @@
+# GAP-004/005: CI/CD check para sincronização de operadores
+# Previne divergência entre Frontend e Backend
+
+name: Operator Sync Check
+
+on:
+  push:
+    paths:
+      - 'client/src/lib/operators.ts'
+      - 'client/src/lib/operatorTypes.ts'
+      - 'backend/src/main/java/com/rulex/entity/complex/RuleCondition.java'
+      - 'backend/src/main/java/com/rulex/dto/complex/ConditionDTO.java'
+  pull_request:
+    paths:
+      - 'client/src/lib/operators.ts'
+      - 'client/src/lib/operatorTypes.ts'
+      - 'backend/src/main/java/com/rulex/entity/complex/RuleCondition.java'
+      - 'backend/src/main/java/com/rulex/dto/complex/ConditionDTO.java'
+
+jobs:
+  sync-check:
+    runs-on: ubuntu-latest
+    name: Verificar Sincronização de Operadores
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Extrair operadores do Java (Entity)
+        run: |
+          grep -E "^\s+[A-Z][A-Z0-9_]*[,;]?\s*(//|$)" \
+            backend/src/main/java/com/rulex/entity/complex/RuleCondition.java \
+            | sed 's/^\s*\([A-Z][A-Z0-9_]*\).*/\1/' \
+            | grep -v "^STRING$\|^NUMBER$\|^BOOLEAN$\|^DATE$\|^TIME$\|^DATETIME$\|^ARRAY_STRING$\|^ARRAY_NUMBER$\|^FIELD_REFERENCE$\|^EXPRESSION$\|^GEO_POINT$\|^GEO_POLYGON$" \
+            | sort -u > /tmp/java_entity_ops.txt
+          echo "Operadores Java Entity: $(wc -l < /tmp/java_entity_ops.txt)"
+      
+      - name: Extrair operadores do TypeScript
+        run: |
+          grep "value: '" client/src/lib/operators.ts \
+            | sed "s/.*value: '\([^']*\)'.*/\1/" \
+            | sort -u > /tmp/ts_ops.txt
+          echo "Operadores TypeScript: $(wc -l < /tmp/ts_ops.txt)"
+      
+      - name: Comparar operadores
+        run: |
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "VERIFICAÇÃO DE SINCRONIZAÇÃO DE OPERADORES"
+          echo "═══════════════════════════════════════════════════════════════"
+          
+          # Operadores no Java mas não no TS
+          JAVA_ONLY=$(comm -23 /tmp/java_entity_ops.txt /tmp/ts_ops.txt | wc -l)
+          if [ "$JAVA_ONLY" -gt 0 ]; then
+            echo "❌ Operadores no Java mas NÃO no TypeScript ($JAVA_ONLY):"
+            comm -23 /tmp/java_entity_ops.txt /tmp/ts_ops.txt | head -20
+          fi
+          
+          # Operadores no TS mas não no Java
+          TS_ONLY=$(comm -13 /tmp/java_entity_ops.txt /tmp/ts_ops.txt | wc -l)
+          if [ "$TS_ONLY" -gt 0 ]; then
+            echo "❌ Operadores no TypeScript mas NÃO no Java ($TS_ONLY):"
+            comm -13 /tmp/java_entity_ops.txt /tmp/ts_ops.txt | head -20
+          fi
+          
+          # Verificar se há divergência
+          if [ "$JAVA_ONLY" -gt 0 ] || [ "$TS_ONLY" -gt 0 ]; then
+            echo ""
+            echo "❌ FALHA: Operadores divergentes entre Java e TypeScript!"
+            echo "   - Java only: $JAVA_ONLY"
+            echo "   - TypeScript only: $TS_ONLY"
+            echo ""
+            echo "Por favor, sincronize os operadores antes de fazer merge."
+            exit 1
+          fi
+          
+          echo "✅ SUCESSO: Todos os operadores estão sincronizados!"
+          echo "   - Total: $(wc -l < /tmp/java_entity_ops.txt) operadores"
+      
+      - name: Verificar operadores legacy no TypeScript
+        run: |
+          echo ""
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "VERIFICAÇÃO DE OPERADORES LEGACY"
+          echo "═══════════════════════════════════════════════════════════════"
+          
+          # Operadores legacy que devem ser removidos
+          LEGACY_OPS="NE MATCHES_REGEX IS_NOT_NULL"
+          LEGACY_FOUND=0
+          
+          for op in $LEGACY_OPS; do
+            if grep -q "\"$op\"" client/src/lib/operatorTypes.ts 2>/dev/null; then
+              echo "⚠️ Operador legacy encontrado: $op"
+              LEGACY_FOUND=$((LEGACY_FOUND + 1))
+            fi
+          done
+          
+          if [ "$LEGACY_FOUND" -gt 0 ]; then
+            echo ""
+            echo "⚠️ AVISO: $LEGACY_FOUND operadores legacy encontrados."
+            echo "   Considere removê-los em uma futura versão."
+          else
+            echo "✅ Nenhum operador legacy encontrado."
+          fi
+
+  test-operators:
+    runs-on: ubuntu-latest
+    name: Testar Operadores
+    needs: sync-check
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+      
+      - name: Executar testes de sincronização
+        run: |
+          cd backend
+          mvn test -Dtest="OperatorSyncTest,OperatorNullEdgeCaseTest" -DfailIfNoTests=false -q
