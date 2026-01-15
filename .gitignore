@@ -116,6 +116,9 @@ SOLUTION_INDEX.csv
 Prompt/
 info/
 reports/
+!reports/
+reports/*
+!reports/manual_page_implementation.md
 evidence/
 research_output/
 *.docx
