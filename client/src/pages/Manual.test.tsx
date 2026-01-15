@@ -2,52 +2,117 @@ import "@testing-library/jest-dom/vitest";
 
 import React from "react";
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import Manual from "./Manual";
-import { MANUAL_DATA } from "@/manual/manualData";
+import { MANUAL_STATS, OPERATORS, FIELD_LABELS } from "@/manual/manualData";
 
 describe("Manual", () => {
-  it("renderiza o titulo e a aba de regras complexas", () => {
+  it("renderiza o titulo e estatisticas principais", () => {
     render(<Manual />);
 
-    expect(screen.getByRole("heading", { name: /manual/i })).toBeInTheDocument();
-    expect(screen.getByText(/regras complexas/i)).toBeInTheDocument();
+    // Titulo principal
+    expect(screen.getByRole("heading", { name: /manual do rulex/i })).toBeInTheDocument();
 
-    // Default tab: regras complexas
-    expect(screen.getAllByText(/operadores de comparacao/i).length).toBeGreaterThan(0);
-    expect(
-      screen.getAllByText(
-        String(MANUAL_DATA.generatedFrom.complexRuleBuilder.comparisonOperators.length)
-      ).length
-    ).toBeGreaterThan(0);
+    // Estatisticas na descricao - texto pode aparecer em múltiplos lugares
+    expect(screen.getAllByText(/operadores/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/campos/i).length).toBeGreaterThan(0);
   });
 
-  it("permite filtrar operadores de comparacao (regras complexas)", async () => {
+  it("exibe a tab Visao Geral por padrao com estatisticas", () => {
+    render(<Manual />);
+
+    // Verifica que a tab Visao Geral está ativa (tabs existem)
+    expect(screen.getByRole("tab", { name: /visão geral/i })).toBeInTheDocument();
+    
+    // Cards de estatisticas existem - usando getAllByText pois aparecem na tab e nos cards
+    expect(screen.getAllByText(/operadores/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/campos/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/categorias/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/templates/i).length).toBeGreaterThan(0);
+  });
+
+  it("navega para tab Operadores e exibe catalogo", async () => {
     const user = userEvent.setup();
     render(<Manual />);
 
-    const input = screen.getByPlaceholderText(/buscar por codigo, label ou descricao/i);
-    await user.type(input, "REGEX");
+    // Clicar na tab Operadores
+    const operadoresTab = screen.getByRole("tab", { name: /operadores/i });
+    await user.click(operadoresTab);
 
-    // Deve aparecer pelo menos REGEX no grid filtrado
-    expect(screen.getAllByText("REGEX").length).toBeGreaterThan(0);
+    // Deve mostrar o catalogo de operadores
+    expect(screen.getByText(/catálogo de operadores/i)).toBeInTheDocument();
+    // O número de operadores aparece em múltiplos lugares, então verificamos que existe
+    expect(screen.getAllByText(String(OPERATORS.length)).length).toBeGreaterThan(0);
   });
 
-  it("exibe a aba de regras (formulario) e lista os operadores", async () => {
+  it("navega para tab Payload e exibe dicionario de campos", async () => {
     const user = userEvent.setup();
     render(<Manual />);
 
-    await user.click(screen.getByRole("tab", { name: /regras \(formulario\)/i }));
+    // Clicar na tab Payload
+    const payloadTab = screen.getByRole("tab", { name: /payload/i });
+    await user.click(payloadTab);
 
-    expect(screen.getByText(/lista carregada de/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(String(MANUAL_DATA.generatedFrom.ruleFormDialog.operators.length))
-    ).toBeInTheDocument();
+    // Deve mostrar o dicionario de campos
+    expect(screen.getByText(/dicionário de campos do payload/i)).toBeInTheDocument();
+    // O número de campos aparece em múltiplos lugares
+    expect(screen.getAllByText(String(Object.keys(FIELD_LABELS).length)).length).toBeGreaterThan(0);
+  });
 
-    // Deve ter pelo menos um operador conhecido
-    expect(screen.getAllByText("EQ").length).toBeGreaterThan(0);
+  it("navega para tab Exemplos e exibe templates", async () => {
+    const user = userEvent.setup();
+    render(<Manual />);
+
+    // Clicar na tab Exemplos
+    const exemplosTab = screen.getByRole("tab", { name: /exemplos/i });
+    await user.click(exemplosTab);
+
+    // Deve mostrar a galeria de templates
+    expect(screen.getByText(/templates de regras/i)).toBeInTheDocument();
+    expect(screen.getAllByText(String(MANUAL_STATS.totalTemplates)).length).toBeGreaterThan(0);
+  });
+
+  it("navega para tab FAQ e exibe perguntas", async () => {
+    const user = userEvent.setup();
+    render(<Manual />);
+
+    // Clicar na tab FAQ
+    const faqTab = screen.getByRole("tab", { name: /faq/i });
+    await user.click(faqTab);
+
+    // Deve mostrar perguntas frequentes
+    expect(screen.getByText(/perguntas frequentes/i)).toBeInTheDocument();
+    expect(screen.getByText(/como criar uma regra simples/i)).toBeInTheDocument();
+  });
+
+  it("navega para tab Glossario e exibe termos", async () => {
+    const user = userEvent.setup();
+    render(<Manual />);
+
+    // Clicar na tab Glossario
+    const glossarioTab = screen.getByRole("tab", { name: /glossário/i });
+    await user.click(glossarioTab);
+
+    // Deve mostrar glossario
+    expect(screen.getByText(/glossário de termos/i)).toBeInTheDocument();
+    // Payload aparece na tab e no glossário, então usamos getAllByText
+    expect(screen.getAllByText("Payload").length).toBeGreaterThan(0);
+    expect(screen.getByText("MCC")).toBeInTheDocument();
+  });
+
+  it("busca global encontra operadores", async () => {
+    const user = userEvent.setup();
+    render(<Manual />);
+
+    // Digitar na busca global
+    const searchInput = screen.getByPlaceholderText(/buscar operadores, campos, templates/i);
+    await user.type(searchInput, "CONTAINS");
+
+    // Deve mostrar resultados (pode haver múltiplos, então usamos getAllByText)
+    expect(screen.getAllByText("Operador").length).toBeGreaterThan(0);
   });
 });
+
