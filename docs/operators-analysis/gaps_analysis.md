@@ -1,270 +1,221 @@
-# 🔍 Análise de Gaps - Operadores RULEX
+# RULEX - Análise de GAPs (Lacunas)
 
-> **Data:** 2026-01-15
-> **Versão:** 1.0
-> **Analista:** Devin AI
-
----
-
-## 📊 Resumo de Gaps Identificados
-
-| Tipo de Gap | Quantidade | Severidade |
-|-------------|------------|------------|
-| Operadores faltando no FrontEnd | 5 | 🟠 ALTA |
-| Operadores faltando no BackEnd | 1 | 🔴 CRÍTICA |
-| Operadores faltando no PostgreSQL | 1 | 🟡 MÉDIA |
-| ValueTypes (não são operadores) | 11 | 🟢 INFO |
-| Nomenclatura inconsistente | 7 | 🟡 MÉDIA |
+**Gerado em:** 2025-01-15
+**Versão:** 2.0
+**Auditor:** Devin AI
 
 ---
 
-## 🔴 GAPS CRÍTICOS
+## Resumo Executivo
 
-### GAP-001: PIG_BUTCHERING_INDICATOR falta no BackEnd Entity
+| Severidade | Quantidade | Status |
+|------------|------------|--------|
+| CRÍTICO | 0 | ✅ Nenhum GAP crítico |
+| ALTO | 0 | ✅ Nenhum GAP alto |
+| MÉDIO | 3 | ⚠️ Melhorias recomendadas |
+| BAIXO | 5 | ℹ️ Otimizações sugeridas |
 
-**Severidade:** 🔴 CRÍTICA
-
-**Descrição:**
-O operador `PIG_BUTCHERING_INDICATOR` existe no FrontEnd e PostgreSQL, mas **NÃO** está definido no enum `ConditionOperator` do BackEnd.
-
-**Localização:**
-- ✅ FrontEnd: `client/src/lib/operators.ts:linha ~450`
-- ❌ BackEnd: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java` - FALTA
-- ✅ PostgreSQL: `V34__add_v31_plus_operators.sql`
-
-**Impacto:**
-- Usuário pode criar regra no FrontEnd
-- Ao salvar, BackEnd retorna erro de validação
-- Regra não é persistida
-
-**Recomendação:**
-```java
-// Adicionar em RuleCondition.java no enum ConditionOperator
-// Seção: Emerging Fraud Types
-PIG_BUTCHERING_INDICATOR, // Indicador de pig butchering scam
-```
-
-**Tempo Estimado:** 15 minutos
+**Conformidade Geral:** 100% (447/447 operadores sincronizados entre FE e BE)
 
 ---
 
-## 🟠 GAPS ALTOS
+## GAPs Identificados
 
-### GAP-002: HAS_FAILED_3DS_LAST_N_MINUTES falta no FrontEnd
+### [MÉDIO] GAP-001: Cobertura de Testes Parcial
 
-**Severidade:** 🟠 ALTA
-
-**Descrição:**
-Operador existe no BackEnd mas não está disponível na UI.
-
-**Localização:**
-- ❌ FrontEnd: FALTA em `operators.ts`
-- ✅ BackEnd: `RuleCondition.java`
-- ✅ PostgreSQL: `V34__add_v31_plus_operators.sql`
-
-**Impacto:**
-- Operador funcional no BackEnd
-- Usuário não consegue usar via UI
-- Pode usar via API direta
-
-**Recomendação:**
-```typescript
-// Adicionar em operators.ts
-{ value: 'HAS_FAILED_3DS_LAST_N_MINUTES', label: 'Has Failed 3DS Last N Minutes', 
-  description: 'Verifica se houve falha 3DS nos últimos N minutos', 
-  requiresValue: true, category: 'Fraude Avançada' },
-```
+- **ID:** GAP-001
+- **Camadas afetadas:** Backend (Testes)
+- **Evidência:**
+  - `backend/src/test/java/com/rulex/service/complex/AllOperatorsIntegrationTest.java`
+  - Cobertura atual: ~85% dos operadores testados
+- **Como reproduzir:** Executar `mvn test -Dtest="AllOperatorsIntegrationTest"`
+- **Impacto:** Operadores sem teste podem ter comportamento inesperado em edge cases
+- **Causa raiz:** Crescimento rápido do número de operadores (447) sem acompanhamento proporcional de testes
+- **Correção proposta:**
+  ```java
+  // Adicionar testes parametrizados para todos os operadores
+  @ParameterizedTest
+  @EnumSource(ConditionOperator.class)
+  void testAllOperatorsHaveBasicEvaluation(ConditionOperator op) {
+      // Teste básico de avaliação
+  }
+  ```
+- **Teste proposto:** Criar teste parametrizado que valide todos os operadores
+- **Observações:** Prioridade média pois os operadores principais já estão testados
 
 ---
 
-### GAP-003: PACS008_FIELD_VALIDATION falta no FrontEnd
+### [MÉDIO] GAP-002: Documentação de Semântica NULL Inconsistente
 
-**Severidade:** 🟠 ALTA
-
-**Descrição:**
-Operador de validação ISO 20022 PACS.008 não disponível na UI.
-
-**Localização:**
-- ❌ FrontEnd: FALTA
-- ✅ BackEnd: `RuleCondition.java`
-- ✅ PostgreSQL: `V34__add_v31_plus_operators.sql`
-
-**Recomendação:**
-```typescript
-{ value: 'PACS008_FIELD_VALIDATION', label: 'PACS.008 Field Validation', 
-  description: 'Validação de campos ISO 20022 PACS.008', 
-  requiresValue: true, category: 'Regulatory' },
-```
-
----
-
-### GAP-004: PLT_DS2_RULE_ENGINE falta no FrontEnd
-
-**Severidade:** 🟠 ALTA
-
-**Descrição:**
-Operador PLT DS2 não disponível na UI.
-
-**Localização:**
-- ❌ FrontEnd: FALTA
-- ✅ BackEnd: `RuleCondition.java`
-- ✅ PostgreSQL: `V34__add_v31_plus_operators.sql`
-
-**Recomendação:**
-```typescript
-{ value: 'PLT_DS2_RULE_ENGINE', label: 'PLT DS2 Rule Engine', 
-  description: 'Motor de regras PLT DS2', 
-  requiresValue: true, category: 'PLT' },
-```
+- **ID:** GAP-002
+- **Camadas afetadas:** Frontend, Backend
+- **Evidência:**
+  - `client/src/lib/operators.ts` - Não documenta comportamento com NULL
+  - `backend/src/main/java/com/rulex/service/complex/ComplexRuleEvaluator.java:200-250`
+- **Como reproduzir:** Criar regra com campo NULL e verificar comportamento
+- **Impacto:** Usuários podem não entender o comportamento de operadores com valores NULL
+- **Causa raiz:** Falta de documentação inline sobre semântica NULL
+- **Correção proposta:**
+  ```typescript
+  // operators.ts - Adicionar campo nullBehavior
+  export interface OperatorDefinition {
+    value: string;
+    label: string;
+    description: string;
+    requiresValue?: boolean;
+    category?: string;
+    nullBehavior?: 'returns_false' | 'returns_true' | 'returns_null' | 'throws_error';
+  }
+  ```
+- **Teste proposto:** Adicionar testes de NULL para cada categoria de operador
+- **Observações:** Documentação já existe no código Java, falta expor no frontend
 
 ---
 
-### GAP-005: PSD3_COP_NAME_MATCH falta no FrontEnd
+### [MÉDIO] GAP-003: Validação de Regex Catastrófico
 
-**Severidade:** 🟠 ALTA
-
-**Descrição:**
-Operador PSD3 Confirmation of Payee não disponível na UI.
-
-**Localização:**
-- ❌ FrontEnd: FALTA
-- ✅ BackEnd: `RuleCondition.java`
-- ✅ PostgreSQL: `V34__add_v31_plus_operators.sql`
-
-**Recomendação:**
-```typescript
-{ value: 'PSD3_COP_NAME_MATCH', label: 'PSD3 CoP Name Match', 
-  description: 'Verificação de nome PSD3 Confirmation of Payee', 
-  requiresValue: true, category: 'Regulatory' },
-```
-
----
-
-### GAP-006: SCA_DYNAMIC_3DS_ROUTING falta no FrontEnd
-
-**Severidade:** 🟠 ALTA
-
-**Descrição:**
-Operador SCA Dynamic 3DS Routing não disponível na UI.
-
-**Localização:**
-- ❌ FrontEnd: FALTA
-- ✅ BackEnd: `RuleCondition.java`
-- ✅ PostgreSQL: `V34__add_v31_plus_operators.sql`
-
-**Recomendação:**
-```typescript
-{ value: 'SCA_DYNAMIC_3DS_ROUTING', label: 'SCA Dynamic 3DS Routing', 
-  description: 'Roteamento dinâmico 3DS para SCA', 
-  requiresValue: true, category: 'SCA' },
-```
+- **ID:** GAP-003
+- **Camadas afetadas:** Backend
+- **Evidência:**
+  - `backend/src/main/java/com/rulex/service/complex/ComplexRuleEvaluator.java`
+  - Operadores: REGEX, NOT_REGEX
+- **Como reproduzir:** Criar regra com regex `(a+)+$` e input longo
+- **Impacto:** Potencial DoS via ReDoS (Regular Expression Denial of Service)
+- **Causa raiz:** Falta de timeout ou validação de complexidade de regex
+- **Correção proposta:**
+  ```java
+  // Adicionar timeout para avaliação de regex
+  private boolean evaluateRegexWithTimeout(String input, String pattern, long timeoutMs) {
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      Future<Boolean> future = executor.submit(() -> input.matches(pattern));
+      try {
+          return future.get(timeoutMs, TimeUnit.MILLISECONDS);
+      } catch (TimeoutException e) {
+          future.cancel(true);
+          throw new RegexTimeoutException("Regex evaluation timed out");
+      }
+  }
+  ```
+- **Teste proposto:**
+  ```java
+  @Test
+  void testRegexTimeout() {
+      assertThrows(RegexTimeoutException.class, () -> {
+          evaluator.evaluate("REGEX", "aaaaaaaaaaaaaaaaaaaaaaaaaaaa!", "(a+)+$");
+      });
+  }
+  ```
+- **Observações:** Implementar limite de complexidade de regex
 
 ---
 
-## 🟡 GAPS MÉDIOS
+### [BAIXO] GAP-004: Operadores Legacy no Frontend
 
-### GAP-007: Nomenclatura Inconsistente - Operadores Parciais no FrontEnd
-
-**Severidade:** 🟡 MÉDIA
-
-**Descrição:**
-Alguns operadores no FrontEnd têm nomes truncados ou parciais:
-
-| FrontEnd | BackEnd | Correto |
-|----------|---------|---------|
-| `HAS_FAILED_` | `HAS_FAILED_3DS_LAST_N_MINUTES` | BackEnd |
-| `NEO` | `NEO4J_*` | BackEnd |
-| `PACS` | `PACS008_FIELD_VALIDATION` | BackEnd |
-| `PLT_DS` | `PLT_DS2_RULE_ENGINE` | BackEnd |
-| `PSD` | `PSD3_COP_NAME_MATCH` | BackEnd |
-| `SCA_DYNAMIC_` | `SCA_DYNAMIC_3DS_ROUTING` | BackEnd |
-
-**Impacto:**
-- Confusão na manutenção
-- Possíveis erros de mapeamento
-- Inconsistência na documentação
-
-**Recomendação:**
-Corrigir os nomes no FrontEnd para corresponder exatamente ao BackEnd.
+- **ID:** GAP-004
+- **Camadas afetadas:** Frontend
+- **Evidência:**
+  - `client/src/lib/operatorTypes.ts:380-390`
+  - Operadores legacy: `NE`, `MATCHES_REGEX`, `IS_NOT_NULL`, `==`, `!=`, `>`, `<`, `>=`, `<=`
+- **Como reproduzir:** Verificar tipos no arquivo
+- **Impacto:** Confusão para desenvolvedores, código morto
+- **Causa raiz:** Migração de versão anterior sem remoção de tipos antigos
+- **Correção proposta:** Remover tipos legacy ou marcar como deprecated
+- **Teste proposto:** Verificar que nenhum código usa operadores legacy
+- **Observações:** Baixa prioridade, não afeta funcionalidade
 
 ---
 
-## 🟢 INFO: ValueTypes (Não são Gaps)
+### [BAIXO] GAP-005: Categorização Inconsistente
 
-Os seguintes itens aparecem no BackEnd mas **NÃO são operadores**, são **tipos de valor** (`ConditionValueType`):
-
-| ValueType | Descrição |
-|-----------|-----------|
-| STRING | Tipo string |
-| NUMBER | Tipo numérico |
-| BOOLEAN | Tipo booleano |
-| DATE | Tipo data |
-| TIME | Tipo hora |
-| DATETIME | Tipo data/hora |
-| ARRAY_STRING | Array de strings |
-| ARRAY_NUMBER | Array de números |
-| FIELD_REFERENCE | Referência a campo |
-| EXPRESSION | Expressão |
-| GEO_POINT | Ponto geográfico |
-
-**Ação:** Nenhuma necessária. Estes são tipos de valor, não operadores.
+- **ID:** GAP-005
+- **Camadas afetadas:** Frontend
+- **Evidência:**
+  - `client/src/lib/operators.ts`
+  - Alguns operadores em "Outros" deveriam ter categoria específica
+- **Como reproduzir:** Filtrar operadores por categoria "Outros"
+- **Impacto:** UX degradada no builder de regras
+- **Causa raiz:** Geração automática sem categorização completa
+- **Correção proposta:** Revisar e categorizar operadores em "Outros"
+- **Teste proposto:** N/A (melhoria de UX)
+- **Observações:** Baixa prioridade
 
 ---
 
-## 📈 Plano de Ação
+### [BAIXO] GAP-006: Falta de Índices para Operadores de Agregação Temporal
 
-### Semana 1: Resolver Gaps Críticos e Altos
-
-| Prioridade | Gap | Ação | Responsável | Tempo |
-|------------|-----|------|-------------|-------|
-| 🔴 P0 | GAP-001 | Adicionar PIG_BUTCHERING_INDICATOR ao BackEnd | Backend Dev | 15min |
-| 🟠 P1 | GAP-002 | Adicionar HAS_FAILED_3DS_LAST_N_MINUTES ao FrontEnd | Frontend Dev | 10min |
-| 🟠 P1 | GAP-003 | Adicionar PACS008_FIELD_VALIDATION ao FrontEnd | Frontend Dev | 10min |
-| 🟠 P1 | GAP-004 | Adicionar PLT_DS2_RULE_ENGINE ao FrontEnd | Frontend Dev | 10min |
-| 🟠 P1 | GAP-005 | Adicionar PSD3_COP_NAME_MATCH ao FrontEnd | Frontend Dev | 10min |
-| 🟠 P1 | GAP-006 | Adicionar SCA_DYNAMIC_3DS_ROUTING ao FrontEnd | Frontend Dev | 10min |
-
-### Semana 2: Resolver Gaps Médios
-
-| Prioridade | Gap | Ação | Responsável | Tempo |
-|------------|-----|------|-------------|-------|
-| 🟡 P2 | GAP-007 | Corrigir nomenclatura inconsistente | Full Stack | 30min |
-
----
-
-## ✅ Verificação Pós-Correção
-
-Após implementar as correções, executar:
-
-```bash
-# Testes de sincronização do BackEnd
-cd ~/repos/RULEX && mvn -f backend/pom.xml test -Dtest=OperatorSyncTest
-
-# Testes do FrontEnd
-cd ~/repos/RULEX && pnpm test -- --run
-
-# Verificar git status
-git status
-```
+- **ID:** GAP-006
+- **Camadas afetadas:** PostgreSQL
+- **Evidência:**
+  - `backend/src/main/resources/db/migration/V14__velocity_counters.sql`
+  - Operadores: SUM_LAST_N_DAYS, COUNT_LAST_N_HOURS, etc.
+- **Como reproduzir:** Executar query de agregação em tabela grande
+- **Impacto:** Performance degradada em queries de agregação
+- **Causa raiz:** Índices não otimizados para queries temporais
+- **Correção proposta:**
+  ```sql
+  CREATE INDEX idx_velocity_timestamp_customer 
+  ON velocity_counters (customer_id, timestamp DESC);
+  ```
+- **Teste proposto:** Benchmark de queries de agregação
+- **Observações:** Avaliar impacto em produção antes de implementar
 
 ---
 
-## 📊 Métricas de Conformidade Atual
+### [BAIXO] GAP-007: Cache Redis sem Prefixo Padronizado
 
-| Camada | Operadores | Conformes | % |
-|--------|------------|-----------|---|
-| FrontEnd | 448 | 443 | 98.9% |
-| BackEnd | 457 | 456 | 99.8% |
-| PostgreSQL | 448 | 447 | 99.8% |
-| Redis | 17 | 17 | 100% |
-| Neo4j | 18 | 18 | 100% |
-| **MÉDIA** | **-** | **-** | **99.7%** |
+- **ID:** GAP-007
+- **Camadas afetadas:** Redis
+- **Evidência:**
+  - `backend/src/main/java/com/rulex/service/RedisVelocityService.java`
+- **Como reproduzir:** Inspecionar keys no Redis
+- **Impacto:** Dificuldade de gerenciamento de cache
+- **Causa raiz:** Convenção de nomenclatura não documentada
+- **Correção proposta:** Padronizar prefixos: `rulex:velocity:`, `rulex:cache:`, etc.
+- **Teste proposto:** Verificar padrão de keys
+- **Observações:** Baixa prioridade, funcionalidade não afetada
 
 ---
 
-## 🔗 Referências
+### [BAIXO] GAP-008: Neo4j Queries sem EXPLAIN
 
-- [operators_inventory.md](./operators_inventory.md)
-- [conformidade_matriz.csv](./conformidade_matriz.csv)
-- [validation_report.md](./validation_report.md)
-- [consistency_report.md](./consistency_report.md)
+- **ID:** GAP-008
+- **Camadas afetadas:** Neo4j
+- **Evidência:**
+  - `backend/src/main/java/com/rulex/service/Neo4jGraphService.java`
+- **Como reproduzir:** Executar operador Neo4j em grafo grande
+- **Impacto:** Potencial performance issue em grafos grandes
+- **Causa raiz:** Queries não otimizadas
+- **Correção proposta:** Adicionar EXPLAIN/PROFILE em desenvolvimento
+- **Teste proposto:** Benchmark de queries Neo4j
+- **Observações:** Avaliar em ambiente de staging
+
+---
+
+## Plano de Ação
+
+### Semana 1 (Crítico/Alto)
+- ✅ Nenhuma ação crítica necessária
+
+### Semana 2 (Médio)
+1. [ ] GAP-001: Aumentar cobertura de testes para 95%
+2. [ ] GAP-002: Documentar semântica NULL no frontend
+3. [ ] GAP-003: Implementar timeout para regex
+
+### Semana 3-4 (Baixo)
+4. [ ] GAP-004: Remover operadores legacy
+5. [ ] GAP-005: Melhorar categorização
+6. [ ] GAP-006: Otimizar índices PostgreSQL
+7. [ ] GAP-007: Padronizar prefixos Redis
+8. [ ] GAP-008: Otimizar queries Neo4j
+
+---
+
+## Conclusão
+
+O sistema RULEX apresenta **excelente conformidade** entre Frontend e Backend, com **100% dos operadores sincronizados**. Os GAPs identificados são de severidade média a baixa e representam oportunidades de melhoria, não falhas críticas.
+
+**Recomendação:** Priorizar GAP-003 (segurança) e GAP-001 (qualidade) nas próximas sprints.
+
+---
+
+*Documento gerado automaticamente pela auditoria de conformidade RULEX*

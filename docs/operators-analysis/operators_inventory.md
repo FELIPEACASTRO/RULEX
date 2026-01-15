@@ -1,273 +1,680 @@
-# 📋 Inventário Completo de Operadores - RULEX
+# RULEX - Inventário Completo de Operadores
 
-> **Data de Geração:** 2026-01-15
-> **Versão:** 1.0
-> **Total de Operadores Únicos:** 465
+**Gerado em:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+**Versão:** 2.0
+**Total de Operadores:** 447
+
+## Sumário por Categoria
+
+| Categoria | Quantidade | Descrição |
+|-----------|------------|-----------|
+| Comparação Básica | 6 | EQ, NEQ, GT, GTE, LT, LTE |
+| Listas | 2 | IN, NOT_IN |
+| Strings | 6 | CONTAINS, NOT_CONTAINS, STARTS_WITH, ENDS_WITH, REGEX, NOT_REGEX |
+| Nulos/Booleanos | 4 | IS_NULL, NOT_NULL, IS_TRUE, IS_FALSE |
+| Range | 2 | BETWEEN, NOT_BETWEEN |
+| Comparação entre Campos | 6 | FIELD_EQ, FIELD_NEQ, FIELD_GT, FIELD_GTE, FIELD_LT, FIELD_LTE |
+| Data/Hora | 6 | DATE_BEFORE, DATE_AFTER, DATE_BETWEEN, TIME_BEFORE, TIME_AFTER, TIME_BETWEEN |
+| Arrays | 5 | ARRAY_CONTAINS, ARRAY_NOT_CONTAINS, ARRAY_SIZE_EQ, ARRAY_SIZE_GT, ARRAY_SIZE_LT |
+| Matemáticos | 2 | MOD_EQ, MOD_NEQ |
+| Geolocalização | 3 | GEO_DISTANCE_LT, GEO_DISTANCE_GT, GEO_IN_POLYGON |
+| Velocity | 8 | VELOCITY_COUNT_GT/LT, VELOCITY_SUM_GT/LT, VELOCITY_AVG_GT/LT, VELOCITY_DISTINCT_GT/LT |
+| Agregações Temporais | 34 | SUM_LAST_N_DAYS, COUNT_LAST_N_HOURS, etc. |
+| Fraude Avançada | 26 | NOT_IN_HISTORICAL, NAME_SIMILARITY_LT, etc. |
+| Velocity Avançado | 10 | VELOCITY_CROSS_CHANNEL, VELOCITY_ROLLING_WINDOW, etc. |
+| Behavioral | 8 | DORMANCY_REVIVAL, AMOUNT_DEVIATION_FROM_AVG, etc. |
+| Graph/Network | 8 | FAN_OUT_COUNT, FAN_IN_COUNT, SHARED_DEVICE_COUNT, etc. |
+| Neo4j Graph | 18 | NEO4J_WEAKLY_CONNECTED_COMPONENTS, NEO4J_PAGERANK_FRAUD_SCORE, etc. |
+| Sanctions | 7 | OFAC_LIST_CHECK, PEP_LIST_CHECK, etc. |
+| Synthetic ID | 8 | CPF_SSN_VALIDATION, PHONE_CARRIER_CHECK, etc. |
+| AML | 8 | STRUCTURING_DETECTION, LAYERING_PATTERN, etc. |
+| Regulatory | 12 | SCA_EXEMPTION_TRA, PSD3_COP_NAME_MATCH, etc. |
+| Device | 10 | DEVICE_JAILBREAK_ROOTED, EMULATOR_DETECTION, etc. |
+| MCC/Merchant | 20 | MCC_HIGH_RISK, MERCHANT_FIRST_SEEN, etc. |
+| Estatísticos | 10 | BENFORD_LAW_DEVIATION, Z_SCORE_GT, etc. |
+| FATF | 28 | FATF_PLACEMENT_CASH_INTENSIVE, FATF_LAYERING_RAPID_MOVEMENT, etc. |
+| PLT (Plataforma) | 28 | PLT_BEHAVIOR_SORTED_LISTS, PLT_IDENTITY_RESOLUTION, etc. |
+| BSL (Basel) | 14 | BSL_BUCKET_CLASSIFICATION, BSL_KRI_MONITORING, etc. |
+| Biométricos | 3 | BIOMETRIC_KEYSTROKE_DYNAMICS, BIOMETRIC_MOUSE_MOVEMENT, BIOMETRIC_SCROLL_VELOCITY |
+| LLM/AI | 12 | LLM_FRAUD_PATTERN_AUTODISCOVERY, LLM_DEEPFAKE_VOICE_DETECTION, etc. |
+| Outros Avançados | ~150 | Diversos operadores especializados |
 
 ---
 
-## 📊 Resumo Executivo
+## 1. OPERADORES DE COMPARAÇÃO BÁSICA
 
-| Camada | Total Operadores | Status |
-|--------|------------------|--------|
-| **FrontEnd** (operators.ts) | 448 | ✅ |
-| **BackEnd** (RuleCondition.java) | 457 | ✅ |
-| **PostgreSQL** (V34 migration) | 448 | ✅ |
-| **Redis** (VelocityService) | 17 | ✅ |
-| **Neo4j** (GraphService) | 18 | ✅ |
+| Operador | Aridade | Tipos Aceitos | Semântica NULL | Exemplo |
+|----------|---------|---------------|----------------|---------|
+| `EQ` | Binário | string, number, bool | NULL == NULL → true | `field EQ "valor"` |
+| `NEQ` | Binário | string, number, bool | NULL != valor → true | `field NEQ "valor"` |
+| `GT` | Binário | number, date | NULL → false | `amount GT 100` |
+| `GTE` | Binário | number, date | NULL → false | `amount GTE 100` |
+| `LT` | Binário | number, date | NULL → false | `amount LT 100` |
+| `LTE` | Binário | number, date | NULL → false | `amount LTE 100` |
+
+**Evidências:**
+- Frontend: `client/src/lib/operators.ts:12-17`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:56-61`
 
 ---
 
-## 🖥️ FrontEnd Operators
+## 2. OPERADORES DE LISTAS
 
-### Localização
+| Operador | Aridade | Tipos Aceitos | Semântica NULL | Exemplo |
+|----------|---------|---------------|----------------|---------|
+| `IN` | Binário | string, number (lista) | NULL IN [] → false | `country IN ["BR","US"]` |
+| `NOT_IN` | Binário | string, number (lista) | NULL NOT_IN [] → true | `country NOT_IN ["RU","CN"]` |
+
+**Evidências:**
+- Frontend: `client/src/lib/operators.ts:18-19`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:62-63`
+
+---
+
+## 3. OPERADORES DE STRINGS
+
+| Operador | Aridade | Tipos Aceitos | Case Sensitive | Exemplo |
+|----------|---------|---------------|----------------|---------|
+| `CONTAINS` | Binário | string | Sim | `name CONTAINS "Silva"` |
+| `NOT_CONTAINS` | Binário | string | Sim | `email NOT_CONTAINS "temp"` |
+| `STARTS_WITH` | Binário | string | Sim | `phone STARTS_WITH "+55"` |
+| `ENDS_WITH` | Binário | string | Sim | `email ENDS_WITH "@gmail.com"` |
+| `REGEX` | Binário | string (regex) | Depende flags | `cpf REGEX "^\d{11}$"` |
+| `NOT_REGEX` | Binário | string (regex) | Depende flags | `name NOT_REGEX "^TEST"` |
+
+**Evidências:**
+- Frontend: `client/src/lib/operators.ts:20-25`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:64-69`
+
+---
+
+## 4. OPERADORES DE NULOS/BOOLEANOS
+
+| Operador | Aridade | Tipos Aceitos | Exemplo |
+|----------|---------|---------------|---------|
+| `IS_NULL` | Unário | any | `middleName IS_NULL` |
+| `NOT_NULL` | Unário | any | `email NOT_NULL` |
+| `IS_TRUE` | Unário | boolean | `isVerified IS_TRUE` |
+| `IS_FALSE` | Unário | boolean | `isFraud IS_FALSE` |
+
+**Evidências:**
+- Frontend: `client/src/lib/operators.ts:26-29`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:70-73`
+
+---
+
+## 5. OPERADORES DE RANGE
+
+| Operador | Aridade | Tipos Aceitos | Exemplo |
+|----------|---------|---------------|---------|
+| `BETWEEN` | Ternário | number, date | `amount BETWEEN [100, 1000]` |
+| `NOT_BETWEEN` | Ternário | number, date | `hour NOT_BETWEEN [0, 6]` |
+
+**Evidências:**
+- Frontend: `client/src/lib/operators.ts:30-31`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:74-75`
+
+---
+
+## 6. OPERADORES DE COMPARAÇÃO ENTRE CAMPOS
+
+| Operador | Aridade | Tipos Aceitos | Exemplo |
+|----------|---------|---------------|---------|
+| `FIELD_EQ` | Binário | field reference | `billingCountry FIELD_EQ shippingCountry` |
+| `FIELD_NEQ` | Binário | field reference | `cardCountry FIELD_NEQ ipCountry` |
+| `FIELD_GT` | Binário | field reference | `amount FIELD_GT avgAmount` |
+| `FIELD_GTE` | Binário | field reference | `score FIELD_GTE threshold` |
+| `FIELD_LT` | Binário | field reference | `age FIELD_LT minAge` |
+| `FIELD_LTE` | Binário | field reference | `risk FIELD_LTE maxRisk` |
+
+**Evidências:**
+- Frontend: `client/src/lib/operators.ts:32-37`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:76-81`
+
+---
+
+## 7. OPERADORES DE DATA/HORA
+
+| Operador | Aridade | Tipos Aceitos | Exemplo |
+|----------|---------|---------------|---------|
+| `DATE_BEFORE` | Binário | date | `expiryDate DATE_BEFORE "2024-12-31"` |
+| `DATE_AFTER` | Binário | date | `createdAt DATE_AFTER "2024-01-01"` |
+| `DATE_BETWEEN` | Ternário | date | `transactionDate DATE_BETWEEN ["2024-01-01", "2024-12-31"]` |
+| `TIME_BEFORE` | Binário | time | `transactionTime TIME_BEFORE "06:00"` |
+| `TIME_AFTER` | Binário | time | `transactionTime TIME_AFTER "22:00"` |
+| `TIME_BETWEEN` | Ternário | time | `transactionTime TIME_BETWEEN ["09:00", "18:00"]` |
+
+**Evidências:**
+- Frontend: `client/src/lib/operators.ts:38-43`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:82-87`
+
+---
+
+## 8. OPERADORES NEO4J GRAPH (18 operadores)
+
+| Operador | Descrição | Algoritmo |
+|----------|-----------|-----------|
+| `NEO4J_WEAKLY_CONNECTED_COMPONENTS` | Detecta clusters de contas relacionadas | WCC |
+| `NEO4J_DEGREE_CENTRALITY` | Identifica nós com muitas conexões | Degree |
+| `NEO4J_PAGERANK_FRAUD_SCORE` | Score de fraude via PageRank | PageRank |
+| `NEO4J_LOUVAIN_COMMUNITY_DETECTION` | Agrupa contas em comunidades | Louvain |
+| `NEO4J_PAIRWISE_SIMILARITY_PII` | Similaridade de PII entre pares | Similarity |
+| `NEO4J_ENTITY_RESOLUTION_SHARED_PII` | Resolução de entidade por PII | Entity Resolution |
+| `NEO4J_FRAUD_RING_DETECTION` | Detecta grupos coordenados de fraude | Ring Detection |
+| `NEO4J_MONEY_MULE_NETWORK_ANALYSIS` | Análise de rede de money mules | Network Analysis |
+| `NEO4J_CIRCULAR_TRANSACTION_DETECTION` | Detecta transações circulares | Cycle Detection |
+| `NEO4J_FIRST_PARTY_FRAUD_CLUSTERING` | Clustering de fraude de primeira parte | Clustering |
+| `NEO4J_SECOND_LEVEL_FRAUDSTER_ID` | Identifica fraudadores de segundo nível | Path Analysis |
+| `NEO4J_BETWEENNESS_CENTRALITY_MULE` | Centralidade para detectar mules | Betweenness |
+| `NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD` | Propagação de label de fraude | Label Propagation |
+| `NEO4J_SHORTEST_PATH_AML_TRACKING` | Rastreamento AML via caminho curto | Shortest Path |
+| `NEO4J_TRIANGLE_COUNT_COLLUSION` | Detecta colusão via triângulos | Triangle Count |
+| `NEO4J_NODE_SIMILARITY_SYNTHETIC_ID` | Detecta ID sintético via similaridade | Node Similarity |
+| `NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION` | Predição via embedding de grafo | Graph Embedding |
+| `NEO4J_TEMPORAL_MOTIF_PATTERN` | Padrão de motif temporal | Temporal Motif |
+
+**Evidências:**
+- Frontend: `client/src/lib/operators.ts:145-162`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:520-537`
+- Service: `backend/src/main/java/com/rulex/service/Neo4jGraphService.java`
+
+---
+
+## 9. OPERADORES VELOCITY (Redis-backed)
+
+| Operador | Descrição | TTL Padrão |
+|----------|-----------|------------|
+| `VELOCITY_COUNT_GT` | Contagem > threshold | 24h |
+| `VELOCITY_COUNT_LT` | Contagem < threshold | 24h |
+| `VELOCITY_SUM_GT` | Soma > threshold | 24h |
+| `VELOCITY_SUM_LT` | Soma < threshold | 24h |
+| `VELOCITY_AVG_GT` | Média > threshold | 24h |
+| `VELOCITY_AVG_LT` | Média < threshold | 24h |
+| `VELOCITY_DISTINCT_GT` | Distintos > threshold | 24h |
+| `VELOCITY_DISTINCT_LT` | Distintos < threshold | 24h |
+
+**Evidências:**
+- Frontend: `client/src/lib/operators.ts:54-61`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:98-105`
+- Redis Service: `backend/src/main/java/com/rulex/service/RedisVelocityService.java`
+
+---
+
+## Lista Completa de Operadores (447)
+
+- `ACCOUNT_AGE_LT_MINUTES`
+- `ACCOUNT_LINK_DEPTH`
+- `ACCOUNT_TAKEOVER_PATTERN`
+- `ADAPTIVE_BEHAVIORAL_ANALYTICS`
+- `ADAPTIVE_PARAMETRIC_THRESHOLD`
+- `ADDRESS_CHANGE_VELOCITY`
+- `ADDRESS_VERIFICATION`
+- `ADVERSE_MEDIA_CHECK`
+- `ALIAS_DETECTION`
+- `AMOUNT_DEVIATION_FROM_AVG`
+- `AMOUNT_ROUNDING_BEHAVIOR`
+- `AMOUNT_SPIKE`
+- `AMOUNT_SUM_PER_CARD_HOUR`
+- `AMOUNT_SUM_PER_CUSTOMER_DAY`
+- `AMOUNT_VARIANCE_ANOMALY`
+- `ANDERSON_DARLING_TEST`
+- `ANTI_DETECT_BROWSER_DETECTION`
+- `APP_FRAUD_DETECTION`
+- `APRIORI_ASSOCIATION`
+- `ARRAY_CONTAINS`
+- `ARRAY_NOT_CONTAINS`
+- `ARRAY_SIZE_EQ`
+- `ARRAY_SIZE_GT`
+- `ARRAY_SIZE_LT`
+- `AUDIO_FINGERPRINT_NEW`
+- `AVG_INTERVAL_BETWEEN_TXN`
+- `AVG_LAST_N_DAYS`
+- `AVG_TRANSACTION_SPIKE`
+- `BATTERY_LEVEL_ANOMALY`
+- `BEHAVIORAL_BASELINE_DEVIATION`
+- `BENEFICIARY_ADD_VELOCITY`
+- `BENEFICIARY_CONCENTRATION`
+- `BENEFICIARY_REUSE_PATTERN`
+- `BENFORD_LAW_DEVIATION`
+- `BETWEEN`
+- `BIOMETRIC_KEYSTROKE_DYNAMICS`
+- `BIOMETRIC_MOUSE_MOVEMENT`
+- `BIOMETRIC_SCROLL_VELOCITY`
+- `BROWSER_INCONSISTENCY`
+- `BSL_BUCKET_CLASSIFICATION`
+- `BSL_BUSINESS_INDICATOR`
+- `BSL_BUSINESS_INDICATOR_COMPONENT`
+- `BSL_CONTROL_DEFICIENCY`
+- `BSL_INTERNAL_LOSS_MULTIPLIER`
+- `BSL_KRI_MONITORING`
+- `BSL_LOSS_DATA_COLLECTION`
+- `BSL_LOSS_EVENT_REPORTING`
+- `BSL_LOSS_EXCLUSION_APPROVAL`
+- `BSL_LOSS_THRESHOLD_SETTING`
+- `BSL_MARGINAL_COEFFICIENT`
+- `BSL_RETENTION_PERIOD`
+- `BSL_RISK_GOVERNANCE`
+- `BSL_SCENARIO_ANALYSIS`
+- `BUSINESS_HOURS_DEVIATION`
+- `BUST_OUT_PATTERN_DETECTION`
+- `CANVAS_FINGERPRINT_MISMATCH`
+- `CARD_ADD_VELOCITY`
+- `CARD_TESTING_RING_DETECTION`
+- `CASH_INTENSIVE_RATIO`
+- `CHANNEL_SWITCH_PATTERN`
+- `CHANNEL_USAGE_ANOMALY`
+- `CHARGEBACK_RATE_GT`
+- `CHI_SQUARE_DISTRIBUTION_TEST`
+- `CIRCULAR_PAYMENT_DETECTION`
+- `CIRCULAR_TRANSFER_DETECTION`
+- `COEFFICIENT_VARIATION_GT`
+- `CONSORTIUM_NEGATIVE_FILE_CHECK`
+- `CONTAINS`
+- `CONTAINS_SUSPICIOUS_KEYWORDS`
+- `CORRELATION_ANOMALY`
+- `CORRESPONDENT_ANOMALY`
+- `COUNT_CRYPTO_TXN_LAST_N_DAYS`
+- `COUNT_DISTINCT_ACCOUNTS`
+- `COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS`
+- `COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS`
+- `COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS`
+- `COUNT_DISTINCT_MERCHANTS_LAST_N_HOURS`
+- `COUNT_DISTINCT_PANS_LAST_N_HOURS`
+- `COUNT_DISTINCT_PAYERS_LAST_N_DAYS`
+- `COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS`
+- `COUNT_FAILURES_LAST_N_HOURS`
+- `COUNT_LAST_N_DAYS`
+- `COUNT_LAST_N_HOURS`
+- `COUNT_MFA_ABANDONMENTS`
+- `COUNT_MFA_DENIALS_LAST_N_HOURS`
+- `COUNT_UNIQUE_BENEFICIARIES_LAST_N_DAYS`
+- `COUNT_UNIQUE_IPS_LAST_N_HOURS`
+- `CPF_SSN_VALIDATION`
+- `CREDITOR_NAME_VALIDATION`
+- `CREDIT_FILE_THIN`
+- `CROSS_BORDER_VELOCITY`
+- `CRYPTO_PUMP_DUMP_DETECTION`
+- `CVV_FAILURE_VELOCITY`
+- `DAILY_LIMIT_PROXIMITY`
+- `DATE_AFTER`
+- `DATE_BEFORE`
+- `DATE_BETWEEN`
+- `DAYS_SINCE_LAST_ACTIVITY`
+- `DAY_OF_WEEK_IN`
+- `DECIMAL_PLACES_GT`
+- `DEVICE_ACCOUNT_RATIO`
+- `DEVICE_CHANGED_IN_SESSION`
+- `DEVICE_FINGERPRINT_CONSISTENCY_CHECK`
+- `DEVICE_JAILBREAK_ROOTED`
+- `DEVICE_MEMORY_ANOMALY`
+- `DEVICE_TRUST_SCORE`
+- `DISTANCE_FROM_LAST_GT`
+- `DOCUMENT_FORGERY_DETECTION`
+- `DOMAIN_IN_LIST`
+- `DORA_INCIDENT_SEVERITY`
+- `DORMANCY_ALERT_VELOCITY`
+- `DORMANCY_REVIVAL`
+- `ECBSV_SSN_VALIDATION`
+- `ECLAT_ITEMSET`
+- `EIDAS_ASSURANCE_LEVEL`
+- `EMAIL_DOMAIN_AGE`
+- `EMAIL_PHONE_MISMATCH`
+- `EMULATOR_DETECTION`
+- `ENDS_WITH`
+- `ENTROPY_SCORE_ANOMALY`
+- `EQ`
+- `EXPIRES_WITHIN_DAYS`
+- `FACE_TO_ID_PHOTO_MATCHING`
+- `FAN_IN_COUNT`
+- `FAN_OUT_COUNT`
+- `FATF_BLACK_MARKET_EXCHANGE`
+- `FATF_CORRESPONDENT_LAYERING`
+- `FATF_CRYPTO_ATM_CASHOUT`
+- `FATF_CRYPTO_MIXING`
+- `FATF_HAWALA_INFORMAL`
+- `FATF_INSURANCE_CASH_VALUE`
+- `FATF_INTEGRATION_BUSINESS_INVESTMENT`
+- `FATF_INTEGRATION_LOAN_REPAYMENT`
+- `FATF_INTEGRATION_LUXURY_GOODS`
+- `FATF_INTEGRATION_REAL_ESTATE`
+- `FATF_LAYERING_CONVERTIBLE_INSTRUMENTS`
+- `FATF_LAYERING_OFFSHORE`
+- `FATF_LAYERING_RAPID_MOVEMENT`
+- `FATF_LAYERING_SHELL_COMPANY`
+- `FATF_LAYERING_WIRE_CHAINS`
+- `FATF_NEW_PAYMENT_EXPLOITATION`
+- `FATF_PEP_TRANSACTION`
+- `FATF_PLACEMENT_CASH_INTENSIVE`
+- `FATF_PLACEMENT_CASINO_GAMBLING`
+- `FATF_PLACEMENT_CURRENCY_EXCHANGE`
+- `FATF_PLACEMENT_SMURFING`
+- `FATF_PLACEMENT_STRUCTURING`
+- `FATF_ROUND_TRIPPING`
+- `FATF_TBML_FALSE_DESCRIPTION`
+- `FATF_TBML_MULTIPLE_INVOICING`
+- `FATF_TBML_OVER_INVOICING`
+- `FATF_TBML_PHANTOM_SHIPPING`
+- `FATF_TBML_UNDER_INVOICING`
+- `FIELD_EQ`
+- `FIELD_GT`
+- `FIELD_GTE`
+- `FIELD_LT`
+- `FIELD_LTE`
+- `FIELD_NEQ`
+- `FONTS_FINGERPRINT_ANOMALY`
+- `FPGROWTH_FREQUENT_PATTERNS`
+- `FREQUENCY_PATTERN_CHANGE`
+- `FUZZY_ADAPTIVE_THRESHOLD`
+- `FUZZY_MEMBERSHIP`
+- `GDPR_DATA_RETENTION_CHECK`
+- `GEOGRAPHIC_BEHAVIOR_SHIFT`
+- `GEO_DISTANCE_GT`
+- `GEO_DISTANCE_LT`
+- `GEO_IN_POLYGON`
+- `GT`
+- `GTE`
+- `GTE_PERCENT_OF_LAST_INCOMING`
+- `GT_CURRENT_DATE`
+- `GT_FIELD_MULTIPLIER`
+- `HARDWARE_CONCURRENCY_MISMATCH`
+- `HAS_FAILED_3DS_LAST_N_MINUTES`
+- `HAS_INCOMING_TRANSFER_LAST_N_HOURS`
+- `HIGH_RISK_CORRIDOR_CHECK`
+- `HIGH_RISK_JURISDICTION`
+- `HOLIDAY_TRANSACTION_SPIKE`
+- `HOUR_BETWEEN`
+- `IDENTITY_VELOCITY`
+- `IN`
+- `INJECTION_ATTACK_DETECTION`
+- `INTEGRATION_PATTERN`
+- `INVESTMENT_SCAM_PATTERN`
+- `IN_CUSTOMER_CHARGEBACK_MERCHANTS`
+- `IN_CUSTOMER_HISTORY`
+- `IN_CUSTOMER_USUAL_HOURS`
+- `IN_LIST`
+- `IS_CRYPTO_RANSOM_AMOUNT`
+- `IS_FALSE`
+- `IS_FIRST`
+- `IS_HOLIDAY`
+- `IS_IMPOSSIBLE_COMBINATION`
+- `IS_NEW`
+- `IS_NULL`
+- `IS_TRUE`
+- `IS_VOIP`
+- `IS_WEEKEND`
+- `KOLMOGOROV_SMIRNOV_TEST`
+- `LANGUAGE_MISMATCH`
+- `LARGE_AMOUNT_FREQUENCY`
+- `LAYERED_TRANSFER_PATTERN`
+- `LAYERING_PATTERN`
+- `LIVENESS_DETECTION_FACIAL`
+- `LIVENESS_DETECTION_VOICE`
+- `LLM_ADVERSARIAL_ATTACK_RESISTANCE`
+- `LLM_ANOMALY_EXPLANATION_GENERATION`
+- `LLM_CHATBOT_FRAUD_DETECTION`
+- `LLM_DEEPFAKE_VOICE_DETECTION`
+- `LLM_EMAIL_PHISHING_ANALYSIS`
+- `LLM_FRAUD_ALERT_PRIORITIZATION`
+- `LLM_FRAUD_PATTERN_AUTODISCOVERY`
+- `LLM_GENERATIVE_RULE_SYNTHESIS`
+- `LLM_MULTI_MODAL_FRAUD_DETECTION`
+- `LLM_SOCIAL_ENGINEERING_CLASSIFICATION`
+- `LLM_SYNTHETIC_IMAGE_DETECTION`
+- `LLM_TRANSACTION_DESCRIPTION_ANALYSIS`
+- `LOCATION_DEVIATION`
+- `LOGIN_PATTERN_DEVIATION`
+- `LT`
+- `LTE`
+- `LT_CURRENT_DATE`
+- `MANN_WHITNEY_U_TEST`
+- `MAX_AMOUNT_LAST_N_DAYS`
+- `MCC_CATEGORY_VELOCITY`
+- `MCC_CROSS_CATEGORY_PATTERN`
+- `MCC_CRYPTO`
+- `MCC_GAMBLING`
+- `MCC_HIGH_RISK`
+- `MCC_SPENDING_LIMIT_CHECK`
+- `MERCHANT_AGE_CHECK`
+- `MERCHANT_AMOUNT_DISTRIBUTION`
+- `MERCHANT_CATEGORY_CHANGE`
+- `MERCHANT_CHARGEBACK_HISTORY`
+- `MERCHANT_COUNTRY_MISMATCH`
+- `MERCHANT_CROSS_BORDER_RATIO`
+- `MERCHANT_CUSTOMER_CONCENTRATION`
+- `MERCHANT_DEVIATION`
+- `MERCHANT_DEVICE_DIVERSITY`
+- `MERCHANT_DORMANT_REACTIVATION`
+- `MERCHANT_FIRST_SEEN`
+- `MERCHANT_FRAUD_RATE_CHECK`
+- `MERCHANT_GEOGRAPHIC_SPREAD`
+- `MERCHANT_HIGH_VALUE_FREQUENCY`
+- `MERCHANT_NEW_CUSTOMER_RATIO`
+- `MERCHANT_REFUND_RATIO`
+- `MERCHANT_REPUTATION_SCORE`
+- `MERCHANT_TIME_PATTERN`
+- `MERCHANT_TRANSACTION_VOLUME`
+- `MERCHANT_VELOCITY_SPIKE`
+- `MICRO_DEPOSIT_VELOCITY`
+- `MICRO_TRANSACTION_TEST`
+- `MIN_AMOUNT_LAST_N_DAYS`
+- `MOD_EQ`
+- `MOD_NEQ`
+- `MULTI_LAYERED_SYNTHETIC_ID_CONTROLS`
+- `NAME_SIMILARITY_LT`
+- `NAME_TRANSLITERATION_MATCH`
+- `NAVIGATION_PATTERN_ANOMALY`
+- `NEO4J_BETWEENNESS_CENTRALITY_MULE`
+- `NEO4J_CIRCULAR_TRANSACTION_DETECTION`
+- `NEO4J_DEGREE_CENTRALITY`
+- `NEO4J_ENTITY_RESOLUTION_SHARED_PII`
+- `NEO4J_FIRST_PARTY_FRAUD_CLUSTERING`
+- `NEO4J_FRAUD_RING_DETECTION`
+- `NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION`
+- `NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD`
+- `NEO4J_LOUVAIN_COMMUNITY_DETECTION`
+- `NEO4J_MONEY_MULE_NETWORK_ANALYSIS`
+- `NEO4J_NODE_SIMILARITY_SYNTHETIC_ID`
+- `NEO4J_PAGERANK_FRAUD_SCORE`
+- `NEO4J_PAIRWISE_SIMILARITY_PII`
+- `NEO4J_SECOND_LEVEL_FRAUDSTER_ID`
+- `NEO4J_SHORTEST_PATH_AML_TRACKING`
+- `NEO4J_TEMPORAL_MOTIF_PATTERN`
+- `NEO4J_TRIANGLE_COUNT_COLLUSION`
+- `NEO4J_WEAKLY_CONNECTED_COMPONENTS`
+- `NEQ`
+- `NESTED_CORRESPONDENT_CHECK`
+- `NIGHTTIME_TRANSACTION_RATIO`
+- `NOT_BETWEEN`
+- `NOT_CONTAINS`
+- `NOT_IN`
+- `NOT_IN_CUSTOMER_HISTORY`
+- `NOT_IN_CUSTOMER_USUAL_HOURS`
+- `NOT_IN_HISTORICAL`
+- `NOT_NULL`
+- `NOT_REGEX`
+- `OFAC_LIST_CHECK`
+- `OUTFLOW_RATE_LAST_N_DAYS`
+- `PACS008_FIELD_VALIDATION`
+- `PATTERN_ESCALATION`
+- `PATTERN_ROUND_NUMBERS`
+- `PATTERN_SPLIT_TRANSACTION`
+- `PAYMENT_METHOD_SWITCH`
+- `PEER_GROUP_DEVIATION_SCORE`
+- `PEP_LIST_CHECK`
+- `PERCENTAGE_OF_FIELD`
+- `PERCENTILE_GT`
+- `PHONE_CARRIER_CHECK`
+- `PIG_BUTCHERING_INDICATOR`
+- `PIX_KEY_CHANGED_LAST_N_DAYS`
+- `PLT_BACKTESTING_LABELING`
+- `PLT_BAD_ENTITY_NETWORK`
+- `PLT_BEHAVIORAL_PROFILING`
+- `PLT_BEHAVIOR_SORTED_LISTS`
+- `PLT_BUSINESS_RULES_SCENARIO`
+- `PLT_COMPROMISE_MANAGER`
+- `PLT_CONSORTIUM_DATA_CHECK`
+- `PLT_CUSTOM_RULE_BUILDER`
+- `PLT_DS2_RULE_ENGINE`
+- `PLT_IDENTITY_RESOLUTION`
+- `PLT_INTELLIGENCE_NETWORK`
+- `PLT_LINKING_VELOCITY`
+- `PLT_ML_FRAUD_RISK_OUTCOME`
+- `PLT_NETWORK_ANALYTICS`
+- `PLT_NETWORK_ENTITY_RESOLUTION`
+- `PLT_RADAR_COMPLEX_CONDITIONS`
+- `PLT_RADAR_INLINE_LISTS`
+- `PLT_RADAR_METADATA_MATCHING`
+- `PLT_RADAR_RULE_BACKTESTING`
+- `PLT_REAL_TIME_DETECTION`
+- `PLT_REVIEWLIST_QUEUE`
+- `PLT_RISK_LIST_COMPARISON`
+- `PLT_RISK_PROFILE_ASSIGNMENT`
+- `PLT_RISK_SCORE_CALCULATION`
+- `PLT_RULES_MODELS_HYBRID`
+- `PLT_SAR_AUTOMATED`
+- `PLT_SCENARIO_SCORECARD`
+- `PLT_VELOCITY_FILTERS`
+- `PSD3_COP_NAME_MATCH`
+- `PURPOSE_CODE_MISMATCH`
+- `RAPID_MOVEMENT`
+- `RAPID_MULTI_HOP`
+- `RAPID_SUCCESSION_PATTERN`
+- `REAL_TIME_RISK_SCORING`
+- `RECIPIENT_DIVERSITY_CHANGE`
+- `REGEX`
+- `REGRESSION_RESIDUAL_OUTLIER`
+- `REMITTANCE_INFO_ANALYSIS`
+- `ROMANCE_SCAM_INDICATOR`
+- `ROUND_AMOUNT_FREQUENCY`
+- `ROUND_TRIP_DETECTION`
+- `SANCTIONS_COUNTRY_CHECK`
+- `SCA_CHALLENGE_MANDATORY`
+- `SCA_CONTACTLESS_EXEMPTION`
+- `SCA_CORPORATE_PAYMENT`
+- `SCA_DYNAMIC_3DS_ROUTING`
+- `SCA_EXEMPTION_LOW_VALUE`
+- `SCA_EXEMPTION_RECURRING`
+- `SCA_EXEMPTION_TRA`
+- `SCA_EXEMPTION_TRUSTED_BENEFICIARY`
+- `SCA_FRAUD_RATE_MONITORING`
+- `SCA_LIABILITY_SHIFT`
+- `SCA_LOW_VALUE_EXEMPTION`
+- `SCA_MERCHANT_INITIATED`
+- `SCA_RECURRING_TRANSACTION`
+- `SCA_SECURE_CORPORATE_PROTOCOL`
+- `SCA_TRA_EXEMPTION`
+- `SCA_TRUSTED_BENEFICIARY`
+- `SCREEN_RESOLUTION_CHANGE`
+- `SEGMENT_OF_ONE_PROFILING`
+- `SEQUENTIAL_AMOUNT_PATTERN`
+- `SESSION_BEHAVIOR_ANOMALY`
+- `SHARED_DEVICE_COUNT`
+- `SHARED_IP_COUNT`
+- `SHELL_BANK_INDICATOR`
+- `SHELL_COMPANY_INDICATOR`
+- `SKEWNESS_KURTOSIS_ANOMALY`
+- `SMALL_AMOUNT_VELOCITY`
+- `SPENDING_CATEGORY_SHIFT`
+- `SPLIT_PAYMENT_PATTERN`
+- `SPLIT_TRANSACTION_DETECTION`
+- `STANDARD_DEVIATION_GT`
+- `STARTS_WITH`
+- `STAT_ANOVA_F_TEST`
+- `STAT_BOOTSTRAP_CONFIDENCE_INTERVAL`
+- `STAT_DBSCAN_NOISE_DETECTION`
+- `STAT_DIXON_Q_TEST`
+- `STAT_GMM_PROBABILITY`
+- `STAT_GRUBBS_TEST`
+- `STAT_ISOLATION_FOREST_SCORE`
+- `STAT_KMEANS_CLUSTER_DISTANCE`
+- `STAT_KRUSKAL_WALLIS_TEST`
+- `STAT_LEVENE_TEST`
+- `STAT_LOCAL_OUTLIER_FACTOR`
+- `STAT_MAHALANOBIS_DISTANCE`
+- `STAT_ONE_CLASS_SVM_BOUNDARY`
+- `STAT_SHAPIRO_WILK_TEST`
+- `STAT_WELCH_T_TEST`
+- `STRUCTURED_ADDRESS_CHECK`
+- `STRUCTURING_DETECTION`
+- `SUM_BY_CHANNEL_LAST_N_DAYS`
+- `SUM_LAST_N_DAYS`
+- `SUM_LAST_N_HOURS`
+- `SYNTHETIC_FRAUD_SCORE`
+- `SYNTHETIC_IDENTITY_RING`
+- `SYNTHETIC_ID_LABEL_CORRECTION`
+- `TIMEZONE_MISMATCH`
+- `TIME_AFTER`
+- `TIME_BEFORE`
+- `TIME_BETWEEN`
+- `TIME_BETWEEN_CONSECUTIVE_TX`
+- `TIME_DEVIATION_FROM_USUAL`
+- `TIME_OF_DAY_ANOMALY`
+- `TIME_PREFERENCE_SHIFT`
+- `TIME_SINCE_LAST_LT`
+- `TOR_EXIT_NODE`
+- `TOUCH_SUPPORT_INCONSISTENCY`
+- `TRADE_BASED_ML_INDICATOR`
+- `TRANSACTION_ATTEMPT_COUNT_PER_CARD`
+- `TRANSACTION_COUNT_PER_CARD_HOUR`
+- `TRANSACTION_COUNT_PER_CUSTOMER_HOUR`
+- `TRANSACTION_COUNT_PER_DEVICE_DAY`
+- `TRANSACTION_COUNT_PER_IP_HOUR`
+- `TRANSACTION_COUNT_PER_MERCHANT_HOUR`
+- `TRANSACTION_FREQUENCY_ANOMALY`
+- `TRANSACTION_SIZE_ESCALATION`
+- `TRANSACTION_TIMING_CLUSTER`
+- `T_TEST_AMOUNT_DEVIATION`
+- `UETR_DUPLICATE_CHECK`
+- `UNIQUE_CARD_COUNT_PER_IP_HOUR`
+- `UNIQUE_MERCHANT_COUNT_PER_CARD_DAY`
+- `UNUSUAL_BUSINESS_PATTERN`
+- `VARIANCE_RATIO_TEST`
+- `VELOCITY_ACCELERATION`
+- `VELOCITY_AVG_GT`
+- `VELOCITY_AVG_LT`
+- `VELOCITY_COUNT_GT`
+- `VELOCITY_COUNT_LT`
+- `VELOCITY_CROSS_CHANNEL`
+- `VELOCITY_DISTINCT_GT`
+- `VELOCITY_DISTINCT_LT`
+- `VELOCITY_PERCENTILE`
+- `VELOCITY_RATIO_GT`
+- `VELOCITY_ROLLING_WINDOW`
+- `VELOCITY_SPIKE`
+- `VELOCITY_SUM_GT`
+- `VELOCITY_SUM_LT`
+- `VELOCITY_TREND`
+- `VPN_PROXY_DETECTION`
+- `WEBGL_FINGERPRINT_ANOMALY`
+- `WEEKEND_VS_WEEKDAY_PATTERN`
+- `WEEKLY_LIMIT_PROXIMITY`
+- `Z_SCORE_GT`
+
+---
+
+## Fontes de Verdade
+
+### Frontend (React/TypeScript)
 - **Arquivo Principal:** `client/src/lib/operators.ts`
 - **Tipos:** `client/src/lib/operatorTypes.ts`
-- **Schema:** `client/src/components/RuleFormDialog/schema.ts`
-- **Testes:** `client/src/components/RuleFormDialog/operators.test.ts`
+- **Schema de Validação:** `client/src/components/RuleFormDialog/schema.ts`
 
-### Categorias de Operadores (448 total)
-
-| Categoria | Quantidade | Exemplos |
-|-----------|------------|----------|
-| Behavioral Phase 1B | 215 | ADAPTIVE_BEHAVIORAL_ANALYTICS, DOCUMENT_FORGERY_DETECTION |
-| Velocity Phase 1 | 40 | VELOCITY_COUNT_GT, VELOCITY_SUM_LT |
-| Agregações Temporais | 34 | SUM_LAST_N_DAYS, COUNT_LAST_N_HOURS |
-| Fraude Avançada | 26 | STRUCTURING_DETECTION, BUST_OUT_PATTERN |
-| Neo4j Graph | 18 | NEO4J_FRAUD_RING_DETECTION, NEO4J_PAGERANK |
-| Merchant/MCC | 13 | MCC_HIGH_RISK, MERCHANT_VELOCITY_SPIKE |
-| Velocity Avançado | 10 | VELOCITY_CROSS_CHANNEL, VELOCITY_TREND |
-| Velocity | 8 | VELOCITY_COUNT_GT, VELOCITY_AVG_LT |
-| Synthetic ID | 8 | CPF_SSN_VALIDATION, IDENTITY_VELOCITY |
-| Regulatory | 8 | SCA_EXEMPTION_TRA, GDPR_DATA_RETENTION |
-| Graph/Network | 8 | FAN_OUT_COUNT, CIRCULAR_TRANSFER_DETECTION |
-| Behavioral | 8 | DORMANCY_REVIVAL, AMOUNT_DEVIATION_FROM_AVG |
-| AML | 8 | STRUCTURING_DETECTION, LAYERING_PATTERN |
-| Sanctions | 7 | OFAC_LIST_CHECK, PEP_LIST_CHECK |
-| Device | 7 | DEVICE_JAILBREAK_ROOTED, VPN_PROXY_DETECTION |
-| Strings | 6 | CONTAINS, STARTS_WITH, REGEX |
-| Data/Hora | 6 | DATE_BEFORE, TIME_BETWEEN |
-| Comparação entre Campos | 6 | FIELD_EQ, FIELD_GT |
-| Comparação Básica | 6 | EQ, NEQ, GT, LT, GTE, LTE |
-| Estatísticos | 5 | BENFORD_LAW_DEVIATION, Z_SCORE_GT |
-| Arrays | 5 | ARRAY_CONTAINS, ARRAY_SIZE_EQ |
-| Nulos/Booleanos | 4 | IS_NULL, NOT_NULL, IS_TRUE |
-| Geolocalização | 3 | GEO_DISTANCE_LT, GEO_IN_POLYGON |
-| Range | 2 | BETWEEN, NOT_BETWEEN |
-| Matemáticos | 2 | MOD_EQ, MOD_NEQ |
-| Listas | 2 | IN, NOT_IN |
-
----
-
-## ⚙️ BackEnd Operators (Java/Spring Boot)
-
-### Localização
-- **Entity:** `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java`
+### Backend (Java/Spring)
+- **Enum Principal:** `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java`
 - **DTO:** `backend/src/main/java/com/rulex/dto/complex/ConditionDTO.java`
 - **Evaluator:** `backend/src/main/java/com/rulex/service/complex/ComplexRuleEvaluator.java`
 
-### Enum ConditionOperator (457 valores)
-
-#### Operadores Básicos (6)
-```java
-EQ, NEQ, GT, GTE, LT, LTE
-```
-
-#### Operadores de Lista (4)
-```java
-IN, NOT_IN, BETWEEN, NOT_BETWEEN
-```
-
-#### Operadores de String (6)
-```java
-CONTAINS, NOT_CONTAINS, STARTS_WITH, ENDS_WITH, REGEX, NOT_REGEX
-```
-
-#### Operadores Nulos/Booleanos (4)
-```java
-IS_NULL, NOT_NULL, IS_TRUE, IS_FALSE
-```
-
-#### Operadores de Campo (6)
-```java
-FIELD_EQ, FIELD_NEQ, FIELD_GT, FIELD_GTE, FIELD_LT, FIELD_LTE
-```
-
-#### Operadores de Data/Hora (6)
-```java
-DATE_BEFORE, DATE_AFTER, DATE_BETWEEN, TIME_BEFORE, TIME_AFTER, TIME_BETWEEN
-```
-
-#### Operadores de Array (5)
-```java
-ARRAY_CONTAINS, ARRAY_NOT_CONTAINS, ARRAY_SIZE_EQ, ARRAY_SIZE_GT, ARRAY_SIZE_LT
-```
-
-#### Operadores Geográficos (3)
-```java
-GEO_DISTANCE_LT, GEO_DISTANCE_GT, GEO_IN_POLYGON
-```
-
-#### Operadores de Velocity (17)
-```java
-VELOCITY_COUNT_GT, VELOCITY_COUNT_LT, VELOCITY_SUM_GT, VELOCITY_SUM_LT,
-VELOCITY_AVG_GT, VELOCITY_AVG_LT, VELOCITY_DISTINCT_GT, VELOCITY_DISTINCT_LT,
-VELOCITY_SPIKE, VELOCITY_TREND, VELOCITY_ACCELERATION, VELOCITY_CROSS_CHANNEL,
-VELOCITY_PERCENTILE, VELOCITY_RATIO_GT, VELOCITY_ROLLING_WINDOW
-```
-
-#### Operadores Neo4j (18)
-```java
-NEO4J_WEAKLY_CONNECTED_COMPONENTS, NEO4J_DEGREE_CENTRALITY,
-NEO4J_PAGERANK_FRAUD_SCORE, NEO4J_LOUVAIN_COMMUNITY_DETECTION,
-NEO4J_PAIRWISE_SIMILARITY_PII, NEO4J_ENTITY_RESOLUTION_SHARED_PII,
-NEO4J_FRAUD_RING_DETECTION, NEO4J_MONEY_MULE_NETWORK_ANALYSIS,
-NEO4J_CIRCULAR_TRANSACTION_DETECTION, NEO4J_FIRST_PARTY_FRAUD_CLUSTERING,
-NEO4J_SECOND_LEVEL_FRAUDSTER_ID, NEO4J_BETWEENNESS_CENTRALITY_MULE,
-NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD, NEO4J_SHORTEST_PATH_AML_TRACKING,
-NEO4J_TRIANGLE_COUNT_COLLUSION, NEO4J_NODE_SIMILARITY_SYNTHETIC_ID,
-NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION, NEO4J_TEMPORAL_MOTIF_PATTERN
-```
-
-#### Operadores FATF (28)
-```java
-FATF_RECOMMENDATION_1, FATF_RECOMMENDATION_2, ... FATF_RECOMMENDATION_28
-```
-
-#### Operadores PLT (28)
-```java
-PLT_RULE_001, PLT_RULE_002, ... PLT_RULE_028
-```
-
-#### Operadores BSL (14)
-```java
-BSL_BUCKET_CLASSIFICATION, BSL_BUSINESS_INDICATOR, BSL_CONTROL_DEFICIENCY, ...
-```
-
----
-
-## 🗄️ PostgreSQL Operators
-
-### Localização
+### PostgreSQL
 - **Migration Principal:** `backend/src/main/resources/db/migration/V34__add_v31_plus_operators.sql`
-- **Migrations Anteriores:**
-  - `V15__add_velocity_operators.sql`
-  - `V28__add_missing_condition_operators.sql`
-  - `V32__add_missing_tables_for_operators.sql`
+- **Schema:** `backend/src/main/resources/db/migration/V8__complex_rules_support.sql`
 
-### Enum `condition_operator` (448 valores)
-
-O enum PostgreSQL `condition_operator` contém todos os operadores definidos via:
-```sql
-ALTER TYPE condition_operator ADD VALUE IF NOT EXISTS 'OPERATOR_NAME';
-```
-
----
-
-## 🔴 Redis Operators (Velocity)
-
-### Localização
-- **Service Principal:** `backend/src/main/java/com/rulex/service/RedisVelocityService.java`
+### Redis
+- **Velocity Service:** `backend/src/main/java/com/rulex/service/RedisVelocityService.java`
 - **Cache Service:** `backend/src/main/java/com/rulex/service/RedisVelocityCacheService.java`
-- **Facade:** `backend/src/main/java/com/rulex/service/VelocityServiceFacade.java`
 
-### Operadores Suportados (17)
-
-| Operador | Descrição | Janelas Temporais |
-|----------|-----------|-------------------|
-| VELOCITY_COUNT_GT | Contagem maior que | 5min, 15min, 30min, 1h, 6h, 12h, 24h, 7d, 30d |
-| VELOCITY_COUNT_LT | Contagem menor que | 5min, 15min, 30min, 1h, 6h, 12h, 24h, 7d, 30d |
-| VELOCITY_SUM_GT | Soma maior que | 5min, 15min, 30min, 1h, 6h, 12h, 24h, 7d, 30d |
-| VELOCITY_SUM_LT | Soma menor que | 5min, 15min, 30min, 1h, 6h, 12h, 24h, 7d, 30d |
-| VELOCITY_AVG_GT | Média maior que | 5min, 15min, 30min, 1h, 6h, 12h, 24h, 7d, 30d |
-| VELOCITY_AVG_LT | Média menor que | 5min, 15min, 30min, 1h, 6h, 12h, 24h, 7d, 30d |
-| VELOCITY_DISTINCT_GT | Distintos maior que | 5min, 15min, 30min, 1h, 6h, 12h, 24h, 7d, 30d |
-| VELOCITY_DISTINCT_LT | Distintos menor que | 5min, 15min, 30min, 1h, 6h, 12h, 24h, 7d, 30d |
-| VELOCITY_SPIKE | Pico de velocidade | Comparação entre janelas |
-| VELOCITY_TREND | Tendência | Análise temporal |
-| VELOCITY_ACCELERATION | Aceleração | Derivada da velocidade |
-| VELOCITY_CROSS_CHANNEL | Cross-channel | Múltiplos canais |
-| VELOCITY_PERCENTILE | Percentil | Distribuição estatística |
-| VELOCITY_RATIO_GT | Ratio maior que | Comparação de ratios |
-| VELOCITY_ROLLING_WINDOW | Janela deslizante | Sliding window |
-
-### Estruturas de Dados Redis
-
-```
-operators:velocity:{keyType}:{windowMinutes} -> SortedSet
-operators:velocity:distinct:{keyType}:{windowMinutes} -> HyperLogLog
-operators:velocity:sum:{keyType}:{windowMinutes} -> String (BigDecimal)
-```
+### Neo4j
+- **Graph Service:** `backend/src/main/java/com/rulex/service/Neo4jGraphService.java`
 
 ---
 
-## 🔵 Neo4j Operators (Graph)
-
-### Localização
-- **Service:** `backend/src/main/java/com/rulex/service/Neo4jGraphService.java`
-- **Evaluator:** `backend/src/main/java/com/rulex/service/complex/ComplexRuleEvaluator.java`
-
-### Operadores Implementados (18)
-
-| Operador | Código | Descrição | Algoritmo |
-|----------|--------|-----------|-----------|
-| NEO4J_WEAKLY_CONNECTED_COMPONENTS | NEO001 | Componentes conectados | WCC |
-| NEO4J_DEGREE_CENTRALITY | NEO002 | Centralidade de grau | Degree |
-| NEO4J_PAGERANK_FRAUD_SCORE | NEO003 | Score PageRank | PageRank |
-| NEO4J_LOUVAIN_COMMUNITY_DETECTION | NEO004 | Detecção de comunidade | Louvain |
-| NEO4J_PAIRWISE_SIMILARITY_PII | NEO005 | Similaridade PII | Jaccard |
-| NEO4J_ENTITY_RESOLUTION_SHARED_PII | NEO006 | Resolução de entidade | Entity Resolution |
-| NEO4J_FRAUD_RING_DETECTION | NEO007 | Detecção de anel | Cycle Detection |
-| NEO4J_MONEY_MULE_NETWORK_ANALYSIS | NEO008 | Análise money mule | Network Analysis |
-| NEO4J_CIRCULAR_TRANSACTION_DETECTION | NEO009 | Transação circular | Cycle Detection |
-| NEO4J_FIRST_PARTY_FRAUD_CLUSTERING | NEO010 | Clustering 1ª parte | Clustering |
-| NEO4J_SECOND_LEVEL_FRAUDSTER_ID | NEO011 | Fraudador 2º nível | BFS |
-| NEO4J_BETWEENNESS_CENTRALITY_MULE | NEO012 | Centralidade intermediação | Betweenness |
-| NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD | NEO013 | Propagação de label | Label Propagation |
-| NEO4J_SHORTEST_PATH_AML_TRACKING | NEO014 | Caminho mais curto | Dijkstra |
-| NEO4J_TRIANGLE_COUNT_COLLUSION | NEO015 | Contagem triângulos | Triangle Count |
-| NEO4J_NODE_SIMILARITY_SYNTHETIC_ID | NEO016 | Similaridade de nó | Node Similarity |
-| NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION | NEO017 | Embedding de grafo | Graph Embedding |
-| NEO4J_TEMPORAL_MOTIF_PATTERN | NEO018 | Padrão temporal | Motif Detection |
-
-### Modelo de Grafo Neo4j
-
-```cypher
-// Nós
-(:Account {id, customerId, type, createdAt})
-(:Transaction {id, amount, timestamp, channel})
-(:Device {id, fingerprint, type})
-(:IP {address, country, isVPN})
-
-// Relacionamentos
-(a:Account)-[:TRANSFERRED_TO {amount, timestamp}]->(b:Account)
-(a:Account)-[:USES_DEVICE]->(d:Device)
-(a:Account)-[:CONNECTS_FROM]->(ip:IP)
-(t:Transaction)-[:FROM]->(a:Account)
-(t:Transaction)-[:TO]->(b:Account)
-```
-
----
-
-## 📁 Arquivos de Referência
-
-| Camada | Arquivo | Linhas | Operadores |
-|--------|---------|--------|------------|
-| FrontEnd | operators.ts | ~1500 | 448 |
-| FrontEnd | operatorTypes.ts | ~500 | 448 |
-| FrontEnd | schema.ts | ~800 | 448 |
-| BackEnd | RuleCondition.java | ~1200 | 457 |
-| BackEnd | ConditionDTO.java | ~1000 | 457 |
-| BackEnd | ComplexRuleEvaluator.java | ~3500 | 520 cases |
-| PostgreSQL | V34__add_v31_plus_operators.sql | ~500 | 448 |
-| Redis | RedisVelocityService.java | ~600 | 17 |
-| Neo4j | Neo4jGraphService.java | ~500 | 18 |
-
----
-
-## 🔗 Referências
-
-- [RuleCondition.java](../backend/src/main/java/com/rulex/entity/complex/RuleCondition.java)
-- [operators.ts](../client/src/lib/operators.ts)
-- [Neo4jGraphService.java](../backend/src/main/java/com/rulex/service/Neo4jGraphService.java)
-- [RedisVelocityService.java](../backend/src/main/java/com/rulex/service/RedisVelocityService.java)
+*Documento gerado automaticamente pela auditoria de conformidade RULEX*
