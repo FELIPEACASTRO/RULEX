@@ -1,4 +1,4 @@
-// Auto-generated from RuleCondition.java - 447 operators
+// Auto-generated from RuleCondition.java - 465 operators (including 18 Neo4j)
 // DO NOT EDIT MANUALLY - Run generate_operators.py to update
 
 export interface OperatorDefinition {
@@ -146,6 +146,25 @@ export const OPERATORS: OperatorDefinition[] = [
   { value: 'CIRCULAR_TRANSFER_DETECTION', label: 'Circular Transfer Detection', description: 'Operador Circular Transfer Detection', requiresValue: true, category: 'Graph/Network' },
   { value: 'RAPID_MULTI_HOP', label: 'Rapid Multi Hop', description: 'Operador Rapid Multi Hop', requiresValue: true, category: 'Graph/Network' },
   { value: 'BENEFICIARY_CONCENTRATION', label: 'Beneficiary Concentration', description: 'Operador Beneficiary Concentration', requiresValue: true, category: 'Graph/Network' },
+  // Neo4j Graph Operators (18)
+  { value: 'NEO4J_WEAKLY_CONNECTED_COMPONENTS', label: 'Neo4j WCC', description: 'Componentes fracamente conectados (WCC) - detecta clusters de contas relacionadas', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_DEGREE_CENTRALITY', label: 'Neo4j Degree Centrality', description: 'Centralidade de grau - identifica nós com muitas conexões', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_PAGERANK_FRAUD_SCORE', label: 'Neo4j PageRank Fraud', description: 'Score de fraude via PageRank - identifica nós influentes na rede', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_LOUVAIN_COMMUNITY_DETECTION', label: 'Neo4j Louvain Community', description: 'Detecção de comunidade Louvain - agrupa contas em comunidades', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_PAIRWISE_SIMILARITY_PII', label: 'Neo4j Pairwise Similarity', description: 'Similaridade de PII entre pares de entidades', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_ENTITY_RESOLUTION_SHARED_PII', label: 'Neo4j Entity Resolution', description: 'Resolução de entidade por PII compartilhado', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_FRAUD_RING_DETECTION', label: 'Neo4j Fraud Ring', description: 'Detecção de anel de fraude - identifica grupos coordenados', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_MONEY_MULE_NETWORK_ANALYSIS', label: 'Neo4j Money Mule Network', description: 'Análise de rede de money mules', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_CIRCULAR_TRANSACTION_DETECTION', label: 'Neo4j Circular Transaction', description: 'Detecção de transação circular no grafo', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_FIRST_PARTY_FRAUD_CLUSTERING', label: 'Neo4j First Party Fraud', description: 'Clustering de fraude de primeira parte', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_SECOND_LEVEL_FRAUDSTER_ID', label: 'Neo4j Second Level Fraudster', description: 'Identificação de fraudador de segundo nível', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_BETWEENNESS_CENTRALITY_MULE', label: 'Neo4j Betweenness Centrality', description: 'Centralidade de intermediação para detectar mules', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD', label: 'Neo4j Label Propagation', description: 'Propagação de label de fraude na rede', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_SHORTEST_PATH_AML_TRACKING', label: 'Neo4j Shortest Path AML', description: 'Rastreamento AML via caminho mais curto', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_TRIANGLE_COUNT_COLLUSION', label: 'Neo4j Triangle Count', description: 'Contagem de triângulos para detectar colusão', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_NODE_SIMILARITY_SYNTHETIC_ID', label: 'Neo4j Node Similarity', description: 'Similaridade de nó para detectar ID sintético', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION', label: 'Neo4j Graph Embedding', description: 'Predição de fraude via embedding de grafo', requiresValue: true, category: 'Neo4j Graph' },
+  { value: 'NEO4J_TEMPORAL_MOTIF_PATTERN', label: 'Neo4j Temporal Motif', description: 'Padrão de motif temporal no grafo', requiresValue: true, category: 'Neo4j Graph' },
   { value: 'OFAC_LIST_CHECK', label: 'Ofac List Check', description: 'Operador Ofac List Check', requiresValue: true, category: 'Sanctions' },
   { value: 'PEP_LIST_CHECK', label: 'Pep List Check', description: 'Operador Pep List Check', requiresValue: true, category: 'Sanctions' },
   { value: 'ADVERSE_MEDIA_CHECK', label: 'Adverse Media Check', description: 'Operador Adverse Media Check', requiresValue: true, category: 'Sanctions' },
@@ -459,4 +478,4 @@ export const OPERATORS: OperatorDefinition[] = [
   { value: 'PIG_BUTCHERING_INDICATOR', label: 'Pig Butchering Indicator', description: 'Indicador de pig butchering scam', requiresValue: true, category: 'Behavioral Phase 1B' },
 ];
 
-export const OPERATOR_COUNT = 447;
+export const OPERATOR_COUNT = 465;
