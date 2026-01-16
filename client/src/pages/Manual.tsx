@@ -10,7 +10,23 @@
  * - Dados 100% reais do código fonte
  */
 import { useMemo, useState } from "react";
-import { Search, BookOpen, Workflow, Database, FileCode, Calculator, Zap, Target, HelpCircle, BookText } from "lucide-react";
+import { 
+  Search, 
+  BookOpen, 
+  Workflow, 
+  Database, 
+  FileCode, 
+  Calculator, 
+  Zap, 
+  Target, 
+  HelpCircle, 
+  BookText,
+  Layers,
+  FunctionSquare,
+  Play,
+  Globe,
+  TestTube2
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,6 +60,16 @@ import {
 import { OperatorCatalog } from "@/manual/OperatorCatalog";
 import { FieldDictionary } from "@/manual/FieldDictionary";
 import { TemplatesGallery } from "@/manual/TemplatesGallery";
+
+// New manual components from generated data
+import { 
+  ActionsCatalog, 
+  FunctionsCatalog, 
+  ApiCatalog, 
+  DbCatalog, 
+  SystemMap, 
+  QaAndE2EGuide 
+} from "@/manual";
 
 // ============================================================================
 // TAB: VISÃO GERAL
@@ -888,6 +914,10 @@ export default function Manual() {
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Visão Geral</span>
           </TabsTrigger>
+          <TabsTrigger value="mapa" className="gap-2">
+            <Layers className="h-4 w-4" />
+            <span className="hidden sm:inline">Mapa</span>
+          </TabsTrigger>
           <TabsTrigger value="fluxo" className="gap-2">
             <Workflow className="h-4 w-4" />
             <span className="hidden sm:inline">Fluxo</span>
@@ -904,13 +934,33 @@ export default function Manual() {
             <Calculator className="h-4 w-4" />
             <span className="hidden sm:inline">Operadores</span>
           </TabsTrigger>
+          <TabsTrigger value="funcoes" className="gap-2">
+            <FunctionSquare className="h-4 w-4" />
+            <span className="hidden sm:inline">Funções</span>
+          </TabsTrigger>
+          <TabsTrigger value="acoes" className="gap-2">
+            <Play className="h-4 w-4" />
+            <span className="hidden sm:inline">Ações</span>
+          </TabsTrigger>
           <TabsTrigger value="operacoes" className="gap-2">
             <Zap className="h-4 w-4" />
             <span className="hidden sm:inline">Operações</span>
           </TabsTrigger>
+          <TabsTrigger value="api" className="gap-2">
+            <Globe className="h-4 w-4" />
+            <span className="hidden sm:inline">API</span>
+          </TabsTrigger>
+          <TabsTrigger value="banco" className="gap-2">
+            <Database className="h-4 w-4" />
+            <span className="hidden sm:inline">Banco</span>
+          </TabsTrigger>
           <TabsTrigger value="exemplos" className="gap-2">
             <Target className="h-4 w-4" />
             <span className="hidden sm:inline">Exemplos</span>
+          </TabsTrigger>
+          <TabsTrigger value="qa" className="gap-2">
+            <TestTube2 className="h-4 w-4" />
+            <span className="hidden sm:inline">QA/E2E</span>
           </TabsTrigger>
           <TabsTrigger value="faq" className="gap-2">
             <HelpCircle className="h-4 w-4" />
@@ -924,6 +974,10 @@ export default function Manual() {
 
         <TabsContent value="visao-geral">
           <OverviewTab />
+        </TabsContent>
+
+        <TabsContent value="mapa">
+          <SystemMap />
         </TabsContent>
 
         <TabsContent value="fluxo">
@@ -942,12 +996,32 @@ export default function Manual() {
           <OperatorCatalog />
         </TabsContent>
 
+        <TabsContent value="funcoes">
+          <FunctionsCatalog />
+        </TabsContent>
+
+        <TabsContent value="acoes">
+          <ActionsCatalog />
+        </TabsContent>
+
         <TabsContent value="operacoes">
           <OperationsTab />
         </TabsContent>
 
+        <TabsContent value="api">
+          <ApiCatalog />
+        </TabsContent>
+
+        <TabsContent value="banco">
+          <DbCatalog />
+        </TabsContent>
+
         <TabsContent value="exemplos">
           <ActionsTab />
+        </TabsContent>
+
+        <TabsContent value="qa">
+          <QaAndE2EGuide />
         </TabsContent>
 
         <TabsContent value="faq">
