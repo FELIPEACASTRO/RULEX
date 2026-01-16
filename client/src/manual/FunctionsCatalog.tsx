@@ -181,7 +181,7 @@ export function FunctionsCatalog() {
                     </TableHeader>
                     <TableBody>
                       {groupedFunctions[cat].map((fn) => (
-                        <TableRow key={fn.name}>
+                        <TableRow key={fn.name} id={`manual-function-${fn.name}`}>
                           <TableCell>
                             <code className="font-mono font-semibold">{fn.name}</code>
                             {isInAllowlist(fn.name) && (
@@ -221,7 +221,7 @@ export function FunctionsCatalog() {
           <CardContent>
             <Accordion type="multiple" className="w-full">
               {filteredFunctions.map((fn) => (
-                <AccordionItem key={fn.name} value={fn.name}>
+                <AccordionItem key={fn.name} value={fn.name} id={`manual-function-${fn.name}`}>
                   <AccordionTrigger className="hover:no-underline">
                     <div className="flex items-center gap-3 text-left">
                       <code className="font-mono font-semibold">{fn.name}</code>

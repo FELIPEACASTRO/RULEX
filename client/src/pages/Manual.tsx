@@ -77,6 +77,13 @@ import {
   RULES_LIBRARY_STATS,
 } from "@/manual";
 
+import {
+  BACKEND_ACTIONS,
+  EXPRESSION_FUNCTIONS,
+  API_ENDPOINTS,
+} from "@/manual/generated";
+import { RULES_LIBRARY } from "@/manual/RulesLibrary";
+
 // ============================================================================
 // TAB: VISÃO GERAL
 // ============================================================================
@@ -629,8 +636,12 @@ function OperationsTab() {
 // ============================================================================
 function ActionsTab({ highlightTemplateId }: { highlightTemplateId?: string }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <TemplatesGallery highlightTemplateId={highlightTemplateId} />
+
+      <div className="border-t pt-6" />
+
+      <RulesLibrary />
     </div>
   );
 }
@@ -785,10 +796,38 @@ function GlossaryTab() {
 // BUSCA GLOBAL
 // ============================================================================
 interface GlobalSearchResult {
-  type: "operator" | "field" | "template";
+  type:
+    | "operator"
+    | "field"
+    | "template"
+    | "action"
+    | "function"
+    | "endpoint"
+    | "example";
   value: string;
   label: string;
   description?: string;
+}
+
+function endpointAnchorId(method: string, path: string) {
+  const slug = path
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `manual-endpoint-${method}-${slug}`;
+}
+
+function flashSearchHighlight(el: HTMLElement) {
+  const classes = [
+    "outline",
+    "outline-2",
+    "outline-primary",
+    "outline-offset-2",
+  ];
+  el.classList.add(...classes);
+  window.setTimeout(() => {
+    el.classList.remove(...classes);
+  }, 2000);
 }
 
 function GlobalSearch({
@@ -842,7 +881,59 @@ function GlobalSearch({
       }
     });
 
-    return matches.slice(0, 20); // Limitar resultados
+    // Buscar em ações
+    BACKEND_ACTIONS.forEach((a) => {
+      const hay = `${a.name} ${a.description || ""}`.toLowerCase();
+      if (hay.includes(q)) {
+        matches.push({
+          type: "action",
+          value: a.name,
+          label: a.name,
+          description: a.description,
+        });
+      }
+    });
+
+    // Buscar em funções
+    EXPRESSION_FUNCTIONS.forEach((fn) => {
+      const hay = `${fn.name} ${fn.alias || ""} ${fn.description || ""} ${fn.example || ""}`.toLowerCase();
+      if (hay.includes(q)) {
+        matches.push({
+          type: "function",
+          value: fn.name,
+          label: fn.alias ? `${fn.name} (alias: ${fn.alias})` : fn.name,
+          description: fn.description,
+        });
+      }
+    });
+
+    // Buscar em endpoints
+    API_ENDPOINTS.forEach((ep) => {
+      const hay = `${ep.method} ${ep.path} ${ep.summary || ""} ${ep.operationId || ""}`.toLowerCase();
+      if (hay.includes(q)) {
+        matches.push({
+          type: "endpoint",
+          value: `${ep.method} ${ep.path}`,
+          label: ep.summary || ep.operationId || ep.path,
+          description: ep.operationId || undefined,
+        });
+      }
+    });
+
+    // Buscar em exemplos (biblioteca)
+    RULES_LIBRARY.forEach((rule) => {
+      const hay = `${rule.id} ${rule.name} ${rule.tags.join(" ")} ${rule.narrativa.situacao}`.toLowerCase();
+      if (hay.includes(q)) {
+        matches.push({
+          type: "example",
+          value: rule.id,
+          label: rule.name,
+          description: `${rule.complexity} / ${rule.category}`,
+        });
+      }
+    });
+
+    return matches.slice(0, 30); // Limitar resultados
   }, [query]);
 
   return (
@@ -850,7 +941,7 @@ function GlobalSearch({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar operadores, campos, templates..."
+          placeholder="Buscar operadores, campos, templates, ações, funções, endpoints, exemplos..."
           className="pl-10"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -884,6 +975,12 @@ function GlobalSearch({
                       ? "default"
                       : r.type === "field"
                       ? "secondary"
+                      : r.type === "template"
+                      ? "outline"
+                      : r.type === "action"
+                      ? "default"
+                      : r.type === "function"
+                      ? "secondary"
                       : "outline"
                   }
                   className="text-xs shrink-0"
@@ -891,6 +988,10 @@ function GlobalSearch({
                   {r.type === "operator" && "Operador"}
                   {r.type === "field" && "Campo"}
                   {r.type === "template" && "Template"}
+                  {r.type === "action" && "Ação"}
+                  {r.type === "function" && "Função"}
+                  {r.type === "endpoint" && "Endpoint"}
+                  {r.type === "example" && "Exemplo"}
                 </Badge>
                 <div className="min-w-0">
                   <p className="font-mono text-sm truncate">{r.value}</p>
@@ -927,6 +1028,14 @@ export default function Manual() {
         ? "operadores"
         : r.type === "field"
         ? "payload"
+        : r.type === "template"
+        ? "exemplos"
+        : r.type === "action"
+        ? "acoes"
+        : r.type === "function"
+        ? "funcoes"
+        : r.type === "endpoint"
+        ? "api"
         : "exemplos";
 
     const anchorId =
@@ -934,7 +1043,19 @@ export default function Manual() {
         ? `manual-operator-${r.value}`
         : r.type === "field"
         ? `manual-field-${r.value}`
-        : `manual-template-${r.value}`;
+        : r.type === "template"
+        ? `manual-template-${r.value}`
+        : r.type === "action"
+        ? `manual-action-${r.value}`
+        : r.type === "function"
+        ? `manual-function-${r.value}`
+        : r.type === "endpoint"
+        ? (() => {
+            const [method, ...rest] = r.value.split(" ");
+            const path = rest.join(" ");
+            return endpointAnchorId(method, path);
+          })()
+        : `manual-example-${r.value}`;
 
     setActiveTab(tab);
     setHighlight(r);
@@ -942,8 +1063,11 @@ export default function Manual() {
     // Tentar rolar após a troca de aba/render.
     const tryScroll = (attempt = 0) => {
       const el = document.getElementById(anchorId);
-      if (el?.scrollIntoView) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (el) {
+        if ("scrollIntoView" in el && typeof (el as any).scrollIntoView === "function") {
+          (el as any).scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        if (el instanceof HTMLElement) flashSearchHighlight(el);
         return;
       }
       if (attempt < 4) {
@@ -963,7 +1087,7 @@ export default function Manual() {
           </h1>
           <p className="text-muted-foreground">
             Guia completo do sistema de detecção de fraude - {MANUAL_STATS.totalOperators} operadores,{" "}
-            {MANUAL_STATS.totalFields} campos, {RULES_LIBRARY_STATS.total} regras de exemplo
+            {MANUAL_STATS.totalFields} campos, {MANUAL_STATS.totalTemplates} templates, {RULES_LIBRARY_STATS.total} regras de exemplo
           </p>
         </div>
         <div className="w-full md:w-[400px]">
@@ -1029,10 +1153,6 @@ export default function Manual() {
           <TabsTrigger value="exemplos" className="gap-2">
             <Target className="h-4 w-4" />
             <span className="hidden sm:inline">Exemplos</span>
-          </TabsTrigger>
-          <TabsTrigger value="biblioteca" className="gap-2">
-            <BookOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">Biblioteca</span>
           </TabsTrigger>
           <TabsTrigger value="qa" className="gap-2">
             <TestTube2 className="h-4 w-4" />
@@ -1112,10 +1232,6 @@ export default function Manual() {
               highlight?.type === "template" ? highlight.value : undefined
             }
           />
-        </TabsContent>
-
-        <TabsContent value="biblioteca">
-          <RulesLibrary />
         </TabsContent>
 
         <TabsContent value="qa">

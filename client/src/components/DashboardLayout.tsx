@@ -55,7 +55,7 @@ const menuSections = [
     icon: Shield,
     items: [
       { icon: Layers, label: "Regras de Fraude", path: "/rules" },
-      { icon: BookOpen, label: "Manual", path: "/manual" },
+      { icon: BookOpen, label: "Manual do RULEX", path: "/manual" },
       { icon: FileText, label: "Auditoria", path: "/audit" },
       { icon: Settings, label: "Configurações", path: "/settings" },
     ],

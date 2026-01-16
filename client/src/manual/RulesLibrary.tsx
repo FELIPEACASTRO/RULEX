@@ -3633,7 +3633,10 @@ export function RulesLibrary() {
                   {rulesInGroup.map((rule) => (
                     <Dialog key={rule.id}>
                       <DialogTrigger asChild>
-                        <Card className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary">
+                        <Card
+                          id={`manual-example-${rule.id}`}
+                          className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary"
+                        >
                           <CardHeader className="pb-2">
                             <div className="flex items-center justify-between">
                               <Badge variant="outline">{rule.id}</Badge>

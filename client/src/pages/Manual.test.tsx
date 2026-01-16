@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 
 import React from "react";
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -73,6 +73,9 @@ describe("Manual", () => {
     // Deve mostrar a galeria de templates
     expect(screen.getByText(/templates de regras/i)).toBeInTheDocument();
     expect(screen.getAllByText(String(MANUAL_STATS.totalTemplates)).length).toBeGreaterThan(0);
+
+    // E também a biblioteca de regras (agora dentro de Exemplos)
+    expect(screen.getByText(/biblioteca de regras de exemplo/i)).toBeInTheDocument();
   });
 
   it("navega para tab FAQ e exibe perguntas", async () => {
@@ -108,11 +111,48 @@ describe("Manual", () => {
     render(<Manual />);
 
     // Digitar na busca global
-    const searchInput = screen.getByPlaceholderText(/buscar operadores, campos, templates/i);
+    const searchInput = screen.getByPlaceholderText(
+      /buscar operadores, campos, templates, ações, funções, endpoints, exemplos/i
+    );
     await user.type(searchInput, "CONTAINS");
 
     // Deve mostrar resultados (pode haver múltiplos, então usamos getAllByText)
     expect(screen.getAllByText("Operador").length).toBeGreaterThan(0);
+  });
+
+  it("tem exatamente 17 abas principais (sem aba extra)", () => {
+    render(<Manual />);
+    const tablist = screen.getByRole("tablist");
+    const tabs = within(tablist).getAllByRole("tab");
+    expect(tabs).toHaveLength(17);
+
+    // Confirma que a antiga aba top-level “Biblioteca” não existe
+    expect(within(tablist).queryByRole("tab", { name: /biblioteca/i })).not.toBeInTheDocument();
+  });
+
+  it("busca global encontra ações, funções, endpoints e exemplos", async () => {
+    const user = userEvent.setup();
+    render(<Manual />);
+
+    const searchInput = screen.getByPlaceholderText(
+      /buscar operadores, campos, templates, ações, funções, endpoints, exemplos/i
+    );
+
+    await user.clear(searchInput);
+    await user.type(searchInput, "SET_DECISION");
+    expect(screen.getAllByText("Ação").length).toBeGreaterThan(0);
+
+    await user.clear(searchInput);
+    await user.type(searchInput, "ROUND");
+    expect(screen.getAllByText("Função").length).toBeGreaterThan(0);
+
+    await user.clear(searchInput);
+    await user.type(searchInput, "metrics/timeline");
+    expect(screen.getAllByText("Endpoint").length).toBeGreaterThan(0);
+
+    await user.clear(searchInput);
+    await user.type(searchInput, "S01");
+    expect(screen.getAllByText("Exemplo").length).toBeGreaterThan(0);
   });
 
   it("inclui as tabs obrigatórias: Infra/Runbook e Regras Complexas", () => {
@@ -127,7 +167,9 @@ describe("Manual", () => {
       const user = userEvent.setup();
     render(<Manual />);
 
-    const searchInput = screen.getByPlaceholderText(/buscar operadores, campos, templates/i);
+    const searchInput = screen.getByPlaceholderText(
+      /buscar operadores, campos, templates, ações, funções, endpoints, exemplos/i
+    );
     await user.type(searchInput, "EQ");
 
     const eqValue = await screen.findByText(/^EQ$/);
@@ -151,6 +193,89 @@ describe("Manual", () => {
     const row = document.getElementById("manual-operator-EQ");
     expect(row).toBeTruthy();
     expect(row?.className ?? "").not.toContain("ring-2");
+    },
+    10000
+  );
+
+  it(
+    "busca global navega para API e destaca endpoint por ~2s",
+    async () => {
+      const user = userEvent.setup();
+      render(<Manual />);
+
+      const searchInput = screen.getByPlaceholderText(
+        /buscar operadores, campos, templates, ações, funções, endpoints, exemplos/i
+      );
+
+      await user.type(searchInput, "metrics/timeline");
+
+      const valueEl = await screen.findByText(/^GET\s+\/api\/metrics\/timeline$/i);
+      const result = valueEl.closest('[role="button"]');
+      expect(result).toBeTruthy();
+      await user.click(result as HTMLElement);
+
+      await screen.findByText(/catálogo de api rest/i);
+
+      const path = "/api/metrics/timeline";
+      const slug = path
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      const anchorId = `manual-endpoint-GET-${slug}`;
+
+      await waitFor(
+        () => {
+          const row = document.getElementById(anchorId);
+          expect(row).toBeTruthy();
+          expect(row?.className ?? "").toContain("outline-2");
+        },
+        { timeout: 2000 }
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 2300));
+
+      const row = document.getElementById(anchorId);
+      expect(row).toBeTruthy();
+      expect(row?.className ?? "").not.toContain("outline-2");
+    },
+    10000
+  );
+
+  it(
+    "busca global navega para Exemplos e destaca regra por ~2s",
+    async () => {
+      const user = userEvent.setup();
+      render(<Manual />);
+
+      const searchInput = screen.getByPlaceholderText(
+        /buscar operadores, campos, templates, ações, funções, endpoints, exemplos/i
+      );
+
+      await user.type(searchInput, "S01");
+
+      const valueEl = await screen.findByText(/^S01$/);
+      const result = valueEl.closest('[role="button"]');
+      expect(result).toBeTruthy();
+      await user.click(result as HTMLElement);
+
+      await screen.findByText(/biblioteca de regras de exemplo/i);
+
+      const anchorId = "manual-example-S01";
+
+      await waitFor(
+        () => {
+          const card = document.getElementById(anchorId);
+          expect(card).toBeTruthy();
+          expect(card?.className ?? "").toContain("outline-2");
+        },
+        { timeout: 2000 }
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 2300));
+
+      const card = document.getElementById(anchorId);
+      expect(card).toBeTruthy();
+      expect(card?.className ?? "").not.toContain("outline-2");
     },
     10000
   );

@@ -37,6 +37,11 @@ import {
 } from "@/lib/operatorNullBehavior";
 
 // ============================================================================
+// DADOS GERADOS PELO SCRIPT (backend derivado)
+// ============================================================================
+import { BACKEND_TEMPLATES } from "./generated";
+
+// ============================================================================
 // TIPOS DO COMPLEXRULEBUILDER
 // ============================================================================
 import {
@@ -630,144 +635,134 @@ export interface ManualTemplate {
   explanation: DidacticExplanation;
 }
 
-export const MANUAL_TEMPLATES: ManualTemplate[] = [
-  {
-    id: "high-amount",
-    name: "Transação de Alto Valor",
-    description: "Detecta transações acima de R$10.000",
-    category: "Valor",
-    icon: "💰",
-    conditions: ["transactionAmount > 10000"],
-    explanation: {
-      oQueFaz: "Alerta quando uma transação excede um valor considerado alto.",
-      porQueImportante:
-        "Transações de alto valor são mais atrativas para fraudadores e merecem atenção especial.",
-      exemploReal:
-        "Compra de R$15.000 em eletrônicos às 3h da manhã de um cartão que normalmente gasta R$500/mês.",
-      analogia:
-        "É como o segurança da loja ficar mais atento quando alguém entra e pede o produto mais caro.",
-      icone: "💰",
-    },
-  },
-  {
-    id: "foreign-country",
-    name: "País Estrangeiro",
-    description: "Detecta transações em países diferentes do cartão",
-    category: "Geolocalização",
+function toKebabId(input: string) {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function formatTemplateValue(value: unknown): string {
+  if (value === null) return "NULL";
+  if (Array.isArray(value)) return `[${value.map((v) => String(v)).join(", ")}]`;
+  return String(value);
+}
+
+function extractTemplateConditions(templateConfig: unknown): string[] {
+  const cfg = templateConfig as any;
+  const groups = Array.isArray(cfg?.groups) ? cfg.groups : [];
+  const lines: string[] = [];
+
+  const walk = (group: any) => {
+    const logic = group?.logic ? String(group.logic) : "";
+    const conditions = Array.isArray(group?.conditions) ? group.conditions : [];
+    if (logic) {
+      lines.push(`GRUPO ${logic}`);
+    }
+    for (const c of conditions) {
+      const field = c?.field ? String(c.field) : "(campo?)";
+      const op = c?.operator ? String(c.operator) : "(op?)";
+      const v = formatTemplateValue(c?.value);
+      lines.push(`${field} ${op} ${v}`);
+    }
+    const children = Array.isArray(group?.children) ? group.children : [];
+    for (const child of children) walk(child);
+  };
+
+  for (const g of groups) walk(g);
+
+  return lines.length ? lines : ["(sem condições extraídas do backend)"];
+}
+
+const TEMPLATE_CATEGORY_LABELS: Record<string, string> = {
+  FRAUD_DETECTION: "Fraude",
+  VELOCITY: "Velocidade",
+};
+
+const DEFAULT_TEMPLATE_EXPLANATION: DidacticExplanation = {
+  oQueFaz:
+    "Este template é uma regra pré-configurada do RULEX para acelerar a criação de detecção.",
+  porQueImportante:
+    "Templates reduzem erros e padronizam boas práticas de prevenção a fraude.",
+  exemploReal:
+    "Aplicar rapidamente uma regra de alto risco e ajustá-la conforme o contexto do seu negócio.",
+  analogia:
+    "É como usar um modelo pronto (checklist) e só adaptar os detalhes.",
+  icone: "📌",
+};
+
+const TEMPLATE_OVERRIDES_BY_BACKEND_NAME: Record<
+  string,
+  Partial<Pick<ManualTemplate, "name" | "category" | "icon" | "explanation">>
+> = {
+  HIGH_VALUE_INTERNATIONAL: {
+    name: "Alto Valor Internacional",
+    category: "Fraude",
     icon: "🌍",
-    conditions: ["merchantCountry != cardCountry"],
     explanation: {
       oQueFaz:
-        "Alerta quando a transação ocorre em um país diferente do país de emissão do cartão.",
+        "Dispara quando há combinação de alto valor e país estrangeiro (do merchant).",
       porQueImportante:
-        "Uso internacional inesperado pode indicar cartão clonado ou roubado.",
+        "Fraudes de alto valor no exterior tendem a gerar prejuízo alto e são um padrão clássico de cartão clonado.",
       exemploReal:
-        "Cartão emitido no Brasil sendo usado na Rússia sem histórico de viagens.",
+        "Compra de R$ 8.000 em país diferente do cartão em um perfil sem histórico internacional.",
       analogia:
-        "É como receber uma ligação do seu número de telefone vindo de outro país.",
+        "É como ver uma compra muito cara em um lugar onde a pessoa nunca esteve.",
       icone: "🌍",
     },
   },
-  {
-    id: "night-transaction",
-    name: "Transação Noturna",
-    description: "Detecta transações entre 00:00 e 06:00",
-    category: "Horário",
-    icon: "🌙",
-    conditions: ["transactionTime BETWEEN '00:00' AND '06:00'"],
-    explanation: {
-      oQueFaz:
-        "Alerta para transações realizadas durante a madrugada.",
-      porQueImportante:
-        "Fraudes frequentemente ocorrem à noite quando o titular está dormindo.",
-      exemploReal:
-        "Sequência de compras online às 3h da manhã quando o cliente nunca comprou nesse horário.",
-      analogia:
-        "É como alguém batendo na sua porta às 3h da manhã - pode ser emergência ou problema.",
-      icone: "🌙",
-    },
-  },
-  {
-    id: "high-risk-mcc",
-    name: "MCC de Alto Risco",
-    description: "Detecta transações em categorias de alto risco (gambling, crypto)",
-    category: "Categoria",
+  LOW_SCORE_HIGH_RISK_MCC: {
+    name: "Score Baixo + MCC Alto Risco",
+    category: "Fraude",
     icon: "⚠️",
-    conditions: ["mcc IN [7995, 6211, 5967, 5966]"],
     explanation: {
       oQueFaz:
-        "Alerta para transações em merchants de categorias consideradas de alto risco.",
+        "Combina score de autenticação baixo com MCCs considerados de alto risco.",
       porQueImportante:
-        "Jogos de azar, criptomoedas e produtos digitais têm alto índice de fraude e chargeback.",
+        "A junção de sinal fraco (score) com contexto arriscado (MCC) aumenta a precisão sem depender de um único fator.",
       exemploReal:
-        "Primeira transação de um cartão novo é em site de apostas - alto risco de fraude.",
+        "Score 3DS baixo em MCC de apostas/cripto logo no início do ciclo do cartão.",
       analogia:
-        "É como verificar com mais cuidado quem entra em áreas restritas de um prédio.",
+        "É como alguém com credencial suspeita tentando entrar em área restrita.",
       icone: "⚠️",
     },
   },
-  {
-    id: "low-auth-score",
-    name: "Score de Autenticação Baixo",
-    description: "Detecta transações com score de autenticação abaixo de 50",
-    category: "Autenticação",
-    icon: "🛡️",
-    conditions: ["consumerAuthenticationScore < 50"],
+  COMPLEX_VELOCITY_CHECK: {
+    name: "Velocity Check (Complexo)",
+    category: "Velocidade",
+    icon: "⏱️",
     explanation: {
       oQueFaz:
-        "Alerta quando o score de autenticação do 3DS está abaixo do limiar aceitável.",
+        "Detecta explosões de transações em janelas curtas/longas, com critérios combinados.",
       porQueImportante:
-        "Score baixo indica que a autenticação pode ter falhado ou ser fraudulenta.",
+        "Velocidade é um dos sinais mais fortes para identificar ataques automatizados e testes de cartão.",
       exemploReal:
-        "Transação de alto valor com score 3DS de 20 - provavelmente não foi o titular.",
+        "Mais de 3 transações em 1h com valor moderado, ou mais de 5 em 24h com valor alto.",
       analogia:
-        "É como alguém tentando entrar com crachá mas a foto não bate muito bem.",
-      icone: "🛡️",
+        "É como perceber várias tentativas repetidas em pouco tempo.",
+      icone: "⏱️",
     },
   },
-  {
-    id: "complex-high-amount-foreign",
-    name: "Alto Valor + País Estrangeiro",
-    description: "Combina alto valor com país estrangeiro",
-    category: "Combinada",
-    icon: "⚡",
-    conditions: ["transactionAmount > 5000", "merchantCountry != cardCountry"],
-    explanation: {
-      oQueFaz:
-        "Alerta quando há combinação de alto valor E uso no exterior.",
-      porQueImportante:
-        "A combinação de múltiplos fatores de risco aumenta significativamente a probabilidade de fraude.",
-      exemploReal:
-        "Compra de R$8.000 em joalheria em Dubai de cartão brasileiro sem histórico de viagens.",
-      analogia:
-        "É como quando múltiplos alarmes disparam ao mesmo tempo - algo sério está acontecendo.",
-      icone: "⚡",
-    },
-  },
-  {
-    id: "complex-nested",
-    name: "Regra com Grupos Aninhados",
-    description: "Exemplo de regra complexa: (A AND B) OR (C AND D)",
-    category: "Avançada",
-    icon: "🔧",
-    conditions: [
-      "(transactionAmount > 10000 AND merchantCountry = 'US')",
-      "OR",
-      "(transactionAmount > 5000 AND transactionTime BETWEEN '00:00' AND '06:00')",
-    ],
-    explanation: {
-      oQueFaz:
-        "Permite criar regras complexas com múltiplas condições agrupadas com lógica AND/OR.",
-      porQueImportante:
-        "Fraudes reais raramente se encaixam em uma única condição simples.",
-      exemploReal:
-        "Alertar se: (valor alto E país estrangeiro) OU (valor médio E madrugada E MCC suspeito).",
-      analogia:
-        "É como um sistema de segurança que ativa quando (porta aberta E alarme desligado) OU (janela quebrada).",
-      icone: "🔧",
-    },
-  },
-];
+};
+
+export const MANUAL_TEMPLATES: ManualTemplate[] = BACKEND_TEMPLATES.map((t: any) => {
+  const override = TEMPLATE_OVERRIDES_BY_BACKEND_NAME[t.name] ?? {};
+  const categoryRaw = String(t.category ?? "");
+  const category =
+    (override.category ?? TEMPLATE_CATEGORY_LABELS[categoryRaw] ?? categoryRaw) ||
+    "Outros";
+
+  return {
+    id: toKebabId(String(t.name ?? "template")),
+    name: override.name ?? String(t.name ?? "Template"),
+    description: String(t.description ?? ""),
+    category,
+    icon: override.icon ?? "📌",
+    conditions: extractTemplateConditions(t.templateConfig),
+    explanation: override.explanation ?? DEFAULT_TEMPLATE_EXPLANATION,
+  };
+});
 
 // ============================================================================
 // ESTATÍSTICAS GERAIS

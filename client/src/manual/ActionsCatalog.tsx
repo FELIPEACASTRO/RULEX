@@ -180,7 +180,11 @@ export function ActionsCatalog() {
               const levelConfig = LEVEL_CONFIG[details.level];
 
               return (
-                <AccordionItem key={action.name} value={action.name}>
+                <AccordionItem
+                  key={action.name}
+                  value={action.name}
+                  id={`manual-action-${action.name}`}
+                >
                   <AccordionTrigger className="hover:no-underline">
                     <div className="flex items-center gap-3 text-left">
                       <span className="text-lg">{levelConfig.icon}</span>

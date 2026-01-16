@@ -9,7 +9,6 @@ export interface DocEntry {
   category: string;
   isEssential: boolean;
 }
-
 export const DOCS_INDEX: DocEntry[] = [
   {
     "id": "01_DOSSIE_URLS_FRAUD_PRODUCTS",

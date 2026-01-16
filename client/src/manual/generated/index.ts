@@ -3,6 +3,7 @@
 
 export * from './backendOperators.generated';
 export * from './backendActions.generated';
+export * from './backendTemplates.generated';
 export * from './logicOperators.generated';
 export * from './expressionFunctions.generated';
 export * from './astAllowlist.generated';

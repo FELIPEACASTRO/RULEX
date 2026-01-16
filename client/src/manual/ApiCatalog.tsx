@@ -38,6 +38,14 @@ const METHOD_COLORS: Record<string, string> = {
   PATCH: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
 };
 
+const endpointAnchorId = (method: string, path: string) => {
+  const slug = path
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `manual-endpoint-${method}-${slug}`;
+};
+
 // Agrupar endpoints por recurso (primeira parte do path)
 const groupByResource = (endpoints: typeof API_ENDPOINTS) => {
   const groups: Record<string, typeof API_ENDPOINTS> = {};
@@ -191,7 +199,10 @@ export function ApiCatalog() {
               </TableHeader>
               <TableBody>
                 {filteredEndpoints.map((ep, idx) => (
-                  <TableRow key={`${ep.method}-${ep.path}-${idx}`}>
+                  <TableRow
+                    key={`${ep.method}-${ep.path}-${idx}`}
+                    id={endpointAnchorId(ep.method, ep.path)}
+                  >
                     <TableCell>
                       <Badge className={METHOD_COLORS[ep.method]}>{ep.method}</Badge>
                     </TableCell>
