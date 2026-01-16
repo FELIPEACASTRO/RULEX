@@ -1,0 +1,94 @@
+
+> rulex@1.0.0 test /home/ubuntu/repos/RULEX
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv4.0.16 [39m[90m/home/ubuntu/repos/RULEX[39m
+
+ [32m✓[39m client/src/pages/NotFound.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 128[2mms[22m[39m
+[90mstderr[2m | client/src/pages/Transactions.test.tsx[2m > [22m[2mTransactions[2m > [22m[2mrenders without crashing
+[22m[39mErro ao buscar transações: TypeError: Failed to parse URL from /api/transactions?page=0&size=20
+[90m    at node:internal/deps/undici/undici:13484:13[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at fetchTransactions [90m(/home/ubuntu/repos/RULEX/[39mclient/src/pages/Transactions.tsx:52:24[90m)[39m {
+  [cause]: TypeError: Invalid URL
+  [90m    at new URL (node:internal/url:818:25)[39m
+      at new URL$1 [90m(file:///home/ubuntu/repos/RULEX/[39mnode_modules/[4m.pnpm[24m/vitest@4.0.16_@types+node@24.7.0_jiti@2.6.1_jsdom@25.0.1_lightningcss@1.30.1_tsx@4.20.6/node_modules/[4mvitest[24m/dist/chunks/index.BspFP3mn.js:556:9[90m)[39m
+  [90m    at new Request (node:internal/deps/undici/undici:9560:25)[39m
+  [90m    at fetch (node:internal/deps/undici/undici:10289:25)[39m
+  [90m    at fetch (node:internal/deps/undici/undici:13482:10)[39m
+  [90m    at fetch (node:internal/bootstrap/web/exposed-window-or-worker:75:12)[39m
+      at fetchTransactions [90m(/home/ubuntu/repos/RULEX/[39mclient/src/pages/Transactions.tsx:52:30[90m)[39m
+      at [90m/home/ubuntu/repos/RULEX/[39mclient/src/pages/Transactions.tsx:36:5
+      at Object.react_stack_bottom_frame [90m(/home/ubuntu/repos/RULEX/[39mnode_modules/[4m.pnpm[24m/react-dom@19.2.1_react@19.2.1/node_modules/[4mreact-dom[24m/cjs/react-dom-client.development.js:25989:20[90m)[39m
+      at runWithFiberInDEV [90m(/home/ubuntu/repos/RULEX/[39mnode_modules/[4m.pnpm[24m/react-dom@19.2.1_react@19.2.1/node_modules/[4mreact-dom[24m/cjs/react-dom-client.development.js:874:13[90m)[39m {
+    code: [32m'ERR_INVALID_URL'[39m,
+    input: [32m'/api/transactions?page=0&size=20'[39m
+  }
+}
+
+[90mstderr[2m | client/src/pages/Transactions.test.tsx[2m > [22m[2mTransactions[2m > [22m[2mrenders transactions content
+[22m[39mErro ao buscar transações: TypeError: Failed to parse URL from /api/transactions?page=0&size=20
+[90m    at node:internal/deps/undici/undici:13484:13[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at fetchTransactions [90m(/home/ubuntu/repos/RULEX/[39mclient/src/pages/Transactions.tsx:52:24[90m)[39m {
+  [cause]: TypeError: Invalid URL
+  [90m    at new URL (node:internal/url:818:25)[39m
+      at new URL$1 [90m(file:///home/ubuntu/repos/RULEX/[39mnode_modules/[4m.pnpm[24m/vitest@4.0.16_@types+node@24.7.0_jiti@2.6.1_jsdom@25.0.1_lightningcss@1.30.1_tsx@4.20.6/node_modules/[4mvitest[24m/dist/chunks/index.BspFP3mn.js:556:9[90m)[39m
+  [90m    at new Request (node:internal/deps/undici/undici:9560:25)[39m
+  [90m    at fetch (node:internal/deps/undici/undici:10289:25)[39m
+  [90m    at fetch (node:internal/deps/undici/undici:13482:10)[39m
+  [90m    at fetch (node:internal/bootstrap/web/exposed-window-or-worker:75:12)[39m
+      at fetchTransactions [90m(/home/ubuntu/repos/RULEX/[39mclient/src/pages/Transactions.tsx:52:30[90m)[39m
+      at [90m/home/ubuntu/repos/RULEX/[39mclient/src/pages/Transactions.tsx:36:5
+      at Object.react_stack_bottom_frame [90m(/home/ubuntu/repos/RULEX/[39mnode_modules/[4m.pnpm[24m/react-dom@19.2.1_react@19.2.1/node_modules/[4mreact-dom[24m/cjs/react-dom-client.development.js:25989:20[90m)[39m
+      at runWithFiberInDEV [90m(/home/ubuntu/repos/RULEX/[39mnode_modules/[4m.pnpm[24m/react-dom@19.2.1_react@19.2.1/node_modules/[4mreact-dom[24m/cjs/react-dom-client.development.js:874:13[90m)[39m {
+    code: [32m'ERR_INVALID_URL'[39m,
+    input: [32m'/api/transactions?page=0&size=20'[39m
+  }
+}
+
+[90mstderr[2m | client/src/pages/Transactions.test.tsx[2m > [22m[2mTransactions[2m > [22m[2mhas proper structure
+[22m[39mErro ao buscar transações: TypeError: Failed to parse URL from /api/transactions?page=0&size=20
+[90m    at node:internal/deps/undici/undici:13484:13[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at fetchTransactions [90m(/home/ubuntu/repos/RULEX/[39mclient/src/pages/Transactions.tsx:52:24[90m)[39m {
+  [cause]: TypeError: Invalid URL
+  [90m    at new URL (node:internal/url:818:25)[39m
+      at new URL$1 [90m(file:///home/ubuntu/repos/RULEX/[39mnode_modules/[4m.pnpm[24m/vitest@4.0.16_@types+node@24.7.0_jiti@2.6.1_jsdom@25.0.1_lightningcss@1.30.1_tsx@4.20.6/node_modules/[4mvitest[24m/dist/chunks/index.BspFP3mn.js:556:9[90m)[39m
+  [90m    at new Request (node:internal/deps/undici/undici:9560:25)[39m
+  [90m    at fetch (node:internal/deps/undici/undici:10289:25)[39m
+  [90m    at fetch (node:internal/deps/undici/undici:13482:10)[39m
+  [90m    at fetch (node:internal/bootstrap/web/exposed-window-or-worker:75:12)[39m
+      at fetchTransactions [90m(/home/ubuntu/repos/RULEX/[39mclient/src/pages/Transactions.tsx:52:30[90m)[39m
+      at [90m/home/ubuntu/repos/RULEX/[39mclient/src/pages/Transactions.tsx:36:5
+      at Object.react_stack_bottom_frame [90m(/home/ubuntu/repos/RULEX/[39mnode_modules/[4m.pnpm[24m/react-dom@19.2.1_react@19.2.1/node_modules/[4mreact-dom[24m/cjs/react-dom-client.development.js:25989:20[90m)[39m
+      at runWithFiberInDEV [90m(/home/ubuntu/repos/RULEX/[39mnode_modules/[4m.pnpm[24m/react-dom@19.2.1_react@19.2.1/node_modules/[4mreact-dom[24m/cjs/react-dom-client.development.js:874:13[90m)[39m {
+    code: [32m'ERR_INVALID_URL'[39m,
+    input: [32m'/api/transactions?page=0&size=20'[39m
+  }
+}
+
+ [32m✓[39m client/src/pages/Transactions.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 86[2mms[22m[39m
+ [32m✓[39m client/src/pages/Audit.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 148[2mms[22m[39m
+ [32m✓[39m client/src/pages/Login.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 137[2mms[22m[39m
+ [32m✓[39m client/src/components/DashboardLayout.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 271[2mms[22m[39m
+ [32m✓[39m client/src/components/RuleFormDialog/operators.test.ts [2m([22m[2m203 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m client/src/pages/Dashboard.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m client/src/pages/Home.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m client/src/components/ErrorBoundary.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m client/src/components/RuleFormDialog/schema.test.ts [2m([22m[2m83 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m client/src/components/ComplexRuleBuilder/ComplexRuleBuilder.test.tsx [2m([22m[2m55 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m client/src/lib/validators/regexValidator.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m client/src/pages/Rules.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1884[2mms[22m[39m
+     [33m[2m✓[22m[39m creates a rule via popup and posts all required fields [33m 1384[2mms[22m[39m
+     [33m[2m✓[22m[39m edits a rule via popup; ruleName is read-only; uses PUT [33m 402[2mms[22m[39m
+ [32m✓[39m client/src/pages/Manual.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 4033[2mms[22m[39m
+     [33m[2m✓[22m[39m navega para tab Operadores e exibe catalogo [33m 430[2mms[22m[39m
+     [33m[2m✓[22m[39m busca global navega para Operadores e destaca o item por ~2s [33m 2579[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m14 passed[39m[22m[90m (14)[39m
+[2m      Tests [22m [1m[32m411 passed[39m[22m[90m (411)[39m
+[2m   Start at [22m 15:32:13
+[2m   Duration [22m 6.07s[2m (transform 2.30s, setup 2.93s, import 5.08s, tests 6.94s, environment 7.17s)[22m
+

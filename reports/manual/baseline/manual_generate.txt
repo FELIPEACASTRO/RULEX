@@ -1,0 +1,64 @@
+
+> rulex@1.0.0 manual:generate /home/ubuntu/repos/RULEX
+> node scripts/manual-generate.mjs
+
+
+============================================================
+MANUAL-GENERATE: Gerando dados do Manual do RULEX
+============================================================
+
+[manual-generate] Extraindo operadores do backend...
+[manual-generate] Extraindo ações do backend...
+[manual-generate] Extraindo operadores lógicos...
+[manual-generate] Extraindo funções de expressão...
+[manual-generate] Extraindo allowlist do AstValidator...
+[manual-generate] Extraindo endpoints do OpenAPI...
+[manual-generate] Extraindo índice de documentos...
+
+------------------------------------------------------------
+
+[manual-generate] ✅ Gerado backendOperators.generated.ts
+[manual-generate] ✅ Gerado backendActions.generated.ts
+[manual-generate] ✅ Gerado logicOperators.generated.ts
+[manual-generate] ✅ Gerado expressionFunctions.generated.ts
+[manual-generate] ✅ Gerado astAllowlist.generated.ts
+[manual-generate] ✅ Gerado openapiSummary.generated.ts
+[manual-generate] ✅ Gerado docsIndex.generated.ts
+[manual-generate] ✅ Gerado index.ts
+
+------------------------------------------------------------
+
+[manual-generate] RESUMO DA GERAÇÃO:
+[manual-generate]   - Operadores backend: 447
+[manual-generate]   - Ações backend: 10
+[manual-generate]   - Operadores lógicos: 6
+[manual-generate]   - Funções de expressão: 23
+[manual-generate]   - Funções allowlist AST: 8
+[manual-generate]   - Operadores allowlist AST: 24
+[manual-generate]   - Aliases de operadores: 6
+[manual-generate]   - Endpoints API: 18
+[manual-generate]   - Documentos: 41
+
+
+[manual-generate] ============================================================
+[manual-generate] TRIPLE CHECK: Validando consistência FE vs BE
+[manual-generate] ============================================================
+[manual-generate] 
+Operadores Backend (enum): 447
+[manual-generate] Operadores Frontend (client/src/lib/operators.ts): 447
+[manual-generate] ✅ Operadores OK: conjuntos idênticos (BE == FE)
+[manual-generate] ✅ Allowlist AST (OPERATOR_ALIASES) OK
+[manual-generate] 
+Funções ExpressionEvaluator: 23
+[manual-generate] Allowlist AST (FUNCS): 8
+[manual-generate] 
+============================================================
+[manual-generate] TRIPLE CHECK: Avisos (não bloqueantes):
+  ⚠️ WARN: FUNC_ALLOWLIST (AstValidator) referencia funções não encontradas no ExpressionEvaluator: TO_DATE_YYYYMMDD, PARSE_GMTOFFSET
+[manual-generate] ✅ TRIPLE CHECK: Todas validações OK!
+[manual-generate] ============================================================
+
+============================================================
+[manual-generate] ✅ MANUAL-GENERATE: Concluído com sucesso!
+============================================================
+

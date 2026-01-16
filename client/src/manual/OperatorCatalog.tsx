@@ -116,7 +116,8 @@ export function OperatorCatalog({ highlightOperator }: OperatorCatalogProps) {
     const target = OPERATORS.find((op) => op.value === highlightOperator);
     if (!target?.category) return;
 
-    setOpenCategories((prev) => (prev.includes(target.category) ? prev : [target.category, ...prev]));
+    const targetCategory = target.category;
+    setOpenCategories((prev) => (prev.includes(targetCategory) ? prev : [targetCategory, ...prev]));
     setFilters((prev) => ({ ...prev, search: highlightOperator }));
   }, [highlightOperator]);
 
