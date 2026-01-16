@@ -16,6 +16,7 @@
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "api:generate": "openapi-typescript ./openapi/rulex.yaml -o ./client/src/lib/api.generated.ts",
+    "inventory:rulex": "node scripts/inventory-rulex.mjs",
     "manual:generate": "node scripts/manual-generate.mjs",
     "manual:check": "pnpm manual:generate && pnpm test && pnpm build"
   },
