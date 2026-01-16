@@ -82,6 +82,13 @@ export const DOCS_INDEX: DocEntry[] = [
     "isEssential": true
   },
   {
+    "id": "DEVIN_ANALYSIS_RULEX_EVOLUTION",
+    "filename": "DEVIN_ANALYSIS_RULEX_EVOLUTION.md",
+    "title": "📊 DEVIN ANALYSIS: RULEX EVOLUTION TO WORLD #1",
+    "category": "Regras",
+    "isEssential": false
+  },
+  {
     "id": "DSL_ADVANCED_AGGREGATIONS",
     "filename": "DSL_ADVANCED_AGGREGATIONS.md",
     "title": "DSL Avançada: Operadores de Agregação Temporal",
@@ -187,6 +194,20 @@ export const DOCS_INDEX: DocEntry[] = [
     "isEssential": true
   },
   {
+    "id": "perf-baseline",
+    "filename": "perf-baseline.md",
+    "title": "RULEX Performance Baseline",
+    "category": "Outros",
+    "isEssential": false
+  },
+  {
+    "id": "perf",
+    "filename": "perf.md",
+    "title": "Performance Report — RULEX Engine",
+    "category": "Outros",
+    "isEssential": false
+  },
+  {
     "id": "PESQUISA_REGRAS_DURAS_EFICIENTES",
     "filename": "PESQUISA_REGRAS_DURAS_EFICIENTES.md",
     "title": "Pesquisa: Como Montar Regras Duras Eficientes para Detecção de Fraude",
@@ -283,24 +304,10 @@ export const DOCS_INDEX: DocEntry[] = [
     "title": "RULEX - Capacidades do Motor de Regras",
     "category": "Regras",
     "isEssential": true
-  },
-  {
-    "id": "perf-baseline",
-    "filename": "perf-baseline.md",
-    "title": "RULEX Performance Baseline",
-    "category": "Outros",
-    "isEssential": false
-  },
-  {
-    "id": "perf",
-    "filename": "perf.md",
-    "title": "Performance Report — RULEX Engine",
-    "category": "Outros",
-    "isEssential": false
   }
 ];
 
-export const DOCS_COUNT = 41;
+export const DOCS_COUNT = 42;
 
 export const ESSENTIAL_DOCS = DOCS_INDEX.filter(d => d.isEssential);
 

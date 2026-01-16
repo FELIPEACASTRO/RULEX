@@ -73,6 +73,8 @@ import {
   QaAndE2EGuide,
   InfraRunbook,
   ComplexRulesGuide,
+  RulesLibrary,
+  RULES_LIBRARY_STATS,
 } from "@/manual";
 
 // ============================================================================
@@ -961,7 +963,7 @@ export default function Manual() {
           </h1>
           <p className="text-muted-foreground">
             Guia completo do sistema de detecção de fraude - {MANUAL_STATS.totalOperators} operadores,{" "}
-            {MANUAL_STATS.totalFields} campos, {MANUAL_STATS.totalTemplates} templates
+            {MANUAL_STATS.totalFields} campos, {RULES_LIBRARY_STATS.total} regras de exemplo
           </p>
         </div>
         <div className="w-full md:w-[400px]">
@@ -1027,6 +1029,10 @@ export default function Manual() {
           <TabsTrigger value="exemplos" className="gap-2">
             <Target className="h-4 w-4" />
             <span className="hidden sm:inline">Exemplos</span>
+          </TabsTrigger>
+          <TabsTrigger value="biblioteca" className="gap-2">
+            <BookOpen className="h-4 w-4" />
+            <span className="hidden sm:inline">Biblioteca</span>
           </TabsTrigger>
           <TabsTrigger value="qa" className="gap-2">
             <TestTube2 className="h-4 w-4" />
@@ -1106,6 +1112,10 @@ export default function Manual() {
               highlight?.type === "template" ? highlight.value : undefined
             }
           />
+        </TabsContent>
+
+        <TabsContent value="biblioteca">
+          <RulesLibrary />
         </TabsContent>
 
         <TabsContent value="qa">

@@ -15,5 +15,9 @@ export { QaAndE2EGuide } from './QaAndE2EGuide';
 export { InfraRunbook } from './InfraRunbook';
 export { ComplexRulesGuide } from './ComplexRulesGuide';
 
+// Biblioteca de Regras de Exemplo
+export { RulesLibrary, RULES_LIBRARY, RULES_LIBRARY_STATS } from './RulesLibrary';
+export type { RuleExample, RuleComplexity, RuleCategory, ExamplePayload } from './RulesLibrary';
+
 // Re-export generated data
 export * from './generated';
