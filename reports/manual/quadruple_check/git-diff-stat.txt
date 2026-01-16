@@ -1,0 +1,12 @@
+﻿ .gitignore                                         |   2 +
+ client/src/manual/FieldDictionary.tsx              |  29 +++-
+ client/src/manual/OperatorCatalog.tsx              |  30 +++-
+ client/src/manual/TemplatesGallery.tsx             |  31 +++-
+ .../manual/generated/backendOperators.generated.ts |   7 +-
+ client/src/manual/generated/docsIndex.generated.ts |   9 +-
+ client/src/manual/index.ts                         |   2 +
+ client/src/pages/Manual.test.tsx                   |  44 ++++-
+ client/src/pages/Manual.tsx                        | 110 +++++++++++--
+ client/src/pages/Rules.test.tsx                    |   7 +-
+ scripts/manual-generate.mjs                        | 178 +++++++++++++++------
+ 11 files changed, 369 insertions(+), 80 deletions(-)

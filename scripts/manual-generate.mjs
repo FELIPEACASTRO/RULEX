@@ -113,33 +113,46 @@ function extractBackendOperators() {
       continue;
     }
     
-    // Detectar comentário de categoria standalone (// Comparação básica)
-    // Não deve ter operador na mesma linha
-    if (!line.match(/^\s*[A-Z][A-Z0-9_]+\s*,/)) {
-      const inlineCategory = line.match(/^\s*\/\/\s*([A-Za-zÀ-ú][A-Za-zÀ-ú\s\/\-&]+)$/);
-      if (inlineCategory) {
-        const cat = inlineCategory[1].trim();
-        if (cat.length >= 4 && cat.length < 60) {
-          currentCategory = cat;
-        }
-      }
-      continue;
-    }
-    
-    // Extrair operador - apenas operadores que terminam com vírgula (ou não, para o último)
-    const opMatch = line.match(/^\s*([A-Z][A-Z0-9_]+)\s*,?\s*(?:\/\/\s*(.*))?/);
+    // Extrair operador (aceita vírgula, ponto-e-vírgula ou nada no final)
+    // Importante: o último enum constant pode NÃO terminar com vírgula.
+    const opMatch = line.match(/^\s*([A-Z][A-Z0-9_]+)\s*(?:,|;)?\s*(?:\/\/\s*(.*))?\s*$/);
     if (opMatch) {
       const name = opMatch[1].trim();
       const comment = opMatch[2]?.trim() || '';
-      operators.push({
-        name,
-        comment,
-        category: currentCategory
-      });
+      operators.push({ name, comment, category: currentCategory });
+      continue;
+    }
+
+    // Detectar comentário de categoria standalone (// Comparação básica)
+    const inlineCategory = line.match(/^\s*\/\/\s*([A-Za-zÀ-ú][A-Za-zÀ-ú\s\/\-&]+)$/);
+    if (inlineCategory) {
+      const cat = inlineCategory[1].trim();
+      if (cat.length >= 4 && cat.length < 60) {
+        currentCategory = cat;
+      }
     }
   }
 
   return operators;
+}
+
+function extractFrontendOperatorValues() {
+  try {
+    const feOpsPath = join(ROOT, 'client', 'src', 'lib', 'operators.ts');
+    const feContent = readFile(feOpsPath);
+    if (!feContent) return [];
+
+    // Capturar value: 'EQ' / value: "EQ" dentro do array OPERATORS
+    const values = [];
+    const valueRegex = /\bvalue\s*:\s*['"]([A-Z][A-Z0-9_]+)['"]/g;
+    let m;
+    while ((m = valueRegex.exec(feContent)) != null) {
+      values.push(m[1]);
+    }
+    return values;
+  } catch {
+    return [];
+  }
 }
 
 // ============================================================================
@@ -738,41 +751,105 @@ export * from './docsIndex.generated';
 // VALIDAÇÃO: TRIPLE CHECK (FE vs BE)
 // ============================================================================
 
-function runTripleCheck(beOperatorCount, feOperatorCount) {
+function runTripleCheck({
+  beOperators,
+  feOperatorValues,
+  exprFunctions,
+  astAllowlist,
+  beActions,
+}) {
   log('='.repeat(60));
   log('TRIPLE CHECK: Validando consistência FE vs BE');
   log('='.repeat(60));
 
   const issues = [];
+  const warnings = [];
 
-  // Check 1: Contagem de operadores
-  log(`\nOperadores Backend: ${beOperatorCount}`);
-  log(`Operadores Frontend: ${feOperatorCount}`);
-  
-  if (beOperatorCount !== feOperatorCount) {
-    const diff = Math.abs(beOperatorCount - feOperatorCount);
-    issues.push(`⚠️ DIVERGÊNCIA: Backend tem ${beOperatorCount} operadores, Frontend tem ${feOperatorCount} (diff: ${diff})`);
+  const beOperatorNames = beOperators.map((o) => o.name);
+  const beOperatorSet = new Set(beOperatorNames);
+  const feOperatorSet = new Set(feOperatorValues);
+
+  // Check 1: Operadores (BE enum vs FE catálogo)
+  log(`\nOperadores Backend (enum): ${beOperatorSet.size}`);
+  log(`Operadores Frontend (client/src/lib/operators.ts): ${feOperatorSet.size}`);
+
+  const missingInFe = [...beOperatorSet].filter((op) => !feOperatorSet.has(op));
+  const extraInFe = [...feOperatorSet].filter((op) => !beOperatorSet.has(op));
+
+  if (missingInFe.length || extraInFe.length) {
+    if (missingInFe.length) {
+      issues.push(`⚠️ DIVERGÊNCIA: Operadores que existem no BACKEND e faltam no FRONTEND: ${missingInFe.join(', ')}`);
+    }
+    if (extraInFe.length) {
+      issues.push(`⚠️ DIVERGÊNCIA: Operadores que existem no FRONTEND e faltam no BACKEND: ${extraInFe.join(', ')}`);
+    }
   } else {
-    success(`Contagem de operadores OK: ${beOperatorCount} = ${feOperatorCount}`);
+    success('Operadores OK: conjuntos idênticos (BE == FE)');
   }
 
-  // Check 2: Funções vs Allowlist
-  // (seria feito comparando os arquivos gerados, mas por simplicidade logamos)
-  log('\nFunções de expressão extraídas com sucesso');
-  log('Allowlist do AstValidator extraída com sucesso');
+  // Check 2: Allowlist AST (aliases) - consistência interna
+  // IMPORTANTE: a allowlist AST pode usar tokens diferentes do enum ConditionOperator.
+  // Aqui validamos apenas que os aliases apontam para operadores presentes na própria allowlist.
+  const allowOps = new Set(astAllowlist.operators ?? []);
+  const aliasPairs = Object.entries(astAllowlist.aliases ?? {});
+  const invalidAliasTargets = aliasPairs
+    .filter(([, to]) => !allowOps.has(to))
+    .map(([from, to]) => `${from} -> ${to}`);
+
+  if (invalidAliasTargets.length) {
+    warnings.push(
+      `⚠️ WARN: OPERATOR_ALIASES contém targets fora de OPERATORS (AstValidator): ${invalidAliasTargets.join(
+        ', '
+      )}`
+    );
+  } else {
+    success('Allowlist AST (OPERATOR_ALIASES) OK');
+  }
+
+  // Check 3: Allowlist AST (FUNCS) deve referenciar funções existentes no ExpressionEvaluator
+  const allowFuncs = new Set(astAllowlist.functions ?? []);
+  const exprFuncNames = new Set(
+    (exprFunctions ?? []).flatMap((f) => [f.name, f.alias].filter(Boolean))
+  );
+  const allowMissingInExpr = [...allowFuncs].filter((fn) => !exprFuncNames.has(fn));
+
+  log(`\nFunções ExpressionEvaluator: ${(exprFunctions ?? []).length}`);
+  log(`Allowlist AST (FUNCS): ${allowFuncs.size}`);
+
+  if (allowMissingInExpr.length) {
+    warnings.push(
+      `⚠️ WARN: FUNC_ALLOWLIST (AstValidator) referencia funções não encontradas no ExpressionEvaluator: ${allowMissingInExpr.join(
+        ', '
+      )}`
+    );
+  } else {
+    success('Allowlist AST (FUNCS) OK: todas existem no ExpressionEvaluator');
+  }
+
+  // Check 5: Ações (sanidade)
+  const beActionNames = (beActions ?? []).map((a) => a.name);
+  const beActionSet = new Set(beActionNames);
+  if (!beActionSet.size) {
+    issues.push('⚠️ DIVERGÊNCIA: Nenhuma ação encontrada no backend (ActionType)');
+  }
 
   // Resultado final
   log('\n' + '='.repeat(60));
+
+  if (warnings.length) {
+    log('TRIPLE CHECK: Avisos (não bloqueantes):');
+    warnings.forEach((w) => console.log(`  ${w}`));
+  }
+
   if (issues.length > 0) {
     error('TRIPLE CHECK: Encontradas divergências:');
     issues.forEach(i => console.log(`  ${i}`));
     log('='.repeat(60));
-    // Não falhar build, apenas avisar
-    return false;
+    return { passed: false, issues, warnings };
   } else {
     success('TRIPLE CHECK: Todas validações OK!');
     log('='.repeat(60));
-    return true;
+    return { passed: true, issues: [], warnings };
   }
 }
 
@@ -819,20 +896,8 @@ function main() {
   const docsCount = generateDocsIndexFile(docs);
   generateIndexFile();
 
-  // Ler contagem do FE para comparação
-  let feOpCount = 0;
-  try {
-    const feOpsPath = join(ROOT, 'client', 'src', 'lib', 'operators.ts');
-    const feContent = readFile(feOpsPath);
-    if (feContent) {
-      const match = feContent.match(/export const OPERATORS.*?\[([\s\S]*?)\];/);
-      if (match) {
-        feOpCount = (match[1].match(/\{\s*value:/g) || []).length;
-      }
-    }
-  } catch (e) {
-    // Ignora erro
-  }
+  // Ler operadores do FE para comparação
+  const feOperatorValues = extractFrontendOperatorValues();
 
   console.log('\n' + '-'.repeat(60) + '\n');
 
@@ -851,13 +916,20 @@ function main() {
   console.log('\n');
 
   // Triple Check
-  const checkPassed = runTripleCheck(beOpCount, feOpCount);
+  const checkResult = runTripleCheck({
+    beOperators,
+    feOperatorValues,
+    exprFunctions: exprFuncs,
+    astAllowlist: allowlist,
+    beActions,
+  });
 
   console.log('\n' + '='.repeat(60));
-  if (checkPassed) {
+  if (checkResult.passed) {
     success('MANUAL-GENERATE: Concluído com sucesso!');
   } else {
-    log('MANUAL-GENERATE: Concluído com avisos (ver acima)');
+    error('MANUAL-GENERATE: FALHOU (ver divergências acima)');
+    process.exitCode = 1;
   }
   console.log('='.repeat(60) + '\n');
 }

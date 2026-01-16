@@ -33,13 +33,28 @@ const CATEGORY_COLORS: Record<string, string> = {
   Avançada: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
 };
 
-function TemplateCard({ template }: { template: ManualTemplate }) {
+function TemplateCard({
+  template,
+  highlightTemplateId,
+}: {
+  template: ManualTemplate;
+  highlightTemplateId?: string;
+}) {
   const [isOpen, setIsOpen] = useState(false);
+  const isHighlighted = highlightTemplateId === template.id;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary">
+        <Card
+          id={`manual-template-${template.id}`}
+          className={
+            [
+              "cursor-pointer hover:shadow-lg transition-shadow hover:border-primary",
+              isHighlighted ? "ring-2 ring-primary ring-inset bg-primary/10" : "",
+            ].join(" ")
+          }
+        >
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <span className="text-3xl">{template.icon}</span>
@@ -155,7 +170,11 @@ function TemplateCard({ template }: { template: ManualTemplate }) {
   );
 }
 
-export function TemplatesGallery() {
+export interface TemplatesGalleryProps {
+  highlightTemplateId?: string;
+}
+
+export function TemplatesGallery({ highlightTemplateId }: TemplatesGalleryProps) {
   // Agrupar templates por categoria
   const categories = Array.from(new Set(MANUAL_TEMPLATES.map((t) => t.category)));
 
@@ -191,7 +210,11 @@ export function TemplatesGallery() {
       {/* Grid de templates */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {MANUAL_TEMPLATES.map((template) => (
-          <TemplateCard key={template.id} template={template} />
+          <TemplateCard
+            key={template.id}
+            template={template}
+            highlightTemplateId={highlightTemplateId}
+          />
         ))}
       </div>
 

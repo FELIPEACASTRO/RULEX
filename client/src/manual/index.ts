@@ -12,6 +12,8 @@ export { DbCatalog } from './DbCatalog';
 // Guias e mapas
 export { SystemMap } from './SystemMap';
 export { QaAndE2EGuide } from './QaAndE2EGuide';
+export { InfraRunbook } from './InfraRunbook';
+export { ComplexRulesGuide } from './ComplexRulesGuide';
 
 // Re-export generated data
 export * from './generated';

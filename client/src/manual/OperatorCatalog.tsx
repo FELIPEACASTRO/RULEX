@@ -8,7 +8,7 @@
  * - Badges informativos
  * - Explicações didáticas por categoria
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   Accordion,
@@ -99,12 +99,26 @@ const NULL_BEHAVIOR_COLORS: Record<NullBehavior, string> = {
   not_applicable: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
 };
 
-export function OperatorCatalog() {
+export interface OperatorCatalogProps {
+  highlightOperator?: string;
+}
+
+export function OperatorCatalog({ highlightOperator }: OperatorCatalogProps) {
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
   const [openCategories, setOpenCategories] = useState<string[]>([]);
 
   const categories = useMemo(() => getOperatorCategories(), []);
   const operatorsByCategory = useMemo(() => getOperatorsByCategory(), []);
+
+  useEffect(() => {
+    if (!highlightOperator) return;
+
+    const target = OPERATORS.find((op) => op.value === highlightOperator);
+    if (!target?.category) return;
+
+    setOpenCategories((prev) => (prev.includes(target.category) ? prev : [target.category, ...prev]));
+    setFilters((prev) => ({ ...prev, search: highlightOperator }));
+  }, [highlightOperator]);
 
   // Aplicar filtros em todos os operadores
   const filteredOperatorsByCategory = useMemo(() => {
@@ -399,8 +413,18 @@ export function OperatorCatalog() {
                           const isNeo4j = isNeo4jOperator(op);
                           const isVelocity = isVelocityOperator(op);
 
+                          const isHighlighted = highlightOperator === op.value;
+
                           return (
-                            <TableRow key={op.value}>
+                            <TableRow
+                              key={op.value}
+                              id={`manual-operator-${op.value}`}
+                              className={
+                                isHighlighted
+                                  ? "bg-primary/10 ring-2 ring-primary ring-inset"
+                                  : undefined
+                              }
+                            >
                               <TableCell className="font-mono text-sm">
                                 {op.value}
                               </TableCell>

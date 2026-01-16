@@ -2238,9 +2238,14 @@ export const BACKEND_OPERATORS: BackendOperator[] = [
     "name": "CRYPTO_PUMP_DUMP_DETECTION",
     "comment": "Detecção de pump and dump crypto",
     "category": "Emerging Fraud Types"
+  },
+  {
+    "name": "PIG_BUTCHERING_INDICATOR",
+    "comment": "Indicador de pig butchering scam",
+    "category": "Emerging Fraud Types"
   }
 ];
 
-export const BACKEND_OPERATOR_COUNT = 446;
+export const BACKEND_OPERATOR_COUNT = 447;
 
 export const BACKEND_OPERATOR_CATEGORIES = [...new Set(BACKEND_OPERATORS.map(o => o.category))];

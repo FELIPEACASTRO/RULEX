@@ -6,7 +6,7 @@
  * - Busca por nome do campo ou label
  * - Labels em português brasileiro
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   Accordion,
@@ -52,9 +52,22 @@ const CATEGORY_ICONS: Record<string, string> = {
   other: "📁",
 };
 
-export function FieldDictionary() {
+export interface FieldDictionaryProps {
+  highlightField?: string;
+}
+
+export function FieldDictionary({ highlightField }: FieldDictionaryProps) {
   const [search, setSearch] = useState("");
   const [openCategories, setOpenCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!highlightField) return;
+    setSearch(highlightField);
+    const category = FIELD_CATEGORIES.find((cat) => cat.fields.includes(highlightField));
+    if (category) {
+      setOpenCategories((prev) => (prev.includes(category.id) ? prev : [category.id, ...prev]));
+    }
+  }, [highlightField]);
 
   // Contar total de campos definidos
   const totalFields = Object.keys(FIELD_LABELS).length;
@@ -187,8 +200,18 @@ export function FieldDictionary() {
                           type = "geo";
                         }
 
+                        const isHighlighted = highlightField === field;
+
                         return (
-                          <TableRow key={field}>
+                          <TableRow
+                            key={field}
+                            id={`manual-field-${field}`}
+                            className={
+                              isHighlighted
+                                ? "bg-primary/10 ring-2 ring-primary ring-inset"
+                                : undefined
+                            }
+                          >
                             <TableCell className="font-mono text-sm">{field}</TableCell>
                             <TableCell>{label}</TableCell>
                             <TableCell className="text-right">

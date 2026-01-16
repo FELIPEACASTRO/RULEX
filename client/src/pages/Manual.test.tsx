@@ -2,9 +2,9 @@ import "@testing-library/jest-dom/vitest";
 
 import React from "react";
 
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import Manual from "./Manual";
 import { MANUAL_STATS, OPERATORS, FIELD_LABELS } from "@/manual/manualData";
@@ -114,5 +114,45 @@ describe("Manual", () => {
     // Deve mostrar resultados (pode haver múltiplos, então usamos getAllByText)
     expect(screen.getAllByText("Operador").length).toBeGreaterThan(0);
   });
+
+  it("inclui as tabs obrigatórias: Infra/Runbook e Regras Complexas", () => {
+    render(<Manual />);
+    expect(screen.getByRole("tab", { name: /infra\/runbook/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /regras complexas/i })).toBeInTheDocument();
+  });
+
+  it(
+    "busca global navega para Operadores e destaca o item por ~2s",
+    async () => {
+      const user = userEvent.setup();
+    render(<Manual />);
+
+    const searchInput = screen.getByPlaceholderText(/buscar operadores, campos, templates/i);
+    await user.type(searchInput, "EQ");
+
+    const eqValue = await screen.findByText(/^EQ$/);
+    const result = eqValue.closest('[role="button"]');
+    expect(result).toBeTruthy();
+    await user.click(result as HTMLElement);
+
+    await screen.findByText(/catálogo de operadores/i);
+
+    await waitFor(
+      () => {
+        const row = document.getElementById("manual-operator-EQ");
+        expect(row).toBeTruthy();
+        expect(row?.className ?? "").toContain("ring-2");
+      },
+      { timeout: 2000 }
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 2300));
+
+    const row = document.getElementById("manual-operator-EQ");
+    expect(row).toBeTruthy();
+    expect(row?.className ?? "").not.toContain("ring-2");
+    },
+    10000
+  );
 });
 

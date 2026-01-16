@@ -118,6 +118,8 @@ info/
 reports/
 !reports/
 reports/*
+!reports/manual/
+!reports/manual/**
 !reports/manual_page_implementation.md
 evidence/
 research_output/

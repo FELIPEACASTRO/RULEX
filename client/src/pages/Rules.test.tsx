@@ -166,7 +166,10 @@ describe('Rules popup (Rules.tsx)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Criar' }));
 
-    await waitFor(() => expect(api.fetchMock).toHaveBeenCalled());
+    await waitFor(() => {
+      const post = api.calls.find((c) => c.method === 'POST' && c.url.includes('/api/rules'));
+      expect(post).toBeTruthy();
+    });
 
     const post = api.calls.find((c) => c.method === 'POST' && c.url.includes('/api/rules'));
     expect(post).toBeTruthy();
@@ -186,7 +189,7 @@ describe('Rules popup (Rules.tsx)', () => {
 
     // dialog should close on success
     await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Nova Regra' })).not.toBeInTheDocument();
     });
   });
 

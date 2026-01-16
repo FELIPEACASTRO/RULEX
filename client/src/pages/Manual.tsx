@@ -9,7 +9,7 @@
  * - Estilo didático "Use a Cabeça"
  * - Dados 100% reais do código fonte
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { 
   Search, 
   BookOpen, 
@@ -25,7 +25,9 @@ import {
   FunctionSquare,
   Play,
   Globe,
-  TestTube2
+  TestTube2,
+  Terminal,
+  Braces
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -68,7 +70,9 @@ import {
   ApiCatalog, 
   DbCatalog, 
   SystemMap, 
-  QaAndE2EGuide 
+  QaAndE2EGuide,
+  InfraRunbook,
+  ComplexRulesGuide,
 } from "@/manual";
 
 // ============================================================================
@@ -621,10 +625,10 @@ function OperationsTab() {
 // ============================================================================
 // TAB: AÇÕES (EXEMPLOS DE USO)
 // ============================================================================
-function ActionsTab() {
+function ActionsTab({ highlightTemplateId }: { highlightTemplateId?: string }) {
   return (
     <div className="space-y-6">
-      <TemplatesGallery />
+      <TemplatesGallery highlightTemplateId={highlightTemplateId} />
     </div>
   );
 }
@@ -785,7 +789,11 @@ interface GlobalSearchResult {
   description?: string;
 }
 
-function GlobalSearch() {
+function GlobalSearch({
+  onSelect,
+}: {
+  onSelect: (result: GlobalSearchResult) => void;
+}) {
   const [query, setQuery] = useState("");
 
   const results = useMemo((): GlobalSearchResult[] => {
@@ -854,6 +862,19 @@ function GlobalSearch() {
               <div
                 key={`${r.type}-${r.value}-${idx}`}
                 className="flex items-center gap-3 p-2 rounded hover:bg-muted cursor-pointer"
+                onClick={() => {
+                  onSelect(r);
+                  setQuery("");
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelect(r);
+                    setQuery("");
+                  }
+                }}
               >
                 <Badge
                   variant={
@@ -889,6 +910,47 @@ function GlobalSearch() {
 // COMPONENTE PRINCIPAL
 // ============================================================================
 export default function Manual() {
+  const [activeTab, setActiveTab] = useState("visao-geral");
+  const [highlight, setHighlight] = useState<GlobalSearchResult | null>(null);
+
+  useEffect(() => {
+    if (!highlight) return;
+    const t = setTimeout(() => setHighlight(null), 2000);
+    return () => clearTimeout(t);
+  }, [highlight]);
+
+  const navigateFromSearch = (r: GlobalSearchResult) => {
+    const tab =
+      r.type === "operator"
+        ? "operadores"
+        : r.type === "field"
+        ? "payload"
+        : "exemplos";
+
+    const anchorId =
+      r.type === "operator"
+        ? `manual-operator-${r.value}`
+        : r.type === "field"
+        ? `manual-field-${r.value}`
+        : `manual-template-${r.value}`;
+
+    setActiveTab(tab);
+    setHighlight(r);
+
+    // Tentar rolar após a troca de aba/render.
+    const tryScroll = (attempt = 0) => {
+      const el = document.getElementById(anchorId);
+      if (el?.scrollIntoView) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      if (attempt < 4) {
+        setTimeout(() => tryScroll(attempt + 1), attempt === 0 ? 0 : 80);
+      }
+    };
+    tryScroll();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -903,12 +965,12 @@ export default function Manual() {
           </p>
         </div>
         <div className="w-full md:w-[400px]">
-          <GlobalSearch />
+          <GlobalSearch onSelect={navigateFromSearch} />
         </div>
       </div>
 
       {/* Tabs principais */}
-      <Tabs defaultValue="visao-geral" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="flex flex-wrap h-auto gap-1">
           <TabsTrigger value="visao-geral" className="gap-2">
             <BookOpen className="h-4 w-4" />
@@ -917,6 +979,10 @@ export default function Manual() {
           <TabsTrigger value="mapa" className="gap-2">
             <Layers className="h-4 w-4" />
             <span className="hidden sm:inline">Mapa</span>
+          </TabsTrigger>
+          <TabsTrigger value="infra" className="gap-2">
+            <Terminal className="h-4 w-4" />
+            <span className="hidden sm:inline">Infra/Runbook</span>
           </TabsTrigger>
           <TabsTrigger value="fluxo" className="gap-2">
             <Workflow className="h-4 w-4" />
@@ -929,6 +995,10 @@ export default function Manual() {
           <TabsTrigger value="regras" className="gap-2">
             <FileCode className="h-4 w-4" />
             <span className="hidden sm:inline">Regras</span>
+          </TabsTrigger>
+          <TabsTrigger value="regras-complexas" className="gap-2">
+            <Braces className="h-4 w-4" />
+            <span className="hidden sm:inline">Regras Complexas</span>
           </TabsTrigger>
           <TabsTrigger value="operadores" className="gap-2">
             <Calculator className="h-4 w-4" />
@@ -980,20 +1050,34 @@ export default function Manual() {
           <SystemMap />
         </TabsContent>
 
+        <TabsContent value="infra">
+          <InfraRunbook />
+        </TabsContent>
+
         <TabsContent value="fluxo">
           <FlowTab />
         </TabsContent>
 
         <TabsContent value="payload">
-          <FieldDictionary />
+          <FieldDictionary
+            highlightField={highlight?.type === "field" ? highlight.value : undefined}
+          />
         </TabsContent>
 
         <TabsContent value="regras">
           <RulesTab />
         </TabsContent>
 
+        <TabsContent value="regras-complexas">
+          <ComplexRulesGuide />
+        </TabsContent>
+
         <TabsContent value="operadores">
-          <OperatorCatalog />
+          <OperatorCatalog
+            highlightOperator={
+              highlight?.type === "operator" ? highlight.value : undefined
+            }
+          />
         </TabsContent>
 
         <TabsContent value="funcoes">
@@ -1017,7 +1101,11 @@ export default function Manual() {
         </TabsContent>
 
         <TabsContent value="exemplos">
-          <ActionsTab />
+          <ActionsTab
+            highlightTemplateId={
+              highlight?.type === "template" ? highlight.value : undefined
+            }
+          />
         </TabsContent>
 
         <TabsContent value="qa">

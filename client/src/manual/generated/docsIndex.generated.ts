@@ -173,6 +173,13 @@ export const DOCS_INDEX: DocEntry[] = [
     "isEssential": false
   },
   {
+    "id": "MANUAL_ABSOLUTO_REPORT",
+    "filename": "MANUAL_ABSOLUTO_REPORT.md",
+    "title": "Manual Absoluto do RULEX - Relatório de Implementação",
+    "category": "Outros",
+    "isEssential": false
+  },
+  {
     "id": "PAYLOAD_CONTRACT_GUARD",
     "filename": "PAYLOAD_CONTRACT_GUARD.md",
     "title": "RULEX - Guarda do Contrato de Payload",
@@ -300,7 +307,7 @@ export const DOCS_INDEX: DocEntry[] = [
   }
 ];
 
-export const DOCS_COUNT = 41;
+export const DOCS_COUNT = 42;
 
 export const ESSENTIAL_DOCS = DOCS_INDEX.filter(d => d.isEssential);
 
