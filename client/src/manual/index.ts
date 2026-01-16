@@ -1,23 +1,24 @@
 /**
  * Manual Components Index
- * Exporta todos os componentes do Manual para fácil importação
+ * Re-exports all manual components for clean imports
  */
 
-// Catálogos de dados
-export { ActionsCatalog } from './ActionsCatalog';
-export { FunctionsCatalog } from './FunctionsCatalog';
-export { ApiCatalog } from './ApiCatalog';
-export { DbCatalog } from './DbCatalog';
+// Catalog components
+export { ActionsCatalog } from "./ActionsCatalog";
+export { FunctionsCatalog } from "./FunctionsCatalog";
+export { ApiCatalog } from "./ApiCatalog";
+export { DbCatalog } from "./DbCatalog";
+export { SystemMap } from "./SystemMap";
+export { QaAndE2EGuide } from "./QaAndE2EGuide";
+export { InfraRunbook } from "./InfraRunbook";
+export { ComplexRulesGuide } from "./ComplexRulesGuide";
+export { RulesLibrary, RULES_LIBRARY_STATS } from "./RulesLibrary";
+export { OperatorCatalog } from "./OperatorCatalog";
+export { FieldDictionary } from "./FieldDictionary";
+export { TemplatesGallery } from "./TemplatesGallery";
 
-// Guias e mapas
-export { SystemMap } from './SystemMap';
-export { QaAndE2EGuide } from './QaAndE2EGuide';
-export { InfraRunbook } from './InfraRunbook';
-export { ComplexRulesGuide } from './ComplexRulesGuide';
+// Data exports
+export * from "./manualData";
 
-// Biblioteca de Regras de Exemplo
-export { RulesLibrary, RULES_LIBRARY, RULES_LIBRARY_STATS } from './RulesLibrary';
-export type { RuleExample, RuleComplexity, RuleCategory, ExamplePayload } from './RulesLibrary';
-
-// Re-export generated data
-export * from './generated';
+// Generated data
+export * from "./generated";

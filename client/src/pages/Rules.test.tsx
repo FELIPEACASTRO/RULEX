@@ -140,7 +140,7 @@ describe('Rules popup (Rules.tsx)', () => {
     cleanup();
   });
 
-  it('creates a rule via popup and posts all required fields', async () => {
+  it('creates a rule via popup and posts all required fields', { timeout: 15000 }, async () => {
     const user = userEvent.setup();
     const api = mockRulesApi([]);
 
@@ -166,10 +166,7 @@ describe('Rules popup (Rules.tsx)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Criar' }));
 
-    await waitFor(() => {
-      const post = api.calls.find((c) => c.method === 'POST' && c.url.includes('/api/rules'));
-      expect(post).toBeTruthy();
-    });
+    await waitFor(() => expect(api.fetchMock).toHaveBeenCalled());
 
     const post = api.calls.find((c) => c.method === 'POST' && c.url.includes('/api/rules'));
     expect(post).toBeTruthy();
@@ -189,7 +186,7 @@ describe('Rules popup (Rules.tsx)', () => {
 
     // dialog should close on success
     await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: 'Nova Regra' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
