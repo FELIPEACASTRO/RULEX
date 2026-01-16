@@ -31,10 +31,20 @@ export const DIAGRAM_CATEGORIES: Record<DiagramCategoryId, DiagramCategory> = {
     label: "API",
     description: "Fluxos e contratos de integrações e endpoints.",
   },
-  dados: {
-    id: "dados",
-    label: "Dados",
-    description: "Modelagem e estruturas de dados (ER, tabelas, schemas).",
+  dados_postgres: {
+    id: "dados_postgres",
+    label: "Dados (Postgres)",
+    description: "Modelagem relacional, schemas, índices e replicação.",
+  },
+  dados_redis: {
+    id: "dados_redis",
+    label: "Dados (Redis)",
+    description: "Cache, keyspaces, replicação e estratégias in-memory.",
+  },
+  dados_neo4j: {
+    id: "dados_neo4j",
+    label: "Dados (Neo4j)",
+    description: "Grafos de propriedades, traversals e ontologias.",
   },
   frontend: {
     id: "frontend",
@@ -50,6 +60,16 @@ export const DIAGRAM_CATEGORIES: Record<DiagramCategoryId, DiagramCategory> = {
     id: "seguranca",
     label: "Segurança",
     description: "Ameaças, controles e fluxos de autenticação/autorização.",
+  },
+  qualidade: {
+    id: "qualidade",
+    label: "Qualidade",
+    description: "Testes, confiabilidade e engenharia de qualidade.",
+  },
+  cs_classicos: {
+    id: "cs_classicos",
+    label: "CS Clássicos",
+    description: "Modelos formais e diagramas de ciência da computação.",
   },
 };
 

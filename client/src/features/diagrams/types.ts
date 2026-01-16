@@ -1,3 +1,21 @@
+export type DiagramNotation =
+  | "FLOWCHART"
+  | "BPMN"
+  | "DMN"
+  | "UML"
+  | "C4"
+  | "ARCHIMATE"
+  | "DFD"
+  | "EPC"
+  | "GRAPH"
+  | "ER"
+  | "PROCESS"
+  | "MATRIX"
+  | "TREE"
+  | "OTHER";
+
+export type RendererStatus = "OK" | "PENDENTE";
+
 export type DiagramCategoryId =
   | "processos"
   | "uml_estrutural"
@@ -5,10 +23,14 @@ export type DiagramCategoryId =
   | "arquitetura"
   | "ddd"
   | "api"
-  | "dados"
+  | "dados_postgres"
+  | "dados_redis"
+  | "dados_neo4j"
   | "frontend"
   | "infra"
-  | "seguranca";
+  | "seguranca"
+  | "qualidade"
+  | "cs_classicos";
 
 export type DiagramSourceKind = "inline" | "file" | "json";
 
@@ -16,6 +38,10 @@ export type DiagramFormat =
   | "mermaid"
   | "plantuml"
   | "bpmn"
+  | "dmn"
+  | "dfd"
+  | "epc"
+  | "matrix"
   | "svg"
   | "png"
   | "pdf"
@@ -24,6 +50,9 @@ export type DiagramFormat =
 export type RendererId =
   | "mermaid"
   | "bpmn"
+  | "dmn"
+  | "dfd"
+  | "matrix"
   | "image"
   | "pdf"
   | "graph"
@@ -61,7 +90,15 @@ export interface JsonDiagramSource extends DiagramSourceBase {
 export type DiagramSource = InlineDiagramSource | FileDiagramSource | JsonDiagramSource;
 
 export interface DiagramCatalogItem {
+  /**
+   * ID canônico no formato NOTACAO/NOME (ex.: UML/Sequence, C4/Container, BPMN/Process)
+   */
   id: string;
+
+  /**
+   * Notação principal (UML, BPMN, C4, etc.)
+   */
+  notation: DiagramNotation;
 
   canonicalName: string;
   aliases: string[];
@@ -74,6 +111,11 @@ export interface DiagramCatalogItem {
   formatsSupported: DiagramFormat[];
   rendererId: RendererId;
 
+  /**
+   * Status do renderer: OK se funcional, PENDENTE se placeholder
+   */
+  rendererStatus: RendererStatus;
+
   /** Exemplo mínimo para demonstrar renderização */
   sample: DiagramSource;
 
@@ -81,6 +123,7 @@ export interface DiagramCatalogItem {
   version?: string;
   updatedAt?: string;
   author?: string;
+  source?: string;
 }
 
 export interface DiagramCategory {
@@ -92,4 +135,17 @@ export interface DiagramCategory {
 export interface GraphDiagramModel {
   nodes: Array<{ id: string; label?: string; x: number; y: number }>;
   edges: Array<{ id: string; from: string; to: string; label?: string }>;
+}
+
+export interface MatrixDiagramModel {
+  rows: Array<{ id: string; label: string }>;
+  cols: Array<{ id: string; label: string }>;
+  cells: Array<{ rowId: string; colId: string; value: string; color?: string }>;
+}
+
+export interface DfdDiagramModel {
+  processes: Array<{ id: string; label: string; x: number; y: number }>;
+  datastores: Array<{ id: string; label: string; x: number; y: number }>;
+  entities: Array<{ id: string; label: string; x: number; y: number }>;
+  flows: Array<{ id: string; from: string; to: string; label?: string }>;
 }

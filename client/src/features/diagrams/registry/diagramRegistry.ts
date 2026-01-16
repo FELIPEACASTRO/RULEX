@@ -1,231 +1,221 @@
-import { LEGACY_DIAGRAM_CATEGORIES } from "./legacyCatalog";
+/**
+ * diagramRegistry.ts
+ *
+ * Central registry for the MASSIVE diagram catalog (200+ types).
+ * Now uses NOTACAO/NOME ID format and tracks renderer status.
+ */
+
+import { MASSIVE_DIAGRAM_CATALOG, type MassiveDiagramFamily, getMassiveDiagramCount } from "./massiveCatalog";
 import { getDiagramCategory } from "./categories";
-import type {
-  DiagramCatalogItem,
-  DiagramCategoryId,
-  DiagramFormat,
-  DiagramSource,
+import type { 
+  DiagramCatalogItem, 
+  DiagramCategoryId, 
+  DiagramFormat, 
+  DiagramNotation,
   RendererId,
+  RendererStatus,
 } from "../types";
 
-function slugify(value: string): string {
-  return value
+/**
+ * Slugify a name for use in IDs
+ */
+function slugify(text: string): string {
+  return text
     .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 80);
+    .replace(/^-+|-+$/g, "");
 }
 
-function svgDataUrl(title: string, subtitle?: string): string {
-  const safeTitle = title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const safeSubtitle = (subtitle ?? "placeholder")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0b1220"/>
-      <stop offset="1" stop-color="#111827"/>
-    </linearGradient>
-  </defs>
-  <rect width="960" height="540" rx="20" fill="url(#bg)"/>
-  <rect x="36" y="36" width="888" height="468" rx="16" fill="#0f172a" stroke="#334155"/>
-  <text x="60" y="120" fill="#e5e7eb" font-family="ui-sans-serif, system-ui" font-size="36" font-weight="700">${safeTitle}</text>
-  <text x="60" y="170" fill="#94a3b8" font-family="ui-sans-serif, system-ui" font-size="20">${safeSubtitle}</text>
-  <text x="60" y="470" fill="#64748b" font-family="ui-sans-serif, system-ui" font-size="16">RULEX • Central de Diagramas</text>
-</svg>`;
-
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+/**
+ * Map notation to primary category ID
+ * NOTE: Some family IDs need special mapping to category IDs
+ */
+function notationToCategory(notation: DiagramNotation, familyId: string): DiagramCategoryId {
+  // Map family IDs to category IDs
+  const mapping: Record<string, DiagramCategoryId> = {
+    processos: "processos",
+    uml: "uml_estrutural", // Most UML diagrams are structural
+    c4: "arquitetura", // C4 is an architectural notation
+    arquitetura: "arquitetura",
+    dados_postgres: "dados_postgres",
+    dados_redis: "dados_redis",
+    dados_neo4j: "dados_neo4j",
+    frontend: "frontend",
+    devops: "infra", // DevOps maps to infra category
+    seguranca: "seguranca",
+    qualidade: "qualidade",
+    cs_classicos: "cs_classicos",
+  };
+  
+  return mapping[familyId] || ("arquitetura" as DiagramCategoryId); // Default fallback
 }
 
-function pickFormats(tools?: string[], name?: string): DiagramFormat[] {
-  const formats = new Set<DiagramFormat>();
-
-  const toolsStr = (tools ?? []).join("|").toLowerCase();
-  const nameStr = (name ?? "").toLowerCase();
-
-  if (toolsStr.includes("mermaid")) formats.add("mermaid");
-  if (toolsStr.includes("plantuml")) formats.add("plantuml");
-  if (
-    nameStr.includes("bpmn") ||
-    toolsStr.includes("camunda") ||
-    toolsStr.includes("bizagi")
-  ) {
-    formats.add("bpmn");
-  }
-
-  // Sempre aceitamos um fallback em arquivo (export/placeholder)
-  formats.add("svg");
-  formats.add("png");
-  formats.add("pdf");
-
-  return Array.from(formats);
+/**
+ * Infer format from notation and name
+ */
+function inferFormat(notation: DiagramNotation, name: string): DiagramFormat {
+  if (notation === "BPMN") return "bpmn";
+  if (notation === "DMN") return "dmn";
+  if (notation === "DFD") return "dfd";
+  if (notation === "MATRIX") return "matrix";
+  if (notation === "ER" || notation === "GRAPH") return "mermaid"; // Use Mermaid for ER/GRAPH
+  if (notation === "EPC") return "epc";
+  return "mermaid"; // Default for flowcharts, UML, trees, etc.
 }
 
-function pickRenderer(formatsSupported: DiagramFormat[]): RendererId {
-  if (formatsSupported.includes("bpmn")) return "bpmn";
-  if (formatsSupported.includes("mermaid")) return "mermaid";
-  if (formatsSupported.includes("plantuml")) return "plantuml";
-  if (formatsSupported.includes("pdf")) return "pdf";
-  return "image";
+/**
+ * Determine renderer status
+ */
+function determineRendererStatus(format: DiagramFormat): RendererStatus {
+  // Renderers marked as "OK" (functional)
+  const okRenderers: DiagramFormat[] = ["mermaid", "bpmn", "pdf", "dfd", "matrix"];
+  return okRenderers.includes(format) ? "OK" : "PENDENTE";
 }
 
-function sampleFor(
-  canonicalName: string,
-  formatsSupported: DiagramFormat[],
-  categoryLabel: string
-): DiagramSource {
-  if (formatsSupported.includes("mermaid")) {
-    const label = canonicalName.replace(/"/g, "'");
-    return {
-      kind: "inline",
-      format: "mermaid",
-      content: `flowchart TD\n  A[${label}] --> B[Exemplo]\n  B --> C[Fim]`,
-    };
+/**
+ * Infer renderer ID from format
+ */
+function inferRenderer(format: DiagramFormat): RendererId {
+  switch (format) {
+    case "bpmn":
+      return "bpmn";
+    case "dmn":
+      return "dmn";
+    case "dfd":
+      return "dfd";
+    case "matrix":
+      return "matrix";
+    case "pdf":
+      return "pdf";
+    case "plantuml":
+      return "plantuml";
+    case "epc":
+      return "fallback"; // EPC not yet implemented
+    default:
+      return "mermaid";
   }
+}
 
-  if (formatsSupported.includes("bpmn")) {
-    return {
-      kind: "inline",
-      format: "bpmn",
-      content: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_1" isExecutable="false">
-    <bpmn:startEvent id="StartEvent_1" name="Início" />
-  </bpmn:process>
-</bpmn:definitions>`,
-    };
-  }
+/**
+ * Normalize a massive diagram type into registry format
+ */
+function normalizeMassiveDiagram(
+  diagramType: MassiveDiagramFamily["diagrams"][0],
+  familyId: string
+): DiagramCatalogItem {
+  const format = inferFormat(diagramType.notation, diagramType.name);
+  const renderer = inferRenderer(format);
+  const rendererStatus = determineRendererStatus(format);
+  const categoryId = notationToCategory(diagramType.notation, familyId);
+  const category = getDiagramCategory(categoryId);
 
-  if (formatsSupported.includes("plantuml")) {
-    return {
-      kind: "inline",
-      format: "plantuml",
-      content: `@startuml\n' ${canonicalName}\nAlice -> Bob: exemplo\n@enduml`,
-    };
-  }
+  // ID format: "NOTACAO/nome-slugificado"
+  const id = `${diagramType.notation}/${slugify(diagramType.name)}`;
 
   return {
-    kind: "file",
-    format: "svg",
-    uri: svgDataUrl(canonicalName, categoryLabel),
-    mimeType: "image/svg+xml",
-    fileName: `${slugify(canonicalName)}.svg`,
+    id,
+    notation: diagramType.notation,
+    canonicalName: diagramType.name,
+    aliases: [diagramType.nameEn, ...(diagramType.tools || [])].filter(Boolean) as string[],
+    categoryId,
+    categoryLabel: category.label,
+    descriptionWhenToUse: `${diagramType.description}. ${diagramType.useCase}`.trim(),
+    formatsSupported: [format],
+    rendererId: renderer,
+    rendererStatus,
+    sample: {
+      kind: "inline",
+      format: "mermaid",
+      content: `flowchart TD\n  A[${diagramType.name}] --> B[Exemplo]`,
+    },
+    source: diagramType.example,
   };
 }
 
-function mapLegacyCategoryToId(legacyId: string): DiagramCategoryId {
-  switch (legacyId) {
-    case "process":
-      return "processos";
-    case "architecture":
-      return "arquitetura";
-    case "ddd":
-      return "ddd";
-    case "api":
-      return "api";
-    case "data":
-      return "dados";
-    case "frontend":
-      return "frontend";
-    case "infra":
-      return "infra";
-    case "security":
-      return "seguranca";
-    case "uml":
-      // depende de subcategoria; fallback
-      return "uml_estrutural";
-    default:
-      return "arquitetura";
-  }
+/**
+ * Build the massive diagram registry
+ */
+export const DIAGRAM_REGISTRY: DiagramCatalogItem[] = MASSIVE_DIAGRAM_CATALOG.flatMap((family) =>
+  family.diagrams.map((diagram) => normalizeMassiveDiagram(diagram, family.id))
+);
+
+/**
+ * Get total count of diagrams in registry
+ */
+export function getDiagramCount(): number {
+  return DIAGRAM_REGISTRY.length;
 }
 
-function mapUmlSubcategoryToId(subcategoryName: string): DiagramCategoryId {
-  const n = subcategoryName.toLowerCase();
-  if (n.includes("estrut")) return "uml_estrutural";
-  return "uml_comportamental";
+/**
+ * Get count from massive catalog (should match registry count)
+ */
+export function getMassiveCatalogCount(): number {
+  return getMassiveDiagramCount();
 }
 
+/**
+ * Get all diagrams
+ */
+export function getAllDiagrams(): DiagramCatalogItem[] {
+  return DIAGRAM_REGISTRY;
+}
+
+/**
+ * Get a diagram by ID
+ */
+export function getDiagramById(id: string): DiagramCatalogItem | undefined {
+  return DIAGRAM_REGISTRY.find((d) => d.id === id);
+}
+
+/**
+ * Get diagrams by category
+ */
+export function getDiagramsByCategory(category: DiagramCategoryId): DiagramCatalogItem[] {
+  return DIAGRAM_REGISTRY.filter((d) => d.categoryId === category);
+}
+
+/**
+ * Get diagrams by notation
+ */
+export function getDiagramsByNotation(notation: DiagramNotation): DiagramCatalogItem[] {
+  return DIAGRAM_REGISTRY.filter((d) => d.notation === notation);
+}
+
+/**
+ * Get diagrams by renderer
+ */
+export function getDiagramsByRenderer(renderer: RendererId): DiagramCatalogItem[] {
+  return DIAGRAM_REGISTRY.filter((d) => d.rendererId === renderer);
+}
+
+/**
+ * Get diagrams by renderer status
+ */
+export function getDiagramsByStatus(status: RendererStatus): DiagramCatalogItem[] {
+  return DIAGRAM_REGISTRY.filter((d) => d.rendererStatus === status);
+}
+
+/**
+ * Search diagrams by name, description, or tags
+ */
+export function searchDiagrams(query: string): DiagramCatalogItem[] {
+  const lowerQuery = query.toLowerCase();
+  return DIAGRAM_REGISTRY.filter(
+    (d) =>
+      d.canonicalName.toLowerCase().includes(lowerQuery) ||
+      d.aliases.some((alias) => alias.toLowerCase().includes(lowerQuery)) ||
+      d.descriptionWhenToUse.toLowerCase().includes(lowerQuery) ||
+      d.categoryLabel.toLowerCase().includes(lowerQuery)
+  );
+}
+
+/**
+ * Legacy aliases for compatibility
+ */
+export const DIAGRAM_ITEMS = DIAGRAM_REGISTRY;
+export const findDiagramById = getDiagramById;
 export function getLegacyDiagramCount(): number {
-  let count = 0;
-  for (const category of LEGACY_DIAGRAM_CATEGORIES) {
-    if (category.diagrams) count += category.diagrams.length;
-    if (category.subcategories) {
-      for (const sc of category.subcategories) count += sc.diagrams.length;
-    }
-  }
-  return count;
-}
-
-export const DIAGRAM_ITEMS: DiagramCatalogItem[] = (() => {
-  const items: DiagramCatalogItem[] = [];
-
-  for (const legacyCategory of LEGACY_DIAGRAM_CATEGORIES) {
-    const baseCategoryId = mapLegacyCategoryToId(legacyCategory.id);
-
-    const pushItem = (categoryId: DiagramCategoryId, d: any) => {
-      const category = getDiagramCategory(categoryId);
-      const formatsSupported = pickFormats(d.tools, d.name);
-      const rendererId = pickRenderer(formatsSupported);
-      const id = `${categoryId}:${slugify(d.name)}`;
-
-      items.push({
-        id,
-        canonicalName: d.name,
-        aliases: [d.nameEn, ...(d.tools ?? [])].filter(Boolean),
-        categoryId,
-        categoryLabel: category.label,
-        descriptionWhenToUse: `${d.description} ${d.useCase}`.trim(),
-        formatsSupported,
-        rendererId,
-        sample: sampleFor(d.name, formatsSupported, category.label),
-      });
-    };
-
-    // diagrams at category root
-    for (const d of legacyCategory.diagrams ?? []) {
-      pushItem(baseCategoryId, d);
-    }
-
-    // subcategories (UML routes to structural/behavioral; others keep base category)
-    for (const subcategory of legacyCategory.subcategories ?? []) {
-      const categoryId =
-        legacyCategory.id === "uml"
-          ? mapUmlSubcategoryToId(subcategory.name)
-          : baseCategoryId;
-
-      for (const d of subcategory.diagrams) {
-        pushItem(categoryId, d);
-      }
-    }
-  }
-
-  // Ensure IDs are unique and stable
-  const seen = new Set<string>();
-  for (const item of items) {
-    if (seen.has(item.id)) {
-      // If collision happens, append a short hash.
-      item.id = `${item.id}-${Math.abs(hashString(item.canonicalName))}`;
-    }
-    seen.add(item.id);
-  }
-
-  return items;
-})();
-
-function hashString(value: string): number {
-  let hash = 0;
-  for (let i = 0; i < value.length; i++) {
-    hash = (hash << 5) - hash + value.charCodeAt(i);
-    hash |= 0;
-  }
-  return hash;
-}
-
-export function findDiagramById(id: string): DiagramCatalogItem | undefined {
-  return DIAGRAM_ITEMS.find((d) => d.id === id);
+  return getDiagramCount();
 }

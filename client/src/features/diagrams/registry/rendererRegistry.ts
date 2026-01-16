@@ -10,6 +10,9 @@ export interface RendererDefinition {
 
 const MermaidRenderer = React.lazy(() => import("../renderers/MermaidRenderer"));
 const BpmnRenderer = React.lazy(() => import("../renderers/BpmnRenderer"));
+const DmnRenderer = React.lazy(() => import("../renderers/DmnRenderer"));
+const DfdRenderer = React.lazy(() => import("../renderers/DfdRenderer"));
+const MatrixRenderer = React.lazy(() => import("../renderers/MatrixRenderer"));
 const ImageRenderer = React.lazy(() => import("../renderers/ImageRenderer"));
 const PdfRenderer = React.lazy(() => import("../renderers/PdfRenderer"));
 const GraphRenderer = React.lazy(() => import("../renderers/GraphRenderer"));
@@ -28,6 +31,24 @@ export const RENDERER_REGISTRY: Record<RendererId, RendererDefinition> = {
     label: "BPMN",
     supportsZoom: false,
     Component: BpmnRenderer,
+  },
+  dmn: {
+    id: "dmn",
+    label: "DMN",
+    supportsZoom: false,
+    Component: DmnRenderer,
+  },
+  dfd: {
+    id: "dfd",
+    label: "DFD",
+    supportsZoom: true,
+    Component: DfdRenderer,
+  },
+  matrix: {
+    id: "matrix",
+    label: "Matrix",
+    supportsZoom: false,
+    Component: MatrixRenderer,
   },
   image: {
     id: "image",
