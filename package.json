@@ -18,6 +18,7 @@
     "api:generate": "openapi-typescript ./openapi/rulex.yaml -o ./client/src/lib/api.generated.ts",
     "inventory:rulex": "node scripts/inventory-rulex.mjs",
     "consistency:rulex": "node scripts/consistency-rulex.mjs",
+    "passada3:rulex": "node scripts/passada3-rulex.mjs",
     "manual:generate": "node scripts/manual-generate.mjs",
     "manual:check": "pnpm manual:generate && pnpm test && pnpm build"
   },

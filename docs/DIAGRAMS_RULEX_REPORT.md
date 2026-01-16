@@ -2,7 +2,7 @@
 
 Este relatório é gerado automaticamente a partir do repositório (PASSADA 1: inventário).
 
-- Gerado em: 2026-01-16T21:28:52.991Z
+- Gerado em: 2026-01-16T21:57:10.121Z
 - Fonte: `RULEX`
 - Inventário (JSON): `docs/DIAGRAMS_RULEX_INVENTORY.json`
 

@@ -2,7 +2,7 @@
 
 Relatório gerado automaticamente a partir de cruzamento entre fontes do repositório.
 
-- Gerado em: 2026-01-16T21:35:20.161Z
+- Gerado em: 2026-01-16T21:57:12.321Z
 - Context path (backend): `/api`
 - JSON: `docs/DIAGRAMS_RULEX_PASSADA2.json`
 
