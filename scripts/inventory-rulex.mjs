@@ -317,9 +317,10 @@ async function main() {
 		};
 	});
 
-	const backendConfigFiles = await walkFiles(backendResRoot, (p) =>
-		/application\.(yml|yaml|properties)$/i.test(path.basename(p)) || /prometheus-alerts\.yml$/i.test(path.basename(p)),
-	);
+	const backendConfigFiles = await walkFiles(backendResRoot, (p) => {
+		const base = path.basename(p);
+		return /application.*\.(yml|yaml|properties)$/i.test(base) || /prometheus-alerts\.yml$/i.test(base);
+	});
 
 	const pages = (await walkFiles(frontendPagesRoot, (p) => p.endsWith(".tsx")))
 		.map((p) => ({ file: rel(p) }))

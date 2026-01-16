@@ -2,7 +2,7 @@
 
 Este relatório é gerado automaticamente a partir do repositório (PASSADA 1: inventário).
 
-- Gerado em: 2026-01-16T21:20:41.642Z
+- Gerado em: 2026-01-16T21:28:52.991Z
 - Fonte: `RULEX`
 - Inventário (JSON): `docs/DIAGRAMS_RULEX_INVENTORY.json`
 
@@ -16,7 +16,7 @@ Este relatório é gerado automaticamente a partir do repositório (PASSADA 1: i
 - Entities (@Entity): 57
 - Repositories (extends JpaRepository/CrudRepository): 57
 - Flyway migrations: 35
-- Arquivos de config (resources): 2
+- Arquivos de config (resources): 4
 
 **OpenAPI (springdoc)**
 - Dependência encontrada: backend/pom.xml#L118

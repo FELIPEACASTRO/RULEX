@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-01-16T21:20:41.642Z",
+  "generatedAt": "2026-01-16T21:28:52.991Z",
   "repoRoot": "RULEX",
   "backend": {
     "controllers": [
@@ -2414,6 +2414,8 @@
       }
     ],
     "configFiles": [
+      "backend/src/main/resources/application-dev.yml",
+      "backend/src/main/resources/application-prod.yml",
       "backend/src/main/resources/application.yml",
       "backend/src/main/resources/prometheus-alerts.yml"
     ],
