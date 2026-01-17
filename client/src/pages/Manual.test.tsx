@@ -48,7 +48,9 @@ describe("Manual", () => {
     expect(screen.getAllByText(String(OPERATORS.length)).length).toBeGreaterThan(0);
   });
 
-  it("navega para tab Payload e exibe dicionario de campos", async () => {
+  it(
+    "navega para tab Payload e exibe dicionario de campos",
+    async () => {
     const user = userEvent.setup();
     render(<Manual />);
 
@@ -58,9 +60,20 @@ describe("Manual", () => {
 
     // Deve mostrar o dicionario de campos
     expect(screen.getByText(/dicionário de campos do payload/i)).toBeInTheDocument();
+    // Colunas enriquecidas
+    expect(await screen.findByRole('columnheader', { name: /descrição/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /valores esperados/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /^exemplo$/i })).toBeInTheDocument();
+
+    // Buscar e garantir que um campo conhecido aparece
+    const fieldSearch = screen.getByPlaceholderText(/buscar por nome do campo ou label/i);
+    await user.type(fieldSearch, "externalTransactionId");
+    expect(screen.getByText(/externalTransactionId/i)).toBeInTheDocument();
     // O número de campos aparece em múltiplos lugares
     expect(screen.getAllByText(String(Object.keys(FIELD_LABELS).length)).length).toBeGreaterThan(0);
-  });
+    },
+    10000
+  );
 
   it("navega para tab Exemplos e exibe templates", async () => {
     const user = userEvent.setup();
@@ -114,10 +127,12 @@ describe("Manual", () => {
     const searchInput = screen.getByPlaceholderText(
       /buscar operadores, campos, templates, ações, funções, endpoints, exemplos/i
     );
+    await user.clear(searchInput);
     await user.type(searchInput, "CONTAINS");
 
     // Deve mostrar resultados (pode haver múltiplos, então usamos getAllByText)
-    expect(screen.getAllByText("Operador").length).toBeGreaterThan(0);
+    const results = await screen.findAllByText("Operador");
+    expect(results.length).toBeGreaterThan(0);
   });
 
   it("tem exatamente 17 abas principais (sem aba extra)", () => {

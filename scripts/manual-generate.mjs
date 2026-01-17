@@ -67,6 +67,165 @@ function writeGenerated(filename, content) {
   success(`Gerado ${filename}`);
 }
 
+function safeJsonParse(value, label) {
+  try {
+    return JSON.parse(value);
+  } catch (e) {
+    error(`Falha ao fazer JSON.parse (${label}): ${e.message}`);
+    return null;
+  }
+}
+
+function ensureArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+// ============================================================================
+// EXTRAÇÃO: PAYLOAD EXAMPLE (Insomnia) + FIELD DICTIONARY
+// ============================================================================
+
+function extractInsomniaAnalyzeExamplePayload() {
+  const filePath = join(ROOT, 'Insomnia', 'RULEX_Insomnia_Collection.json');
+  const raw = readFile(filePath);
+  if (!raw) return null;
+
+  const insomnia = safeJsonParse(raw, 'Insomnia Collection');
+  if (!insomnia) return null;
+
+  const resources = ensureArray(insomnia.resources);
+  const preferredName = 'POST /transactions/analyze (FULL PAYLOAD - 118 campos)';
+
+  const candidates = resources
+    .filter((r) => r && r._type === 'request' && String(r.method || '').toUpperCase() === 'POST')
+    .filter((r) => typeof r.url === 'string' && r.url.includes('/transactions/analyze'))
+    .filter((r) => r.body && typeof r.body.text === 'string' && r.body.text.trim().startsWith('{'));
+
+  if (!candidates.length) {
+    error('Não encontrou request POST /transactions/analyze com body.text no Insomnia');
+    return null;
+  }
+
+  // Prioriza o request FULL PAYLOAD; se não existir, pega o maior payload válido.
+  const ordered = [
+    ...candidates.filter((c) => c.name === preferredName),
+    ...candidates.filter((c) => c.name !== preferredName),
+  ];
+
+  let best = null;
+  for (const req of ordered) {
+    const parsed = safeJsonParse(req.body.text, `Insomnia body (${req.name})`);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) continue;
+    const keyCount = Object.keys(parsed).length;
+    if (!best || keyCount > best.keyCount) {
+      best = {
+        name: req.name,
+        payload: parsed,
+        keyCount,
+      };
+    }
+    // Se achou o preferred e é razoável, pode parar.
+    if (req.name === preferredName) break;
+  }
+
+  if (!best) {
+    error('Não conseguiu parsear nenhum payload JSON válido do Insomnia');
+    return null;
+  }
+
+  return best;
+}
+
+function loadExistingFieldDictionaryItems() {
+  const filePath = join(GENERATED_DIR, 'fieldDictionary.generated.ts');
+  if (!existsSync(filePath)) return [];
+
+  const content = readFile(filePath);
+  if (!content) return [];
+
+  const marker = 'export const FIELD_DICTIONARY';
+  const idx = content.indexOf(marker);
+  if (idx === -1) return [];
+
+  // Importante: o primeiro '[' após o marker pode ser o '[]' do type annotation.
+  // Precisamos do '[' do array literal, que vem após o '='.
+  const eqIdx = content.indexOf('=', idx);
+  if (eqIdx === -1) return [];
+
+  const startArr = content.indexOf('[', eqIdx);
+  const endArr = content.indexOf('];', startArr);
+  if (startArr === -1 || endArr === -1) return [];
+
+  const arrayText = content.slice(startArr, endArr + 1);
+  const parsed = safeJsonParse(arrayText, 'fieldDictionary.generated.ts FIELD_DICTIONARY array');
+  return Array.isArray(parsed) ? parsed : [];
+}
+
+function inferTypeFromExample(name, value) {
+  if (value === null || value === undefined) return { type: 'string' };
+
+  const t = typeof value;
+  if (t === 'boolean') return { type: 'boolean' };
+  if (t === 'number') {
+    if (Number.isInteger(value)) {
+      const format = Math.abs(value) > 2147483647 ? 'int64' : undefined;
+      return { type: 'integer', format };
+    }
+    return { type: 'number' };
+  }
+  if (t === 'string') return { type: 'string' };
+  if (Array.isArray(value)) return { type: 'array' };
+  if (t === 'object') return { type: 'object' };
+  return { type: 'string' };
+}
+
+function generateFieldDictionaryFile() {
+  const existingItems = loadExistingFieldDictionaryItems();
+  const existingByName = new Map(existingItems.map((i) => [i?.name, i]).filter(([k]) => typeof k === 'string'));
+
+  const insomnia = extractInsomniaAnalyzeExamplePayload();
+  const examplePayload = insomnia?.payload ?? {};
+  const exampleSource = insomnia?.name ?? 'POST /transactions/analyze (example payload)';
+
+  const names = new Set([
+    ...Object.keys(examplePayload),
+    ...Array.from(existingByName.keys()).filter(Boolean),
+  ]);
+
+  const items = Array.from(names)
+    .filter((n) => typeof n === 'string' && n.length > 0)
+    .sort((a, b) => a.localeCompare(b))
+    .map((name) => {
+      const existing = existingByName.get(name);
+      const exampleValue = Object.prototype.hasOwnProperty.call(examplePayload, name)
+        ? examplePayload[name]
+        : undefined;
+
+      const inferred = inferTypeFromExample(name, exampleValue);
+
+      const constraints = ensureArray(existing?.constraints);
+      if ((exampleValue === null || exampleValue === undefined) && !constraints.includes('Pode ser nulo')) {
+        constraints.push('Pode ser nulo');
+      }
+
+      return {
+        name,
+        label: existing?.label,
+        description: existing?.description,
+        required: Boolean(existing?.required ?? false),
+        type: existing?.type ?? inferred.type,
+        format: existing?.format ?? inferred.format,
+        constraints,
+        possibleValues: ensureArray(existing?.possibleValues),
+        example: existing?.example ?? (exampleValue !== undefined ? JSON.stringify(exampleValue) : undefined),
+      };
+    });
+
+  const content = `// Auto-generated by scripts/manual-generate.mjs\n// Sources:\n// - Insomnia/RULEX_Insomnia_Collection.json (${exampleSource})\n// - (optional) existing generated file for richer metadata\n\nexport interface FieldDictionaryItem {\n  name: string;\n  label?: string;\n  description?: string;\n  required: boolean;\n  type: string;\n  format?: string;\n  constraints: string[];\n  possibleValues: string[];\n  example?: string;\n}\n\nexport const FIELD_DICTIONARY: FieldDictionaryItem[] = ${JSON.stringify(items, null, 2)};\n\nexport const FIELD_DICTIONARY_BY_NAME: Record<string, FieldDictionaryItem> = Object.fromEntries(\n  FIELD_DICTIONARY.map((f) => [f.name, f])\n);\n\nexport const FIELD_DICTIONARY_COUNT = FIELD_DICTIONARY.length;\n\nexport const FIELD_DICTIONARY_EXAMPLE_SOURCE = ${JSON.stringify(exampleSource)};\n`;
+
+  writeGenerated('fieldDictionary.generated.ts', content);
+  return items.length;
+}
+
 // ============================================================================
 // EXTRAÇÃO: TEMPLATES DO BACKEND (migrações Flyway)
 // ============================================================================
@@ -818,6 +977,7 @@ export * from './expressionFunctions.generated';
 export * from './astAllowlist.generated';
 export * from './openapiSummary.generated';
 export * from './docsIndex.generated';
+export * from './fieldDictionary.generated';
 `;
   writeGenerated('index.ts', content);
 }
@@ -972,6 +1132,8 @@ function main() {
   log('Extraindo índice de documentos...');
   const docs = extractDocsIndex();
 
+  log('Gerando dicionário de campos do payload (Insomnia)...');
+
   console.log('\n' + '-'.repeat(60) + '\n');
 
   // Gerar arquivos
@@ -983,6 +1145,7 @@ function main() {
   const astCounts = generateAstAllowlistFile(allowlist);
   const apiCount = generateOpenapiSummaryFile(endpoints);
   const docsCount = generateDocsIndexFile(docs);
+  const fieldDictCount = generateFieldDictionaryFile();
   generateIndexFile();
 
   // Ler operadores do FE para comparação
@@ -1002,6 +1165,7 @@ function main() {
   log(`  - Aliases de operadores: ${astCounts.aliases}`);
   log(`  - Endpoints API: ${apiCount}`);
   log(`  - Documentos: ${docsCount}`);
+  log(`  - Campos do payload (dicionário): ${fieldDictCount}`);
 
   console.log('\n');
 

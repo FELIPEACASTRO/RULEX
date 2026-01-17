@@ -9,3 +9,4 @@ export * from './expressionFunctions.generated';
 export * from './astAllowlist.generated';
 export * from './openapiSummary.generated';
 export * from './docsIndex.generated';
+export * from './fieldDictionary.generated';
