@@ -17,6 +17,8 @@ type CategoryFilter = "all" | DiagramCategoryId;
 
 type RendererFilter = "all" | RendererId;
 
+type CatalogMode = "solution" | "template";
+
 function normalize(text: string): string {
   return text
     .toLowerCase()
@@ -26,6 +28,7 @@ function normalize(text: string): string {
 
 export default function DiagramsHub() {
   const [query, setQuery] = useState("");
+  const [mode, setMode] = useState<CatalogMode>("solution");
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [renderer, setRenderer] = useState<RendererFilter>("all");
 
@@ -35,6 +38,8 @@ export default function DiagramsHub() {
     const q = normalize(query.trim());
 
     return DIAGRAM_ITEMS.filter((d) => {
+      if (mode === "solution" && d.origin !== "solution") return false;
+      if (mode === "template" && d.origin !== "template") return false;
       if (category !== "all" && d.categoryId !== category) return false;
       if (renderer !== "all" && d.rendererId !== renderer) return false;
 
@@ -45,13 +50,17 @@ export default function DiagramsHub() {
       );
       return hay.includes(q);
     });
-  }, [query, category, renderer]);
+  }, [query, mode, category, renderer]);
 
   const availableRenderers = useMemo(() => {
     const ids = new Set<RendererId>();
-    for (const item of DIAGRAM_ITEMS) ids.add(item.rendererId);
+    for (const item of DIAGRAM_ITEMS) {
+      if (mode === "solution" && item.origin !== "solution") continue;
+      if (mode === "template" && item.origin !== "template") continue;
+      ids.add(item.rendererId);
+    }
     return Array.from(ids).sort();
-  }, []);
+  }, [mode]);
 
   const selected: DiagramCatalogItem | undefined = useMemo(
     () => filtered.find((d) => d.id === selectedId) ?? DIAGRAM_ITEMS.find((d) => d.id === selectedId) ?? filtered[0],
@@ -79,12 +88,15 @@ export default function DiagramsHub() {
         <div>
           <h1 className="text-xl font-semibold">Central de Diagramas do RULEX</h1>
           <p className="text-sm text-muted-foreground">
-            Catálogo completo + renderização (Mermaid/BPMN/Imagem/PDF) com filtros e preview.
+            Diagramas da solução (verificados) + templates (referência) com filtros e preview.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{filtered.length} itens</Badge>
+          <Badge variant={mode === "solution" ? "default" : "secondary"}>
+            {mode === "solution" ? "Solução (verificado)" : "Templates"}
+          </Badge>
         </div>
       </div>
 
@@ -92,6 +104,21 @@ export default function DiagramsHub() {
         <ResizablePanel defaultSize={38} minSize={26} className="bg-background">
           <div className="flex h-full flex-col">
             <div className="border-b p-3">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <Tabs value={mode} onValueChange={(v) => setMode(v as CatalogMode)}>
+                  <TabsList className="flex flex-wrap">
+                    <TabsTrigger value="solution">Solução</TabsTrigger>
+                    <TabsTrigger value="template">Templates</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+
+                {mode === "template" ? (
+                  <div className="text-xs text-muted-foreground">
+                    Templates são referência didática e podem não refletir o RULEX real.
+                  </div>
+                ) : null}
+              </div>
+
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2 top-2.5 size-4 text-muted-foreground" />
                 <Input
@@ -163,6 +190,7 @@ export default function DiagramsHub() {
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
+                        {item.verified ? <Badge>verificado</Badge> : <Badge variant="secondary">template</Badge>}
                         {item.formatsSupported.includes("mermaid") ? (
                           <Badge variant="secondary">mmd</Badge>
                         ) : null}

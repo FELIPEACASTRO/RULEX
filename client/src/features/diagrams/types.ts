@@ -16,6 +16,8 @@ export type DiagramNotation =
 
 export type RendererStatus = "OK" | "PENDENTE";
 
+export type DiagramCatalogOrigin = "solution" | "template";
+
 export type DiagramCategoryId =
   | "processos"
   | "uml_estrutural"
@@ -102,6 +104,19 @@ export interface DiagramCatalogItem {
 
   canonicalName: string;
   aliases: string[];
+
+  /**
+   * Origem do item no catálogo:
+   * - solution: diagrama instanciado e verificado como representação do RULEX
+   * - template: tipo/template didático (não é garantia de fidelidade da solução)
+   */
+  origin: DiagramCatalogOrigin;
+
+  /** True apenas quando o conteúdo representa fielmente a solução RULEX (verificado). */
+  verified: boolean;
+
+  /** Observações curtas de verificação (fonte, escopo, limites). */
+  verificationNotes?: string;
 
   categoryId: DiagramCategoryId;
   categoryLabel: string;

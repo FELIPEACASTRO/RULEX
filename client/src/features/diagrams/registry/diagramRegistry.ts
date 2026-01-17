@@ -7,6 +7,7 @@
 
 import { MASSIVE_DIAGRAM_CATALOG, type MassiveDiagramFamily, getMassiveDiagramCount } from "./massiveCatalog";
 import { getDiagramCategory } from "./categories";
+import { buildInventorySolutionDiagrams } from "./inventorySolutionCatalog";
 import type { 
   DiagramCatalogItem, 
   DiagramCategoryId, 
@@ -380,6 +381,10 @@ function normalizeMassiveDiagram(
     notation: diagramType.notation,
     canonicalName: diagramType.name,
     aliases: [diagramType.nameEn, ...(diagramType.tools || [])].filter(Boolean) as string[],
+
+    origin: "template",
+    verified: false,
+    verificationNotes: "Template didático (não representa necessariamente o RULEX real).",
     categoryId,
     categoryLabel: category.label,
     descriptionWhenToUse: `${diagramType.description}. ${diagramType.useCase}`.trim(),
@@ -391,12 +396,181 @@ function normalizeMassiveDiagram(
   };
 }
 
+function solutionMermaidFlowAnalyze(): string {
+  return [
+    "flowchart TD",
+    "  FE[Frontend / Simulator] -->|POST /analyze| API[API (Spring Boot)]",
+    "  API --> V[Validate + Normalize payload]",
+    "  V --> ENG[RuleEngineService]",
+    "  ENG -->|load rules| DB[(PostgreSQL)]",
+    "  ENG --> C[Compute score + matches]",
+    "  C --> D{Decision}",
+    "  D -->|APPROVE| A1[Persist audit + decision]",
+    "  D -->|REVIEW| A2[Persist audit + create case]",
+    "  D -->|BLOCK| A3[Persist audit + block]",
+    "  A1 --> DB",
+    "  A2 --> DB",
+    "  A3 --> DB",
+    "  API --> AUD[AccessLogService / Audit]",
+    "  AUD --> MON[MetricsService / Monitoring]",
+    "  API --> FE",
+  ].join("\n");
+}
+
+function solutionMermaidSequenceAnalyze(): string {
+  return [
+    "sequenceDiagram",
+    "  participant FE as RULEX Web",
+    "  participant API as TransactionController",
+    "  participant ENG as RuleEngineService",
+    "  participant DB as PostgreSQL",
+    "  participant AUD as AccessLogService",
+    "  FE->>API: POST /api/analyze (transaction)",
+    "  API->>AUD: log request (headers, route, outcome)",
+    "  API->>ENG: analyze(transaction)",
+    "  ENG->>DB: load active rules / operators",
+    "  DB-->>ENG: rules",
+    "  ENG-->>API: decision + score + reasons",
+    "  API->>DB: persist transaction + audit",
+    "  DB-->>API: ok",
+    "  API-->>FE: 200 decision payload",
+  ].join("\n");
+}
+
+function solutionMermaidC4Container(): string {
+  return [
+    "flowchart LR",
+    "  subgraph Users[Users]",
+    "    U1[Analista]",
+    "    U2[Admin]",
+    "  end",
+    "  subgraph RULEX[RULEX Platform]",
+    "    FE[RULEX Web (React)]",
+    "    API[API (Spring Boot)]",
+    "    ENG[Rules Engine]",
+    "    DB[(PostgreSQL)]",
+    "    CACHE[(Redis)]",
+    "  end",
+    "  subgraph Obs[Observability]",
+    "    LOGS[Audit/Logs]",
+    "    METRICS[Metrics]",
+    "  end",
+    "  U1 --> FE",
+    "  U2 --> FE",
+    "  FE --> API",
+    "  API --> ENG",
+    "  ENG --> DB",
+    "  ENG --> CACHE",
+    "  API --> LOGS",
+    "  ENG --> LOGS",
+    "  LOGS --> METRICS",
+  ].join("\n");
+}
+
+function solutionMermaidErCore(): string {
+  return [
+    "erDiagram",
+    "  TRANSACTION ||--o{ RULE_EVAL : evaluated_by",
+    "  RULE_EVAL }o--|| RULE : references",
+    "  TRANSACTION {",
+    "    uuid id",
+    "    string externalTransactionId",
+    "    decimal amount",
+    "    string currency",
+    "  }",
+    "  RULE {",
+    "    uuid id",
+    "    string name",
+    "    string status",
+    "  }",
+    "  RULE_EVAL {",
+    "    uuid id",
+    "    uuid transactionId",
+    "    uuid ruleId",
+    "    int scoreImpact",
+    "  }",
+  ].join("\n");
+}
+
+export const SOLUTION_DIAGRAMS: DiagramCatalogItem[] = [
+  {
+    id: "RULEX/FLOW_analyze",
+    notation: "FLOWCHART",
+    canonicalName: "Fluxo real: /analyze (RULEX)",
+    aliases: ["/analyze", "transaction", "score", "decision"],
+    origin: "solution",
+    verified: true,
+    verificationNotes: "Representação fiel do fluxo ponta-a-ponta (FE→API→Engine→DB/Audit).",
+    categoryId: "processos",
+    categoryLabel: getDiagramCategory("processos").label,
+    descriptionWhenToUse: "Fluxo operacional real da análise de transação no RULEX.",
+    formatsSupported: ["mermaid"],
+    rendererId: "mermaid",
+    rendererStatus: "OK",
+    sample: { kind: "inline", format: "mermaid", content: solutionMermaidFlowAnalyze() },
+  },
+  {
+    id: "RULEX/SEQ_analyze",
+    notation: "UML",
+    canonicalName: "Sequência real: FE → API → Engine → DB",
+    aliases: ["sequence", "TransactionController", "RuleEngineService"],
+    origin: "solution",
+    verified: true,
+    verificationNotes: "Sequência real do request /analyze e persistência/auditoria.",
+    categoryId: "api",
+    categoryLabel: getDiagramCategory("api").label,
+    descriptionWhenToUse: "Entender a ordem de chamadas e persistência do /analyze.",
+    formatsSupported: ["mermaid"],
+    rendererId: "mermaid",
+    rendererStatus: "OK",
+    sample: { kind: "inline", format: "mermaid", content: solutionMermaidSequenceAnalyze() },
+  },
+  {
+    id: "RULEX/C4_container",
+    notation: "C4",
+    canonicalName: "C4 (Container): RULEX",
+    aliases: ["C4", "containers", "architecture"],
+    origin: "solution",
+    verified: true,
+    verificationNotes: "Visão de containers da solução (Web/API/DB/Cache/Obs).",
+    categoryId: "arquitetura",
+    categoryLabel: getDiagramCategory("arquitetura").label,
+    descriptionWhenToUse: "Visão macro dos componentes implantáveis do RULEX.",
+    formatsSupported: ["mermaid"],
+    rendererId: "mermaid",
+    rendererStatus: "OK",
+    sample: { kind: "inline", format: "mermaid", content: solutionMermaidC4Container() },
+  },
+  {
+    id: "RULEX/ER_core",
+    notation: "ER",
+    canonicalName: "ER (Core): Transaction ↔ Rule ↔ Evaluation",
+    aliases: ["ER", "schema", "postgres"],
+    origin: "solution",
+    verified: true,
+    verificationNotes: "Modelo de dados central (alto nível).",
+    categoryId: "dados_postgres",
+    categoryLabel: getDiagramCategory("dados_postgres").label,
+    descriptionWhenToUse: "Entender entidades/tabelas core e relações principais.",
+    formatsSupported: ["mermaid"],
+    rendererId: "mermaid",
+    rendererStatus: "OK",
+    sample: { kind: "inline", format: "mermaid", content: solutionMermaidErCore() },
+  },
+];
+
+export const INVENTORY_SOLUTION_DIAGRAMS: DiagramCatalogItem[] = buildInventorySolutionDiagrams();
+
 /**
  * Build the massive diagram registry
  */
 export const DIAGRAM_REGISTRY: DiagramCatalogItem[] = MASSIVE_DIAGRAM_CATALOG.flatMap((family) =>
   family.diagrams.map((diagram) => normalizeMassiveDiagram(diagram, family.id))
 );
+
+export const TEMPLATE_DIAGRAMS: DiagramCatalogItem[] = DIAGRAM_REGISTRY;
+
+export const ALL_DIAGRAMS: DiagramCatalogItem[] = [...SOLUTION_DIAGRAMS, ...INVENTORY_SOLUTION_DIAGRAMS, ...TEMPLATE_DIAGRAMS];
 
 /**
  * Get total count of diagrams in registry
@@ -416,42 +590,42 @@ export function getMassiveCatalogCount(): number {
  * Get all diagrams
  */
 export function getAllDiagrams(): DiagramCatalogItem[] {
-  return DIAGRAM_REGISTRY;
+  return ALL_DIAGRAMS;
 }
 
 /**
  * Get a diagram by ID
  */
 export function getDiagramById(id: string): DiagramCatalogItem | undefined {
-  return DIAGRAM_REGISTRY.find((d) => d.id === id);
+  return ALL_DIAGRAMS.find((d) => d.id === id);
 }
 
 /**
  * Get diagrams by category
  */
 export function getDiagramsByCategory(category: DiagramCategoryId): DiagramCatalogItem[] {
-  return DIAGRAM_REGISTRY.filter((d) => d.categoryId === category);
+  return ALL_DIAGRAMS.filter((d) => d.categoryId === category);
 }
 
 /**
  * Get diagrams by notation
  */
 export function getDiagramsByNotation(notation: DiagramNotation): DiagramCatalogItem[] {
-  return DIAGRAM_REGISTRY.filter((d) => d.notation === notation);
+  return ALL_DIAGRAMS.filter((d) => d.notation === notation);
 }
 
 /**
  * Get diagrams by renderer
  */
 export function getDiagramsByRenderer(renderer: RendererId): DiagramCatalogItem[] {
-  return DIAGRAM_REGISTRY.filter((d) => d.rendererId === renderer);
+  return ALL_DIAGRAMS.filter((d) => d.rendererId === renderer);
 }
 
 /**
  * Get diagrams by renderer status
  */
 export function getDiagramsByStatus(status: RendererStatus): DiagramCatalogItem[] {
-  return DIAGRAM_REGISTRY.filter((d) => d.rendererStatus === status);
+  return ALL_DIAGRAMS.filter((d) => d.rendererStatus === status);
 }
 
 /**
@@ -459,7 +633,7 @@ export function getDiagramsByStatus(status: RendererStatus): DiagramCatalogItem[
  */
 export function searchDiagrams(query: string): DiagramCatalogItem[] {
   const lowerQuery = query.toLowerCase();
-  return DIAGRAM_REGISTRY.filter(
+  return ALL_DIAGRAMS.filter(
     (d) =>
       d.canonicalName.toLowerCase().includes(lowerQuery) ||
       d.aliases.some((alias) => alias.toLowerCase().includes(lowerQuery)) ||
@@ -471,7 +645,7 @@ export function searchDiagrams(query: string): DiagramCatalogItem[] {
 /**
  * Legacy aliases for compatibility
  */
-export const DIAGRAM_ITEMS = DIAGRAM_REGISTRY;
+export const DIAGRAM_ITEMS = ALL_DIAGRAMS;
 export const findDiagramById = getDiagramById;
 export function getLegacyDiagramCount(): number {
   return getDiagramCount();

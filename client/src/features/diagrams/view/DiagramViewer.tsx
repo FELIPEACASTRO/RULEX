@@ -97,6 +97,11 @@ export function DiagramViewer({ item }: Props) {
         <div className="min-w-0">
           <div className="truncate text-lg font-semibold">{item.canonicalName}</div>
           <div className="text-sm text-muted-foreground">{item.categoryLabel}</div>
+          {item.verificationNotes ? (
+            <div className="mt-1 text-xs text-muted-foreground">
+              {item.verificationNotes}
+            </div>
+          ) : null}
         </div>
 
         <div className="flex items-center gap-2">

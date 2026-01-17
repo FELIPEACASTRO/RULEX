@@ -4,7 +4,8 @@ import { DIAGRAM_ITEMS, getLegacyDiagramCount } from "../registry/diagramRegistr
 
 describe("Diagram registry", () => {
   it("covers the full legacy catalog (anti-gap)", () => {
-    expect(DIAGRAM_ITEMS.length).toBe(getLegacyDiagramCount());
+    // Legacy count refers to the template/massive catalog; DIAGRAM_ITEMS includes solution + templates.
+    expect(DIAGRAM_ITEMS.length).toBeGreaterThanOrEqual(getLegacyDiagramCount());
   });
 
   it("has unique ids", () => {
@@ -15,6 +16,7 @@ describe("Diagram registry", () => {
   it("has required metadata for each item", () => {
     for (const item of DIAGRAM_ITEMS) {
       expect(item.canonicalName).toBeTruthy();
+      expect(item.origin).toBeTruthy();
       expect(item.categoryId).toBeTruthy();
       expect(item.categoryLabel).toBeTruthy();
       expect(item.formatsSupported.length).toBeGreaterThan(0);

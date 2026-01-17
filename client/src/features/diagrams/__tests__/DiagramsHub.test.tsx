@@ -24,4 +24,10 @@ describe("DiagramsHub", () => {
     expect(screen.getByText(/itens/i)).toBeInTheDocument();
     expect(screen.getByLabelText("Buscar diagramas")).toBeInTheDocument();
   });
+
+  it("defaults to Solution mode and shows verified diagrams", () => {
+    render(<DiagramsHub />);
+    expect(screen.getByText("Solução (verificado)")).toBeInTheDocument();
+    expect(screen.getByText(/Fluxo real: \/analyze/i)).toBeInTheDocument();
+  });
 });
