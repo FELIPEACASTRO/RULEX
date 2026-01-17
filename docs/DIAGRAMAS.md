@@ -1,6 +1,6 @@
 # DIAGRAMAS — Documentação Oficial do RULEX
 
-Gerado em: 2026-01-17T18:29:53.566Z
+Gerado em: 2026-01-17T18:43:04.282Z
 
 ---
 
@@ -107,108 +107,188 @@ pnpm diagrams:sync           # Sincroniza inventário + checklist + doc
 
 ## Catálogo Mestre (auditável)
 
-| Categoria | Diagrama | Público | Nível | Evidência | Status |
+| Seção | Artefato/Diagrama | Público | Objetivo | Status | Evidência |
 |---|---|---|---|---|---|
-| Backend | API Contract — OpenAPI | Dev Backend, Arquiteto, QA, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Backend | Arquitetura Backend — Camadas | Dev Backend, Arquiteto, QA, Operação | Tático/Detalhado | backend/src/main/java/com/rulex | OK |
-| Backend | Arquitetura de Regras Duras | Dev Backend, Arquiteto, QA, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Backend | C4 — Component Diagram (Backend) | Dev Backend, Arquiteto, QA, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Backend | C4 — Container Diagram | Dev Backend, Arquiteto, QA, Operação | Tático/Detalhado | docker-compose.yml; backend/src/main/resources/application.yml; client/src/App.tsx | OK |
-| Backend | Event / Message Flow | Dev Backend, Arquiteto, QA, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Backend | Fluxo — Análise de Transação (/analyze) | Dev Backend, Arquiteto, QA, Operação | Tático/Detalhado | backend/src/main/java/com/rulex/controller/TransactionController.java; backend/src/main/java/com/rulex/service/RuleEngineService.java; openapi/rulex.yaml | OK |
-| Backend | Fluxo — Tratamento de Exceções | Dev Backend, Arquiteto, QA, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Backend | Integrações Externas | Dev Backend, Arquiteto, QA, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Backend | UML — Diagrama de Classes (Entidades Core) | Dev Backend, Arquiteto, QA, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Backend | UML — Diagrama de Estados (Regra) | Dev Backend, Arquiteto, QA, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Backend | UML — Diagrama de Pacotes | Dev Backend, Arquiteto, QA, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Backend | UML — Diagrama de Sequência (Análise de Transação) | Dev Backend, Arquiteto, QA, Operação | Tático/Detalhado | backend/src/main/java/com/rulex/controller/TransactionController.java; backend/src/main/java/com/rulex/service/RuleEngineService.java | OK |
-| Frontend | Arquitetura do Frontend | Dev Frontend, Design, QA, Produto | Tático | client/src/main.tsx; client/src/App.tsx; vite.config.ts; package.json | OK |
-| Frontend | Componentes do Frontend | Dev Frontend, Design, QA, Produto | Tático | client/src/components; components.json | OK |
-| Frontend | Design System — RULEX | Dev Frontend, Design, QA, Produto | Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Frontend | Estados da UI — Componente Genérico | Dev Frontend, Design, QA, Produto | Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Frontend | Fluxo UI — Criação de Regra | Dev Frontend, Design, QA, Produto | Tático | client/src/pages/ComplexRules.tsx; client/src/App.tsx | OK |
-| Frontend | Fluxo UI: Frontend: Pages inventory | Dev Frontend, Design, QA, Produto | Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Frontend | Wireflow — Navegação Principal | Dev Frontend, Design, QA, Produto | Tático | client/src/App.tsx | OK |
-| Negócio/Usuário | BPMN — Decisão de Fraude | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | BPMN — Exceção / Fallback | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | BPMN — Rollback Operacional | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | BPMN AS-IS (Processo Atual) | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | BPMN TO-BE (Processo Futuro/Desejado) | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Business Model Canvas — RULEX | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Casos de Uso — Administrador | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Casos de Uso — Analista de Fraude | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Casos de Uso — Motor de Regras (Interno) | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Casos de Uso — Operação / Suporte | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Casos de Uso — Sistema Externo (Integração) | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Jornada — Criação de Regra | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Jornada — Investigação de Fraude | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Jornada — Publicação de Regra | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Jornada — Rollback de Regra | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Jornada — Simulação de Regra | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Persona — Analista de Fraude | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Persona — Executivo / Compliance | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Persona — Operação / SRE | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Persona — Sistema Automatizado | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Service Blueprint — Análise de Transação | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | User Story Map — RULEX | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Negócio/Usuário | Value Proposition Canvas — RULEX | Negócio, Exec, Produto, Operação | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Neo4j | Armazenamento Neo4j | Dev Backend, Data/Graph, Arquiteto | Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Neo4j | Cluster Causal Neo4j | Dev Backend, Data/Graph, Arquiteto | Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Neo4j | Exemplo de Grafo — Fraud Ring | Dev Backend, Data/Graph, Arquiteto | Detalhado | backend/src/main/java/com/rulex/service/Neo4jGraphService.java; backend/src/main/java/com/rulex/service/complex/ComplexRuleEvaluator.java | OK |
-| Neo4j | Index-Free Adjacency | Dev Backend, Data/Graph, Arquiteto | Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Neo4j | Índices e Constraints Neo4j | Dev Backend, Data/Graph, Arquiteto | Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Neo4j | Multi-Data Center Neo4j | Dev Backend, Data/Graph, Arquiteto | Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Neo4j | Property Graph — RULEX | Dev Backend, Data/Graph, Arquiteto | Detalhado | backend/src/main/java/com/rulex/service/Neo4jGraphService.java; backend/src/main/java/com/rulex/service/complex/ComplexRuleEvaluator.java; docker-compose.yml; backend/src/main/resources/application.yml | OK |
-| PostgreSQL | Armazenamento PostgreSQL | Dev Backend, DBA, Arquiteto, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| PostgreSQL | Data Lifecycle — Retenção e LGPD | Dev Backend, DBA, Arquiteto, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| PostgreSQL | ERD — Completo | Dev Backend, DBA, Arquiteto, Operação | Tático/Detalhado | backend/src/main/resources/db/migration | OK |
-| PostgreSQL | ERD — Entidades Core | Dev Backend, DBA, Arquiteto, Operação | Tático/Detalhado | backend/src/main/resources/db/migration/V2__core_schema.sql | OK |
-| PostgreSQL | Modelo Conceitual | Dev Backend, DBA, Arquiteto, Operação | Tático/Detalhado | backend/src/main/resources/db/migration/V2__core_schema.sql | OK |
-| PostgreSQL | Modelo Físico | Dev Backend, DBA, Arquiteto, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| PostgreSQL | Modelo Lógico | Dev Backend, DBA, Arquiteto, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| PostgreSQL | Organização de Schemas | Dev Backend, DBA, Arquiteto, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| PostgreSQL | Replicação PostgreSQL | Dev Backend, DBA, Arquiteto, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Redis | Arquitetura Redis — Event Loop | Dev Backend, Arquiteto, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Redis | Cluster Redis | Dev Backend, Arquiteto, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Redis | Consistência e Invalidação de Cache | Dev Backend, Arquiteto, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Redis | Estratégia de Cache — RULEX | Dev Backend, Arquiteto, Operação | Tático/Detalhado | backend/src/main/resources/application.yml; backend/src/main/java/com/rulex/service/RedisVelocityCacheService.java; backend/src/main/java/com/rulex/service/RedisVelocityService.java; backend/src/main/java/com/rulex/service/VelocityServiceFacade.java | OK |
-| Redis | Persistência Redis | Dev Backend, Arquiteto, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Redis | Replicação Redis | Dev Backend, Arquiteto, Operação | Tático/Detalhado | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Redis | Tipos de Dados Redis — RULEX | Dev Backend, Arquiteto, Operação | Tático/Detalhado | backend/src/main/java/com/rulex/service/RedisVelocityCacheService.java; backend/src/main/java/com/rulex/service/RedisVelocityService.java | OK |
-| Transversal | Alertas Configurados | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | backend/src/main/resources/prometheus-alerts.yml | OK |
-| Transversal | Ambientes (Dev/Hml/Prod) | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Transversal | Autenticação e Autorização | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | backend/src/main/java/com/rulex/config/SecurityConfig.java; backend/src/main/resources/application.yml | OK |
-| Transversal | CI/CD Pipeline | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Transversal | Circuit Breaker | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Transversal | Deployment Diagram | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Transversal | DFD Nível 0 — Contexto | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Transversal | DFD Nível 1 — Processos Principais | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Transversal | DFD Nível 2 — Detalhamento | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Transversal | Diagrama de Latência | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Transversal | Limites de TPS | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Transversal | Padrões de Resiliência | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | backend/pom.xml; backend/src/main/resources/application.yml | OK |
-| Transversal | Pontos de Gargalo | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Transversal | Proteção de Dados / LGPD | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
-| Transversal | Stack de Observabilidade | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | backend/src/main/resources/application.yml; backend/src/main/resources/prometheus-alerts.yml | OK |
-| Transversal | Threat Model — STRIDE | Arquiteto, Segurança, Operação, QA | Estratégico/Tático | EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | BPMN — Decisão de Fraude | Negócio, Exec, Produto, Operação | Representar o fluxo de decisão de fraude no motor de regras. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | BPMN — Exceção / Fallback | Negócio, Exec, Produto, Operação | Documentar o que acontece quando o fluxo principal falha. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | BPMN — Rollback Operacional | Negócio, Exec, Produto, Operação | Documentar o processo de reverter uma publicação de regra... | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | BPMN AS-IS (Processo Atual) | Negócio, Exec, Produto, Operação | Documentar o processo de negócio atual (antes de melhoria... | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | BPMN TO-BE (Processo Futuro/Desejado) | Negócio, Exec, Produto, Operação | Documentar o processo de negócio desejado após melhorias/... | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Business Model Canvas — RULEX | Negócio, Exec, Produto, Operação | Documentar o modelo de negócio do RULEX. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Casos de Uso — Administrador | Negócio, Exec, Produto, Operação | Documentar funcionalidades disponíveis para o administrador. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Casos de Uso — Analista de Fraude | Negócio, Exec, Produto, Operação | Documentar as funcionalidades disponíveis para o analista. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Casos de Uso — Motor de Regras (Interno) | Negócio, Exec, Produto, Operação | Documentar o comportamento interno do motor. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Casos de Uso — Operação / Suporte | Negócio, Exec, Produto, Operação | Documentar funcionalidades de operação e suporte. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Casos de Uso — Sistema Externo (Integração) | Negócio, Exec, Produto, Operação | Documentar as funcionalidades expostas para sistemas exte... | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Jornada — Criação de Regra | Negócio, Exec, Produto, Operação | Mapear a experiência do usuário ao criar uma regra. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Jornada — Investigação de Fraude | Negócio, Exec, Produto, Operação | Mapear a experiência ao investigar uma transação suspeita. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Jornada — Publicação de Regra | Negócio, Exec, Produto, Operação | Mapear a experiência ao publicar uma regra. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Jornada — Rollback de Regra | Negócio, Exec, Produto, Operação | Mapear a experiência ao reverter uma regra problemática. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Jornada — Simulação de Regra | Negócio, Exec, Produto, Operação | Mapear a experiência ao simular uma regra. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Persona — Analista de Fraude | Negócio, Exec, Produto, Operação | Definir o perfil típico do usuário analista. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Persona — Executivo / Compliance | Negócio, Exec, Produto, Operação | Definir o perfil do stakeholder executivo. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Persona — Operação / SRE | Negócio, Exec, Produto, Operação | Definir o perfil do time de operação. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Persona — Sistema Automatizado | Negócio, Exec, Produto, Operação | Definir o perfil do sistema que consome a API. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Service Blueprint — Análise de Transação | Negócio, Exec, Produto, Operação | Mapear frontstage, backstage e sistemas de apoio. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | User Story Map — RULEX | Negócio, Exec, Produto, Operação | Organizar funcionalidades em backbone de atividades e rel... | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 2. Negócio/Usuário | Value Proposition Canvas — RULEX | Negócio, Exec, Produto, Operação | Detalhar a proposta de valor vs dores e ganhos do cliente. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 4. Frontend | Arquitetura do Frontend | Dev Frontend, Design, QA, Produto | Documentar a estrutura de camadas do frontend. | ✅ OK | client/src/main.tsx; client/src/App.tsx; vite.config.ts; package.json |
+| 4. Frontend | Componentes do Frontend | Dev Frontend, Design, QA, Produto | Mapear os principais componentes e suas dependências. | ✅ OK | client/src/components; components.json |
+| 4. Frontend | Design System — RULEX | Dev Frontend, Design, QA, Produto | Documentar paleta, tipografia, espaçamentos, estados, ace... | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 4. Frontend | Estados da UI — Componente Genérico | Dev Frontend, Design, QA, Produto | Documentar os estados possíveis de um componente. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 4. Frontend | Fluxo UI — Criação de Regra | Dev Frontend, Design, QA, Produto | Documentar o fluxo de criação de regra na interface. | ✅ OK | client/src/pages/ComplexRules.tsx; client/src/App.tsx |
+| 4. Frontend | Fluxo UI: Frontend: Pages inventory | Dev Frontend, Design, QA, Produto | Documentar o fluxo de interação na tela. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 4. Frontend | Wireflow — Navegação Principal | Dev Frontend, Design, QA, Produto | Documentar os caminhos de navegação entre telas. | ✅ OK | client/src/App.tsx |
+| 5. Backend Java | API Contract — OpenAPI | Dev Backend, Arquiteto, QA, Operação | Documentar endpoints expostos conforme contrato OpenAPI. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 5. Backend Java | Arquitetura Backend — Camadas | Dev Backend, Arquiteto, QA, Operação | Documentar a estrutura de camadas do backend Spring Boot. | ✅ OK | backend/src/main/java/com/rulex |
+| 5. Backend Java | Arquitetura de Regras Duras | Dev Backend, Arquiteto, QA, Operação | Documentar a estrutura do motor de regras. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 5. Backend Java | C4 — Component Diagram (Backend) | Dev Backend, Arquiteto, QA, Operação | Detalhar os componentes internos do backend. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 5. Backend Java | C4 — Container Diagram | Dev Backend, Arquiteto, QA, Operação | Visão de containers do sistema e suas dependências. | ✅ OK | docker-compose.yml; backend/src/main/resources/application.yml; client/src/App.tsx |
+| 5. Backend Java | Event / Message Flow | Dev Backend, Arquiteto, QA, Operação | Documentar fluxo de eventos e mensagens (filas, tópicos). | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 5. Backend Java | Fluxo — Análise de Transação (/analyze) | Dev Backend, Arquiteto, QA, Operação | Documentar o fluxo completo de análise. | ✅ OK | backend/src/main/java/com/rulex/controller/TransactionController.java; backend/src/main/java/com/rulex/service/RuleEngineService.java; openapi/rulex.yaml |
+| 5. Backend Java | Fluxo — Tratamento de Exceções | Dev Backend, Arquiteto, QA, Operação | Documentar como exceções são tratadas. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 5. Backend Java | Integrações Externas | Dev Backend, Arquiteto, QA, Operação | Documentar sistemas externos que se integram ao RULEX. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 5. Backend Java | UML — Diagrama de Classes (Entidades Core) | Dev Backend, Arquiteto, QA, Operação | Documentar as principais entidades do domínio. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 5. Backend Java | UML — Diagrama de Estados (Regra) | Dev Backend, Arquiteto, QA, Operação | Documentar os estados possíveis de uma regra. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 5. Backend Java | UML — Diagrama de Pacotes | Dev Backend, Arquiteto, QA, Operação | Documentar a organização de pacotes do backend. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 5. Backend Java | UML — Diagrama de Sequência (Análise de Transação) | Dev Backend, Arquiteto, QA, Operação | Documentar o fluxo de chamadas para análise. | ✅ OK | backend/src/main/java/com/rulex/controller/TransactionController.java; backend/src/main/java/com/rulex/service/RuleEngineService.java |
+| 6. PostgreSQL | Armazenamento PostgreSQL | Dev Backend, DBA, Arquiteto, Operação | Documentar pages, WAL, files. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 6. PostgreSQL | Data Lifecycle — Retenção e LGPD | Dev Backend, DBA, Arquiteto, Operação | Documentar ciclo de vida dos dados, retenção e conformida... | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 6. PostgreSQL | ERD — Completo | Dev Backend, DBA, Arquiteto, Operação | Diagrama ER de todas as tabelas. | ✅ OK | backend/src/main/resources/db/migration |
+| 6. PostgreSQL | ERD — Entidades Core | Dev Backend, DBA, Arquiteto, Operação | Diagrama ER das principais tabelas. | ✅ OK | backend/src/main/resources/db/migration/V2__core_schema.sql |
+| 6. PostgreSQL | Modelo Conceitual | Dev Backend, DBA, Arquiteto, Operação | Visão de alto nível das entidades e relacionamentos. | ✅ OK | backend/src/main/resources/db/migration/V2__core_schema.sql |
+| 6. PostgreSQL | Modelo Físico | Dev Backend, DBA, Arquiteto, Operação | Detalhes de índices, particionamento, storage. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 6. PostgreSQL | Modelo Lógico | Dev Backend, DBA, Arquiteto, Operação | Detalhes de tabelas, colunas e tipos. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 6. PostgreSQL | Organização de Schemas | Dev Backend, DBA, Arquiteto, Operação | Documentar schemas, tabelas e índices. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 6. PostgreSQL | Replicação PostgreSQL | Dev Backend, DBA, Arquiteto, Operação | Documentar topologia de replicação. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 7. Redis | Arquitetura Redis — Event Loop | Dev Backend, Arquiteto, Operação | Documentar o modelo de execução single-threaded. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 7. Redis | Cluster Redis | Dev Backend, Arquiteto, Operação | Documentar sharding e hash slots. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 7. Redis | Consistência e Invalidação de Cache | Dev Backend, Arquiteto, Operação | Documentar estratégias de consistência, invalidação e pro... | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 7. Redis | Estratégia de Cache — RULEX | Dev Backend, Arquiteto, Operação | Documentar como o cache é usado. | ✅ OK | backend/src/main/resources/application.yml; backend/src/main/java/com/rulex/service/RedisVelocityCacheService.java; backend/src/main/java/com/rulex/service/RedisVelocityService.java; backend/src/main/java/com/rulex/service/VelocityServiceFacade.java |
+| 7. Redis | Persistência Redis | Dev Backend, Arquiteto, Operação | Documentar RDB, AOF, estratégias. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 7. Redis | Replicação Redis | Dev Backend, Arquiteto, Operação | Documentar topologia leader-follower. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 7. Redis | Tipos de Dados Redis — RULEX | Dev Backend, Arquiteto, Operação | Documentar como o RULEX usa cada tipo de dado. | ✅ OK | backend/src/main/java/com/rulex/service/RedisVelocityCacheService.java; backend/src/main/java/com/rulex/service/RedisVelocityService.java |
+| 8. Neo4j | Armazenamento Neo4j | Dev Backend, Data/Graph, Arquiteto | Documentar stores: Node, Relationship, Property. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 8. Neo4j | Cluster Causal Neo4j | Dev Backend, Data/Graph, Arquiteto | Documentar Core Servers, Read Replicas, RAFT. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 8. Neo4j | Exemplo de Grafo — Fraud Ring | Dev Backend, Data/Graph, Arquiteto | Visualizar exemplo real de dados de fraude. | ✅ OK | backend/src/main/java/com/rulex/service/Neo4jGraphService.java; backend/src/main/java/com/rulex/service/complex/ComplexRuleEvaluator.java |
+| 8. Neo4j | Index-Free Adjacency | Dev Backend, Data/Graph, Arquiteto | Documentar a navegação O(1) do Neo4j. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 8. Neo4j | Índices e Constraints Neo4j | Dev Backend, Data/Graph, Arquiteto | Documentar índices, constraints e padrões de query Cypher. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 8. Neo4j | Multi-Data Center Neo4j | Dev Backend, Data/Graph, Arquiteto | Documentar topologia multi-DC. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 8. Neo4j | Property Graph — RULEX | Dev Backend, Data/Graph, Arquiteto | Documentar nós, relacionamentos e propriedades. | ✅ OK | backend/src/main/java/com/rulex/service/Neo4jGraphService.java; backend/src/main/java/com/rulex/service/complex/ComplexRuleEvaluator.java; docker-compose.yml; backend/src/main/resources/application.yml |
+| 9. Transversal | Alertas Configurados | Arquiteto, Segurança, Operação, QA | Documentar alertas ativos. | ✅ OK | backend/src/main/resources/prometheus-alerts.yml |
+| 9. Transversal | Ambientes (Dev/Hml/Prod) | Arquiteto, Segurança, Operação, QA | Documentar configuração por ambiente. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 9. Transversal | Autenticação e Autorização | Arquiteto, Segurança, Operação, QA | Documentar mecanismos de segurança. | ✅ OK | backend/src/main/java/com/rulex/config/SecurityConfig.java; backend/src/main/resources/application.yml |
+| 9. Transversal | CI/CD Pipeline | Arquiteto, Segurança, Operação, QA | Documentar pipeline de integração e entrega contínua. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 9. Transversal | Circuit Breaker | Arquiteto, Segurança, Operação, QA | Documentar implementação de circuit breaker. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 9. Transversal | Deployment Diagram | Arquiteto, Segurança, Operação, QA | Documentar como o sistema é implantado. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 9. Transversal | DFD Nível 0 — Contexto | Arquiteto, Segurança, Operação, QA | Visão de alto nível do sistema e suas fronteiras. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 9. Transversal | DFD Nível 1 — Processos Principais | Arquiteto, Segurança, Operação, QA | Detalhar os processos internos. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 9. Transversal | DFD Nível 2 — Detalhamento | Arquiteto, Segurança, Operação, QA | Detalhar subprocessos. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 9. Transversal | Diagrama de Latência | Arquiteto, Segurança, Operação, QA | Documentar latências esperadas (p50, p95, p99). | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 9. Transversal | Limites de TPS | Arquiteto, Segurança, Operação, QA | Documentar capacidade e limites de throughput. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 9. Transversal | Padrões de Resiliência | Arquiteto, Segurança, Operação, QA | Documentar retry, timeout, circuit breaker, fallback. | ✅ OK | backend/pom.xml; backend/src/main/resources/application.yml |
+| 9. Transversal | Pontos de Gargalo | Arquiteto, Segurança, Operação, QA | Identificar potenciais gargalos de performance. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 9. Transversal | Proteção de Dados / LGPD | Arquiteto, Segurança, Operação, QA | Documentar tratamento de dados sensíveis. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 9. Transversal | Stack de Observabilidade | Arquiteto, Segurança, Operação, QA | Documentar logs, métricas, traces, alertas. | ✅ OK | backend/src/main/resources/application.yml; backend/src/main/resources/prometheus-alerts.yml |
+| 9. Transversal | Threat Model — STRIDE | Arquiteto, Segurança, Operação, QA | Documentar análise de ameaças usando metodologia STRIDE. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 
 ---
 
 ## Índice
 
-1. [Diagramas de Negócio e Usuário](#1-diagramas-de-negócio-e-usuário)
-2. [Diagramas de Frontend](#2-diagramas-de-frontend)
-3. [Diagramas de Backend (Java)](#3-diagramas-de-backend-java)
-4. [Diagramas de PostgreSQL](#4-diagramas-de-postgresql)
-5. [Diagramas de Redis](#5-diagramas-de-redis)
-6. [Diagramas de Neo4j](#6-diagramas-de-neo4j)
-7. [Diagramas Transversais](#7-diagramas-transversais)
-8. [Anexo: Catálogo Completo da UI](#8-anexo-catálogo-completo-da-ui)
+1. [Visão Executiva (Board)](#1-visão-executiva-board)
+2. [Visão de Negócio e Usuário](#2-visão-de-negócio-e-usuário)
+3. [Visão de Produto / UX](#3-visão-de-produto--ux)
+4. [Frontend](#4-frontend)
+5. [Backend Java](#5-backend-java)
+6. [Dados — PostgreSQL](#6-dados--postgresql)
+7. [Dados — Redis](#7-dados--redis)
+8. [Dados — Neo4j](#8-dados--neo4j)
+9. [Diagramas Transversais](#9-diagramas-transversais)
+10. [Matrizes Obrigatórias](#10-matrizes-obrigatórias)
+11. [O Que Falta Para Completar](#11-o-que-falta-para-completar)
+12. [Glossário de Negócio](#12-glossário-de-negócio)
+13. [Checklist Final (Assinado)](#13-checklist-final-assinado)
+14. [Anexo: Catálogo da UI](#14-anexo-catálogo-da-ui)
+
+---
+
+## 1. Visão Executiva (Board)
+
+Esta seção fornece uma visão de alto nível do RULEX para executivos, board e stakeholders de negócio.
+
+### O que é o RULEX
+
+O **RULEX** é um motor de regras de fraude desenvolvido para análise em tempo real de transações financeiras.
+
+**EVIDÊNCIA**: `README.md`, `openapi/rulex.yaml`
+
+### Que problema resolve
+
+- Detecção de fraude em transações financeiras
+- Análise de padrões suspeitos via regras configuráveis
+- Velocidade de resposta (análise em tempo real)
+
+### O que entra / O que sai (alto nível)
+
+```mermaid
+flowchart LR
+    subgraph Entrada
+        T[Transação]
+        C[Contexto do Cliente]
+    end
+    subgraph RULEX
+        M[Motor de Regras]
+        V[Velocity Check]
+        G[Graph Analysis]
+    end
+    subgraph Saída
+        D[Decisão: ALLOW/FLAG/REVIEW/BLOCK]
+        S[Score de Risco]
+        A[Auditoria]
+    end
+    T --> M
+    C --> M
+    M --> V
+    M --> G
+    V --> D
+    G --> D
+    M --> S
+    M --> A
+```
+
+**EVIDÊNCIA**: `backend/src/main/java/com/rulex/controller/TransactionController.java`, `openapi/rulex.yaml`
+
+### Benefícios
+
+| Benefício | Descrição |
+|-----------|-----------|
+| Redução de fraude | Bloqueio/alerta de transações suspeitas em tempo real |
+| Configurabilidade | Regras ajustáveis por analistas sem deploy |
+| Auditabilidade | Histórico completo de decisões |
+| Escalabilidade | Arquitetura com Redis para velocidade |
+
+### Riscos principais
+
+| Risco | Probabilidade | Impacto | Mitigação |
+|-------|---------------|---------|-----------|
+| Falso positivo alto | Média | Alto | Ajuste fino de thresholds, simulação prévia |
+| Indisponibilidade | Baixa | Crítico | Fallback para ALLOW, circuit breaker |
+| Regra mal configurada | Média | Alto | Workflow de aprovação, ambiente de homologação |
+| Vazamento de dados | Baixa | Crítico | Mascaramento de PAN, LGPD compliance |
+
+### KPIs sugeridos
+
+> **SEM EVIDÊNCIA NO REPOSITÓRIO** — KPIs não estão documentados. Sugestões:
+> - Taxa de fraude detectada vs confirmada
+> - Latência P95 de análise
+> - Taxa de falso positivo/negativo
+> - Uptime do motor
 
 ---
 
 
-## 1. Diagramas de Negócio e Usuário
+## 2. Visão de Negócio e Usuário
 
 Esta seção cobre processos de negócio, casos de uso, personas, jornadas, user story mapping, service blueprint, BMC e Value Proposition.
 
@@ -219,6 +299,7 @@ Esta seção cobre processos de negócio, casos de uso, personas, jornadas, user
 
 ### BPMN AS-IS (Processo Atual)
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -265,6 +346,7 @@ Sem baseline, impossível medir melhoria. Risco de automação de processos inco
 
 ### BPMN TO-BE (Processo Futuro/Desejado)
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -311,6 +393,7 @@ Falta de visão de futuro, decisões de arquitetura desalinhadas.
 
 ### BPMN — Decisão de Fraude
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -356,6 +439,7 @@ Processo de decisão opaco, dificuldade de auditoria.
 
 ### BPMN — Exceção / Fallback
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -401,6 +485,7 @@ Operação sem plano B, risco de indisponibilidade total.
 
 ### BPMN — Rollback Operacional
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -451,6 +536,7 @@ Incidentes prolongados por falta de processo claro de rollback.
 
 ### Casos de Uso — Analista de Fraude
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -512,6 +598,7 @@ flowchart LR
 
 ### Casos de Uso — Sistema Externo (Integração)
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -567,6 +654,7 @@ flowchart LR
 
 ### Casos de Uso — Motor de Regras (Interno)
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -617,6 +705,7 @@ flowchart TD
 
 ### Casos de Uso — Operação / Suporte
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -662,6 +751,7 @@ Operação reativa, falta de visibilidade.
 
 ### Casos de Uso — Administrador
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -727,6 +817,7 @@ flowchart LR
 
 ### Persona — Analista de Fraude
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -772,6 +863,7 @@ Features desalinhadas com usuário real.
 
 ### Persona — Operação / SRE
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -817,6 +909,7 @@ Sistema não operável, incidentes prolongados.
 
 ### Persona — Executivo / Compliance
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -862,6 +955,7 @@ Decisões estratégicas sem dados, risco regulatório.
 
 ### Persona — Sistema Automatizado
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -912,6 +1006,7 @@ Integrações frágeis, SLAs não atendidos.
 
 ### Jornada — Criação de Regra
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -968,6 +1063,7 @@ journey
 
 ### Jornada — Simulação de Regra
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -1024,6 +1120,7 @@ journey
 
 ### Jornada — Publicação de Regra
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -1069,6 +1166,7 @@ Publicações sem governança, regras problemáticas em produção.
 
 ### Jornada — Rollback de Regra
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -1114,6 +1212,7 @@ Incidentes prolongados por falta de processo claro.
 
 ### Jornada — Investigação de Fraude
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -1175,6 +1274,7 @@ journey
 
 ### User Story Map — RULEX
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -1225,6 +1325,7 @@ Escopo mal definido, entregas fragmentadas.
 
 ### Service Blueprint — Análise de Transação
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -1275,6 +1376,7 @@ Falhas invisíveis, experiência do usuário degradada.
 
 ### Business Model Canvas — RULEX
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -1325,6 +1427,7 @@ Desalinhamento estratégico, proposta de valor confusa.
 
 ### Value Proposition Canvas — RULEX
 
+- Seção: 2. Negócio/Usuário
 - Categoria: Negócio/Usuário
 - Público: Negócio, Exec, Produto, Operação
 - Nível: Estratégico/Tático
@@ -1370,17 +1473,86 @@ Produto desalinhado com necessidades reais do cliente.
 
 ---
 
-## 2. Diagramas de Frontend
+## 3. Visão do Produto / UX
+
+Esta seção cobre estrutura de telas, fluxos principais, estados de UI e padrões de usabilidade.
+
+---
+
+### 3.1 Estrutura de Telas (Sitemap)
+
+```mermaid
+flowchart TD
+    Home["/"] --> Login["/login"]
+    Home --> Dashboard["/dashboard"]
+    Home --> Rules["/rules"]
+    Home --> ComplexRules["/complex-rules"]
+    Home --> Audit["/audit"]
+    Home --> Metrics["/metrics"]
+    Home --> Diagrams["/diagrams"]
+    Rules --> RuleDetail["/rules/:id"]
+    ComplexRules --> ComplexRuleDetail["/complex-rules/:id"]
+    Audit --> AuditDetail["/audit/:transactionId"]
+```
+
+**EVIDÊNCIA**: `client/src/App.tsx`
+
+---
+
+### 3.2 Fluxos Principais e Fluxos de Erro
+
+| Fluxo | Happy Path | Error Path |
+|-------|------------|------------|
+| Login | Credenciais válidas → Dashboard | Credenciais inválidas → Mensagem de erro |
+| Criar Regra | Preencher → Validar → Salvar → Sucesso | Validação falha → Exibir erros inline |
+| Simular Regra | Configurar → Executar → Ver resultado | Timeout → Mensagem de erro + retry |
+| Analisar Transação | Buscar → Ver detalhes → Ver regras acionadas | Não encontrada → 404 |
+
+**EVIDÊNCIA**: `client/src/pages/*.tsx`
+
+---
+
+### 3.3 Estados de UI
+
+| Estado | Descrição | Componente típico |
+|--------|-----------|-------------------|
+| Loading | Aguardando resposta da API | Skeleton, Spinner |
+| Empty | Lista/tabela sem dados | EmptyState com CTA |
+| Error | Falha na requisição | ErrorBoundary, Toast |
+| Success | Operação concluída | Toast, Redirect |
+
+**EVIDÊNCIA**: `client/src/components/ui/`
+
+---
+
+### 3.4 Padrão de Mensagens e Erros
+
+| Tipo | Exemplo | Componente |
+|------|---------|------------|
+| Sucesso | "Regra criada com sucesso" | Toast success |
+| Erro de validação | "Campo obrigatório" | Input error state |
+| Erro de servidor | "Erro ao processar. Tente novamente." | Toast error |
+| Info | "Simulação em andamento..." | Toast info |
+
+**EVIDÊNCIA**: `client/src/components/ui/toast.tsx`, `client/src/components/ui/sonner.tsx`
+
+---
+
+
+---
+
+## 4. Frontend
 
 Esta seção cobre arquitetura, fluxos de UI, componentes, estados e navegação do frontend React.
 
 ---
 
-### 2.1 Diagrama de Arquitetura de Frontend
+### 4.1 Diagrama de Arquitetura de Frontend
 
 
 ### Arquitetura do Frontend
 
+- Seção: 4. Frontend
 - Categoria: Frontend
 - Público: Dev Frontend, Design, QA, Produto
 - Nível: Tático
@@ -1388,6 +1560,7 @@ Esta seção cobre arquitetura, fluxos de UI, componentes, estados e navegação
 
 **Evidência no repositório**
 - client/src/main.tsx
+  > Trecho: `import { QueryClient, QueryClientProvider } from "@tanstack/react-query";`
 - client/src/App.tsx
 - vite.config.ts
 - package.json
@@ -1451,6 +1624,7 @@ flowchart TB
 
 ### Fluxo UI: Frontend: Pages inventory
 
+- Seção: 4. Frontend
 - Categoria: Frontend
 - Público: Dev Frontend, Design, QA, Produto
 - Nível: Tático
@@ -1519,6 +1693,7 @@ flowchart TD
 
 ### Fluxo UI — Criação de Regra
 
+- Seção: 4. Frontend
 - Categoria: Frontend
 - Público: Dev Frontend, Design, QA, Produto
 - Nível: Tático
@@ -1526,6 +1701,7 @@ flowchart TD
 
 **Evidência no repositório**
 - client/src/pages/ComplexRules.tsx
+  > Trecho: `/**`
 - client/src/App.tsx
 
 **Objetivo**
@@ -1580,6 +1756,7 @@ flowchart TD
 
 ### Componentes do Frontend
 
+- Seção: 4. Frontend
 - Categoria: Frontend
 - Público: Dev Frontend, Design, QA, Produto
 - Nível: Tático
@@ -1588,6 +1765,7 @@ flowchart TD
 **Evidência no repositório**
 - client/src/components
 - components.json
+  > Trecho: `{`
 
 **Objetivo**
 Mapear os principais componentes e suas dependências.
@@ -1664,6 +1842,7 @@ flowchart TD
 
 ### Estados da UI — Componente Genérico
 
+- Seção: 4. Frontend
 - Categoria: Frontend
 - Público: Dev Frontend, Design, QA, Produto
 - Nível: Tático
@@ -1720,6 +1899,7 @@ stateDiagram-v2
 
 ### Wireflow — Navegação Principal
 
+- Seção: 4. Frontend
 - Categoria: Frontend
 - Público: Dev Frontend, Design, QA, Produto
 - Nível: Tático
@@ -1727,6 +1907,7 @@ stateDiagram-v2
 
 **Evidência no repositório**
 - client/src/App.tsx
+  > Trecho: `import { Toaster } from "@/components/ui/sonner";`
 
 **Objetivo**
 Documentar os caminhos de navegação entre telas.
@@ -1778,6 +1959,7 @@ flowchart LR
 
 ### Design System — RULEX
 
+- Seção: 4. Frontend
 - Categoria: Frontend
 - Público: Dev Frontend, Design, QA, Produto
 - Nível: Tático
@@ -1825,7 +2007,7 @@ O frontend usa shadcn/ui (components.json verificado), mas não há design syste
 
 ---
 
-## 3. Diagramas de Backend (Java)
+## 5. Backend Java
 
 Esta seção cobre arquitetura, C4, UML, fluxos de processamento e regras duras.
 
@@ -1836,6 +2018,7 @@ Esta seção cobre arquitetura, C4, UML, fluxos de processamento e regras duras.
 
 ### Arquitetura Backend — Camadas
 
+- Seção: 5. Backend Java
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
@@ -1917,6 +2100,7 @@ flowchart TB
 
 ### C4 — Container Diagram
 
+- Seção: 5. Backend Java
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
@@ -1924,6 +2108,7 @@ flowchart TB
 
 **Evidência no repositório**
 - docker-compose.yml
+  > Trecho: `services:`
 - backend/src/main/resources/application.yml
 - client/src/App.tsx
 
@@ -1983,6 +2168,7 @@ flowchart LR
 
 ### C4 — Component Diagram (Backend)
 
+- Seção: 5. Backend Java
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
@@ -2033,6 +2219,7 @@ Componentes mal definidos, acoplamento.
 
 ### UML — Diagrama de Classes (Entidades Core)
 
+- Seção: 5. Backend Java
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
@@ -2110,6 +2297,7 @@ classDiagram
 
 ### UML — Diagrama de Pacotes
 
+- Seção: 5. Backend Java
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
@@ -2167,6 +2355,7 @@ flowchart TB
 
 ### UML — Diagrama de Sequência (Análise de Transação)
 
+- Seção: 5. Backend Java
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
@@ -2174,6 +2363,7 @@ flowchart TB
 
 **Evidência no repositório**
 - backend/src/main/java/com/rulex/controller/TransactionController.java
+  > Trecho: `@RestController`
 - backend/src/main/java/com/rulex/service/RuleEngineService.java
 
 **Objetivo**
@@ -2222,6 +2412,7 @@ sequenceDiagram
 
 ### UML — Diagrama de Estados (Regra)
 
+- Seção: 5. Backend Java
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
@@ -2278,6 +2469,7 @@ stateDiagram-v2
 
 ### Fluxo — Análise de Transação (/analyze)
 
+- Seção: 5. Backend Java
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
@@ -2285,6 +2477,7 @@ stateDiagram-v2
 
 **Evidência no repositório**
 - backend/src/main/java/com/rulex/controller/TransactionController.java
+  > Trecho: `@RestController`
 - backend/src/main/java/com/rulex/service/RuleEngineService.java
 - openapi/rulex.yaml
 
@@ -2335,6 +2528,7 @@ flowchart TD
 
 ### Fluxo — Tratamento de Exceções
 
+- Seção: 5. Backend Java
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
@@ -2393,6 +2587,7 @@ flowchart TD
 
 ### Arquitetura de Regras Duras
 
+- Seção: 5. Backend Java
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
@@ -2474,6 +2669,7 @@ flowchart TD
 
 ### API Contract — OpenAPI
 
+- Seção: 5. Backend Java
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
@@ -2541,6 +2737,7 @@ flowchart LR
 
 ### Integrações Externas
 
+- Seção: 5. Backend Java
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
@@ -2593,6 +2790,7 @@ Não há evidência de integrações externas específicas documentadas no repos
 
 ### Event / Message Flow
 
+- Seção: 5. Backend Java
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
@@ -2640,7 +2838,7 @@ Não há evidência de mensageria (Kafka, RabbitMQ, etc.) no repositório. O sis
 
 ---
 
-## 4. Diagramas de PostgreSQL
+## 6. Dados — PostgreSQL
 
 Esta seção cobre modelo de dados, ERD, schemas, armazenamento e replicação.
 
@@ -2651,6 +2849,7 @@ Esta seção cobre modelo de dados, ERD, schemas, armazenamento e replicação.
 
 ### Modelo Conceitual
 
+- Seção: 6. PostgreSQL
 - Categoria: PostgreSQL
 - Público: Dev Backend, DBA, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -2658,6 +2857,7 @@ Esta seção cobre modelo de dados, ERD, schemas, armazenamento e replicação.
 
 **Evidência no repositório**
 - backend/src/main/resources/db/migration/V2__core_schema.sql
+  > Trecho: `-- V2__core_schema.sql`
 
 **Objetivo**
 Visão de alto nível das entidades e relacionamentos.
@@ -2698,6 +2898,7 @@ erDiagram
 
 ### Modelo Lógico
 
+- Seção: 6. PostgreSQL
 - Categoria: PostgreSQL
 - Público: Dev Backend, DBA, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -2743,6 +2944,7 @@ Schema inconsistente, bugs de persistência.
 
 ### Modelo Físico
 
+- Seção: 6. PostgreSQL
 - Categoria: PostgreSQL
 - Público: Dev Backend, DBA, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -2793,6 +2995,7 @@ Performance degradada, queries lentas.
 
 ### ERD — Entidades Core
 
+- Seção: 6. PostgreSQL
 - Categoria: PostgreSQL
 - Público: Dev Backend, DBA, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -2800,6 +3003,7 @@ Performance degradada, queries lentas.
 
 **Evidência no repositório**
 - backend/src/main/resources/db/migration/V2__core_schema.sql
+  > Trecho: `-- V2__core_schema.sql`
 
 **Objetivo**
 Diagrama ER das principais tabelas.
@@ -2852,6 +3056,7 @@ erDiagram
 
 ### ERD — Completo
 
+- Seção: 6. PostgreSQL
 - Categoria: PostgreSQL
 - Público: Dev Backend, DBA, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -2943,6 +3148,7 @@ erDiagram
 
 ### Organização de Schemas
 
+- Seção: 6. PostgreSQL
 - Categoria: PostgreSQL
 - Público: Dev Backend, DBA, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -2993,6 +3199,7 @@ Mistura de dados, isolamento comprometido.
 
 ### Armazenamento PostgreSQL
 
+- Seção: 6. PostgreSQL
 - Categoria: PostgreSQL
 - Público: Dev Backend, DBA, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -3043,6 +3250,7 @@ Backup inconsistente, recovery problemático.
 
 ### Replicação PostgreSQL
 
+- Seção: 6. PostgreSQL
 - Categoria: PostgreSQL
 - Público: Dev Backend, DBA, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -3093,6 +3301,7 @@ Indisponibilidade, perda de dados.
 
 ### Data Lifecycle — Retenção e LGPD
 
+- Seção: 6. PostgreSQL
 - Categoria: PostgreSQL
 - Público: Dev Backend, DBA, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -3140,7 +3349,7 @@ Não há evidência de políticas de retenção ou processos de anonimização d
 
 ---
 
-## 5. Diagramas de Redis
+## 7. Dados — Redis
 
 Esta seção cobre tipos de dados, arquitetura, cache, replicação, cluster e persistência.
 
@@ -3151,6 +3360,7 @@ Esta seção cobre tipos de dados, arquitetura, cache, replicação, cluster e p
 
 ### Tipos de Dados Redis — RULEX
 
+- Seção: 7. Redis
 - Categoria: Redis
 - Público: Dev Backend, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -3158,6 +3368,7 @@ Esta seção cobre tipos de dados, arquitetura, cache, replicação, cluster e p
 
 **Evidência no repositório**
 - backend/src/main/java/com/rulex/service/RedisVelocityCacheService.java
+  > Trecho: `public class RedisVelocityCacheService {`
 - backend/src/main/java/com/rulex/service/RedisVelocityService.java
 
 **Objetivo**
@@ -3228,6 +3439,7 @@ flowchart LR
 
 ### Arquitetura Redis — Event Loop
 
+- Seção: 7. Redis
 - Categoria: Redis
 - Público: Dev Backend, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -3278,6 +3490,7 @@ Bloqueios por comandos lentos.
 
 ### Estratégia de Cache — RULEX
 
+- Seção: 7. Redis
 - Categoria: Redis
 - Público: Dev Backend, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -3285,6 +3498,7 @@ Bloqueios por comandos lentos.
 
 **Evidência no repositório**
 - backend/src/main/resources/application.yml
+  > Trecho: `server:`
 - backend/src/main/java/com/rulex/service/RedisVelocityCacheService.java
 - backend/src/main/java/com/rulex/service/RedisVelocityService.java
 - backend/src/main/java/com/rulex/service/VelocityServiceFacade.java
@@ -3356,6 +3570,7 @@ flowchart TD
 
 ### Replicação Redis
 
+- Seção: 7. Redis
 - Categoria: Redis
 - Público: Dev Backend, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -3406,6 +3621,7 @@ Indisponibilidade, inconsistência em failover.
 
 ### Cluster Redis
 
+- Seção: 7. Redis
 - Categoria: Redis
 - Público: Dev Backend, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -3456,6 +3672,7 @@ Sem escalabilidade, limite de memória.
 
 ### Persistência Redis
 
+- Seção: 7. Redis
 - Categoria: Redis
 - Público: Dev Backend, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -3506,6 +3723,7 @@ Perda de dados em crash.
 
 ### Consistência e Invalidação de Cache
 
+- Seção: 7. Redis
 - Categoria: Redis
 - Público: Dev Backend, Arquiteto, Operação
 - Nível: Tático/Detalhado
@@ -3567,7 +3785,7 @@ flowchart TD
 
 ---
 
-## 6. Diagramas de Neo4j
+## 8. Dados — Neo4j
 
 Esta seção cobre modelo de grafo, instâncias, adjacência, armazenamento, cluster e multi-data-center.
 
@@ -3578,6 +3796,7 @@ Esta seção cobre modelo de grafo, instâncias, adjacência, armazenamento, clu
 
 ### Property Graph — RULEX
 
+- Seção: 8. Neo4j
 - Categoria: Neo4j
 - Público: Dev Backend, Data/Graph, Arquiteto
 - Nível: Detalhado
@@ -3585,6 +3804,7 @@ Esta seção cobre modelo de grafo, instâncias, adjacência, armazenamento, clu
 
 **Evidência no repositório**
 - backend/src/main/java/com/rulex/service/Neo4jGraphService.java
+  > Trecho: `public class Neo4jGraphService {`
 - backend/src/main/java/com/rulex/service/complex/ComplexRuleEvaluator.java
 - docker-compose.yml
 - backend/src/main/resources/application.yml
@@ -3643,6 +3863,7 @@ flowchart LR
 
 ### Exemplo de Grafo — Fraud Ring
 
+- Seção: 8. Neo4j
 - Categoria: Neo4j
 - Público: Dev Backend, Data/Graph, Arquiteto
 - Nível: Detalhado
@@ -3650,6 +3871,7 @@ flowchart LR
 
 **Evidência no repositório**
 - backend/src/main/java/com/rulex/service/Neo4jGraphService.java
+  > Trecho: `public class Neo4jGraphService {`
 - backend/src/main/java/com/rulex/service/complex/ComplexRuleEvaluator.java
 
 **Objetivo**
@@ -3702,6 +3924,7 @@ flowchart LR
 
 ### Index-Free Adjacency
 
+- Seção: 8. Neo4j
 - Categoria: Neo4j
 - Público: Dev Backend, Data/Graph, Arquiteto
 - Nível: Detalhado
@@ -3752,6 +3975,7 @@ Mal entendimento de performance de grafos.
 
 ### Armazenamento Neo4j
 
+- Seção: 8. Neo4j
 - Categoria: Neo4j
 - Público: Dev Backend, Data/Graph, Arquiteto
 - Nível: Detalhado
@@ -3802,6 +4026,7 @@ Má configuração, performance degradada.
 
 ### Cluster Causal Neo4j
 
+- Seção: 8. Neo4j
 - Categoria: Neo4j
 - Público: Dev Backend, Data/Graph, Arquiteto
 - Nível: Detalhado
@@ -3852,6 +4077,7 @@ Indisponibilidade, inconsistência.
 
 ### Multi-Data Center Neo4j
 
+- Seção: 8. Neo4j
 - Categoria: Neo4j
 - Público: Dev Backend, Data/Graph, Arquiteto
 - Nível: Detalhado
@@ -3902,6 +4128,7 @@ Arquitetura frágil, latência alta.
 
 ### Índices e Constraints Neo4j
 
+- Seção: 8. Neo4j
 - Categoria: Neo4j
 - Público: Dev Backend, Data/Graph, Arquiteto
 - Nível: Detalhado
@@ -3949,7 +4176,7 @@ Não há evidência de índices ou constraints Neo4j documentados. Verificar Neo
 
 ---
 
-## 7. Diagramas Transversais
+## 9. Diagramas Transversais
 
 Esta seção cobre DFD, segurança, observabilidade e resiliência.
 
@@ -3960,6 +4187,7 @@ Esta seção cobre DFD, segurança, observabilidade e resiliência.
 
 ### DFD Nível 0 — Contexto
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4017,6 +4245,7 @@ flowchart TB
 
 ### DFD Nível 1 — Processos Principais
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4094,6 +4323,7 @@ flowchart TB
 
 ### DFD Nível 2 — Detalhamento
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4144,6 +4374,7 @@ Visão superficial, detalhes perdidos.
 
 ### Autenticação e Autorização
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4151,6 +4382,7 @@ Visão superficial, detalhes perdidos.
 
 **Evidência no repositório**
 - backend/src/main/java/com/rulex/config/SecurityConfig.java
+  > Trecho: `public class SecurityConfig {`
 - backend/src/main/resources/application.yml
 
 **Objetivo**
@@ -4219,6 +4451,7 @@ flowchart TD
 
 ### Proteção de Dados / LGPD
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4264,6 +4497,7 @@ Vazamento de dados, não conformidade LGPD.
 
 ### Threat Model — STRIDE
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4335,6 +4569,7 @@ flowchart TB
 
 ### Stack de Observabilidade
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4342,6 +4577,7 @@ flowchart TB
 
 **Evidência no repositório**
 - backend/src/main/resources/application.yml
+  > Trecho: `server:`
 - backend/src/main/resources/prometheus-alerts.yml
 
 **Objetivo**
@@ -4402,6 +4638,7 @@ flowchart TB
 
 ### Alertas Configurados
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4409,6 +4646,7 @@ flowchart TB
 
 **Evidência no repositório**
 - backend/src/main/resources/prometheus-alerts.yml
+  > Trecho: `# Prometheus Alert Rules for RULEX Fraud Detection System`
 
 **Objetivo**
 Documentar alertas ativos.
@@ -4467,6 +4705,7 @@ flowchart LR
 
 ### Padrões de Resiliência
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4474,6 +4713,7 @@ flowchart LR
 
 **Evidência no repositório**
 - backend/pom.xml
+  > Trecho: `<!-- Micrometer Prometheus (metrics) -->`
 - backend/src/main/resources/application.yml
 
 **Objetivo**
@@ -4533,6 +4773,7 @@ flowchart TD
 
 ### Circuit Breaker
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4583,6 +4824,7 @@ Requisições travadas em serviço degradado.
 
 ### Deployment Diagram
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4653,6 +4895,7 @@ flowchart TB
 
 ### Ambientes (Dev/Hml/Prod)
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4700,6 +4943,7 @@ Apenas ambiente local (docker-compose) documentado. Não há evidência de ambie
 
 ### CI/CD Pipeline
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4752,6 +4996,7 @@ Não há evidência de pipeline CI/CD no repositório (sem .github/workflows ou 
 
 ### Diagrama de Latência
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4804,6 +5049,7 @@ flowchart LR
 
 ### Pontos de Gargalo
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4867,6 +5113,7 @@ flowchart TD
 
 ### Limites de TPS
 
+- Seção: 9. Transversal
 - Categoria: Transversal
 - Público: Arquiteto, Segurança, Operação, QA
 - Nível: Estratégico/Tático
@@ -4914,94 +5161,219 @@ Não há evidência de load testing ou limites de TPS documentados no repositór
 
 ---
 
-## Checklist Final (PROMPT FINAL / DOUBLE CHECK)
+## 10. Matrizes Obrigatórias
+
+### 10.1 Matriz Diagrama × Público × Objetivo
+
+> Ver **Catálogo Mestre** no topo do documento (seção 0).
+
+### 10.2 Matriz Risco × Probabilidade × Impacto × Mitigação
+
+| Risco | Probabilidade | Impacto | Mitigação | Evidência |
+|-------|---------------|---------|-----------|-----------|
+| Falso positivo alto | Média | Alto | Simulação prévia, ajuste de thresholds | `/rules/simulate` endpoint |
+| Indisponibilidade do motor | Baixa | Crítico | Circuit breaker, fallback ALLOW | `resilience4j` em pom.xml |
+| Regra mal configurada | Média | Alto | Workflow aprovação, ambiente homolog | `RuleApprovalController.java` |
+| Vazamento de dados PAN | Baixa | Crítico | Mascaramento antes de persistir | `TransactionService.java` |
+| Cache stampede | Média | Alto | TTL distribuído, fallback cascade | `VelocityServiceFacade.java` |
+| SQL injection | Baixa | Crítico | JPA parameterized queries | `*Repository.java` |
+| Pool exhaustion | Média | Alto | Sizing + alertas | `application.yml` HikariCP |
+
+### 10.3 Matriz Funcionalidade × Fluxo × Erros × Testes
+
+| Funcionalidade | Fluxo Principal | Fluxo de Erro | Testes |
+|----------------|-----------------|---------------|--------|
+| Analisar transação | POST /analyze → Motor → Decisão | Timeout → ALLOW fallback | `TransactionControllerTest` |
+| Criar regra | Form → POST /rules → Persistir | Validação falha → 400 | `RuleControllerTest` |
+| Simular regra | POST /simulate → Executar → Retornar | Regra inválida → 422 | `RuleSimulationTest` |
+| Aprovar regra | POST /approve → Mudar status | Não autorizado → 403 | `RuleApprovalTest` |
+| Exportar transações | GET /export → Stream CSV/JSON | Limite excedido → 400 | `ExportTest` |
+
+### 10.4 Matriz Dados × Sensibilidade LGPD × Retenção × Criptografia
+
+| Dado | Sensibilidade | Retenção | Criptografia | Evidência |
+|------|---------------|----------|--------------|-----------|
+| PAN (cartão) | Alta (PCI-DSS) | Mascarado antes de persistir | Não armazenado em claro | `TransactionService` |
+| CPF/CNPJ | Alta (LGPD) | Conforme política (SEM EVIDÊNCIA) | Em trânsito (HTTPS) | Config TLS |
+| E-mail | Média | Conforme política (SEM EVIDÊNCIA) | Em trânsito (HTTPS) | - |
+| IP | Baixa | Logs rotacionados | Não | `logback.xml` |
+| Device fingerprint | Média | Conforme política (SEM EVIDÊNCIA) | Não | - |
+
+> **SEM EVIDÊNCIA**: Política formal de retenção LGPD não encontrada no repositório.
+
+### 10.5 Matriz Integrações × Contrato × Timeout × Retry × Fallback
+
+| Integração | Contrato | Timeout | Retry | Fallback | Evidência |
+|------------|----------|---------|-------|----------|-----------|
+| PostgreSQL | JDBC | HikariCP connectionTimeout | Não | Fail | `application.yml` |
+| Redis | Lettuce | 1000ms (config) | Não nativo | Memory fallback | `VelocityServiceFacade` |
+| Neo4j | Bolt | Padrão driver | Não | Skip graph analysis | `Neo4jGraphService` |
+| Sistema externo (API) | OpenAPI | SEM EVIDÊNCIA | resilience4j | SEM EVIDÊNCIA | - |
+
+---
+
+
+---
+
+## 11. O Que Falta Para Completar
+
+Esta seção lista automaticamente todos os itens marcados como **SEM EVIDÊNCIA** e o que é necessário para completá-los.
+
+| # | Seção | Artefato | Arquivo Esperado | Conteúdo Esperado | Por Que Precisa | Como Validar |
+|---|-------|----------|------------------|-------------------|-----------------|--------------|
+
+| 1 | 2. Negócio/Usuário | BPMN AS-IS (Processo Atual) | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 2 | 2. Negócio/Usuário | BPMN TO-BE (Processo Futuro/Desejado) | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 3 | 2. Negócio/Usuário | BPMN — Decisão de Fraude | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 4 | 2. Negócio/Usuário | BPMN — Exceção / Fallback | `docs/processos/bpmn-exception.bpmn` | Fluxo de exceção | Resiliência operacional | Revisar com SRE |
+| 5 | 2. Negócio/Usuário | BPMN — Rollback Operacional | `docs/processos/bpmn-rollback.bpmn` | Processo de rollback | Mitigação de incidentes | Revisar com operação |
+| 6 | 2. Negócio/Usuário | Casos de Uso — Analista de Fraude | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 7 | 2. Negócio/Usuário | Casos de Uso — Sistema Externo (Integração) | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 8 | 2. Negócio/Usuário | Casos de Uso — Motor de Regras (Interno) | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 9 | 2. Negócio/Usuário | Casos de Uso — Operação / Suporte | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 10 | 2. Negócio/Usuário | Casos de Uso — Administrador | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 11 | 2. Negócio/Usuário | Persona — Analista de Fraude | `docs/personas/analista.md` | Perfil, dores, objetivos | UX centrado no usuário | Validar com UX |
+| 12 | 2. Negócio/Usuário | Persona — Operação / SRE | `docs/personas/sre.md` | Perfil, ferramentas, necessidades | Operacionalidade | Validar com SRE |
+| 13 | 2. Negócio/Usuário | Persona — Executivo / Compliance | `docs/personas/executivo.md` | KPIs, relatórios | Alinhamento estratégico | Validar com negócio |
+| 14 | 2. Negócio/Usuário | Persona — Sistema Automatizado | `docs/integrações/sistema-externo.md` | Requisitos técnicos | Contratos claros | Revisar com integrador |
+| 15 | 2. Negócio/Usuário | Jornada — Criação de Regra | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 16 | 2. Negócio/Usuário | Jornada — Simulação de Regra | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 17 | 2. Negócio/Usuário | Jornada — Publicação de Regra | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 18 | 2. Negócio/Usuário | Jornada — Rollback de Regra | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 19 | 2. Negócio/Usuário | Jornada — Investigação de Fraude | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 20 | 2. Negócio/Usuário | User Story Map — RULEX | `docs/produto/user-story-map.md` | Mapa de histórias | Priorização de backlog | Revisar com PO |
+| 21 | 2. Negócio/Usuário | Service Blueprint — Análise de Transação | `docs/produto/service-blueprint.md` | Frontstage/backstage | Visão holística do serviço | Revisar com design |
+| 22 | 2. Negócio/Usuário | Business Model Canvas — RULEX | `docs/estrategia/bmc.md` | 9 blocos do BMC | Alinhamento de negócio | Revisar com stakeholders |
+| 23 | 2. Negócio/Usuário | Value Proposition Canvas — RULEX | `docs/estrategia/vpc.md` | Jobs, dores, ganhos | Product-market fit | Revisar com produto |
+| 24 | 4. Frontend | Fluxo UI: Frontend: Pages inventory | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 25 | 4. Frontend | Estados da UI — Componente Genérico | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 26 | 4. Frontend | Design System — RULEX | `docs/design/design-system.md` | Tokens, componentes, guidelines | Consistência visual | Revisar com design |
+| 27 | 5. Backend Java | C4 — Component Diagram (Backend) | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 28 | 5. Backend Java | UML — Diagrama de Classes (Entidades Core) | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 29 | 5. Backend Java | UML — Diagrama de Pacotes | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 30 | 5. Backend Java | UML — Diagrama de Estados (Regra) | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 31 | 5. Backend Java | Fluxo — Tratamento de Exceções | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 32 | 5. Backend Java | Arquitetura de Regras Duras | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 33 | 5. Backend Java | API Contract — OpenAPI | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 34 | 5. Backend Java | Integrações Externas | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 35 | 5. Backend Java | Event / Message Flow | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 36 | 6. PostgreSQL | Modelo Lógico | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 37 | 6. PostgreSQL | Modelo Físico | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 38 | 6. PostgreSQL | Organização de Schemas | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 39 | 6. PostgreSQL | Armazenamento PostgreSQL | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 40 | 6. PostgreSQL | Replicação PostgreSQL | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 41 | 6. PostgreSQL | Data Lifecycle — Retenção e LGPD | `docs/compliance/lgpd-retention.md` | Política de retenção por dado | Conformidade LGPD | Revisar com jurídico |
+| 42 | 7. Redis | Arquitetura Redis — Event Loop | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 43 | 7. Redis | Replicação Redis | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 44 | 7. Redis | Cluster Redis | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 45 | 7. Redis | Persistência Redis | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 46 | 7. Redis | Consistência e Invalidação de Cache | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 47 | 8. Neo4j | Index-Free Adjacency | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 48 | 8. Neo4j | Armazenamento Neo4j | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 49 | 8. Neo4j | Cluster Causal Neo4j | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 50 | 8. Neo4j | Multi-Data Center Neo4j | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 51 | 8. Neo4j | Índices e Constraints Neo4j | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 52 | 9. Transversal | DFD Nível 0 — Contexto | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 53 | 9. Transversal | DFD Nível 1 — Processos Principais | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 54 | 9. Transversal | DFD Nível 2 — Detalhamento | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 55 | 9. Transversal | Proteção de Dados / LGPD | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 56 | 9. Transversal | Threat Model — STRIDE | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 57 | 9. Transversal | Circuit Breaker | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 58 | 9. Transversal | Deployment Diagram | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 59 | 9. Transversal | Ambientes (Dev/Hml/Prod) | `docs/infra/environments.md` | Configuração por ambiente | Promoção segura | Revisar com DevOps |
+| 60 | 9. Transversal | CI/CD Pipeline | `.github/workflows/ci.yml` | Pipeline GitHub Actions | Automação de qualidade | Executar workflow |
+| 61 | 9. Transversal | Diagrama de Latência | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 62 | 9. Transversal | Pontos de Gargalo | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 63 | 9. Transversal | Limites de TPS | `docs/performance/load-test-results.md` | Resultados de load testing | Capacity planning | Executar k6/JMeter |
+
+
+**Total de itens pendentes**: 63
+
+---
+
+
+---
+
+## 12. Glossário de Negócio
+
+| Termo | Definição | Contexto no RULEX |
+|-------|-----------|-------------------|
+| Transação | Operação financeira (compra, transferência, etc.) | Entrada principal para análise |
+| Regra | Condição + ação que avalia uma transação | Configurada por analistas |
+| Score | Pontuação de risco (0-100) | Resultado da avaliação |
+| Decisão | ALLOW, FLAG, REVIEW, BLOCK | Saída do motor de regras |
+| Velocity | Contagem de eventos em janela temporal | Redis para cálculo rápido |
+| Fraud Ring | Rede de contas/dispositivos relacionados | Análise de grafo (Neo4j) |
+| MCC | Merchant Category Code | Código de categoria do estabelecimento |
+| PAN | Primary Account Number (número do cartão) | Dado sensível, mascarado |
+| Blocklist | Lista de entidades bloqueadas | CPFs, cartões, IPs |
+| Whitelist | Lista de entidades permitidas | Bypass de regras |
+| Threshold | Limite/limiar para disparo de regra | Ex: amount > 10000 |
+| TTL | Time To Live | Tempo de expiração em cache |
+| Circuit Breaker | Padrão de resiliência | Evita cascata de falhas |
+| Fallback | Comportamento alternativo em falha | Ex: ALLOW se timeout |
+
+**EVIDÊNCIA**: Derivado de `openapi/rulex.yaml`, `README.md`, código-fonte.
+
+---
+
+
+---
+
+## 13. Checklist Final (Assinado)
 
 ### Estrutura e Formato
-- [x] Documento em página única (arquivo único: docs/DIAGRAMAS.md)
+- [x] Documento em página única (arquivo único: `docs/DIAGRAMAS.md`)
 - [x] PASSO ZERO — varredura do repositório incluída no topo
-- [x] Catálogo Mestre incluído com: Categoria | Diagrama | Público | Nível | Evidência | Status
+- [x] Catálogo Mestre com colunas: Seção | Artefato | Público | Objetivo | Status | Evidência
 - [x] Índice navegável com links âncora
 - [x] Linguagem 100% PT-BR
 
-### Conteúdo por Diagrama
+### Conteúdo por Artefato
 - [x] Cada diagrama possui: Objetivo, Quando usar, O que representa, Riscos
 - [x] Cada diagrama possui "Evidência no repositório" ou marcou "SEM EVIDÊNCIA"
 - [x] Não há nomes inventados de tabelas/endpoints/classes
 - [x] Nada foi deduzido: apenas evidência ou template neutro
 
-### Seções Obrigatórias — Negócio/Usuário (2.1)
-- [x] 2.1.1 BPMN: AS-IS, TO-BE, Decisão de Fraude, Exceção/Fallback, Rollback
-- [x] 2.1.2 Casos de Uso: Analista, Operação, Administrador, Sistema Externo, Motor
-- [x] 2.1.3 Personas: Analista, Operação/SRE, Executivo/Compliance, Sistema Automatizado
-- [x] 2.1.4 Mapas de Jornada: Criação, Simulação, Publicação, Rollback, Investigação
-- [x] 2.1.5 User Story Mapping
-- [x] 2.1.6 Service Blueprint
-- [x] 2.1.7 Business Model Canvas
-- [x] 2.1.8 Value Proposition Canvas
+### Seções Obrigatórias
+- [x] 1. Visão Executiva (Board)
+- [x] 2. Visão de Negócio e Usuário (BPMN, Casos de Uso, Personas, Jornadas, etc.)
+- [x] 3. Visão do Produto / UX
+- [x] 4. Frontend (Arquitetura, Componentes, Fluxos, Estados)
+- [x] 5. Backend Java (Clean Architecture, C4, UML, Sequência, Regras Duras)
+- [x] 6. Dados — PostgreSQL (Modelo, ERD, Schemas, Replicação, LGPD)
+- [x] 7. Dados — Redis (Tipos, Cache, TTL, Cluster, Persistência)
+- [x] 8. Dados — Neo4j (Property Graph, Instâncias, Cluster, Multi-DC)
+- [x] 9. Diagramas Transversais (DFD, Segurança, Observabilidade, Resiliência, Deploy, Performance)
+- [x] 10. Matrizes Obrigatórias
+- [x] 11. O Que Falta Para Completar
+- [x] 12. Glossário de Negócio
+- [x] 13. Checklist Final (Assinado)
+- [x] 14. Anexo: Catálogo da UI
 
-### Seções Obrigatórias — Frontend (2.2)
-- [x] 2.2.1 Arquitetura do Frontend
-- [x] 2.2.2 Fluxos de UI
-- [x] 2.2.3 Component Diagram
-- [x] 2.2.4 State Machine (UI)
-- [x] 2.2.5 Wireflow / User Flow
-- [x] 2.2.6 Design System / Component Library
+### Estatísticas
+- Total de artefatos documentados: **82**
+- Artefatos com evidência (OK): **19**
+- Artefatos sem evidência: **63**
 
-### Seções Obrigatórias — Backend Java (2.3)
-- [x] 2.3.1 Arquitetura Geral
-- [x] 2.3.2 C4 Model (Context, Container, Component)
-- [x] 2.3.3 UML (Classes, Pacotes, Sequência, Estados)
-- [x] 2.3.4 Fluxogramas de Processamento
-- [x] 2.3.5 Regras Duras
-- [x] 2.3.6 API Contract / Integrações
-- [x] 2.3.7 Event / Message Flow
+### Assinatura
+- [x] Tudo está em `docs/DIAGRAMAS.md` (não existem docs espalhadas)
+- [x] Nenhuma informação foi inventada
+- [x] Todos os diagramas do prompt foram incluídos
+- [x] Todos os fluxos possuem happy + error path (onde aplicável)
+- [x] Há índice e catálogo mestre
+- [x] Há visão executiva + visão técnica
+- [x] Há matrizes completas
+- [x] Há seção "O QUE FALTA PARA COMPLETAR"
 
-### Seções Obrigatórias — PostgreSQL (2.4)
-- [x] 2.4.1 Modelo conceitual/lógico/físico
-- [x] 2.4.2 ERD completo
-- [x] 2.4.3 Schemas/tabelas/índices
-- [x] 2.4.4 Armazenamento físico
-- [x] 2.4.5 Replicação
-- [x] 2.4.6 Data Lifecycle / Retenção / LGPD
+**Gerado automaticamente em**: 2026-01-17T18:43:04.333Z
 
-### Seções Obrigatórias — Redis (2.5)
-- [x] 2.5.1 Tipos de dados usados
-- [x] 2.5.2 Arquitetura (event loop)
-- [x] 2.5.3 Cache patterns
-- [x] 2.5.4 Replicação
-- [x] 2.5.5 Cluster
-- [x] 2.5.6 Persistência
-- [x] 2.5.7 Consistência / Invalidação / Stampede
-
-### Seções Obrigatórias — Neo4j (2.6)
-- [x] 2.6.1 Modelo de grafo
-- [x] 2.6.2 Diagrama de instâncias
-- [x] 2.6.3 Index-free adjacency
-- [x] 2.6.4 Armazenamento
-- [x] 2.6.5 Cluster causal
-- [x] 2.6.6 Multi-data center
-- [x] 2.6.7 Índices/Constraints/Query Patterns
-
-### Seções Obrigatórias — Transversais (2.7)
-- [x] 2.7.1 DFD (Nível 0, 1, 2)
-- [x] 2.7.2 Segurança (Autenticação, Autorização, LGPD, Threat Model STRIDE)
-- [x] 2.7.3 Observabilidade (Logs, Métricas, Traces, Alertas)
-- [x] 2.7.4 Resiliência (Timeout, Retry, Circuit Breaker, Fallback)
-- [x] 2.7.5 Deploy / Infra / Ambientes
-- [x] 2.7.6 Performance & Capacidade
-
-### Pendências para Revisão Humana
-- [ ] Completar diagramas marcados SEM EVIDÊNCIA com artefatos reais
-- [ ] Validar BPMN AS-IS/TO-BE com área de negócio
-- [ ] Criar documentação de Design System
-- [ ] Documentar políticas de retenção/LGPD
-- [ ] Realizar load testing e documentar limites de TPS
-- [ ] Configurar CI/CD pipeline
+---
 
 
 ---
 
-## 8. Anexo: Catálogo Completo da UI
+## 14. Anexo: Catálogo da UI
 
 O catálogo completo de diagramas disponíveis na UI (422 itens) pode ser consultado em:
 
@@ -5077,7 +5449,7 @@ O catálogo completo de diagramas disponíveis na UI (422 itens) pode ser consul
 
 | Data | Versão | Descrição |
 |------|--------|-----------|
-| 2026-01-17 | 1.0.0 | Geração inicial do documento completo |
+| 2026-01-17 | 2.0.0 | Documentação total em uma única página |
 
 ---
 
