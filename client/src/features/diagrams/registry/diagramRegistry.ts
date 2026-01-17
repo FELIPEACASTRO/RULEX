@@ -130,13 +130,13 @@ function mermaidSampleForDiagram(diagramType: MassiveDiagramFamily["diagrams"][0
     return [
       "flowchart TD",
       `  T["${safeDiagramName}"] --> A[${RULEX_SYSTEM_LABELS.frontend}]`,
-      `  A -->|POST /analyze| B[${RULEX_SYSTEM_LABELS.api}]`,
+      `  A -->|POST /api/transactions/analyze| B[${RULEX_SYSTEM_LABELS.api}]`,
       `  B --> C[Normalize + Validate payload]`,
       `  C --> D[${RULEX_SYSTEM_LABELS.engine}]`,
-      "  D --> E{Score/Decision}",
-      "  E -->|APPROVE| F[Persist decision]",
-      "  E -->|REVIEW| G[Create case]",
-      "  E -->|BLOCK| H[Block transaction]",
+      "  D --> E{Score/Classificação}",
+      "  E -->|APROVADA| F[Persistir auditoria + classificação]",
+      "  E -->|SUSPEITA_DE_FRAUDE| G[Persistir auditoria + marcar suspeita]",
+      "  E -->|FRAUDE| H[Persistir auditoria + sinalizar fraude]",
       `  F --> I[${RULEX_SYSTEM_LABELS.db}]`,
       `  G --> I`,
       `  H --> I`,
@@ -183,7 +183,7 @@ function mermaidSampleForDiagram(diagramType: MassiveDiagramFamily["diagrams"][0
       "  participant ENG as Rules Engine",
       "  participant DB as Postgres",
       `  Note over FE,API: ${safeDiagramName}`,
-      "  FE->>API: POST /analyze (transaction)",
+      "  FE->>API: POST /api/transactions/analyze (transaction)",
       "  API->>ENG: evaluate(transaction)",
       "  ENG->>DB: load active rules",
       "  DB-->>ENG: rules",
@@ -239,10 +239,10 @@ function mermaidSampleForDiagram(diagramType: MassiveDiagramFamily["diagrams"][0
     "flowchart TD",
     `  A["${safeDiagramName}"] --> B[Aplicado no RULEX]`,
     `  B --> C[${RULEX_SYSTEM_LABELS.engine} executa avaliação]`,
-    "  C --> D{Decisão}",
-    "  D -->|Approve| E[OK]",
-    "  D -->|Review| F[Case]",
-    "  D -->|Block| G[Block]",
+    "  C --> D{Classificação}",
+    "  D -->|APROVADA| E[OK]",
+    "  D -->|SUSPEITA_DE_FRAUDE| F[Suspeita]",
+    "  D -->|FRAUDE| G[Fraude]",
   ].join("\n");
 }
 
@@ -260,9 +260,9 @@ function bpmnSampleXml(): string {
     <bpmn:task id="Task_Evaluate" name="Avaliar regras" />
     <bpmn:exclusiveGateway id="Gateway_Decision" name="Decisão" />
     <bpmn:task id="Task_Persist" name="Persistir auditoria" />
-    <bpmn:endEvent id="EndEvent_Approved" name="Approve" />
-    <bpmn:endEvent id="EndEvent_Review" name="Review" />
-    <bpmn:endEvent id="EndEvent_Blocked" name="Block" />
+    <bpmn:endEvent id="EndEvent_Approved" name="APROVADA" />
+    <bpmn:endEvent id="EndEvent_Suspicious" name="SUSPEITA_DE_FRAUDE" />
+    <bpmn:endEvent id="EndEvent_Fraud" name="FRAUDE" />
 
     <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_Validate" />
     <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_Validate" targetRef="Task_Evaluate" />
@@ -280,7 +280,7 @@ function bpmnSampleXml(): string {
 function dfdSampleModel() {
   return {
     processes: [
-      { id: "p_api", label: "API /analyze", x: 180, y: 170 },
+      { id: "p_api", label: "API /api/transactions/analyze", x: 180, y: 170 },
       { id: "p_engine", label: "Rules Engine", x: 460, y: 170 },
     ],
     datastores: [
@@ -297,7 +297,7 @@ function dfdSampleModel() {
       { id: "f3", from: "p_engine", to: "d_pg", label: "rules/audit" },
       { id: "f4", from: "p_engine", to: "d_cache", label: "cache" },
       { id: "f5", from: "p_api", to: "e_client", label: "decision" },
-      { id: "f6", from: "e_ops", to: "p_api", label: "review" },
+      { id: "f6", from: "e_ops", to: "p_api", label: "auditar" },
     ],
   };
 }
@@ -409,15 +409,15 @@ function normalizeMassiveDiagram(
 function solutionMermaidFlowAnalyze(): string {
   return [
     "flowchart TD",
-    "  FE[Frontend / Simulator] -->|POST /analyze| API[API (Spring Boot)]",
+    "  FE[Frontend / Simulator] -->|POST /api/transactions/analyze| API[API (Spring Boot)]",
     "  API --> V[Validate + Normalize payload]",
     "  V --> ENG[RuleEngineService]",
     "  ENG -->|load rules| DB[(PostgreSQL)]",
     "  ENG --> C[Compute score + matches]",
-    "  C --> D{Decision}",
-    "  D -->|APPROVE| A1[Persist audit + decision]",
-    "  D -->|REVIEW| A2[Persist audit + create case]",
-    "  D -->|BLOCK| A3[Persist audit + block]",
+    "  C --> D{Classificação}",
+    "  D -->|APROVADA| A1[Persist audit + classificação]",
+    "  D -->|SUSPEITA_DE_FRAUDE| A2[Persist audit + suspeita]",
+    "  D -->|FRAUDE| A3[Persist audit + fraude]",
     "  A1 --> DB",
     "  A2 --> DB",
     "  A3 --> DB",
@@ -435,7 +435,7 @@ function solutionMermaidSequenceAnalyze(): string {
     "  participant ENG as RuleEngineService",
     "  participant DB as PostgreSQL",
     "  participant AUD as AccessLogService",
-    "  FE->>API: POST /api/analyze (transaction)",
+    "  FE->>API: POST /api/transactions/analyze (transaction)",
     "  API->>AUD: log request (headers, route, outcome)",
     "  API->>ENG: analyze(transaction)",
     "  ENG->>DB: load active rules / operators",
@@ -443,7 +443,7 @@ function solutionMermaidSequenceAnalyze(): string {
     "  ENG-->>API: decision + score + reasons",
     "  API->>DB: persist transaction + audit",
     "  DB-->>API: ok",
-    "  API-->>FE: 200 decision payload",
+    "  API-->>FE: 200 classificação payload",
   ].join("\n");
 }
 
@@ -506,8 +506,8 @@ export const SOLUTION_DIAGRAMS: DiagramCatalogItem[] = [
   {
     id: "RULEX/FLOW_analyze",
     notation: "FLOWCHART",
-    canonicalName: "Fluxo real: /analyze (RULEX)",
-    aliases: ["/analyze", "transaction", "score", "decision"],
+    canonicalName: "Fluxo real: /api/transactions/analyze (RULEX)",
+    aliases: ["/api/transactions/analyze", "transaction", "score", "classificacao"],
     origin: "solution",
     verified: true,
     verificationNotes: "Representação fiel do fluxo ponta-a-ponta (FE→API→Engine→DB/Audit).",
@@ -526,10 +526,10 @@ export const SOLUTION_DIAGRAMS: DiagramCatalogItem[] = [
     aliases: ["sequence", "TransactionController", "RuleEngineService"],
     origin: "solution",
     verified: true,
-    verificationNotes: "Sequência real do request /analyze e persistência/auditoria.",
+    verificationNotes: "Sequência real do request /api/transactions/analyze e persistência/auditoria.",
     categoryId: "api",
     categoryLabel: getDiagramCategory("api").label,
-    descriptionWhenToUse: "Entender a ordem de chamadas e persistência do /analyze.",
+    descriptionWhenToUse: "Entender a ordem de chamadas e persistência do /api/transactions/analyze.",
     formatsSupported: ["mermaid"],
     rendererId: "mermaid",
     rendererStatus: "OK",

@@ -1,6 +1,6 @@
 # DIAGRAMAS — Documentação Oficial do RULEX
 
-Gerado em: 2026-01-17T18:43:04.282Z
+Gerado em: 2026-01-17T20:45:32.543Z
 
 ---
 
@@ -32,7 +32,7 @@ Este documento contém **TODOS** os diagramas, fluxogramas e representações do
 ### Como regerar
 
 ```bash
-pnpm diagrams:doc-completo   # Gera este documento
+pnpm diagrams:doc            # Gera este documento
 pnpm diagrams:sync           # Sincroniza inventário + checklist + doc
 ```
 
@@ -105,10 +105,68 @@ pnpm diagrams:sync           # Sincroniza inventário + checklist + doc
 
 ---
 
+## Mapa Geral do Sistema (macro)
+
+
+### Mapa Geral do Sistema (macro)
+
+- Seção: 0. Painel
+- Categoria: Visão Geral
+- Público: Todos
+- Nível: Executivo
+- Status: ✅ OK
+
+**Evidência no repositório**
+- docker-compose.yml
+  > Trecho: `services:`
+- client/src/App.tsx
+- backend/src/main/resources/application.yml
+
+**Objetivo**
+Dar visão macro (contexto + containers principais) do RULEX e suas dependências locais.
+
+**Quando usar**
+Onboarding rápido, alinhamento executivo e visão compartilhada do sistema.
+
+**O que representa**
+Frontend web (Vite/React) consumindo API backend (Spring Boot) e dependências de dados (PostgreSQL/Redis/Neo4j) conforme docker-compose e context-path /api.
+
+**Entradas**
+- (ver evidência; varia por diagrama)
+
+**Saídas**
+- (ver evidência; varia por diagrama)
+
+**Regras/Assunções (somente se comprovadas)**
+- (sem regras/assunções registradas para este diagrama)
+
+**Riscos**
+Sem visão macro, decisões de integração/infra ficam fragmentadas e aumentam gaps de entendimento.
+
+**Notas**
+Evidências: docker-compose.yml (serviços/portas), client/src/App.tsx (rotas), backend/src/main/resources/application.yml (context-path /api).
+
+
+
+```mermaid
+flowchart LR
+    U[Usuário/Analista] -->|HTTP| WEB[Web UI (Vite + React)]
+    WEB -->|HTTP /api/*| API[Backend API (Spring Boot)]
+    API --> PG[(PostgreSQL 16)]
+    API --> R[(Redis 7)]
+    API --> N4J[(Neo4j 5)]
+```
+
+
+
+
+---
+
 ## Catálogo Mestre (auditável)
 
 | Seção | Artefato/Diagrama | Público | Objetivo | Status | Evidência |
 |---|---|---|---|---|---|
+| 0. Painel | Mapa Geral do Sistema (macro) | Todos | Dar visão macro (contexto + containers principais) do RUL... | ✅ OK | docker-compose.yml; client/src/App.tsx; backend/src/main/resources/application.yml |
 | 2. Negócio/Usuário | BPMN — Decisão de Fraude | Negócio, Exec, Produto, Operação | Representar o fluxo de decisão de fraude no motor de regras. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 2. Negócio/Usuário | BPMN — Exceção / Fallback | Negócio, Exec, Produto, Operação | Documentar o que acontece quando o fluxo principal falha. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 2. Negócio/Usuário | BPMN — Rollback Operacional | Negócio, Exec, Produto, Operação | Documentar o processo de reverter uma publicação de regra... | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
@@ -136,16 +194,16 @@ pnpm diagrams:sync           # Sincroniza inventário + checklist + doc
 | 4. Frontend | Componentes do Frontend | Dev Frontend, Design, QA, Produto | Mapear os principais componentes e suas dependências. | ✅ OK | client/src/components; components.json |
 | 4. Frontend | Design System — RULEX | Dev Frontend, Design, QA, Produto | Documentar paleta, tipografia, espaçamentos, estados, ace... | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 4. Frontend | Estados da UI — Componente Genérico | Dev Frontend, Design, QA, Produto | Documentar os estados possíveis de um componente. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
-| 4. Frontend | Fluxo UI — Criação de Regra | Dev Frontend, Design, QA, Produto | Documentar o fluxo de criação de regra na interface. | ✅ OK | client/src/pages/ComplexRules.tsx; client/src/App.tsx |
+| 4. Frontend | Fluxo UI — Criação de Regra | Dev Frontend, Design, QA, Produto | Documentar o fluxo de criação de regra na interface. | ✅ OK | client/src/App.tsx; client/src/pages/ComplexRules.tsx; client/src/components/RuleFormDialog; client/src/lib/javaApi.ts; backend/src/main/java/com/rulex/controller/ComplexRuleCrudController.java; backend/src/main/resources/application.yml |
 | 4. Frontend | Fluxo UI: Frontend: Pages inventory | Dev Frontend, Design, QA, Produto | Documentar o fluxo de interação na tela. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 4. Frontend | Wireflow — Navegação Principal | Dev Frontend, Design, QA, Produto | Documentar os caminhos de navegação entre telas. | ✅ OK | client/src/App.tsx |
-| 5. Backend Java | API Contract — OpenAPI | Dev Backend, Arquiteto, QA, Operação | Documentar endpoints expostos conforme contrato OpenAPI. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
+| 5. Backend Java | API Contract — OpenAPI | Dev Backend, Arquiteto, QA, Operação | Documentar endpoints expostos conforme contrato OpenAPI. | ✅ OK | openapi/rulex.yaml; backend/src/main/resources/application.yml |
 | 5. Backend Java | Arquitetura Backend — Camadas | Dev Backend, Arquiteto, QA, Operação | Documentar a estrutura de camadas do backend Spring Boot. | ✅ OK | backend/src/main/java/com/rulex |
 | 5. Backend Java | Arquitetura de Regras Duras | Dev Backend, Arquiteto, QA, Operação | Documentar a estrutura do motor de regras. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 5. Backend Java | C4 — Component Diagram (Backend) | Dev Backend, Arquiteto, QA, Operação | Detalhar os componentes internos do backend. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 5. Backend Java | C4 — Container Diagram | Dev Backend, Arquiteto, QA, Operação | Visão de containers do sistema e suas dependências. | ✅ OK | docker-compose.yml; backend/src/main/resources/application.yml; client/src/App.tsx |
 | 5. Backend Java | Event / Message Flow | Dev Backend, Arquiteto, QA, Operação | Documentar fluxo de eventos e mensagens (filas, tópicos). | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
-| 5. Backend Java | Fluxo — Análise de Transação (/analyze) | Dev Backend, Arquiteto, QA, Operação | Documentar o fluxo completo de análise. | ✅ OK | backend/src/main/java/com/rulex/controller/TransactionController.java; backend/src/main/java/com/rulex/service/RuleEngineService.java; openapi/rulex.yaml |
+| 5. Backend Java | Fluxo — Análise de Transação (/api/transactions/analyze) | Dev Backend, Arquiteto, QA, Operação | Documentar o fluxo completo de análise. | ✅ OK | backend/src/main/java/com/rulex/controller/TransactionController.java; backend/src/main/java/com/rulex/service/RuleEngineService.java; openapi/rulex.yaml |
 | 5. Backend Java | Fluxo — Tratamento de Exceções | Dev Backend, Arquiteto, QA, Operação | Documentar como exceções são tratadas. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 5. Backend Java | Integrações Externas | Dev Backend, Arquiteto, QA, Operação | Documentar sistemas externos que se integram ao RULEX. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 5. Backend Java | UML — Diagrama de Classes (Entidades Core) | Dev Backend, Arquiteto, QA, Operação | Documentar as principais entidades do domínio. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
@@ -243,7 +301,7 @@ flowchart LR
         G[Graph Analysis]
     end
     subgraph Saída
-        D[Decisão: ALLOW/FLAG/REVIEW/BLOCK]
+      D[Classificação: APROVADA / SUSPEITA_DE_FRAUDE / FRAUDE]
         S[Score de Risco]
         A[Auditoria]
     end
@@ -273,7 +331,7 @@ flowchart LR
 | Risco | Probabilidade | Impacto | Mitigação |
 |-------|---------------|---------|-----------|
 | Falso positivo alto | Média | Alto | Ajuste fino de thresholds, simulação prévia |
-| Indisponibilidade | Baixa | Crítico | Fallback para ALLOW, circuit breaker |
+| Indisponibilidade | Baixa | Crítico | Circuit breaker; comportamento de fallback **SEM EVIDÊNCIA NO REPOSITÓRIO** |
 | Regra mal configurada | Média | Alto | Workflow de aprovação, ambiente de homologação |
 | Vazamento de dados | Baixa | Crítico | Mascaramento de PAN, LGPD compliance |
 
@@ -629,7 +687,7 @@ Endpoints disponíveis para sistemas que consomem o RULEX.
 Integrações mal documentadas, quebras de contrato.
 
 **Notas**
-Derivado dos controllers REST verificados: TransactionController, EvaluateController.
+Derivado dos controllers REST verificados (TransactionController, EvaluateController) e do context-path /api (backend/src/main/resources/application.yml).
 
 
 
@@ -641,8 +699,8 @@ flowchart LR
         E3[Health Check]
     end
     subgraph RULEX["🖥️ RULEX API"]
-        R1["POST /transactions/analyze"]
-        R2["POST /evaluate"]
+      R1["POST /api/transactions/analyze"]
+      R2["POST /api/evaluate"]
         R3["GET /actuator/health"]
     end
     E1 --> R1
@@ -695,7 +753,7 @@ flowchart TD
         M1[Carregar Regras Ativas]
         M2[Avaliar Condições]
         M3[Aplicar Pesos/Scores]
-        M4[Decidir: ALLOW/FLAG/REVIEW/BLOCK]
+        M4[Classificar: APROVADA / SUSPEITA_DE_FRAUDE / FRAUDE]
         M5[Registrar Auditoria]
     end
     M1 --> M2 --> M3 --> M4 --> M5
@@ -1037,7 +1095,7 @@ Passo a passo: acessar → configurar → validar → salvar.
 UX confusa, erros de configuração, abandono.
 
 **Notas**
-Derivado do fluxo da UI ComplexRules e endpoint POST /complex-rules.
+Derivado do fluxo da UI ComplexRules e endpoint POST /api/complex-rules (context-path /api).
 
 
 
@@ -1094,7 +1152,7 @@ Passo a passo: selecionar regra → configurar payload → executar → analisar
 Regras publicadas sem teste, incidentes em produção.
 
 **Notas**
-Derivado do endpoint POST /rules/simulate e tela de simulação.
+Derivado do endpoint POST /api/rules/simulate (context-path /api).
 
 
 
@@ -1483,19 +1541,23 @@ Esta seção cobre estrutura de telas, fluxos principais, estados de UI e padrõ
 
 ```mermaid
 flowchart TD
-    Home["/"] --> Login["/login"]
-    Home --> Dashboard["/dashboard"]
-    Home --> Rules["/rules"]
-    Home --> ComplexRules["/complex-rules"]
-    Home --> Audit["/audit"]
-    Home --> Metrics["/metrics"]
-    Home --> Diagrams["/diagrams"]
-    Rules --> RuleDetail["/rules/:id"]
-    ComplexRules --> ComplexRuleDetail["/complex-rules/:id"]
-    Audit --> AuditDetail["/audit/:transactionId"]
+    Login["/login"] --> App["(app protegido via DashboardLayout)"]
+    App --> Home["/"]
+    App --> Dashboard["/dashboard"]
+    App --> Transactions["/transactions"]
+    App --> Rules["/rules"]
+    App --> Audit["/audit"]
+    App --> Simulator["/simulator"]
+    App --> Monitoring["/monitoring"]
+    App --> Settings["/settings"]
+    App --> Manual["/manual"]
+    App --> Diagrams["/diagrams"]
+    App --> NotFound["/404 (NotFound) + fallback"]
 ```
 
-**EVIDÊNCIA**: `client/src/App.tsx`
+**EVIDÊNCIA NO REPOSITÓRIO**:
+- client/src/App.tsx
+  > Trecho: `<Route path={"/login"} component={Login} />`
 
 ---
 
@@ -1518,10 +1580,10 @@ flowchart TD
 |--------|-----------|-------------------|
 | Loading | Aguardando resposta da API | Skeleton, Spinner |
 | Empty | Lista/tabela sem dados | EmptyState com CTA |
-| Error | Falha na requisição | ErrorBoundary, Toast |
-| Success | Operação concluída | Toast, Redirect |
+| Error | Falha na requisição | ErrorBoundary, Toaster (sonner) |
+| Success | Operação concluída | Toaster (sonner), Redirect |
 
-**EVIDÊNCIA**: `client/src/components/ui/`
+**EVIDÊNCIA**: `client/src/App.tsx`, `client/src/components/ErrorBoundary.tsx`, `client/src/components/ui/sonner.tsx`
 
 ---
 
@@ -1534,7 +1596,7 @@ flowchart TD
 | Erro de servidor | "Erro ao processar. Tente novamente." | Toast error |
 | Info | "Simulação em andamento..." | Toast info |
 
-**EVIDÊNCIA**: `client/src/components/ui/toast.tsx`, `client/src/components/ui/sonner.tsx`
+**EVIDÊNCIA**: `client/src/components/ui/sonner.tsx` (Toaster)
 
 ---
 
@@ -1700,9 +1762,13 @@ flowchart TD
 - Status: ✅ OK
 
 **Evidência no repositório**
-- client/src/pages/ComplexRules.tsx
-  > Trecho: `/**`
 - client/src/App.tsx
+  > Trecho: `import { Toaster } from "@/components/ui/sonner";`
+- client/src/pages/ComplexRules.tsx
+- client/src/components/RuleFormDialog
+- client/src/lib/javaApi.ts
+- backend/src/main/java/com/rulex/controller/ComplexRuleCrudController.java
+- backend/src/main/resources/application.yml
 
 **Objetivo**
 Documentar o fluxo de criação de regra na interface.
@@ -1726,7 +1792,7 @@ Passo a passo visual: formulário → validação → salvamento.
 Bugs de interface, fluxo confuso.
 
 **Notas**
-Derivado de RuleFormDialog.tsx e endpoint POST /complex-rules.
+Derivado de RuleFormDialog (frontend) e ComplexRuleCrudController (backend). O prefixo /api vem do server.servlet.context-path.
 
 
 
@@ -1740,7 +1806,7 @@ flowchart TD
     D --> G[Ações/Score]
     E & F & G --> H[Clicar Salvar]
     H --> I{Validação}
-    I -->|Sucesso| J[POST /complex-rules]
+    I -->|Sucesso| J[POST /api/complex-rules]
     I -->|Erro| K[Mostrar erros]
     J --> L[Fechar dialog]
     L --> M[Atualizar lista]
@@ -2388,7 +2454,7 @@ Frontend → API → Engine → DB → Response.
 Fluxo opaco, difícil de debugar.
 
 **Notas**
-Sequência real do request /analyze e persistência/auditoria.
+Sequência real do request /api/transactions/analyze e persistência/auditoria.
 
 
 ```mermaid
@@ -2398,7 +2464,7 @@ sequenceDiagram
   participant ENG as RuleEngineService
   participant DB as PostgreSQL
   participant AUD as AccessLogService
-  FE->>API: POST /api/analyze (transaction)
+  FE->>API: POST /api/transactions/analyze (transaction)
   API->>AUD: log request (headers, route, outcome)
   API->>ENG: analyze(transaction)
   ENG->>DB: load active rules / operators
@@ -2406,7 +2472,7 @@ sequenceDiagram
   ENG-->>API: decision + score + reasons
   API->>DB: persist transaction + audit
   DB-->>API: ok
-  API-->>FE: 200 decision payload
+  API-->>FE: 200 classificação payload
 ```
 
 
@@ -2467,7 +2533,7 @@ stateDiagram-v2
 ### 3.4 Fluxogramas de Processamento
 
 
-### Fluxo — Análise de Transação (/analyze)
+### Fluxo — Análise de Transação (/api/transactions/analyze)
 
 - Seção: 5. Backend Java
 - Categoria: Backend
@@ -2508,15 +2574,15 @@ Representação fiel do fluxo ponta-a-ponta (FE→API→Engine→DB/Audit).
 
 ```mermaid
 flowchart TD
-  FE[Frontend / Simulator] -->|POST /analyze| API[API (Spring Boot)]
+  FE[Frontend / Simulator] -->|POST /api/transactions/analyze| API[API (Spring Boot)]
   API --> V[Validate + Normalize payload]
   V --> ENG[RuleEngineService]
   ENG -->|load rules| DB[(PostgreSQL)]
   ENG --> C[Compute score + matches]
-  C --> D{Decision}
-  D -->|APPROVE| A1[Persist audit + decision]
-  D -->|REVIEW| A2[Persist audit + create case]
-  D -->|BLOCK| A3[Persist audit + block]
+  C --> D{Classificação}
+  D -->|APROVADA| A1[Persist audit + classificação]
+  D -->|SUSPEITA_DE_FRAUDE| A2[Persist audit + suspeita]
+  D -->|FRAUDE| A3[Persist audit + fraude]
   A1 --> DB
   A2 --> DB
   A3 --> DB
@@ -2646,10 +2712,10 @@ flowchart TD
     
     Load --> Sort
     Sort --> T1
-    T1 -->|BLOCK?| ShortCircuit[Curto-circuito]
-    T1 -->|ALLOW| T2
-    T2 -->|BLOCK?| ShortCircuit
-    T2 -->|ALLOW| T3
+    T1 -->|Severidade máxima?| ShortCircuit[Curto-circuito]
+    T1 -->|Não| T2
+    T2 -->|Severidade máxima?| ShortCircuit
+    T2 -->|Não| T3
     T3 --> Eval
     Eval --> Score
     Score --> Decision
@@ -2673,10 +2739,12 @@ flowchart TD
 - Categoria: Backend
 - Público: Dev Backend, Arquiteto, QA, Operação
 - Nível: Tático/Detalhado
-- Status: 🟥 SEM EVIDÊNCIA
+- Status: ✅ OK
 
 **Evidência no repositório**
-- **EVIDÊNCIA NÃO ENCONTRADA NO REPOSITÓRIO**
+- openapi/rulex.yaml
+  > Trecho: `paths:`
+- backend/src/main/resources/application.yml
 
 **Objetivo**
 Documentar endpoints expostos conforme contrato OpenAPI.
@@ -2706,15 +2774,15 @@ Derivado de openapi/rulex.yaml verificado.
 
 ```mermaid
 flowchart LR
-    subgraph Endpoints["📡 Principais Endpoints (openapi/rulex.yaml)"]
-        E1["POST /transactions/analyze"]
-        E2["POST /evaluate"]
-        E3["GET/POST /rules"]
-        E4["GET/POST /complex-rules"]
-        E5["GET /audit"]
-        E6["POST /rules/simulate"]
-        E7["GET /metrics"]
-        E8["GET /actuator/health"]
+  subgraph Endpoints["📡 Principais Endpoints (openapi/rulex.yaml)"]
+    E1["POST /api/transactions/analyze"]
+    E2["POST /api/transactions/analyze-advanced"]
+    E3["GET /api/transactions"]
+    E4["GET/POST /api/rules"]
+    E5["GET/PUT/DELETE /api/rules/{id}"]
+    E6["PATCH /api/rules/{id}/toggle"]
+    E7["GET /api/audit"]
+    E8["GET /api/metrics"]
     end
     
     subgraph Consumers["🔌 Consumidores"]
@@ -2723,10 +2791,9 @@ flowchart LR
         C3["Monitoramento"]
     end
     
-    C1 --> E3
     C1 --> E4
-    C1 --> E5
-    C1 --> E6
+    C1 --> E7
+    C1 --> E8
     C2 --> E1
     C2 --> E2
     C3 --> E7
@@ -4441,7 +4508,7 @@ flowchart TD
     F3 --> F4
     F1 --> A1
     A1 -->|Sim| A2
-    A1 -->|Não| Allow["Permitir"]
+    A1 -->|Não| Public["Permitir (rota pública)"]
     A2 -->|ADMIN| ADMIN
     A2 -->|ANALYST| ANALYST
     A2 -->|Negado| Deny["HTTP 403"]
@@ -4677,7 +4744,7 @@ Derivado de prometheus-alerts.yml verificado.
 ```mermaid
 flowchart LR
     subgraph Alerts["🚨 Alertas RULEX"]
-        A1["HighErrorRate: >5% erros em /analyze"]
+        A1["HighErrorRate: >5% erros em /api/transactions/analyze"]
         A2["HighLatency: p99 > 500ms"]
         A3["HikariPoolExhausted: pool < 5"]
         A4["AuthSpike: >100 401/403 em 5min"]
@@ -4723,7 +4790,7 @@ Documentar retry, timeout, circuit breaker, fallback.
 Alta disponibilidade, degradação graciosa.
 
 **O que representa**
-Estratégias implementadas: timeout em regex, tiers com timeout, fallback de cache.
+Estratégias implementadas no código (quando evidenciadas): circuit breaker (resilience4j) e fallback de cache/BD para velocity.
 
 **Entradas**
 - (ver evidência; varia por diagrama)
@@ -4745,10 +4812,10 @@ Derivado de VelocityServiceFacade.java, ParallelRuleExecutionService.java, Regex
 ```mermaid
 flowchart TD
     subgraph Patterns["🛡️ Padrões Implementados"]
-        P1["Timeout: Regex (1s), Regras por tier (5ms/50ms/200ms)"]
-        P2["Fallback: Redis → Memory → PostgreSQL"]
-        P3["Early Termination: BLOCK → Skip remaining tiers"]
-        P4["Graceful Degradation: Erro em regra → continuar com outras"]
+      P1["Timeouts e tierização (valores: SEM EVIDÊNCIA no repositório)"]
+      P2["Fallback (velocity): Redis real → cache em memória → PostgreSQL"]
+      P3["Early termination (exemplo): FRAUDE → interromper avaliação"]
+      P4["Graceful degradation (semântica detalhada: SEM EVIDÊNCIA)"]
     end
     
     subgraph Flow["Fluxo de Fallback (Velocidade)"]
@@ -5037,7 +5104,7 @@ flowchart LR
         L1["TIER 1 (Blocklists): < 1ms"]
         L2["TIER 2 (Velocity): < 10ms"]
         L3["TIER 3 (Agregações): < 100ms"]
-        L4["Total /analyze: < 200ms p95"]
+        L4["Total /api/transactions/analyze: < 200ms p95"]
     end
     
     subgraph Alertas["🚨 Alertas"]
@@ -5171,11 +5238,11 @@ Não há evidência de load testing ou limites de TPS documentados no repositór
 
 | Risco | Probabilidade | Impacto | Mitigação | Evidência |
 |-------|---------------|---------|-----------|-----------|
-| Falso positivo alto | Média | Alto | Simulação prévia, ajuste de thresholds | `/rules/simulate` endpoint |
-| Indisponibilidade do motor | Baixa | Crítico | Circuit breaker, fallback ALLOW | `resilience4j` em pom.xml |
-| Regra mal configurada | Média | Alto | Workflow aprovação, ambiente homolog | `RuleApprovalController.java` |
-| Vazamento de dados PAN | Baixa | Crítico | Mascaramento antes de persistir | `TransactionService.java` |
-| Cache stampede | Média | Alto | TTL distribuído, fallback cascade | `VelocityServiceFacade.java` |
+| Falso positivo alto | Média | Alto | Simulação prévia (quando usada), ajuste de thresholds | `backend/src/main/java/com/rulex/v31/rules/RulesV31Controller.java` |
+| Indisponibilidade do motor | Baixa | Crítico | Circuit breaker; fallback **SEM EVIDÊNCIA NO REPOSITÓRIO** | `backend/pom.xml`, `backend/src/main/resources/application.yml` |
+| Regra mal configurada | Média | Alto | Workflow de aprovação (4 olhos), ambiente de homologação | `backend/src/main/java/com/rulex/controller/RuleApprovalController.java` |
+| Vazamento de dados PAN | Baixa | Crítico | Mascaramento de dados sensíveis em logs/outputs | `backend/src/main/java/com/rulex/util/SensitiveDataMasker.java` |
+| Cache stampede | Média | Alto | Mitigação específica: **SEM EVIDÊNCIA NO REPOSITÓRIO** | `backend/src/main/java/com/rulex/service/VelocityServiceFacade.java` |
 | SQL injection | Baixa | Crítico | JPA parameterized queries | `*Repository.java` |
 | Pool exhaustion | Média | Alto | Sizing + alertas | `application.yml` HikariCP |
 
@@ -5183,20 +5250,20 @@ Não há evidência de load testing ou limites de TPS documentados no repositór
 
 | Funcionalidade | Fluxo Principal | Fluxo de Erro | Testes |
 |----------------|-----------------|---------------|--------|
-| Analisar transação | POST /analyze → Motor → Decisão | Timeout → ALLOW fallback | `TransactionControllerTest` |
-| Criar regra | Form → POST /rules → Persistir | Validação falha → 400 | `RuleControllerTest` |
-| Simular regra | POST /simulate → Executar → Retornar | Regra inválida → 422 | `RuleSimulationTest` |
-| Aprovar regra | POST /approve → Mudar status | Não autorizado → 403 | `RuleApprovalTest` |
-| Exportar transações | GET /export → Stream CSV/JSON | Limite excedido → 400 | `ExportTest` |
+| Analisar transação | POST /api/transactions/analyze → Motor → Classificação | Timeout/fallback: **SEM EVIDÊNCIA NO REPOSITÓRIO** | `backend/src/test/java/com/rulex/controller/integration/TransactionApiIntegrationTest.java` |
+| Criar regra | POST /api/rules (simples) OU POST /api/complex-rules (complexa) | Validação falha → 400 | `backend/src/test/java/com/rulex/controller/integration/RuleApiIntegrationTest.java` |
+| Simular regra | POST /api/rules/simulate → avaliar AST/payload | Erros de validação → 400 (ex.: payload obrigatório) | **SEM EVIDÊNCIA** (teste específico não encontrado) |
+| Aprovar regra | POST /api/rules/approvals/{id}/approve | Não autorizado → 403 (RBAC) | `backend/src/test/java/com/rulex/security/SecurityRbacIT.java` |
+| Exportar transações | GET /api/transactions/export | Limites/erros detalhados: **SEM EVIDÊNCIA NO REPOSITÓRIO** | **SEM EVIDÊNCIA** (teste específico não encontrado) |
 
 ### 10.4 Matriz Dados × Sensibilidade LGPD × Retenção × Criptografia
 
 | Dado | Sensibilidade | Retenção | Criptografia | Evidência |
 |------|---------------|----------|--------------|-----------|
-| PAN (cartão) | Alta (PCI-DSS) | Mascarado antes de persistir | Não armazenado em claro | `TransactionService` |
+| PAN (cartão) | Alta (PCI-DSS) | Política de retenção: **SEM EVIDÊNCIA** | Mascaração em logs/outputs | `backend/src/main/java/com/rulex/util/SensitiveDataMasker.java` |
 | CPF/CNPJ | Alta (LGPD) | Conforme política (SEM EVIDÊNCIA) | Em trânsito (HTTPS) | Config TLS |
 | E-mail | Média | Conforme política (SEM EVIDÊNCIA) | Em trânsito (HTTPS) | - |
-| IP | Baixa | Logs rotacionados | Não | `logback.xml` |
+| IP | Baixa | Logs/rotação: **SEM EVIDÊNCIA** | **SEM EVIDÊNCIA** | - |
 | Device fingerprint | Média | Conforme política (SEM EVIDÊNCIA) | Não | - |
 
 > **SEM EVIDÊNCIA**: Política formal de retenção LGPD não encontrada no repositório.
@@ -5206,8 +5273,8 @@ Não há evidência de load testing ou limites de TPS documentados no repositór
 | Integração | Contrato | Timeout | Retry | Fallback | Evidência |
 |------------|----------|---------|-------|----------|-----------|
 | PostgreSQL | JDBC | HikariCP connectionTimeout | Não | Fail | `application.yml` |
-| Redis | Lettuce | 1000ms (config) | Não nativo | Memory fallback | `VelocityServiceFacade` |
-| Neo4j | Bolt | Padrão driver | Não | Skip graph analysis | `Neo4jGraphService` |
+| Redis | Lettuce | **SEM EVIDÊNCIA** (valores) | **SEM EVIDÊNCIA** | Fallback (velocity): Redis → memória → BD | `backend/src/main/java/com/rulex/service/VelocityServiceFacade.java` |
+| Neo4j | Bolt | **SEM EVIDÊNCIA** (valores) | **SEM EVIDÊNCIA** | **SEM EVIDÊNCIA** (política de fallback) | `backend/src/main/java/com/rulex/service/Neo4jGraphService.java` |
 | Sistema externo (API) | OpenAPI | SEM EVIDÊNCIA | resilience4j | SEM EVIDÊNCIA | - |
 
 ---
@@ -5254,40 +5321,39 @@ Esta seção lista automaticamente todos os itens marcados como **SEM EVIDÊNCIA
 | 30 | 5. Backend Java | UML — Diagrama de Estados (Regra) | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
 | 31 | 5. Backend Java | Fluxo — Tratamento de Exceções | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
 | 32 | 5. Backend Java | Arquitetura de Regras Duras | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 33 | 5. Backend Java | API Contract — OpenAPI | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 34 | 5. Backend Java | Integrações Externas | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 35 | 5. Backend Java | Event / Message Flow | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 36 | 6. PostgreSQL | Modelo Lógico | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 37 | 6. PostgreSQL | Modelo Físico | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 38 | 6. PostgreSQL | Organização de Schemas | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 39 | 6. PostgreSQL | Armazenamento PostgreSQL | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 40 | 6. PostgreSQL | Replicação PostgreSQL | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 41 | 6. PostgreSQL | Data Lifecycle — Retenção e LGPD | `docs/compliance/lgpd-retention.md` | Política de retenção por dado | Conformidade LGPD | Revisar com jurídico |
-| 42 | 7. Redis | Arquitetura Redis — Event Loop | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 43 | 7. Redis | Replicação Redis | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 44 | 7. Redis | Cluster Redis | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 45 | 7. Redis | Persistência Redis | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 46 | 7. Redis | Consistência e Invalidação de Cache | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 47 | 8. Neo4j | Index-Free Adjacency | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 48 | 8. Neo4j | Armazenamento Neo4j | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 49 | 8. Neo4j | Cluster Causal Neo4j | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 50 | 8. Neo4j | Multi-Data Center Neo4j | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 51 | 8. Neo4j | Índices e Constraints Neo4j | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 52 | 9. Transversal | DFD Nível 0 — Contexto | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 53 | 9. Transversal | DFD Nível 1 — Processos Principais | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 54 | 9. Transversal | DFD Nível 2 — Detalhamento | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 55 | 9. Transversal | Proteção de Dados / LGPD | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 56 | 9. Transversal | Threat Model — STRIDE | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 57 | 9. Transversal | Circuit Breaker | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 58 | 9. Transversal | Deployment Diagram | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 59 | 9. Transversal | Ambientes (Dev/Hml/Prod) | `docs/infra/environments.md` | Configuração por ambiente | Promoção segura | Revisar com DevOps |
-| 60 | 9. Transversal | CI/CD Pipeline | `.github/workflows/ci.yml` | Pipeline GitHub Actions | Automação de qualidade | Executar workflow |
-| 61 | 9. Transversal | Diagrama de Latência | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 62 | 9. Transversal | Pontos de Gargalo | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
-| 63 | 9. Transversal | Limites de TPS | `docs/performance/load-test-results.md` | Resultados de load testing | Capacity planning | Executar k6/JMeter |
+| 33 | 5. Backend Java | Integrações Externas | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 34 | 5. Backend Java | Event / Message Flow | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 35 | 6. PostgreSQL | Modelo Lógico | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 36 | 6. PostgreSQL | Modelo Físico | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 37 | 6. PostgreSQL | Organização de Schemas | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 38 | 6. PostgreSQL | Armazenamento PostgreSQL | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 39 | 6. PostgreSQL | Replicação PostgreSQL | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 40 | 6. PostgreSQL | Data Lifecycle — Retenção e LGPD | `docs/compliance/lgpd-retention.md` | Política de retenção por dado | Conformidade LGPD | Revisar com jurídico |
+| 41 | 7. Redis | Arquitetura Redis — Event Loop | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 42 | 7. Redis | Replicação Redis | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 43 | 7. Redis | Cluster Redis | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 44 | 7. Redis | Persistência Redis | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 45 | 7. Redis | Consistência e Invalidação de Cache | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 46 | 8. Neo4j | Index-Free Adjacency | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 47 | 8. Neo4j | Armazenamento Neo4j | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 48 | 8. Neo4j | Cluster Causal Neo4j | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 49 | 8. Neo4j | Multi-Data Center Neo4j | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 50 | 8. Neo4j | Índices e Constraints Neo4j | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 51 | 9. Transversal | DFD Nível 0 — Contexto | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 52 | 9. Transversal | DFD Nível 1 — Processos Principais | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 53 | 9. Transversal | DFD Nível 2 — Detalhamento | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 54 | 9. Transversal | Proteção de Dados / LGPD | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 55 | 9. Transversal | Threat Model — STRIDE | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 56 | 9. Transversal | Circuit Breaker | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 57 | 9. Transversal | Deployment Diagram | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 58 | 9. Transversal | Ambientes (Dev/Hml/Prod) | `docs/infra/environments.md` | Configuração por ambiente | Promoção segura | Revisar com DevOps |
+| 59 | 9. Transversal | CI/CD Pipeline | `.github/workflows/ci.yml` | Pipeline GitHub Actions | Automação de qualidade | Executar workflow |
+| 60 | 9. Transversal | Diagrama de Latência | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 61 | 9. Transversal | Pontos de Gargalo | `docs/a-definir.md` | Conteúdo a definir | Completude | Revisar com equipe |
+| 62 | 9. Transversal | Limites de TPS | `docs/performance/load-test-results.md` | Resultados de load testing | Capacity planning | Executar k6/JMeter |
 
 
-**Total de itens pendentes**: 63
+**Total de itens pendentes**: 62
 
 ---
 
@@ -5301,7 +5367,7 @@ Esta seção lista automaticamente todos os itens marcados como **SEM EVIDÊNCIA
 | Transação | Operação financeira (compra, transferência, etc.) | Entrada principal para análise |
 | Regra | Condição + ação que avalia uma transação | Configurada por analistas |
 | Score | Pontuação de risco (0-100) | Resultado da avaliação |
-| Decisão | ALLOW, FLAG, REVIEW, BLOCK | Saída do motor de regras |
+| Classificação | APPROVED, SUSPICIOUS, FRAUD (OpenAPI) / APROVADA, SUSPEITA_DE_FRAUDE, FRAUDE (normalização) | Saída da avaliação |
 | Velocity | Contagem de eventos em janela temporal | Redis para cálculo rápido |
 | Fraud Ring | Rede de contas/dispositivos relacionados | Análise de grafo (Neo4j) |
 | MCC | Merchant Category Code | Código de categoria do estabelecimento |
@@ -5311,7 +5377,7 @@ Esta seção lista automaticamente todos os itens marcados como **SEM EVIDÊNCIA
 | Threshold | Limite/limiar para disparo de regra | Ex: amount > 10000 |
 | TTL | Time To Live | Tempo de expiração em cache |
 | Circuit Breaker | Padrão de resiliência | Evita cascata de falhas |
-| Fallback | Comportamento alternativo em falha | Ex: ALLOW se timeout |
+| Fallback | Comportamento alternativo em falha | Política específica de fallback decisório: **SEM EVIDÊNCIA** |
 
 **EVIDÊNCIA**: Derivado de `openapi/rulex.yaml`, `README.md`, código-fonte.
 
@@ -5352,9 +5418,9 @@ Esta seção lista automaticamente todos os itens marcados como **SEM EVIDÊNCIA
 - [x] 14. Anexo: Catálogo da UI
 
 ### Estatísticas
-- Total de artefatos documentados: **82**
-- Artefatos com evidência (OK): **19**
-- Artefatos sem evidência: **63**
+- Total de artefatos documentados: **83**
+- Artefatos com evidência (OK): **21**
+- Artefatos sem evidência: **62**
 
 ### Assinatura
 - [x] Tudo está em `docs/DIAGRAMAS.md` (não existem docs espalhadas)
@@ -5366,7 +5432,7 @@ Esta seção lista automaticamente todos os itens marcados como **SEM EVIDÊNCIA
 - [x] Há matrizes completas
 - [x] Há seção "O QUE FALTA PARA COMPLETAR"
 
-**Gerado automaticamente em**: 2026-01-17T18:43:04.333Z
+**Gerado automaticamente em**: 2026-01-17T20:45:32.569Z
 
 ---
 
@@ -5390,56 +5456,56 @@ O catálogo completo de diagramas disponíveis na UI (422 itens) pode ser consul
 ### Lista de Diagramas Verificados (solution)
 
 
-- **Fluxo real: /analyze (RULEX)** (`RULEX/FLOW_analyze`) — FLOWCHART
+- **Fluxo real: /api/transactions/analyze (RULEX)** (`RULEX/FLOW_analyze`) — FLOWCHART
 - **Sequência real: FE → API → Engine → DB** (`RULEX/SEQ_analyze`) — UML
 - **C4 (Container): RULEX** (`RULEX/C4_container`) — C4
 - **ER (Core): Transaction ↔ Rule ↔ Evaluation** (`RULEX/ER_core`) — ER
 - **API Controller: RulesV31Controller** (`RULEX/CTRL_rulesv31controller`) — UML
-- **Endpoint: POST /rules/validate** (`RULEX/EP_post-rules-validate-rulesv31controller`) — UML
-- **Endpoint: POST /rules/lint** (`RULEX/EP_post-rules-lint-rulesv31controller`) — UML
-- **Endpoint: POST /rules/simulate** (`RULEX/EP_post-rules-simulate-rulesv31controller`) — UML
+- **Endpoint: POST /api/rules/validate** (`RULEX/EP_post-rules-validate-rulesv31controller`) — UML
+- **Endpoint: POST /api/rules/lint** (`RULEX/EP_post-rules-lint-rulesv31controller`) — UML
+- **Endpoint: POST /api/rules/simulate** (`RULEX/EP_post-rules-simulate-rulesv31controller`) — UML
 - **API Controller: FieldDictionaryController** (`RULEX/CTRL_fielddictionarycontroller`) — UML
-- **Endpoint: GET /field-dictionary** (`RULEX/EP_get-field-dictionary-fielddictionarycontroller`) — UML
+- **Endpoint: GET /api/field-dictionary** (`RULEX/EP_get-field-dictionary-fielddictionarycontroller`) — UML
 - **API Controller: AuditController** (`RULEX/CTRL_auditcontroller`) — UML
-- **Endpoint: GET /audit** (`RULEX/EP_get-audit-auditcontroller`) — UML
-- **Endpoint: GET /audit/export** (`RULEX/EP_get-audit-export-auditcontroller`) — UML
-- **Endpoint: GET /audit/export/csv** (`RULEX/EP_get-audit-export-csv-auditcontroller`) — UML
-- **Endpoint: GET /audit/transaction/{transactionId}** (`RULEX/EP_get-audit-transaction-transactionid-auditcontroller`) — UML
+- **Endpoint: GET /api/audit** (`RULEX/EP_get-audit-auditcontroller`) — UML
+- **Endpoint: GET /api/audit/export** (`RULEX/EP_get-audit-export-auditcontroller`) — UML
+- **Endpoint: GET /api/audit/export/csv** (`RULEX/EP_get-audit-export-csv-auditcontroller`) — UML
+- **Endpoint: GET /api/audit/transaction/{transactionId}** (`RULEX/EP_get-audit-transaction-transactionid-auditcontroller`) — UML
 - **API Controller: ComplexRuleCrudController** (`RULEX/CTRL_complexrulecrudcontroller`) — UML
-- **Endpoint: GET /complex-rules** (`RULEX/EP_get-complex-rules-complexrulecrudcontroller`) — UML
-- **Endpoint: GET /complex-rules/{id}** (`RULEX/EP_get-complex-rules-id-complexrulecrudcontroller`) — UML
-- **Endpoint: GET /complex-rules/key/{key}** (`RULEX/EP_get-complex-rules-key-key-complexrulecrudcontroller`) — UML
-- **Endpoint: POST /complex-rules** (`RULEX/EP_post-complex-rules-complexrulecrudcontroller`) — UML
-- **Endpoint: PUT /complex-rules/{id}** (`RULEX/EP_put-complex-rules-id-complexrulecrudcontroller`) — UML
-- **Endpoint: DELETE /complex-rules/{id}** (`RULEX/EP_delete-complex-rules-id-complexrulecrudcontroller`) — UML
-- **Endpoint: PATCH /complex-rules/{id}/toggle** (`RULEX/EP_patch-complex-rules-id-toggle-complexrulecrudcontroller`) — UML
-- **Endpoint: POST /complex-rules/{id}/duplicate** (`RULEX/EP_post-complex-rules-id-duplicate-complexrulecrudcontroller`) — UML
-- **Endpoint: POST /complex-rules/validate** (`RULEX/EP_post-complex-rules-validate-complexrulecrudcontroller`) — UML
+- **Endpoint: GET /api/complex-rules** (`RULEX/EP_get-complex-rules-complexrulecrudcontroller`) — UML
+- **Endpoint: GET /api/complex-rules/{id}** (`RULEX/EP_get-complex-rules-id-complexrulecrudcontroller`) — UML
+- **Endpoint: GET /api/complex-rules/key/{key}** (`RULEX/EP_get-complex-rules-key-key-complexrulecrudcontroller`) — UML
+- **Endpoint: POST /api/complex-rules** (`RULEX/EP_post-complex-rules-complexrulecrudcontroller`) — UML
+- **Endpoint: PUT /api/complex-rules/{id}** (`RULEX/EP_put-complex-rules-id-complexrulecrudcontroller`) — UML
+- **Endpoint: DELETE /api/complex-rules/{id}** (`RULEX/EP_delete-complex-rules-id-complexrulecrudcontroller`) — UML
+- **Endpoint: PATCH /api/complex-rules/{id}/toggle** (`RULEX/EP_patch-complex-rules-id-toggle-complexrulecrudcontroller`) — UML
+- **Endpoint: POST /api/complex-rules/{id}/duplicate** (`RULEX/EP_post-complex-rules-id-duplicate-complexrulecrudcontroller`) — UML
+- **Endpoint: POST /api/complex-rules/validate** (`RULEX/EP_post-complex-rules-validate-complexrulecrudcontroller`) — UML
 - **API Controller: EvaluateController** (`RULEX/CTRL_evaluatecontroller`) — UML
-- **Endpoint: POST /evaluate** (`RULEX/EP_post-evaluate-evaluatecontroller`) — UML
-- **Endpoint: POST /evaluate/raw** (`RULEX/EP_post-evaluate-raw-evaluatecontroller`) — UML
+- **Endpoint: POST /api/evaluate** (`RULEX/EP_post-evaluate-evaluatecontroller`) — UML
+- **Endpoint: POST /api/evaluate/raw** (`RULEX/EP_post-evaluate-raw-evaluatecontroller`) — UML
 - **API Controller: MetricsController** (`RULEX/CTRL_metricscontroller`) — UML
-- **Endpoint: GET /metrics** (`RULEX/EP_get-metrics-metricscontroller`) — UML
-- **Endpoint: GET /metrics/mcc** (`RULEX/EP_get-metrics-mcc-metricscontroller`) — UML
-- **Endpoint: GET /metrics/merchant** (`RULEX/EP_get-metrics-merchant-metricscontroller`) — UML
-- **Endpoint: GET /metrics/timeline** (`RULEX/EP_get-metrics-timeline-metricscontroller`) — UML
+- **Endpoint: GET /api/metrics** (`RULEX/EP_get-metrics-metricscontroller`) — UML
+- **Endpoint: GET /api/metrics/mcc** (`RULEX/EP_get-metrics-mcc-metricscontroller`) — UML
+- **Endpoint: GET /api/metrics/merchant** (`RULEX/EP_get-metrics-merchant-metricscontroller`) — UML
+- **Endpoint: GET /api/metrics/timeline** (`RULEX/EP_get-metrics-timeline-metricscontroller`) — UML
 - **API Controller: RuleApprovalController** (`RULEX/CTRL_ruleapprovalcontroller`) — UML
-- **Endpoint: POST /rules/approvals/create** (`RULEX/EP_post-rules-approvals-create-ruleapprovalcontroller`) — UML
-- **Endpoint: POST /rules/approvals/update/{ruleId}** (`RULEX/EP_post-rules-approvals-update-ruleid-ruleapprovalcontroller`) — UML
-- **Endpoint: POST /rules/approvals/delete/{ruleId}** (`RULEX/EP_post-rules-approvals-delete-ruleid-ruleapprovalcontroller`) — UML
-- **Endpoint: POST /rules/approvals/{id}/approve** (`RULEX/EP_post-rules-approvals-id-approve-ruleapprovalcontroller`) — UML
-- **Endpoint: POST /rules/approvals/{id}/reject** (`RULEX/EP_post-rules-approvals-id-reject-ruleapprovalcontroller`) — UML
-- **Endpoint: POST /rules/approvals/{id}/cancel** (`RULEX/EP_post-rules-approvals-id-cancel-ruleapprovalcontroller`) — UML
-- **Endpoint: GET /rules/approvals/pending** (`RULEX/EP_get-rules-approvals-pending-ruleapprovalcontroller`) — UML
-- **Endpoint: GET /rules/approvals/pending/page** (`RULEX/EP_get-rules-approvals-pending-page-ruleapprovalcontroller`) — UML
-- **Endpoint: GET /rules/approvals/pending/count** (`RULEX/EP_get-rules-approvals-pending-count-ruleapprovalcontroller`) — UML
-- **Endpoint: GET /rules/approvals/{id}** (`RULEX/EP_get-rules-approvals-id-ruleapprovalcontroller`) — UML
-- **Endpoint: GET /rules/approvals/history/{ruleId}** (`RULEX/EP_get-rules-approvals-history-ruleid-ruleapprovalcontroller`) — UML
+- **Endpoint: POST /api/rules/approvals/create** (`RULEX/EP_post-rules-approvals-create-ruleapprovalcontroller`) — UML
+- **Endpoint: POST /api/rules/approvals/update/{ruleId}** (`RULEX/EP_post-rules-approvals-update-ruleid-ruleapprovalcontroller`) — UML
+- **Endpoint: POST /api/rules/approvals/delete/{ruleId}** (`RULEX/EP_post-rules-approvals-delete-ruleid-ruleapprovalcontroller`) — UML
+- **Endpoint: POST /api/rules/approvals/{id}/approve** (`RULEX/EP_post-rules-approvals-id-approve-ruleapprovalcontroller`) — UML
+- **Endpoint: POST /api/rules/approvals/{id}/reject** (`RULEX/EP_post-rules-approvals-id-reject-ruleapprovalcontroller`) — UML
+- **Endpoint: POST /api/rules/approvals/{id}/cancel** (`RULEX/EP_post-rules-approvals-id-cancel-ruleapprovalcontroller`) — UML
+- **Endpoint: GET /api/rules/approvals/pending** (`RULEX/EP_get-rules-approvals-pending-ruleapprovalcontroller`) — UML
+- **Endpoint: GET /api/rules/approvals/pending/page** (`RULEX/EP_get-rules-approvals-pending-page-ruleapprovalcontroller`) — UML
+- **Endpoint: GET /api/rules/approvals/pending/count** (`RULEX/EP_get-rules-approvals-pending-count-ruleapprovalcontroller`) — UML
+- **Endpoint: GET /api/rules/approvals/{id}** (`RULEX/EP_get-rules-approvals-id-ruleapprovalcontroller`) — UML
+- **Endpoint: GET /api/rules/approvals/history/{ruleId}** (`RULEX/EP_get-rules-approvals-history-ruleid-ruleapprovalcontroller`) — UML
 - **API Controller: RuleController** (`RULEX/CTRL_rulecontroller`) — UML
-- **Endpoint: GET /rules** (`RULEX/EP_get-rules-rulecontroller`) — UML
-- **Endpoint: GET /rules/{id}** (`RULEX/EP_get-rules-id-rulecontroller`) — UML
-- **Endpoint: POST /rules** (`RULEX/EP_post-rules-rulecontroller`) — UML
-- **Endpoint: PUT /rules/{id}** (`RULEX/EP_put-rules-id-rulecontroller`) — UML
+- **Endpoint: GET /api/rules** (`RULEX/EP_get-rules-rulecontroller`) — UML
+- **Endpoint: GET /api/rules/{id}** (`RULEX/EP_get-rules-id-rulecontroller`) — UML
+- **Endpoint: POST /api/rules** (`RULEX/EP_post-rules-rulecontroller`) — UML
+- **Endpoint: PUT /api/rules/{id}** (`RULEX/EP_put-rules-id-rulecontroller`) — UML
 - ... e mais 163 diagramas verificados.
 
 
@@ -5453,4 +5519,4 @@ O catálogo completo de diagramas disponíveis na UI (422 itens) pode ser consul
 
 ---
 
-*Documento gerado automaticamente. Para atualizar, execute `pnpm diagrams:doc-completo`.*
+*Documento gerado automaticamente. Para atualizar, execute `pnpm diagrams:doc`.*

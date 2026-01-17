@@ -49,15 +49,25 @@ function setDiagramContext(ctx: {
 // Evidências explícitas (path reais). Se um título não estiver aqui, ele NÃO pode ser
 // marcado como "OK" automaticamente.
 const EVIDENCE_BY_TITLE: Record<string, string[]> = {
+  // Mapa geral (macro)
+  "Mapa Geral do Sistema (macro)": ["docker-compose.yml", "client/src/App.tsx", "backend/src/main/resources/application.yml"],
+
   // Frontend
   "Arquitetura do Frontend": ["client/src/main.tsx", "client/src/App.tsx", "vite.config.ts", "package.json"],
   "Componentes do Frontend": ["client/src/components", "components.json"],
   "Wireflow — Navegação Principal": ["client/src/App.tsx"],
-  "Fluxo UI — Criação de Regra": ["client/src/pages/ComplexRules.tsx", "client/src/App.tsx"],
+  "Fluxo UI — Criação de Regra": [
+    "client/src/App.tsx",
+    "client/src/pages/ComplexRules.tsx",
+    "client/src/components/RuleFormDialog",
+    "client/src/lib/javaApi.ts",
+    "backend/src/main/java/com/rulex/controller/ComplexRuleCrudController.java",
+    "backend/src/main/resources/application.yml",
+  ],
 
   // Backend / API
   "Arquitetura Backend — Camadas": ["backend/src/main/java/com/rulex"],
-  "Fluxo — Análise de Transação (/analyze)": [
+  "Fluxo — Análise de Transação (/api/transactions/analyze)": [
     "backend/src/main/java/com/rulex/controller/TransactionController.java",
     "backend/src/main/java/com/rulex/service/RuleEngineService.java",
     "openapi/rulex.yaml"
@@ -71,6 +81,7 @@ const EVIDENCE_BY_TITLE: Record<string, string[]> = {
 
   // API Contract
   "C4 — Container Diagram": ["docker-compose.yml", "backend/src/main/resources/application.yml", "client/src/App.tsx"],
+  "API Contract — OpenAPI": ["openapi/rulex.yaml", "backend/src/main/resources/application.yml"],
 
   // Infra / Deploy local
   "Docker Compose (ambiente local)": ["docker-compose.yml", "Dockerfile.web", "backend/Dockerfile"],
@@ -484,7 +495,7 @@ Este documento contém **TODOS** os diagramas, fluxogramas e representações do
 ### Como regerar
 
 \`\`\`bash
-pnpm diagrams:doc-completo   # Gera este documento
+pnpm diagrams:doc            # Gera este documento
 pnpm diagrams:sync           # Sincroniza inventário + checklist + doc
 \`\`\`
 
@@ -493,6 +504,42 @@ pnpm diagrams:sync           # Sincroniza inventário + checklist + doc
 ## 0. PASSO ZERO — Varredura obrigatória do repositório
 
 ${inventoryMd}
+
+---
+
+## Mapa Geral do Sistema (macro)
+`);
+
+  // Macro-map deve ficar no topo do documento e ser baseado apenas em evidências.
+  setDiagramContext({
+    secao: "0. Painel",
+    categoria: "Visão Geral",
+    publico: "Todos",
+    nivel: "Executivo",
+  });
+  lines.push(
+    diagramBlock(
+      "Mapa Geral do Sistema (macro)",
+      "Dar visão macro (contexto + containers principais) do RULEX e suas dependências locais.",
+      "Onboarding rápido, alinhamento executivo e visão compartilhada do sistema.",
+      "Frontend web (Vite/React) consumindo API backend (Spring Boot) e dependências de dados (PostgreSQL/Redis/Neo4j) conforme docker-compose e context-path /api.",
+      "Sem visão macro, decisões de integração/infra ficam fragmentadas e aumentam gaps de entendimento.",
+      `
+\`\`\`mermaid
+flowchart LR
+    U[Usuário/Analista] -->|HTTP| WEB[Web UI (Vite + React)]
+    WEB -->|HTTP /api/*| API[Backend API (Spring Boot)]
+    API --> PG[(PostgreSQL 16)]
+    API --> R[(Redis 7)]
+    API --> N4J[(Neo4j 5)]
+\`\`\`
+`,
+      false,
+      "Evidências: docker-compose.yml (serviços/portas), client/src/App.tsx (rotas), backend/src/main/resources/application.yml (context-path /api).",
+    ),
+  );
+
+  lines.push(`
 
 ---
 
@@ -551,7 +598,7 @@ flowchart LR
         G[Graph Analysis]
     end
     subgraph Saída
-        D[Decisão: ALLOW/FLAG/REVIEW/BLOCK]
+      D[Classificação: APROVADA / SUSPEITA_DE_FRAUDE / FRAUDE]
         S[Score de Risco]
         A[Auditoria]
     end
@@ -581,7 +628,7 @@ flowchart LR
 | Risco | Probabilidade | Impacto | Mitigação |
 |-------|---------------|---------|-----------|
 | Falso positivo alto | Média | Alto | Ajuste fino de thresholds, simulação prévia |
-| Indisponibilidade | Baixa | Crítico | Fallback para ALLOW, circuit breaker |
+| Indisponibilidade | Baixa | Crítico | Circuit breaker; comportamento de fallback **SEM EVIDÊNCIA NO REPOSITÓRIO** |
 | Regra mal configurada | Média | Alto | Workflow de aprovação, ambiente de homologação |
 | Vazamento de dados | Baixa | Crítico | Mascaramento de PAN, LGPD compliance |
 
@@ -741,8 +788,8 @@ flowchart LR
         E3[Health Check]
     end
     subgraph RULEX["🖥️ RULEX API"]
-        R1["POST /transactions/analyze"]
-        R2["POST /evaluate"]
+      R1["POST /api/transactions/analyze"]
+      R2["POST /api/evaluate"]
         R3["GET /actuator/health"]
     end
     E1 --> R1
@@ -751,7 +798,7 @@ flowchart LR
 \`\`\`
 `,
     false,
-    "Derivado dos controllers REST verificados: TransactionController, EvaluateController."
+    "Derivado dos controllers REST verificados (TransactionController, EvaluateController) e do context-path /api (backend/src/main/resources/application.yml)."
   ));
 
   lines.push(diagramBlock(
@@ -767,7 +814,7 @@ flowchart TD
         M1[Carregar Regras Ativas]
         M2[Avaliar Condições]
         M3[Aplicar Pesos/Scores]
-        M4[Decidir: ALLOW/FLAG/REVIEW/BLOCK]
+        M4[Classificar: APROVADA / SUSPEITA_DE_FRAUDE / FRAUDE]
         M5[Registrar Auditoria]
     end
     M1 --> M2 --> M3 --> M4 --> M5
@@ -900,7 +947,7 @@ journey
 \`\`\`
 `,
     false,
-    "Derivado do fluxo da UI ComplexRules e endpoint POST /complex-rules."
+  "Derivado do fluxo da UI ComplexRules e endpoint POST /api/complex-rules (context-path /api)."
   ));
 
   lines.push(diagramBlock(
@@ -929,7 +976,7 @@ journey
 \`\`\`
 `,
     false,
-    "Derivado do endpoint POST /rules/simulate e tela de simulação."
+  "Derivado do endpoint POST /api/rules/simulate (context-path /api)."
   ));
 
   lines.push(diagramBlock(
@@ -1071,19 +1118,23 @@ Esta seção cobre estrutura de telas, fluxos principais, estados de UI e padrõ
 
 \`\`\`mermaid
 flowchart TD
-    Home["/"] --> Login["/login"]
-    Home --> Dashboard["/dashboard"]
-    Home --> Rules["/rules"]
-    Home --> ComplexRules["/complex-rules"]
-    Home --> Audit["/audit"]
-    Home --> Metrics["/metrics"]
-    Home --> Diagrams["/diagrams"]
-    Rules --> RuleDetail["/rules/:id"]
-    ComplexRules --> ComplexRuleDetail["/complex-rules/:id"]
-    Audit --> AuditDetail["/audit/:transactionId"]
+    Login["/login"] --> App["(app protegido via DashboardLayout)"]
+    App --> Home["/"]
+    App --> Dashboard["/dashboard"]
+    App --> Transactions["/transactions"]
+    App --> Rules["/rules"]
+    App --> Audit["/audit"]
+    App --> Simulator["/simulator"]
+    App --> Monitoring["/monitoring"]
+    App --> Settings["/settings"]
+    App --> Manual["/manual"]
+    App --> Diagrams["/diagrams"]
+    App --> NotFound["/404 (NotFound) + fallback"]
 \`\`\`
 
-**EVIDÊNCIA**: \`client/src/App.tsx\`
+**EVIDÊNCIA NO REPOSITÓRIO**:
+- client/src/App.tsx
+  > Trecho: \`<Route path={"/login"} component={Login} />\`
 
 ---
 
@@ -1106,10 +1157,10 @@ flowchart TD
 |--------|-----------|-------------------|
 | Loading | Aguardando resposta da API | Skeleton, Spinner |
 | Empty | Lista/tabela sem dados | EmptyState com CTA |
-| Error | Falha na requisição | ErrorBoundary, Toast |
-| Success | Operação concluída | Toast, Redirect |
+| Error | Falha na requisição | ErrorBoundary, Toaster (sonner) |
+| Success | Operação concluída | Toaster (sonner), Redirect |
 
-**EVIDÊNCIA**: \`client/src/components/ui/\`
+**EVIDÊNCIA**: \`client/src/App.tsx\`, \`client/src/components/ErrorBoundary.tsx\`, \`client/src/components/ui/sonner.tsx\`
 
 ---
 
@@ -1122,7 +1173,7 @@ flowchart TD
 | Erro de servidor | "Erro ao processar. Tente novamente." | Toast error |
 | Info | "Simulação em andamento..." | Toast info |
 
-**EVIDÊNCIA**: \`client/src/components/ui/toast.tsx\`, \`client/src/components/ui/sonner.tsx\`
+**EVIDÊNCIA**: \`client/src/components/ui/sonner.tsx\` (Toaster)
 
 ---
 `);
@@ -1223,7 +1274,7 @@ flowchart TD
     D --> G[Ações/Score]
     E & F & G --> H[Clicar Salvar]
     H --> I{Validação}
-    I -->|Sucesso| J[POST /complex-rules]
+    I -->|Sucesso| J[POST /api/complex-rules]
     I -->|Erro| K[Mostrar erros]
     J --> L[Fechar dialog]
     L --> M[Atualizar lista]
@@ -1231,7 +1282,7 @@ flowchart TD
 \`\`\`
 `,
     false,
-    "Derivado de RuleFormDialog.tsx e endpoint POST /complex-rules."
+    "Derivado de RuleFormDialog (frontend) e ComplexRuleCrudController (backend). O prefixo /api vem do server.servlet.context-path."
   ));
 
   // 2.3 Componentes
@@ -1652,7 +1703,7 @@ stateDiagram-v2
   if (flowDiagrams.length > 0) {
     const item = flowDiagrams[0];
     lines.push(diagramBlock(
-      "Fluxo — Análise de Transação (/analyze)",
+      "Fluxo — Análise de Transação (/api/transactions/analyze)",
       "Documentar o fluxo completo de análise.",
       "Debugging, testes, documentação.",
       "Entrada → Validação → Regras → Score → Decisão → Auditoria.",
@@ -1727,10 +1778,10 @@ flowchart TD
     
     Load --> Sort
     Sort --> T1
-    T1 -->|BLOCK?| ShortCircuit[Curto-circuito]
-    T1 -->|ALLOW| T2
-    T2 -->|BLOCK?| ShortCircuit
-    T2 -->|ALLOW| T3
+    T1 -->|Severidade máxima?| ShortCircuit[Curto-circuito]
+    T1 -->|Não| T2
+    T2 -->|Severidade máxima?| ShortCircuit
+    T2 -->|Não| T3
     T3 --> Eval
     Eval --> Score
     Score --> Decision
@@ -1761,15 +1812,15 @@ flowchart TD
     `
 \`\`\`mermaid
 flowchart LR
-    subgraph Endpoints["📡 Principais Endpoints (openapi/rulex.yaml)"]
-        E1["POST /transactions/analyze"]
-        E2["POST /evaluate"]
-        E3["GET/POST /rules"]
-        E4["GET/POST /complex-rules"]
-        E5["GET /audit"]
-        E6["POST /rules/simulate"]
-        E7["GET /metrics"]
-        E8["GET /actuator/health"]
+  subgraph Endpoints["📡 Principais Endpoints (openapi/rulex.yaml)"]
+    E1["POST /api/transactions/analyze"]
+    E2["POST /api/transactions/analyze-advanced"]
+    E3["GET /api/transactions"]
+    E4["GET/POST /api/rules"]
+    E5["GET/PUT/DELETE /api/rules/{id}"]
+    E6["PATCH /api/rules/{id}/toggle"]
+    E7["GET /api/audit"]
+    E8["GET /api/metrics"]
     end
     
     subgraph Consumers["🔌 Consumidores"]
@@ -1778,10 +1829,9 @@ flowchart LR
         C3["Monitoramento"]
     end
     
-    C1 --> E3
     C1 --> E4
-    C1 --> E5
-    C1 --> E6
+    C1 --> E7
+    C1 --> E8
     C2 --> E1
     C2 --> E2
     C3 --> E7
@@ -2576,7 +2626,7 @@ flowchart TD
     F3 --> F4
     F1 --> A1
     A1 -->|Sim| A2
-    A1 -->|Não| Allow["Permitir"]
+    A1 -->|Não| Public["Permitir (rota pública)"]
     A2 -->|ADMIN| ADMIN
     A2 -->|ANALYST| ANALYST
     A2 -->|Negado| Deny["HTTP 403"]
@@ -2691,7 +2741,7 @@ flowchart TB
 \`\`\`mermaid
 flowchart LR
     subgraph Alerts["🚨 Alertas RULEX"]
-        A1["HighErrorRate: >5% erros em /analyze"]
+        A1["HighErrorRate: >5% erros em /api/transactions/analyze"]
         A2["HighLatency: p99 > 500ms"]
         A3["HikariPoolExhausted: pool < 5"]
         A4["AuthSpike: >100 401/403 em 5min"]
@@ -2725,16 +2775,16 @@ flowchart LR
     "Padrões de Resiliência",
     "Documentar retry, timeout, circuit breaker, fallback.",
     "Alta disponibilidade, degradação graciosa.",
-    "Estratégias implementadas: timeout em regex, tiers com timeout, fallback de cache.",
+    "Estratégias implementadas no código (quando evidenciadas): circuit breaker (resilience4j) e fallback de cache/BD para velocity.",
     "Sistema frágil, cascata de falhas.",
     `
 \`\`\`mermaid
 flowchart TD
     subgraph Patterns["🛡️ Padrões Implementados"]
-        P1["Timeout: Regex (1s), Regras por tier (5ms/50ms/200ms)"]
-        P2["Fallback: Redis → Memory → PostgreSQL"]
-        P3["Early Termination: BLOCK → Skip remaining tiers"]
-        P4["Graceful Degradation: Erro em regra → continuar com outras"]
+      P1["Timeouts e tierização (valores: SEM EVIDÊNCIA no repositório)"]
+      P2["Fallback (velocity): Redis real → cache em memória → PostgreSQL"]
+      P3["Early termination (exemplo): FRAUDE → interromper avaliação"]
+      P4["Graceful degradation (semântica detalhada: SEM EVIDÊNCIA)"]
     end
     
     subgraph Flow["Fluxo de Fallback (Velocidade)"]
@@ -2861,7 +2911,7 @@ flowchart LR
         L1["TIER 1 (Blocklists): < 1ms"]
         L2["TIER 2 (Velocity): < 10ms"]
         L3["TIER 3 (Agregações): < 100ms"]
-        L4["Total /analyze: < 200ms p95"]
+        L4["Total /api/transactions/analyze: < 200ms p95"]
     end
     
     subgraph Alertas["🚨 Alertas"]
@@ -2936,11 +2986,11 @@ flowchart TD
 
 | Risco | Probabilidade | Impacto | Mitigação | Evidência |
 |-------|---------------|---------|-----------|-----------|
-| Falso positivo alto | Média | Alto | Simulação prévia, ajuste de thresholds | \`/rules/simulate\` endpoint |
-| Indisponibilidade do motor | Baixa | Crítico | Circuit breaker, fallback ALLOW | \`resilience4j\` em pom.xml |
-| Regra mal configurada | Média | Alto | Workflow aprovação, ambiente homolog | \`RuleApprovalController.java\` |
-| Vazamento de dados PAN | Baixa | Crítico | Mascaramento antes de persistir | \`TransactionService.java\` |
-| Cache stampede | Média | Alto | TTL distribuído, fallback cascade | \`VelocityServiceFacade.java\` |
+| Falso positivo alto | Média | Alto | Simulação prévia (quando usada), ajuste de thresholds | \`backend/src/main/java/com/rulex/v31/rules/RulesV31Controller.java\` |
+| Indisponibilidade do motor | Baixa | Crítico | Circuit breaker; fallback **SEM EVIDÊNCIA NO REPOSITÓRIO** | \`backend/pom.xml\`, \`backend/src/main/resources/application.yml\` |
+| Regra mal configurada | Média | Alto | Workflow de aprovação (4 olhos), ambiente de homologação | \`backend/src/main/java/com/rulex/controller/RuleApprovalController.java\` |
+| Vazamento de dados PAN | Baixa | Crítico | Mascaramento de dados sensíveis em logs/outputs | \`backend/src/main/java/com/rulex/util/SensitiveDataMasker.java\` |
+| Cache stampede | Média | Alto | Mitigação específica: **SEM EVIDÊNCIA NO REPOSITÓRIO** | \`backend/src/main/java/com/rulex/service/VelocityServiceFacade.java\` |
 | SQL injection | Baixa | Crítico | JPA parameterized queries | \`*Repository.java\` |
 | Pool exhaustion | Média | Alto | Sizing + alertas | \`application.yml\` HikariCP |
 
@@ -2948,20 +2998,20 @@ flowchart TD
 
 | Funcionalidade | Fluxo Principal | Fluxo de Erro | Testes |
 |----------------|-----------------|---------------|--------|
-| Analisar transação | POST /analyze → Motor → Decisão | Timeout → ALLOW fallback | \`TransactionControllerTest\` |
-| Criar regra | Form → POST /rules → Persistir | Validação falha → 400 | \`RuleControllerTest\` |
-| Simular regra | POST /simulate → Executar → Retornar | Regra inválida → 422 | \`RuleSimulationTest\` |
-| Aprovar regra | POST /approve → Mudar status | Não autorizado → 403 | \`RuleApprovalTest\` |
-| Exportar transações | GET /export → Stream CSV/JSON | Limite excedido → 400 | \`ExportTest\` |
+| Analisar transação | POST /api/transactions/analyze → Motor → Classificação | Timeout/fallback: **SEM EVIDÊNCIA NO REPOSITÓRIO** | \`backend/src/test/java/com/rulex/controller/integration/TransactionApiIntegrationTest.java\` |
+| Criar regra | POST /api/rules (simples) OU POST /api/complex-rules (complexa) | Validação falha → 400 | \`backend/src/test/java/com/rulex/controller/integration/RuleApiIntegrationTest.java\` |
+| Simular regra | POST /api/rules/simulate → avaliar AST/payload | Erros de validação → 400 (ex.: payload obrigatório) | **SEM EVIDÊNCIA** (teste específico não encontrado) |
+| Aprovar regra | POST /api/rules/approvals/{id}/approve | Não autorizado → 403 (RBAC) | \`backend/src/test/java/com/rulex/security/SecurityRbacIT.java\` |
+| Exportar transações | GET /api/transactions/export | Limites/erros detalhados: **SEM EVIDÊNCIA NO REPOSITÓRIO** | **SEM EVIDÊNCIA** (teste específico não encontrado) |
 
 ### 10.4 Matriz Dados × Sensibilidade LGPD × Retenção × Criptografia
 
 | Dado | Sensibilidade | Retenção | Criptografia | Evidência |
 |------|---------------|----------|--------------|-----------|
-| PAN (cartão) | Alta (PCI-DSS) | Mascarado antes de persistir | Não armazenado em claro | \`TransactionService\` |
+| PAN (cartão) | Alta (PCI-DSS) | Política de retenção: **SEM EVIDÊNCIA** | Mascaração em logs/outputs | \`backend/src/main/java/com/rulex/util/SensitiveDataMasker.java\` |
 | CPF/CNPJ | Alta (LGPD) | Conforme política (SEM EVIDÊNCIA) | Em trânsito (HTTPS) | Config TLS |
 | E-mail | Média | Conforme política (SEM EVIDÊNCIA) | Em trânsito (HTTPS) | - |
-| IP | Baixa | Logs rotacionados | Não | \`logback.xml\` |
+| IP | Baixa | Logs/rotação: **SEM EVIDÊNCIA** | **SEM EVIDÊNCIA** | - |
 | Device fingerprint | Média | Conforme política (SEM EVIDÊNCIA) | Não | - |
 
 > **SEM EVIDÊNCIA**: Política formal de retenção LGPD não encontrada no repositório.
@@ -2971,8 +3021,8 @@ flowchart TD
 | Integração | Contrato | Timeout | Retry | Fallback | Evidência |
 |------------|----------|---------|-------|----------|-----------|
 | PostgreSQL | JDBC | HikariCP connectionTimeout | Não | Fail | \`application.yml\` |
-| Redis | Lettuce | 1000ms (config) | Não nativo | Memory fallback | \`VelocityServiceFacade\` |
-| Neo4j | Bolt | Padrão driver | Não | Skip graph analysis | \`Neo4jGraphService\` |
+| Redis | Lettuce | **SEM EVIDÊNCIA** (valores) | **SEM EVIDÊNCIA** | Fallback (velocity): Redis → memória → BD | \`backend/src/main/java/com/rulex/service/VelocityServiceFacade.java\` |
+| Neo4j | Bolt | **SEM EVIDÊNCIA** (valores) | **SEM EVIDÊNCIA** | **SEM EVIDÊNCIA** (política de fallback) | \`backend/src/main/java/com/rulex/service/Neo4jGraphService.java\` |
 | Sistema externo (API) | OpenAPI | SEM EVIDÊNCIA | resilience4j | SEM EVIDÊNCIA | - |
 
 ---
@@ -3039,7 +3089,7 @@ Esta seção lista automaticamente todos os itens marcados como **SEM EVIDÊNCIA
 | Transação | Operação financeira (compra, transferência, etc.) | Entrada principal para análise |
 | Regra | Condição + ação que avalia uma transação | Configurada por analistas |
 | Score | Pontuação de risco (0-100) | Resultado da avaliação |
-| Decisão | ALLOW, FLAG, REVIEW, BLOCK | Saída do motor de regras |
+| Classificação | APPROVED, SUSPICIOUS, FRAUD (OpenAPI) / APROVADA, SUSPEITA_DE_FRAUDE, FRAUDE (normalização) | Saída da avaliação |
 | Velocity | Contagem de eventos em janela temporal | Redis para cálculo rápido |
 | Fraud Ring | Rede de contas/dispositivos relacionados | Análise de grafo (Neo4j) |
 | MCC | Merchant Category Code | Código de categoria do estabelecimento |
@@ -3049,7 +3099,7 @@ Esta seção lista automaticamente todos os itens marcados como **SEM EVIDÊNCIA
 | Threshold | Limite/limiar para disparo de regra | Ex: amount > 10000 |
 | TTL | Time To Live | Tempo de expiração em cache |
 | Circuit Breaker | Padrão de resiliência | Evita cascata de falhas |
-| Fallback | Comportamento alternativo em falha | Ex: ALLOW se timeout |
+| Fallback | Comportamento alternativo em falha | Política específica de fallback decisório: **SEM EVIDÊNCIA** |
 
 **EVIDÊNCIA**: Derivado de \`openapi/rulex.yaml\`, \`README.md\`, código-fonte.
 
@@ -3160,7 +3210,7 @@ O catálogo completo de diagramas disponíveis na UI (${totalCatalog} itens) pod
 
 ---
 
-*Documento gerado automaticamente. Para atualizar, execute \`pnpm diagrams:doc-completo\`.*
+*Documento gerado automaticamente. Para atualizar, execute \`pnpm diagrams:doc\`.*
 `);
 
   // ===========================================================================

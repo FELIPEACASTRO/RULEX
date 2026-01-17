@@ -57,15 +57,27 @@ function loadInventory(): RulexInventory | null {
   }
 }
 
+const API_CONTEXT_PATH = "/api";
+
+function withApiContextPath(path?: string): string | undefined {
+  if (!path) return path;
+  if (path === API_CONTEXT_PATH) return path;
+  if (path.startsWith(`${API_CONTEXT_PATH}/`)) return path;
+  if (path.startsWith("/")) return `${API_CONTEXT_PATH}${path}`;
+  return `${API_CONTEXT_PATH}/${path}`;
+}
+
 function evidenceLine(e?: InventoryEvidence): string {
   if (!e?.file) return "";
   return e.line ? `${e.file}:${e.line}` : e.file;
 }
 
 function controllerDiagramMermaid(ctrl: InventoryController): string {
-  const header = `  C["${ctrl.className}${ctrl.basePath ? `\\n(${ctrl.basePath})` : ""}"]`;
+  const basePath = withApiContextPath(ctrl.basePath);
+  const header = `  C["${ctrl.className}${basePath ? `\\n(${basePath})` : ""}"]`;
   const endpoints = (ctrl.endpoints ?? []).slice(0, 50).map((ep, i) => {
-    const node = `E${i + 1}["${ep.httpMethod} ${ep.path}"]`;
+    const runtimePath = withApiContextPath(ep.path) ?? ep.path;
+    const node = `E${i + 1}["${ep.httpMethod} ${runtimePath}"]`;
     return `  ${header}\n  C --> ${node}`;
   });
 
@@ -79,11 +91,12 @@ function controllerDiagramMermaid(ctrl: InventoryController): string {
 }
 
 function endpointSequenceMermaid(ctrl: InventoryController, httpMethod: string, path: string): string {
+  const runtimePath = withApiContextPath(path) ?? path;
   return [
     "sequenceDiagram",
     "  participant FE as RULEX Web",
     `  participant API as ${ctrl.className}`,
-    `  FE->>API: ${httpMethod} ${path}`,
+    `  FE->>API: ${httpMethod} ${runtimePath}`,
     "  API-->>FE: 2xx/4xx (response)",
   ].join("\n");
 }
@@ -138,12 +151,13 @@ export function buildInventorySolutionDiagrams(): DiagramCatalogItem[] {
   for (const ctrl of inv.backend?.controllers ?? []) {
     const id = `RULEX/CTRL_${slugify(ctrl.className)}`;
     const note = `Extraído do inventário${generatedAt}. Evidência: ${evidenceLine(ctrl.evidence)}`.trim();
+    const basePathRuntime = withApiContextPath(ctrl.basePath);
     out.push(
       asSolutionItem({
         id,
         notation: "UML",
         canonicalName: `API Controller: ${ctrl.className}`,
-        aliases: [ctrl.basePath ?? "", "controller"].filter(Boolean),
+        aliases: [basePathRuntime ?? "", ctrl.basePath ?? "", "controller"].filter(Boolean),
         categoryId: "api",
         descriptionWhenToUse: "Mapa dos endpoints expostos por um controller no backend.",
         verificationNotes: note,
@@ -153,14 +167,15 @@ export function buildInventorySolutionDiagrams(): DiagramCatalogItem[] {
 
     // Endpoints: one diagram per endpoint for true 1-by-1 coverage.
     for (const ep of ctrl.endpoints ?? []) {
+      const runtimePath = withApiContextPath(ep.path) ?? ep.path;
       const epId = `RULEX/EP_${slugify(`${ep.httpMethod}_${ep.path}_${ctrl.className}`)}`;
       const epNote = `Extraído do inventário${generatedAt}. Evidência: ${evidenceLine(ep.evidence)}`.trim();
       out.push(
         asSolutionItem({
           id: epId,
           notation: "UML",
-          canonicalName: `Endpoint: ${ep.httpMethod} ${ep.path}`,
-          aliases: [ctrl.className, ep.httpMethod, ep.path],
+          canonicalName: `Endpoint: ${ep.httpMethod} ${runtimePath}`,
+          aliases: [ctrl.className, ep.httpMethod, runtimePath, ep.path],
           categoryId: "api",
           descriptionWhenToUse: "Endpoint real detectado no backend (inventário).",
           verificationNotes: epNote,

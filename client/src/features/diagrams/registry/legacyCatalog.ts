@@ -96,7 +96,7 @@ Sim          Não
  │            │
  ▼            ▼
 ┌────────┐  ┌────────┐
-│ Review │  │ Aprovar│
+│ Suspeita│ │ Aprovar│
 └────────┘  └────────┘`,
       },
       {
@@ -157,18 +157,18 @@ Sim          Não
         name: "Diagrama de Estados do Processo",
         nameEn: "Process State Diagram",
         description: "Estados pelos quais uma entidade passa durante o processo.",
-        useCase: "Ciclo de vida de uma transação: PENDING → ANALYZING → APPROVED/BLOCKED.",
+        useCase: "Ciclo de vida de uma transação: PENDING → ANALYZING → APROVADA/SUSPEITA_DE_FRAUDE/FRAUDE.",
         tools: ["PlantUML", "Mermaid"],
         example: `[*] --> Pending
 Pending --> Analyzing : receive
-Analyzing --> Approved : score < 50
-Analyzing --> Suspicious : score 50-80
-Analyzing --> Blocked : score > 80
-Approved --> [*]
-Suspicious --> Review
-Review --> Approved
-Review --> Blocked
-Blocked --> [*]`,
+      Analyzing --> Aprovada : score < 50
+Analyzing --> Suspeita : score 50-80
+      Analyzing --> Fraude : score > 80
+      Aprovada --> [*]
+Suspeita --> Revisao
+Revisao --> Aprovada
+Revisao --> Fraude
+      Fraude --> [*]`,
       },
       {
         name: "Árvore de Decisão",
@@ -348,7 +348,7 @@ Admin│  └─────────────────────┘ 
             example: `┌──────┐     ┌─────────┐     ┌──────┐     ┌────┐
 │Client│     │Controller│     │Service│     │ DB │
 └──┬───┘     └────┬────┘     └───┬───┘     └─┬──┘
-   │   POST /analyze    │           │          │
+  │   POST /api/transactions/analyze    │           │          │
    │──────────────────►│           │          │
    │              │    │ evaluate()│          │
    │              │    │──────────►│          │

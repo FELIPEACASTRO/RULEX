@@ -376,7 +376,7 @@ Admin│  └─────────────────────┘ 
             example: `┌──────┐     ┌─────────┐     ┌──────┐     ┌────┐
 │Client│     │Controller│     │Service│     │ DB │
 └──┬───┘     └────┬────┘     └───┬───┘     └─┬──┘
-   │   POST /analyze    │           │          │
+  │   POST /api/transactions/analyze    │           │          │
    │──────────────────►│           │          │
    │              │    │ evaluate()│          │
    │              │    │──────────►│          │
