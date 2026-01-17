@@ -1,4 +1,5 @@
 import { getDiagramCategory } from "./categories";
+import RULEX_INVENTORY from "../generated/rulexInventory";
 import type { DiagramCatalogItem, DiagramCategoryId, DiagramNotation } from "../types";
 
 type InventoryEvidence = { file: string; line?: number; snippet?: string };
@@ -50,16 +51,7 @@ function slugify(text: string): string {
 
 function loadInventory(): RulexInventory | null {
   try {
-    const modules = import.meta.glob("../../../../../docs/DIAGRAMS_RULEX_INVENTORY.json", {
-      query: "?raw",
-      import: "default",
-      eager: true,
-    }) as Record<string, string>;
-
-    const raw = Object.values(modules)[0];
-    if (!raw) return null;
-
-    return JSON.parse(raw) as RulexInventory;
+    return (RULEX_INVENTORY ?? null) as unknown as RulexInventory | null;
   } catch {
     return null;
   }

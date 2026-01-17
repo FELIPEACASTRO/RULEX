@@ -19,7 +19,7 @@ type RendererFilter = "all" | RendererId;
 
 type RendererStatusFilter = "all" | RendererStatus;
 
-type CatalogMode = "solution" | "template";
+type CatalogMode = "all" | "solution" | "template";
 
 function normalize(text: string): string {
   return text
@@ -113,7 +113,7 @@ export default function DiagramsHub() {
             PENDENTE: {statusCounts.pending}
           </Badge>
           <Badge variant={mode === "solution" ? "default" : "secondary"}>
-            {mode === "solution" ? "Solução (verificado)" : "Templates"}
+            {mode === "all" ? "Todos (solução + templates)" : mode === "solution" ? "Solução (verificado)" : "Templates"}
           </Badge>
         </div>
       </div>
@@ -125,6 +125,7 @@ export default function DiagramsHub() {
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <Tabs value={mode} onValueChange={(v) => setMode(v as CatalogMode)}>
                   <TabsList className="flex flex-wrap">
+                    <TabsTrigger value="all">Todos</TabsTrigger>
                     <TabsTrigger value="solution">Solução</TabsTrigger>
                     <TabsTrigger value="template">Templates</TabsTrigger>
                   </TabsList>
@@ -133,6 +134,10 @@ export default function DiagramsHub() {
                 {mode === "template" ? (
                   <div className="text-xs text-muted-foreground">
                     Templates são referência didática e podem não refletir o RULEX real.
+                  </div>
+                ) : mode === "all" ? (
+                  <div className="text-xs text-muted-foreground">
+                    Exibindo solução + templates (use os badges para diferenciar).
                   </div>
                 ) : null}
               </div>

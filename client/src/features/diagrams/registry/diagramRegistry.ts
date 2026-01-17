@@ -82,7 +82,17 @@ function inferFormat(notation: DiagramNotation, name: string): DiagramFormat {
  */
 function determineRendererStatus(format: DiagramFormat): RendererStatus {
   // Renderers marked as "OK" (functional)
-  const okRenderers: DiagramFormat[] = ["mermaid", "bpmn", "pdf", "dfd", "matrix", "json"];
+  const okRenderers: DiagramFormat[] = [
+    "mermaid",
+    "bpmn",
+    "pdf",
+    "dfd",
+    "matrix",
+    "json",
+    "dmn",
+    "plantuml",
+    "epc",
+  ];
   return okRenderers.includes(format) ? "OK" : "PENDENTE";
 }
 
@@ -113,19 +123,14 @@ function inferRenderer(format: DiagramFormat): RendererId {
 }
 
 function mermaidSampleForDiagram(diagramType: MassiveDiagramFamily["diagrams"][0], familyId: string): string {
-  // Prefer explicit examples if they look like Mermaid syntax (heuristic)
-  if (diagramType.example) {
-    const ex = diagramType.example.trim();
-    if (/(^flowchart\s)|(^sequenceDiagram\s)|(^erDiagram\s)|(^stateDiagram\b)|(^classDiagram\b)/m.test(ex)) {
-      return ex;
-    }
-  }
+  const safeDiagramName = diagramType.name.replace(/"/g, "'");
 
   // Category-focused templates that represent RULEX
   if (familyId === "processos") {
     return [
       "flowchart TD",
-      `  A[${RULEX_SYSTEM_LABELS.frontend}] -->|POST /analyze| B[${RULEX_SYSTEM_LABELS.api}]`,
+      `  T["${safeDiagramName}"] --> A[${RULEX_SYSTEM_LABELS.frontend}]`,
+      `  A -->|POST /analyze| B[${RULEX_SYSTEM_LABELS.api}]`,
       `  B --> C[Normalize + Validate payload]`,
       `  C --> D[${RULEX_SYSTEM_LABELS.engine}]`,
       "  D --> E{Score/Decision}",
@@ -143,6 +148,7 @@ function mermaidSampleForDiagram(diagramType: MassiveDiagramFamily["diagrams"][0
   if (familyId === "arquitetura" || familyId === "c4") {
     return [
       "flowchart LR",
+      `  NOTE["${safeDiagramName}"]`,
       "  subgraph Client[Client Layer]",
       `    FE[${RULEX_SYSTEM_LABELS.frontend}]`,
       "  end",
@@ -158,6 +164,7 @@ function mermaidSampleForDiagram(diagramType: MassiveDiagramFamily["diagrams"][0
       `    AUD[${RULEX_SYSTEM_LABELS.audit}]`,
       `    MON[${RULEX_SYSTEM_LABELS.monitoring}]`,
       "  end",
+      "  NOTE --> FE",
       "  FE --> API",
       "  API --> ENG",
       "  ENG --> DB",
@@ -175,6 +182,7 @@ function mermaidSampleForDiagram(diagramType: MassiveDiagramFamily["diagrams"][0
       "  participant API as API",
       "  participant ENG as Rules Engine",
       "  participant DB as Postgres",
+      `  Note over FE,API: ${safeDiagramName}`,
       "  FE->>API: POST /analyze (transaction)",
       "  API->>ENG: evaluate(transaction)",
       "  ENG->>DB: load active rules",
@@ -188,6 +196,7 @@ function mermaidSampleForDiagram(diagramType: MassiveDiagramFamily["diagrams"][0
 
   if (familyId.startsWith("dados_")) {
     return [
+      `%% ${safeDiagramName}`,
       "erDiagram",
       "  TRANSACTION ||--o{ RULE_EVAL : evaluated_by",
       "  RULE_EVAL }o--|| RULE : references",
@@ -214,7 +223,8 @@ function mermaidSampleForDiagram(diagramType: MassiveDiagramFamily["diagrams"][0
   if (familyId === "seguranca") {
     return [
       "flowchart TD",
-      "  A[User] --> B[Login]",
+      `  T["${safeDiagramName}"] --> A[User]`,
+      "  A --> B[Login]",
       "  B --> C{Auth ok?}",
       "  C -->|no| D[403]",
       "  C -->|yes| E[Access RULEX UI]",
@@ -227,7 +237,7 @@ function mermaidSampleForDiagram(diagramType: MassiveDiagramFamily["diagrams"][0
   // Generic, but still RULEX-relevant and non-trivial
   return [
     "flowchart TD",
-    `  A[${diagramType.name}] --> B[Aplicado no RULEX]`,
+    `  A["${safeDiagramName}"] --> B[Aplicado no RULEX]`,
     `  B --> C[${RULEX_SYSTEM_LABELS.engine} executa avaliação]`,
     "  C --> D{Decisão}",
     "  D -->|Approve| E[OK]",
