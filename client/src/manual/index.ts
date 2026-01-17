@@ -20,5 +20,5 @@ export { TemplatesGallery } from "./TemplatesGallery";
 // Data exports
 export * from "./manualData";
 
-// Generated data
-export * from "./generated";
+// NOTE: generated artifacts are imported from "@/manual/generated" directly.
+// Re-exporting here causes name collisions (e.g. LogicOperator).
