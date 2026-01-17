@@ -10,12 +10,14 @@ import { cn } from "@/lib/utils";
 
 import { DIAGRAM_ITEMS } from "../registry/diagramRegistry";
 import { DIAGRAM_CATEGORIES } from "../registry/categories";
-import type { DiagramCategoryId, DiagramCatalogItem, RendererId } from "../types";
+import type { DiagramCategoryId, DiagramCatalogItem, RendererId, RendererStatus } from "../types";
 import { DiagramViewer } from "./DiagramViewer";
 
 type CategoryFilter = "all" | DiagramCategoryId;
 
 type RendererFilter = "all" | RendererId;
+
+type RendererStatusFilter = "all" | RendererStatus;
 
 type CatalogMode = "solution" | "template";
 
@@ -31,6 +33,7 @@ export default function DiagramsHub() {
   const [mode, setMode] = useState<CatalogMode>("solution");
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [renderer, setRenderer] = useState<RendererFilter>("all");
+  const [rendererStatus, setRendererStatus] = useState<RendererStatusFilter>("all");
 
   const [selectedId, setSelectedId] = useState<string>(() => DIAGRAM_ITEMS[0]?.id ?? "");
 
@@ -42,6 +45,7 @@ export default function DiagramsHub() {
       if (mode === "template" && d.origin !== "template") return false;
       if (category !== "all" && d.categoryId !== category) return false;
       if (renderer !== "all" && d.rendererId !== renderer) return false;
+      if (rendererStatus !== "all" && d.rendererStatus !== rendererStatus) return false;
 
       if (!q) return true;
 
@@ -50,7 +54,17 @@ export default function DiagramsHub() {
       );
       return hay.includes(q);
     });
-  }, [query, mode, category, renderer]);
+  }, [query, mode, category, renderer, rendererStatus]);
+
+  const statusCounts = useMemo(() => {
+    let ok = 0;
+    let pending = 0;
+    for (const d of filtered) {
+      if (d.rendererStatus === "OK") ok += 1;
+      else pending += 1;
+    }
+    return { ok, pending };
+  }, [filtered]);
 
   const availableRenderers = useMemo(() => {
     const ids = new Set<RendererId>();
@@ -94,6 +108,10 @@ export default function DiagramsHub() {
 
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{filtered.length} itens</Badge>
+          <Badge variant="secondary">OK: {statusCounts.ok}</Badge>
+          <Badge variant={statusCounts.pending > 0 ? "destructive" : "secondary"}>
+            PENDENTE: {statusCounts.pending}
+          </Badge>
           <Badge variant={mode === "solution" ? "default" : "secondary"}>
             {mode === "solution" ? "Solução (verificado)" : "Templates"}
           </Badge>
@@ -158,6 +176,20 @@ export default function DiagramsHub() {
                     </option>
                   ))}
                 </select>
+
+                <select
+                  value={rendererStatus}
+                  onChange={(e) => setRendererStatus(e.target.value as RendererStatusFilter)}
+                  className={cn(
+                    "h-9 rounded-md border bg-background px-2 text-sm",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  )}
+                  aria-label="Filtro de status do renderer"
+                >
+                  <option value="all">Todos status</option>
+                  <option value="OK">OK</option>
+                  <option value="PENDENTE">PENDENTE</option>
+                </select>
               </div>
             </div>
 
@@ -191,6 +223,11 @@ export default function DiagramsHub() {
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         {item.verified ? <Badge>verificado</Badge> : <Badge variant="secondary">template</Badge>}
+                        {item.rendererStatus === "OK" ? (
+                          <Badge variant="secondary">OK</Badge>
+                        ) : (
+                          <Badge variant="destructive">PENDENTE</Badge>
+                        )}
                         {item.formatsSupported.includes("mermaid") ? (
                           <Badge variant="secondary">mmd</Badge>
                         ) : null}

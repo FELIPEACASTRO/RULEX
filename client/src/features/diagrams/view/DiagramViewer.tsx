@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { Download, Maximize2, Minus, Plus, RotateCcw } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -97,9 +98,22 @@ export function DiagramViewer({ item }: Props) {
         <div className="min-w-0">
           <div className="truncate text-lg font-semibold">{item.canonicalName}</div>
           <div className="text-sm text-muted-foreground">{item.categoryLabel}</div>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            {item.rendererStatus === "OK" ? (
+              <Badge variant="secondary">Renderer OK</Badge>
+            ) : (
+              <Badge variant="destructive">Renderer PENDENTE</Badge>
+            )}
+            {item.verified ? <Badge>verificado</Badge> : <Badge variant="secondary">template</Badge>}
+          </div>
           {item.verificationNotes ? (
             <div className="mt-1 text-xs text-muted-foreground">
               {item.verificationNotes}
+            </div>
+          ) : null}
+          {item.rendererStatus === "PENDENTE" ? (
+            <div className="mt-2 text-xs text-muted-foreground">
+              Este formato ainda não tem renderer completo; o preview pode ser um fallback (texto/placeholder).
             </div>
           ) : null}
         </div>
