@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Search } from "lucide-react";
 
@@ -47,10 +47,23 @@ export default function DiagramsHub() {
     });
   }, [query, category, renderer]);
 
+  const availableRenderers = useMemo(() => {
+    const ids = new Set<RendererId>();
+    for (const item of DIAGRAM_ITEMS) ids.add(item.rendererId);
+    return Array.from(ids).sort();
+  }, []);
+
   const selected: DiagramCatalogItem | undefined = useMemo(
     () => filtered.find((d) => d.id === selectedId) ?? DIAGRAM_ITEMS.find((d) => d.id === selectedId) ?? filtered[0],
     [filtered, selectedId]
   );
+
+  // Keep selection coherent with current filters to avoid showing an item that's not in the list.
+  useEffect(() => {
+    if (filtered.length === 0) return;
+    const stillVisible = filtered.some((d) => d.id === selectedId);
+    if (!stillVisible) setSelectedId(filtered[0].id);
+  }, [filtered, selectedId]);
 
   const parentRef = useRef<HTMLDivElement | null>(null);
   const rowVirtualizer = useVirtualizer({
@@ -86,6 +99,7 @@ export default function DiagramsHub() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Buscar diagramas (nome, alias, descrição, ferramenta…)"
                   className="pl-8"
+                  aria-label="Buscar diagramas"
                 />
               </div>
 
@@ -111,12 +125,11 @@ export default function DiagramsHub() {
                   aria-label="Filtro de renderer"
                 >
                   <option value="all">Todos renderers</option>
-                  <option value="mermaid">Mermaid</option>
-                  <option value="bpmn">BPMN</option>
-                  <option value="image">Imagem</option>
-                  <option value="pdf">PDF</option>
-                  <option value="graph">Grafo</option>
-                  <option value="plantuml">PlantUML</option>
+                  {availableRenderers.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

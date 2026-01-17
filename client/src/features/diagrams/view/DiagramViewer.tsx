@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, Suspense } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { Download, Maximize2, Minus, Plus, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -76,6 +76,18 @@ export function DiagramViewer({ item }: Props) {
     });
     return { href: URL.createObjectURL(blob), filename: getDownloadFilename(item, source), revoke: true };
   }, [item, source]);
+
+  // Cleanup object URLs when switching between sources/items.
+  useEffect(() => {
+    if (!download.revoke) return;
+    return () => {
+      try {
+        URL.revokeObjectURL(download.href);
+      } catch {
+        // ignore
+      }
+    };
+  }, [download.href, download.revoke]);
 
   const RendererComponent = renderer.Component;
 

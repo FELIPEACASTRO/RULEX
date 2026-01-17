@@ -18,4 +18,10 @@ describe("DiagramsHub", () => {
       screen.getByText("Central de Diagramas do RULEX")
     ).toBeInTheDocument();
   });
+
+  it("renders list and item count", () => {
+    render(<DiagramsHub />);
+    expect(screen.getByText(/itens/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Buscar diagramas")).toBeInTheDocument();
+  });
 });

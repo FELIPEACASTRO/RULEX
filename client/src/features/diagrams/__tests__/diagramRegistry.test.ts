@@ -21,4 +21,26 @@ describe("Diagram registry", () => {
       expect(item.sample).toBeTruthy();
     }
   });
+
+  it("does not use the old generic placeholder sample", () => {
+    const oldPlaceholder = /\n\s*A\[[^\]]+\]\s*-->\s*B\[Exemplo\]\s*$/m;
+    for (const item of DIAGRAM_ITEMS) {
+      if (item.sample.kind === "inline") {
+        expect(item.sample.content).not.toMatch(oldPlaceholder);
+      }
+    }
+  });
+
+  it("uses sample formats coherent with renderer", () => {
+    for (const item of DIAGRAM_ITEMS) {
+      if (item.rendererId === "bpmn") {
+        expect(item.sample.kind).toBe("inline");
+        expect(item.sample.format).toBe("bpmn");
+      }
+      if (item.rendererId === "dfd" || item.rendererId === "matrix" || item.rendererId === "graph") {
+        expect(item.sample.kind).toBe("json");
+        expect(item.sample.format).toBe("json");
+      }
+    }
+  });
 });
