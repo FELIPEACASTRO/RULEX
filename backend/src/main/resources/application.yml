@@ -147,7 +147,13 @@ rulex:
         enabled: true
   audit:
     enabled: true
-    log-all-decisions: true
+    # ATENÇÃO: Em produção com alto TPS, considere desabilitar ou usar sampling
+    log-all-decisions: ${RULEX_AUDIT_LOG_ALL:false}
+  access-log:
+    enabled: ${RULEX_ACCESS_LOG_ENABLED:true}
+    # Sampling rate para logs de sucesso (0.0 = nenhum, 1.0 = todos)
+    # Erros (4xx/5xx) e mutações (POST/PUT/DELETE) são sempre logados
+    success-sampling-rate: ${RULEX_ACCESS_LOG_SAMPLING:0.1}
   security:
     enabled: ${RULEX_SECURITY_ENABLED:true}
     admin:

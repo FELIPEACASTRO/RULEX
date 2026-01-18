@@ -2,6 +2,9 @@ package com.rulex.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +23,17 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 @Configuration
 @EnableWebSecurity
 @EnableConfigurationProperties(RulexSecurityProperties.class)
+@Slf4j
 public class SecurityConfig {
+
+  /** Senhas conhecidas como fracas/default que não devem ser usadas em produção */
+  private static final Set<String> WEAK_PASSWORDS = Set.of(
+      "admin", "password", "123456", "rulex", "rulex123", "changeme",
+      "secret", "test", "demo", "default", "postgres", "neo4j"
+  );
+
+  @Value("${spring.profiles.active:dev}")
+  private String activeProfile;
 
   @Bean
   PasswordEncoder passwordEncoder() {
@@ -53,6 +66,10 @@ public class SecurityConfig {
       throw new IllegalStateException(
           "rulex.security.analyst.username/password devem estar configurados quando rulex.security.enabled=true");
     }
+
+    // Validar senhas fracas/default em produção
+    validatePasswordStrength(admin.password(), "admin", activeProfile);
+    validatePasswordStrength(analyst.password(), "analyst", activeProfile);
 
     return new InMemoryUserDetailsManager(
         User.withUsername(admin.username())
@@ -152,5 +169,53 @@ public class SecurityConfig {
         .httpBasic(withDefaults());
 
     return http.build();
+  }
+
+  /**
+   * Valida força da senha. Em produção, rejeita senhas fracas/default.
+   * Em dev/test, apenas emite warning.
+   */
+  private void validatePasswordStrength(String password, String userType, String profile) {
+    boolean isProduction = "prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile);
+
+    // Verificar senhas conhecidas como fracas
+    if (WEAK_PASSWORDS.contains(password.toLowerCase())) {
+      String message = String.format(
+          "⚠️ ALERTA DE SEGURANÇA: Senha fraca/default detectada para usuário '%s'. " +
+          "Senhas como '%s' são conhecidas e facilmente comprometidas.",
+          userType, password);
+
+      if (isProduction) {
+        throw new IllegalStateException(
+            message + " Configure uma senha forte via variável de ambiente.");
+      } else {
+        log.warn(message + " Isso é aceitável apenas em ambiente de desenvolvimento.");
+      }
+    }
+
+    // Verificar comprimento mínimo em produção
+    if (isProduction && password.length() < 12) {
+      throw new IllegalStateException(String.format(
+          "Senha do usuário '%s' deve ter no mínimo 12 caracteres em produção (atual: %d)",
+          userType, password.length()));
+    }
+
+    // Verificar complexidade em produção
+    if (isProduction && !isStrongPassword(password)) {
+      throw new IllegalStateException(String.format(
+          "Senha do usuário '%s' deve conter letras maiúsculas, minúsculas, números e caracteres especiais",
+          userType));
+    }
+  }
+
+  /**
+   * Verifica se a senha atende requisitos de complexidade.
+   */
+  private boolean isStrongPassword(String password) {
+    boolean hasUpper = password.chars().anyMatch(Character::isUpperCase);
+    boolean hasLower = password.chars().anyMatch(Character::isLowerCase);
+    boolean hasDigit = password.chars().anyMatch(Character::isDigit);
+    boolean hasSpecial = password.chars().anyMatch(c -> "!@#$%^&*()_+-=[]{}|;':\",./<>?".indexOf(c) >= 0);
+    return hasUpper && hasLower && hasDigit && hasSpecial;
   }
 }

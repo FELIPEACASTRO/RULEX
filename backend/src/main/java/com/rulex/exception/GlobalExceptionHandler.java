@@ -387,6 +387,28 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
   }
 
+  /** Tratamento de payload muito grande (413). */
+  @ExceptionHandler(com.rulex.api.CachedBodyHttpServletRequest.PayloadTooLargeException.class)
+  public ResponseEntity<ErrorResponse> handlePayloadTooLarge(
+      com.rulex.api.CachedBodyHttpServletRequest.PayloadTooLargeException ex,
+      HttpServletRequest request) {
+    log.warn("Payload too large: {} - {}", request.getRequestURI(), ex.getMessage());
+
+    ErrorResponse error =
+        ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.PAYLOAD_TOO_LARGE.value())
+            .error("Payload Too Large")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .details(Map.of(
+                "maxSize", com.rulex.api.CachedBodyHttpServletRequest.MAX_BODY_SIZE,
+                "suggestion", "Reduza o tamanho do payload ou divida em múltiplas requisições"))
+            .build();
+
+    return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);
+  }
+
   /** Tratamento de exceções genéricas. */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleGenericException(
