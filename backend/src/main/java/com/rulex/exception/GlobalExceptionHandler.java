@@ -241,6 +241,152 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
   }
 
+  /** Tratamento de operador não suportado (501). */
+  @ExceptionHandler(UnsupportedOperatorException.class)
+  public ResponseEntity<ErrorResponse> handleUnsupportedOperator(
+      UnsupportedOperatorException ex, HttpServletRequest request) {
+    log.warn("Operador não suportado: {}", ex.getOperator());
+
+    ErrorResponse error =
+        ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.NOT_IMPLEMENTED.value())
+            .error("Not Implemented")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .details(
+                Map.of(
+                    "operator", ex.getOperator().name(),
+                    "status", ex.getStatus(),
+                    "suggestion", "Consulte GET /api/operators/status para ver operadores disponíveis"))
+            .build();
+
+    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(error);
+  }
+
+  /** Tratamento de erro na avaliação de regra (422). */
+  @ExceptionHandler(RuleEvaluationException.class)
+  public ResponseEntity<ErrorResponse> handleRuleEvaluation(
+      RuleEvaluationException ex, HttpServletRequest request) {
+    log.error("Erro na avaliação de regra: {}", ex.getMessage(), ex);
+
+    ErrorResponse error =
+        ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+            .error("Rule Evaluation Error")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .details(
+                Map.of(
+                    "ruleId", ex.getRuleId() != null ? ex.getRuleId() : "unknown",
+                    "ruleName", ex.getRuleName() != null ? ex.getRuleName() : "unknown"))
+            .build();
+
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
+  }
+
+  /** Tratamento de erro de conexão Neo4j (503). */
+  @ExceptionHandler(Neo4jConnectionException.class)
+  public ResponseEntity<ErrorResponse> handleNeo4jConnection(
+      Neo4jConnectionException ex, HttpServletRequest request) {
+    log.error("Erro de conexão Neo4j: {}", ex.getMessage());
+
+    ErrorResponse error =
+        ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.SERVICE_UNAVAILABLE.value())
+            .error("Service Unavailable")
+            .message("Serviço de análise de grafos temporariamente indisponível")
+            .path(request.getRequestURI())
+            .details(
+                Map.of(
+                    "service", "neo4j",
+                    "suggestion", "Tente novamente em alguns segundos"))
+            .build();
+
+    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
+  }
+
+  /** Tratamento de erro de conexão Redis (503). */
+  @ExceptionHandler(RedisConnectionException.class)
+  public ResponseEntity<ErrorResponse> handleRedisConnection(
+      RedisConnectionException ex, HttpServletRequest request) {
+    log.error("Erro de conexão Redis: {}", ex.getMessage());
+
+    ErrorResponse error =
+        ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.SERVICE_UNAVAILABLE.value())
+            .error("Service Unavailable")
+            .message("Serviço de cache temporariamente indisponível")
+            .path(request.getRequestURI())
+            .details(
+                Map.of(
+                    "service", "redis",
+                    "suggestion", "Tente novamente em alguns segundos"))
+            .build();
+
+    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
+  }
+
+  /** Tratamento de payload inválido (400). */
+  @ExceptionHandler(InvalidPayloadException.class)
+  public ResponseEntity<ErrorResponse> handleInvalidPayload(
+      InvalidPayloadException ex, HttpServletRequest request) {
+    log.warn("Payload inválido: {}", ex.getMessage());
+
+    ErrorResponse error =
+        ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error("Invalid Payload")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .details(
+                Map.of(
+                    "field", ex.getField() != null ? ex.getField() : "unknown"))
+            .build();
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+  }
+
+  /** Tratamento de erro de configuração (500). */
+  @ExceptionHandler(ConfigurationException.class)
+  public ResponseEntity<ErrorResponse> handleConfiguration(
+      ConfigurationException ex, HttpServletRequest request) {
+    log.error("Erro de configuração: {}", ex.getMessage());
+
+    ErrorResponse error =
+        ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+            .error("Configuration Error")
+            .message("Erro de configuração do sistema. Contate o administrador.")
+            .path(request.getRequestURI())
+            .build();
+
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+  }
+
+  /** Tratamento de exceção base RULEX (500). */
+  @ExceptionHandler(RulexException.class)
+  public ResponseEntity<ErrorResponse> handleRulexException(
+      RulexException ex, HttpServletRequest request) {
+    log.error("Erro RULEX: {}", ex.getMessage(), ex);
+
+    ErrorResponse error =
+        ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+            .error("RULEX Error")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+  }
+
   /** Tratamento de exceções genéricas. */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleGenericException(
