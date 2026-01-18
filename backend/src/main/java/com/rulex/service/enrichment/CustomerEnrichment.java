@@ -8,6 +8,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
@@ -302,8 +303,15 @@ public class CustomerEnrichment {
                 BigDecimal.valueOf(history.totalTransactions), 2, RoundingMode.HALF_UP);
       }
 
-      // TODO: Implementar busca de última transação e contagem de fraudes
-      // quando os métodos estiverem disponíveis no repository
+      // Buscar última atividade do cliente
+      Optional<OffsetDateTime> lastActivityOpt =
+          transactionLogRepository.findLastActivityByCustomerId(customerId);
+      if (lastActivityOpt.isPresent()) {
+        OffsetDateTime lastActivity = lastActivityOpt.get();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        history.daysSinceLastTransaction = (int) java.time.temporal.ChronoUnit.DAYS.between(lastActivity, now);
+        history.hoursSinceLastTransaction = (int) java.time.temporal.ChronoUnit.HOURS.between(lastActivity, now);
+      }
 
     } catch (Exception e) {
       log.debug("Erro ao buscar histórico do cliente: {}", e.getMessage());

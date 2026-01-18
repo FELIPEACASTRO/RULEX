@@ -18,6 +18,7 @@ import com.rulex.repository.TransactionRepository;
 import com.rulex.util.PanHashUtil;
 import com.rulex.util.PanMaskingUtil;
 import com.rulex.util.RegexValidator;
+import com.rulex.service.enrichment.TransactionEnrichmentFacade;
 import com.rulex.v31.execlog.ExecutionEventType;
 import com.rulex.v31.execlog.RuleExecutionLogService;
 import java.beans.PropertyDescriptor;
@@ -58,6 +59,7 @@ public class RuleEngineService {
   private final RuleExecutionLogService ruleExecutionLogService;
   private final EnrichmentService enrichmentService;
   private final RuleOrderingService ruleOrderingService;
+  private final TransactionEnrichmentFacade transactionEnrichmentFacade;
 
   // V4.0: advanced hard-rule services (opt-in via config)
   private final BloomFilterService bloomFilterService;
@@ -522,6 +524,16 @@ public class RuleEngineService {
         derivedContext.getTransactionTimestamp(),
         derivedContext.getBin(),
         derivedContext.getMaskedPan());
+
+    // V4.1: Enriquecimento completo da transação usando TransactionEnrichmentFacade
+    // Isso disponibiliza todos os 103+ campos derivados para avaliação de regras
+    TransactionEnrichmentFacade.FullEnrichmentContext enrichmentContext =
+        transactionEnrichmentFacade.enrichFull(request);
+    Map<String, Object> enrichedFields = enrichmentContext.toFlatMap();
+    log.debug(
+        "Enriquecimento completo em {}ms: {} campos disponíveis",
+        enrichmentContext.getEnrichmentTimeMs(),
+        enrichedFields.size());
 
     int totalScore = 0;
     List<TriggeredRuleDTO> triggeredRules = new ArrayList<>();

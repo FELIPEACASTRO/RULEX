@@ -1,16 +1,40 @@
+server:
+  servlet:
+    context-path: /api
+
 spring:
+  # DataSource é configurado dinamicamente pelo BaseIntegrationTest via @DynamicPropertySource
   datasource:
-    url: jdbc:tc:postgresql:16-alpine:///rulex_db
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    hikari:
+      pool-name: RulexTestPool
+      minimum-idle: 2
+      maximum-pool-size: 5
+      connection-timeout: 30000
+      auto-commit: true
   jpa:
     hibernate:
       ddl-auto: create-drop
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
   flyway:
     enabled: false
+  # Desabilitar Redis para testes
+  data:
+    redis:
+      repositories:
+        enabled: false
+    neo4j:
+      repositories:
+        enabled: false
 
 rulex:
   security:
     enabled: false
+  access-log:
+    enabled: false
+  engine:
+    velocity:
+      redis:
+        enabled: false

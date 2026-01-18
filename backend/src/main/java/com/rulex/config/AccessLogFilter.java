@@ -13,6 +13,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -28,6 +29,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Order(Ordered.LOWEST_PRECEDENCE - 10)
 @RequiredArgsConstructor
 @Slf4j
+@ConditionalOnProperty(name = "rulex.access-log.enabled", havingValue = "true", matchIfMissing = true)
 public class AccessLogFilter extends OncePerRequestFilter {
 
   private final AccessLogService accessLogService;
