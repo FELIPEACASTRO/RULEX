@@ -3594,7 +3594,7 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  // ========== OPERADORES V31+ (82 stubs) - CATEGORIAS A-K ==========
+  // ========== OPERADORES V31+ IMPLEMENTADOS - CATEGORIAS A-K ==========
 
   // --- CATEGORIA A: Velocity Avançado (10) ---
 
@@ -7498,7 +7498,7 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  // ========== STUB METHODS - FATF Compliance ==========
+  // ========== PLANNED OPERATORS - FATF Compliance (lançam UnsupportedOperatorException) ==========
 
   private boolean evaluateFatfBlackMarketExchange(
       RuleCondition condition, EvaluationContext context) {
@@ -7655,7 +7655,7 @@ public class ComplexRuleEvaluator {
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
-  // ========== STUB METHODS - Platform Integration ==========
+  // ========== PLANNED OPERATORS - Platform Integration (lançam UnsupportedOperatorException) ==========
 
   private boolean evaluatePltBacktestingLabeling(
       RuleCondition condition, EvaluationContext context) {
@@ -7840,7 +7840,7 @@ public class ComplexRuleEvaluator {
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
-  // ========== STUB METHODS - SCA Compliance ==========
+  // ========== PLANNED OPERATORS - SCA Compliance (lançam UnsupportedOperatorException) ==========
 
   private boolean evaluateScaChallengeMandatory(
       RuleCondition condition, EvaluationContext context) {
@@ -7955,7 +7955,7 @@ public class ComplexRuleEvaluator {
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
-  // ========== STUB METHODS - Association Rules ==========
+  // ========== PLANNED OPERATORS - Association Rules (lançam UnsupportedOperatorException) ==========
 
   private boolean evaluateAprioriAssociation(RuleCondition condition, EvaluationContext context) {
     throw new UnsupportedOperatorException(
@@ -7976,7 +7976,7 @@ public class ComplexRuleEvaluator {
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
-  // ========== STUB METHODS - Fuzzy Logic ==========
+  // ========== PLANNED OPERATORS - Fuzzy Logic (lançam UnsupportedOperatorException) ==========
 
   private boolean evaluateFuzzyMembership(RuleCondition condition, EvaluationContext context) {
     throw new UnsupportedOperatorException(
@@ -7991,7 +7991,7 @@ public class ComplexRuleEvaluator {
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
-  // ========== STUB METHODS - Basel SL (Operational Risk) ==========
+  // ========== PLANNED OPERATORS - Basel SL (Operational Risk) (lançam UnsupportedOperatorException) ==========
 
   private boolean evaluateBslBucketClassification(
       RuleCondition condition, EvaluationContext context) {
