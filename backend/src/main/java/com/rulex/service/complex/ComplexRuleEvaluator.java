@@ -868,8 +868,10 @@ public class ComplexRuleEvaluator {
       case PIG_BUTCHERING_INDICATOR -> evaluatePigButcheringIndicator(condition, context);
 
       default -> {
-        log.warn("Operador não implementado: {}", operator);
-        yield false;
+        log.error("Operador desconhecido ou não mapeado no switch: {}", operator);
+        throw new UnsupportedOperatorException(
+            operator,
+            "Operador não mapeado no evaluateOperator switch. Verifique se o operador está registrado.");
       }
     };
   }
@@ -2180,7 +2182,7 @@ public class ComplexRuleEvaluator {
     }
   }
 
-  /** IS_HOLIDAY: Verifica se a transação é em feriado (placeholder) */
+  /** IS_HOLIDAY: Verifica se a transação é em feriado */
   private boolean evaluateIsHoliday(EvaluationContext context) {
     try {
       // Obter data da transação
