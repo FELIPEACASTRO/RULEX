@@ -2,8 +2,10 @@ package com.rulex.service.complex;
 
 import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.complex.RuleCondition;
+import com.rulex.entity.complex.RuleCondition.ConditionOperator;
 import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleExecutionDetail;
+import com.rulex.exception.UnsupportedOperatorException;
 import com.rulex.service.FuzzyLogicService;
 import com.rulex.service.GeoService;
 import com.rulex.service.Neo4jGraphService;
@@ -7500,500 +7502,587 @@ public class ComplexRuleEvaluator {
 
   private boolean evaluateFatfBlackMarketExchange(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_BLACK_MARKET_EXCHANGE: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_BLACK_MARKET_EXCHANGE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfCorrespondentLayering(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_CORRESPONDENT_LAYERING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_CORRESPONDENT_LAYERING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfCryptoAtmCashout(RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_CRYPTO_ATM_CASHOUT: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_CRYPTO_ATM_CASHOUT,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfCryptoMixing(RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_CRYPTO_MIXING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_CRYPTO_MIXING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfHawalaInformal(RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_HAWALA_INFORMAL: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_HAWALA_INFORMAL,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfInsuranceCashValue(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_INSURANCE_CASH_VALUE: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_INSURANCE_CASH_VALUE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfIntegrationLuxuryGoods(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_INTEGRATION_LUXURY_GOODS: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_INTEGRATION_LUXURY_GOODS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfIntegrationRealEstate(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_INTEGRATION_REAL_ESTATE: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_INTEGRATION_REAL_ESTATE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfLayeringOffshore(RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_LAYERING_OFFSHORE: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_LAYERING_OFFSHORE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfLayeringRapidMovement(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_LAYERING_RAPID_MOVEMENT: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_LAYERING_RAPID_MOVEMENT,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfLayeringShellCompany(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_LAYERING_SHELL_COMPANY: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_LAYERING_SHELL_COMPANY,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfLayeringWireChains(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_LAYERING_WIRE_CHAINS: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_LAYERING_WIRE_CHAINS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfNewPaymentExploitation(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_NEW_PAYMENT_EXPLOITATION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_NEW_PAYMENT_EXPLOITATION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfPepTransaction(RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_PEP_TRANSACTION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_PEP_TRANSACTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfPlacementCashIntensive(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_PLACEMENT_CASH_INTENSIVE: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_PLACEMENT_CASH_INTENSIVE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfPlacementSmurfing(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_PLACEMENT_SMURFING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_PLACEMENT_SMURFING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfPlacementStructuring(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_PLACEMENT_STRUCTURING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_PLACEMENT_STRUCTURING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfRoundTripping(RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_ROUND_TRIPPING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_ROUND_TRIPPING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfTbmlFalseDescription(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_TBML_FALSE_DESCRIPTION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_TBML_FALSE_DESCRIPTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfTbmlMultipleInvoicing(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_TBML_MULTIPLE_INVOICING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_TBML_MULTIPLE_INVOICING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfTbmlOverInvoicing(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_TBML_OVER_INVOICING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_TBML_OVER_INVOICING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfTbmlPhantomShipping(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_TBML_PHANTOM_SHIPPING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_TBML_PHANTOM_SHIPPING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfTbmlUnderInvoicing(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_TBML_UNDER_INVOICING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_TBML_UNDER_INVOICING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   // ========== STUB METHODS - Platform Integration ==========
 
   private boolean evaluatePltBacktestingLabeling(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_BACKTESTING_LABELING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_BACKTESTING_LABELING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltBadEntityNetwork(RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_BAD_ENTITY_NETWORK: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_BAD_ENTITY_NETWORK,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltBehaviorSortedLists(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_BEHAVIOR_SORTED_LISTS: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_BEHAVIOR_SORTED_LISTS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltBehavioralProfiling(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_BEHAVIORAL_PROFILING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_BEHAVIORAL_PROFILING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltBusinessRulesScenario(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_BUSINESS_RULES_SCENARIO: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_BUSINESS_RULES_SCENARIO,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltCompromiseManager(RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_COMPROMISE_MANAGER: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_COMPROMISE_MANAGER,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltConsortiumDataCheck(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_CONSORTIUM_DATA_CHECK: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_CONSORTIUM_DATA_CHECK,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltCustomRuleBuilder(RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_CUSTOM_RULE_BUILDER: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_CUSTOM_RULE_BUILDER,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltDs2RuleEngine(RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_DS2_RULE_ENGINE: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_DS2_RULE_ENGINE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltIdentityResolution(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_IDENTITY_RESOLUTION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_IDENTITY_RESOLUTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltIntelligenceNetwork(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_INTELLIGENCE_NETWORK: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_INTELLIGENCE_NETWORK,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltLinkingVelocity(RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_LINKING_VELOCITY: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_LINKING_VELOCITY,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltMlFraudRiskOutcome(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_ML_FRAUD_RISK_OUTCOME: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_ML_FRAUD_RISK_OUTCOME,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltNetworkAnalytics(RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_NETWORK_ANALYTICS: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_NETWORK_ANALYTICS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltNetworkEntityResolution(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_NETWORK_ENTITY_RESOLUTION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_NETWORK_ENTITY_RESOLUTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltRadarComplexConditions(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_RADAR_COMPLEX_CONDITIONS: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_RADAR_COMPLEX_CONDITIONS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltRadarInlineLists(RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_RADAR_INLINE_LISTS: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_RADAR_INLINE_LISTS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltRadarMetadataMatching(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_RADAR_METADATA_MATCHING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_RADAR_METADATA_MATCHING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltRadarRuleBacktesting(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_RADAR_RULE_BACKTESTING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_RADAR_RULE_BACKTESTING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltRealTimeDetection(RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_REAL_TIME_DETECTION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_REAL_TIME_DETECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltReviewlistQueue(RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_REVIEWLIST_QUEUE: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_REVIEWLIST_QUEUE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltRiskListComparison(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_RISK_LIST_COMPARISON: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_RISK_LIST_COMPARISON,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltRiskProfileAssignment(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_RISK_PROFILE_ASSIGNMENT: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_RISK_PROFILE_ASSIGNMENT,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltRiskScoreCalculation(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_RISK_SCORE_CALCULATION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_RISK_SCORE_CALCULATION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltRulesModelsHybrid(RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_RULES_MODELS_HYBRID: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_RULES_MODELS_HYBRID,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltSarAutomated(RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_SAR_AUTOMATED: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_SAR_AUTOMATED,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltScenarioScorecard(RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_SCENARIO_SCORECARD: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_SCENARIO_SCORECARD,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluatePltVelocityFilters(RuleCondition condition, EvaluationContext context) {
-    log.debug("PLT_VELOCITY_FILTERS: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PLT_VELOCITY_FILTERS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   // ========== STUB METHODS - SCA Compliance ==========
 
   private boolean evaluateScaChallengeMandatory(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("SCA_CHALLENGE_MANDATORY: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SCA_CHALLENGE_MANDATORY,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateScaContactlessExemption(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("SCA_CONTACTLESS_EXEMPTION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SCA_CONTACTLESS_EXEMPTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateScaCorporatePayment(RuleCondition condition, EvaluationContext context) {
-    log.debug("SCA_CORPORATE_PAYMENT: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SCA_CORPORATE_PAYMENT,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateScaFraudRateMonitoring(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("SCA_FRAUD_RATE_MONITORING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SCA_FRAUD_RATE_MONITORING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateScaLiabilityShift(RuleCondition condition, EvaluationContext context) {
-    log.debug("SCA_LIABILITY_SHIFT: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SCA_LIABILITY_SHIFT,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateScaLowValueExemption(RuleCondition condition, EvaluationContext context) {
-    log.debug("SCA_LOW_VALUE_EXEMPTION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SCA_LOW_VALUE_EXEMPTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateScaMerchantInitiated(RuleCondition condition, EvaluationContext context) {
-    log.debug("SCA_MERCHANT_INITIATED: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SCA_MERCHANT_INITIATED,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateScaRecurringTransaction(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("SCA_RECURRING_TRANSACTION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SCA_RECURRING_TRANSACTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateScaSecureCorporateProtocol(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("SCA_SECURE_CORPORATE_PROTOCOL: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SCA_SECURE_CORPORATE_PROTOCOL,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateScaTraExemption(RuleCondition condition, EvaluationContext context) {
-    log.debug("SCA_TRA_EXEMPTION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SCA_TRA_EXEMPTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateScaTrustedBeneficiary(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("SCA_TRUSTED_BENEFICIARY: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SCA_TRUSTED_BENEFICIARY,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfPlacementCurrencyExchange(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_PLACEMENT_CURRENCY_EXCHANGE: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_PLACEMENT_CURRENCY_EXCHANGE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfPlacementCasinoGambling(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_PLACEMENT_CASINO_GAMBLING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_PLACEMENT_CASINO_GAMBLING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfLayeringConvertibleInstruments(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_LAYERING_CONVERTIBLE_INSTRUMENTS: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_LAYERING_CONVERTIBLE_INSTRUMENTS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfIntegrationBusinessInvestment(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_INTEGRATION_BUSINESS_INVESTMENT: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_INTEGRATION_BUSINESS_INVESTMENT,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFatfIntegrationLoanRepayment(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FATF_INTEGRATION_LOAN_REPAYMENT: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_INTEGRATION_LOAN_REPAYMENT,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateScaDynamic3dsRouting(RuleCondition condition, EvaluationContext context) {
-    log.debug("SCA_DYNAMIC_3DS_ROUTING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SCA_DYNAMIC_3DS_ROUTING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   // ========== STUB METHODS - Association Rules ==========
 
   private boolean evaluateAprioriAssociation(RuleCondition condition, EvaluationContext context) {
-    log.debug("APRIORI_ASSOCIATION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.APRIORI_ASSOCIATION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateEclatItemset(RuleCondition condition, EvaluationContext context) {
-    log.debug("ECLAT_ITEMSET: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.ECLAT_ITEMSET,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFpgrowthFrequentPatterns(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FPGROWTH_FREQUENT_PATTERNS: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FPGROWTH_FREQUENT_PATTERNS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   // ========== STUB METHODS - Fuzzy Logic ==========
 
   private boolean evaluateFuzzyMembership(RuleCondition condition, EvaluationContext context) {
-    log.debug("FUZZY_MEMBERSHIP: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FUZZY_MEMBERSHIP,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateFuzzyAdaptiveThreshold(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("FUZZY_ADAPTIVE_THRESHOLD: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FUZZY_ADAPTIVE_THRESHOLD,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   // ========== STUB METHODS - Basel SL (Operational Risk) ==========
 
   private boolean evaluateBslBucketClassification(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_BUCKET_CLASSIFICATION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_BUCKET_CLASSIFICATION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateBslBusinessIndicator(RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_BUSINESS_INDICATOR: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_BUSINESS_INDICATOR,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateBslBusinessIndicatorComponent(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_BUSINESS_INDICATOR_COMPONENT: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_BUSINESS_INDICATOR_COMPONENT,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateBslControlDeficiency(RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_CONTROL_DEFICIENCY: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_CONTROL_DEFICIENCY,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateBslInternalLossMultiplier(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_INTERNAL_LOSS_MULTIPLIER: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_INTERNAL_LOSS_MULTIPLIER,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateBslKriMonitoring(RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_KRI_MONITORING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_KRI_MONITORING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateBslLossDataCollection(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_LOSS_DATA_COLLECTION: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_LOSS_DATA_COLLECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateBslLossEventReporting(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_LOSS_EVENT_REPORTING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_LOSS_EVENT_REPORTING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateBslLossExclusionApproval(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_LOSS_EXCLUSION_APPROVAL: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_LOSS_EXCLUSION_APPROVAL,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateBslLossThresholdSetting(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_LOSS_THRESHOLD_SETTING: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_LOSS_THRESHOLD_SETTING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateBslMarginalCoefficient(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_MARGINAL_COEFFICIENT: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_MARGINAL_COEFFICIENT,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateBslRetentionPeriod(RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_RETENTION_PERIOD: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_RETENTION_PERIOD,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateBslRiskGovernance(RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_RISK_GOVERNANCE: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_RISK_GOVERNANCE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   private boolean evaluateBslScenarioAnalysis(RuleCondition condition, EvaluationContext context) {
-    log.debug("BSL_SCENARIO_ANALYSIS: stub - retornando false");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BSL_SCENARIO_ANALYSIS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
   // ========== LLM & Generative AI Fraud Detection (LLM001-LLM012) ==========
@@ -8001,85 +8090,97 @@ public class ComplexRuleEvaluator {
   private boolean evaluateLlmTransactionDescriptionAnalysis(
       RuleCondition condition, EvaluationContext context) {
     // LLM001: Análise de descrição de transação via LLM para detectar padrões suspeitos
-    log.debug("LLM_TRANSACTION_DESCRIPTION_ANALYSIS: Analisando descrição de transação");
-    return false; // Stub - integração com API LLM necessária
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LLM_TRANSACTION_DESCRIPTION_ANALYSIS,
+        "Operador PLANNED - requer integração com API LLM. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLlmGenerativeRuleSynthesis(
       RuleCondition condition, EvaluationContext context) {
     // LLM002: Síntese automática de regras via LLM
-    log.debug("LLM_GENERATIVE_RULE_SYNTHESIS: Gerando regras automaticamente");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LLM_GENERATIVE_RULE_SYNTHESIS,
+        "Operador PLANNED - requer integração com API LLM. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLlmAnomalyExplanationGeneration(
       RuleCondition condition, EvaluationContext context) {
     // LLM003: Geração de explicação de anomalia em linguagem natural
-    log.debug("LLM_ANOMALY_EXPLANATION_GENERATION: Gerando explicação de anomalia");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LLM_ANOMALY_EXPLANATION_GENERATION,
+        "Operador PLANNED - requer integração com API LLM. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLlmChatbotFraudDetection(
       RuleCondition condition, EvaluationContext context) {
     // LLM004: Detecção de fraude em chatbot/conversação
-    log.debug("LLM_CHATBOT_FRAUD_DETECTION: Analisando conversa para fraude");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LLM_CHATBOT_FRAUD_DETECTION,
+        "Operador PLANNED - requer integração com API LLM. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLlmDeepfakeVoiceDetection(
       RuleCondition condition, EvaluationContext context) {
     // LLM005: Detecção de deepfake de voz
-    log.debug("LLM_DEEPFAKE_VOICE_DETECTION: Verificando autenticidade de voz");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LLM_DEEPFAKE_VOICE_DETECTION,
+        "Operador PLANNED - requer integração com API LLM. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLlmSyntheticImageDetection(
       RuleCondition condition, EvaluationContext context) {
     // LLM006: Detecção de imagem sintética/GAN
-    log.debug("LLM_SYNTHETIC_IMAGE_DETECTION: Verificando imagem sintética");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LLM_SYNTHETIC_IMAGE_DETECTION,
+        "Operador PLANNED - requer integração com API LLM. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLlmEmailPhishingAnalysis(
       RuleCondition condition, EvaluationContext context) {
     // LLM007: Análise de phishing em email
-    log.debug("LLM_EMAIL_PHISHING_ANALYSIS: Analisando email para phishing");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LLM_EMAIL_PHISHING_ANALYSIS,
+        "Operador PLANNED - requer integração com API LLM. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLlmSocialEngineeringClassification(
       RuleCondition condition, EvaluationContext context) {
     // LLM008: Classificação de engenharia social
-    log.debug("LLM_SOCIAL_ENGINEERING_CLASSIFICATION: Classificando engenharia social");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LLM_SOCIAL_ENGINEERING_CLASSIFICATION,
+        "Operador PLANNED - requer integração com API LLM. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLlmFraudAlertPrioritization(
       RuleCondition condition, EvaluationContext context) {
     // LLM009: Priorização automática de alertas
-    log.debug("LLM_FRAUD_ALERT_PRIORITIZATION: Priorizando alertas");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LLM_FRAUD_ALERT_PRIORITIZATION,
+        "Operador PLANNED - requer integração com API LLM. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLlmMultiModalFraudDetection(
       RuleCondition condition, EvaluationContext context) {
     // LLM010: Detecção multimodal (texto+imagem+dados)
-    log.debug("LLM_MULTI_MODAL_FRAUD_DETECTION: Detecção multimodal");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LLM_MULTI_MODAL_FRAUD_DETECTION,
+        "Operador PLANNED - requer integração com API LLM. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLlmAdversarialAttackResistance(
       RuleCondition condition, EvaluationContext context) {
     // LLM011: Resistência a ataques adversariais
-    log.debug("LLM_ADVERSARIAL_ATTACK_RESISTANCE: Verificando resistência adversarial");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LLM_ADVERSARIAL_ATTACK_RESISTANCE,
+        "Operador PLANNED - requer integração com API LLM. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLlmFraudPatternAutodiscovery(
       RuleCondition condition, EvaluationContext context) {
     // LLM012: Autodescoberta de padrões de fraude
-    log.debug("LLM_FRAUD_PATTERN_AUTODISCOVERY: Descobrindo padrões automaticamente");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LLM_FRAUD_PATTERN_AUTODISCOVERY,
+        "Operador PLANNED - requer integração com API LLM. Consulte GET /api/operators/status.");
   }
 
   // ========== Neo4j Graph Fraud Detection (NEO001-NEO018) ==========
@@ -8291,8 +8392,9 @@ public class ComplexRuleEvaluator {
   private boolean evaluateNeo4jTemporalMotifPattern(
       RuleCondition condition, EvaluationContext context) {
     // NEO018: Padrão de motif temporal
-    log.debug("NEO4J_TEMPORAL_MOTIF_PATTERN: Analisando padrão temporal");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.NEO4J_TEMPORAL_MOTIF_PATTERN,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   // ========== Synthetic Identity Detection (SYN001-SYN015) ==========
@@ -8300,104 +8402,119 @@ public class ComplexRuleEvaluator {
   private boolean evaluateBiometricKeystrokeDynamics(
       RuleCondition condition, EvaluationContext context) {
     // SYN001: Dinâmica de digitação biométrica
-    log.debug("BIOMETRIC_KEYSTROKE_DYNAMICS: Analisando dinâmica de digitação");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BIOMETRIC_KEYSTROKE_DYNAMICS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateBiometricMouseMovement(
       RuleCondition condition, EvaluationContext context) {
     // SYN002: Movimento de mouse biométrico
-    log.debug("BIOMETRIC_MOUSE_MOVEMENT: Analisando movimento de mouse");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BIOMETRIC_MOUSE_MOVEMENT,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateBiometricScrollVelocity(
       RuleCondition condition, EvaluationContext context) {
     // SYN003: Velocidade de scroll biométrica
-    log.debug("BIOMETRIC_SCROLL_VELOCITY: Analisando velocidade de scroll");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BIOMETRIC_SCROLL_VELOCITY,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateDeviceFingerprintConsistencyCheck(
       RuleCondition condition, EvaluationContext context) {
     // SYN004: Verificação de consistência de fingerprint
-    log.debug("DEVICE_FINGERPRINT_CONSISTENCY_CHECK: Verificando consistência de fingerprint");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.DEVICE_FINGERPRINT_CONSISTENCY_CHECK,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateEcbsvSsnValidation(RuleCondition condition, EvaluationContext context) {
     // SYN005: Validação SSN via eCBSV
-    log.debug("ECBSV_SSN_VALIDATION: Validando SSN via eCBSV");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.ECBSV_SSN_VALIDATION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateSyntheticFraudScore(RuleCondition condition, EvaluationContext context) {
     // SYN006: Score de fraude sintética
-    log.debug("SYNTHETIC_FRAUD_SCORE: Calculando score de fraude sintética");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SYNTHETIC_FRAUD_SCORE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateInjectionAttackDetection(
       RuleCondition condition, EvaluationContext context) {
     // SYN007: Detecção de ataque de injeção
-    log.debug("INJECTION_ATTACK_DETECTION: Detectando ataque de injeção");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.INJECTION_ATTACK_DETECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLivenessDetectionFacial(
       RuleCondition condition, EvaluationContext context) {
     // SYN008: Detecção de liveness facial
-    log.debug("LIVENESS_DETECTION_FACIAL: Verificando liveness facial");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LIVENESS_DETECTION_FACIAL,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLivenessDetectionVoice(
       RuleCondition condition, EvaluationContext context) {
     // SYN009: Detecção de liveness de voz
-    log.debug("LIVENESS_DETECTION_VOICE: Verificando liveness de voz");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LIVENESS_DETECTION_VOICE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateAntiDetectBrowserDetection(
       RuleCondition condition, EvaluationContext context) {
     // SYN010: Detecção de browser anti-detect
-    log.debug("ANTI_DETECT_BROWSER_DETECTION: Detectando browser anti-detect");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.ANTI_DETECT_BROWSER_DETECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateDocumentForgeryDetection(
       RuleCondition condition, EvaluationContext context) {
     // SYN011: Detecção de falsificação de documento
-    log.debug("DOCUMENT_FORGERY_DETECTION: Detectando falsificação de documento");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.DOCUMENT_FORGERY_DETECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateFaceToIdPhotoMatching(
       RuleCondition condition, EvaluationContext context) {
     // SYN012: Matching de face com foto de ID
-    log.debug("FACE_TO_ID_PHOTO_MATCHING: Comparando face com foto de ID");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FACE_TO_ID_PHOTO_MATCHING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateAdaptiveBehavioralAnalytics(
       RuleCondition condition, EvaluationContext context) {
     // SYN013: Analytics comportamental adaptativo
-    log.debug("ADAPTIVE_BEHAVIORAL_ANALYTICS: Analisando comportamento adaptativo");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.ADAPTIVE_BEHAVIORAL_ANALYTICS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateSyntheticIdLabelCorrection(
       RuleCondition condition, EvaluationContext context) {
     // SYN014: Correção de label de ID sintético
-    log.debug("SYNTHETIC_ID_LABEL_CORRECTION: Corrigindo label de ID sintético");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SYNTHETIC_ID_LABEL_CORRECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateMultiLayeredSyntheticIdControls(
       RuleCondition condition, EvaluationContext context) {
     // SYN015: Controles multicamada para ID sintético
-    log.debug("MULTI_LAYERED_SYNTHETIC_ID_CONTROLS: Aplicando controles multicamada");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.MULTI_LAYERED_SYNTHETIC_ID_CONTROLS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   // ========== Estatísticos Avançados Pure Rules (STAT001-STAT015) ==========
@@ -8405,242 +8522,282 @@ public class ComplexRuleEvaluator {
   private boolean evaluateStatKruskalWallisTest(
       RuleCondition condition, EvaluationContext context) {
     // STAT001: Teste Kruskal-Wallis (não-paramétrico ANOVA)
-    log.debug("STAT_KRUSKAL_WALLIS_TEST: Executando teste Kruskal-Wallis");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_KRUSKAL_WALLIS_TEST,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatAnovaFTest(RuleCondition condition, EvaluationContext context) {
     // STAT002: Teste F ANOVA para comparação de grupos
-    log.debug("STAT_ANOVA_F_TEST: Executando teste F ANOVA");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_ANOVA_F_TEST,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatIsolationForestScore(
       RuleCondition condition, EvaluationContext context) {
     // STAT003: Score de Isolation Forest (anomalia)
-    log.debug("STAT_ISOLATION_FOREST_SCORE: Calculando score Isolation Forest");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_ISOLATION_FOREST_SCORE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatLocalOutlierFactor(
       RuleCondition condition, EvaluationContext context) {
     // STAT004: Local Outlier Factor (LOF)
-    log.debug("STAT_LOCAL_OUTLIER_FACTOR: Calculando LOF");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_LOCAL_OUTLIER_FACTOR,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatOneClassSvmBoundary(
       RuleCondition condition, EvaluationContext context) {
     // STAT005: One-Class SVM boundary detection
-    log.debug("STAT_ONE_CLASS_SVM_BOUNDARY: Verificando boundary SVM");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_ONE_CLASS_SVM_BOUNDARY,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatKmeansClusterDistance(
       RuleCondition condition, EvaluationContext context) {
     // STAT006: Distância do centróide K-Means
-    log.debug("STAT_KMEANS_CLUSTER_DISTANCE: Calculando distância K-Means");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_KMEANS_CLUSTER_DISTANCE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatDbscanNoiseDetection(
       RuleCondition condition, EvaluationContext context) {
     // STAT007: Detecção de ruído DBSCAN
-    log.debug("STAT_DBSCAN_NOISE_DETECTION: Detectando ruído DBSCAN");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_DBSCAN_NOISE_DETECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatGmmProbability(RuleCondition condition, EvaluationContext context) {
     // STAT008: Probabilidade Gaussian Mixture Model
-    log.debug("STAT_GMM_PROBABILITY: Calculando probabilidade GMM");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_GMM_PROBABILITY,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatMahalanobisDistance(
       RuleCondition condition, EvaluationContext context) {
     // STAT009: Distância de Mahalanobis multivariada
-    log.debug("STAT_MAHALANOBIS_DISTANCE: Calculando distância Mahalanobis");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_MAHALANOBIS_DISTANCE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatGrubbsTest(RuleCondition condition, EvaluationContext context) {
     // STAT010: Teste de Grubbs para outliers
-    log.debug("STAT_GRUBBS_TEST: Executando teste de Grubbs");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_GRUBBS_TEST,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatDixonQTest(RuleCondition condition, EvaluationContext context) {
     // STAT011: Teste Q de Dixon para outliers
-    log.debug("STAT_DIXON_Q_TEST: Executando teste Q de Dixon");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_DIXON_Q_TEST,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatShapiroWilkTest(RuleCondition condition, EvaluationContext context) {
     // STAT012: Teste Shapiro-Wilk de normalidade
-    log.debug("STAT_SHAPIRO_WILK_TEST: Executando teste Shapiro-Wilk");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_SHAPIRO_WILK_TEST,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatLeveneTest(RuleCondition condition, EvaluationContext context) {
     // STAT013: Teste de Levene para homogeneidade de variância
-    log.debug("STAT_LEVENE_TEST: Executando teste de Levene");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_LEVENE_TEST,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatWelchTTest(RuleCondition condition, EvaluationContext context) {
     // STAT014: Teste t de Welch (variâncias desiguais)
-    log.debug("STAT_WELCH_T_TEST: Executando teste t de Welch");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_WELCH_T_TEST,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateStatBootstrapConfidenceInterval(
       RuleCondition condition, EvaluationContext context) {
     // STAT015: Intervalo de confiança Bootstrap
-    log.debug("STAT_BOOTSTRAP_CONFIDENCE_INTERVAL: Calculando intervalo Bootstrap");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.STAT_BOOTSTRAP_CONFIDENCE_INTERVAL,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   // ========== Fraud Patterns & Market Operators (Phase 7) ==========
 
   private boolean evaluateCardTestingRingDetection(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("CARD_TESTING_RING_DETECTION: Detectando anel de teste de cartão");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.CARD_TESTING_RING_DETECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateBustOutPatternDetection(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("BUST_OUT_PATTERN_DETECTION: Detectando padrão bust-out");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.BUST_OUT_PATTERN_DETECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateCircularPaymentDetection(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("CIRCULAR_PAYMENT_DETECTION: Detectando pagamento circular");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.CIRCULAR_PAYMENT_DETECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateAccountTakeoverPattern(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("ACCOUNT_TAKEOVER_PATTERN: Detectando padrão de tomada de conta");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.ACCOUNT_TAKEOVER_PATTERN,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateSyntheticIdentityRing(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("SYNTHETIC_IDENTITY_RING: Detectando anel de identidade sintética");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SYNTHETIC_IDENTITY_RING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateCrossBorderVelocity(RuleCondition condition, EvaluationContext context) {
-    log.debug("CROSS_BORDER_VELOCITY: Calculando velocidade cross-border");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.CROSS_BORDER_VELOCITY,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateCorrespondentAnomaly(RuleCondition condition, EvaluationContext context) {
-    log.debug("CORRESPONDENT_ANOMALY: Detectando anomalia de correspondente");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.CORRESPONDENT_ANOMALY,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateNestedCorrespondentCheck(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("NESTED_CORRESPONDENT_CHECK: Verificando correspondente aninhado");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.NESTED_CORRESPONDENT_CHECK,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateShellBankIndicator(RuleCondition condition, EvaluationContext context) {
-    log.debug("SHELL_BANK_INDICATOR: Verificando indicador de banco shell");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SHELL_BANK_INDICATOR,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateHighRiskCorridorCheck(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("HIGH_RISK_CORRIDOR_CHECK: Verificando corredor de alto risco");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.HIGH_RISK_CORRIDOR_CHECK,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateSegmentOfOneProfiling(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("SEGMENT_OF_ONE_PROFILING: Aplicando perfil segment-of-one");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SEGMENT_OF_ONE_PROFILING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateAdaptiveParametricThreshold(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("ADAPTIVE_PARAMETRIC_THRESHOLD: Aplicando threshold paramétrico adaptativo");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.ADAPTIVE_PARAMETRIC_THRESHOLD,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateRealTimeRiskScoring(RuleCondition condition, EvaluationContext context) {
-    log.debug("REAL_TIME_RISK_SCORING: Calculando score de risco em tempo real");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.REAL_TIME_RISK_SCORING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateConsortiumNegativeFileCheck(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("CONSORTIUM_NEGATIVE_FILE_CHECK: Verificando arquivo negativo de consórcio");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.CONSORTIUM_NEGATIVE_FILE_CHECK,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluatePeerGroupDeviationScore(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PEER_GROUP_DEVIATION_SCORE: Calculando score de desvio de grupo de pares");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PEER_GROUP_DEVIATION_SCORE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateMicroDepositVelocity(RuleCondition condition, EvaluationContext context) {
-    log.debug("MICRO_DEPOSIT_VELOCITY: Calculando velocidade de micro-depósitos");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.MICRO_DEPOSIT_VELOCITY,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateRapidSuccessionPattern(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("RAPID_SUCCESSION_PATTERN: Detectando padrão de sucessão rápida");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.RAPID_SUCCESSION_PATTERN,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateSplitTransactionDetection(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("SPLIT_TRANSACTION_DETECTION: Detectando transação dividida");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.SPLIT_TRANSACTION_DETECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateRoundTripDetection(RuleCondition condition, EvaluationContext context) {
-    log.debug("ROUND_TRIP_DETECTION: Detectando ida e volta");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.ROUND_TRIP_DETECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateLayeredTransferPattern(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("LAYERED_TRANSFER_PATTERN: Detectando padrão de transferência em camadas");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.LAYERED_TRANSFER_PATTERN,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateAppFraudDetection(RuleCondition condition, EvaluationContext context) {
-    log.debug("APP_FRAUD_DETECTION: Detectando fraude de APP (Authorized Push Payment)");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.APP_FRAUD_DETECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateRomanceScamIndicator(RuleCondition condition, EvaluationContext context) {
-    log.debug("ROMANCE_SCAM_INDICATOR: Verificando indicador de golpe romântico");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.ROMANCE_SCAM_INDICATOR,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateInvestmentScamPattern(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("INVESTMENT_SCAM_PATTERN: Detectando padrão de golpe de investimento");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.INVESTMENT_SCAM_PATTERN,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluateCryptoPumpDumpDetection(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("CRYPTO_PUMP_DUMP_DETECTION: Detectando pump and dump crypto");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.CRYPTO_PUMP_DUMP_DETECTION,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
   private boolean evaluatePigButcheringIndicator(
       RuleCondition condition, EvaluationContext context) {
-    log.debug("PIG_BUTCHERING_INDICATOR: Verificando indicador de pig butchering scam");
-    return false;
+    throw new UnsupportedOperatorException(
+        ConditionOperator.PIG_BUTCHERING_INDICATOR,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 }
