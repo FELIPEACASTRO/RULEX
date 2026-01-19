@@ -120,6 +120,7 @@ public class ConditionDTO {
     AVG_LAST_N_DAYS("Avg Last N Days"),
     COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS("Count Distinct Merchants Last N Days"),
     COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS("Count Distinct Countries Last N Hours"),
+    COUNT_DISTINCT_COUNTRIES_LAST_N_DAYS("Count Distinct Countries Last N Days"),
     MAX_AMOUNT_LAST_N_DAYS("Max Amount Last N Days"),
     MIN_AMOUNT_LAST_N_DAYS("Min Amount Last N Days"),
     GT_FIELD_MULTIPLIER("Gt Field Multiplier"),
@@ -511,7 +512,70 @@ public class ConditionDTO {
     ROMANCE_SCAM_INDICATOR("Romance Scam Indicator"),
     INVESTMENT_SCAM_PATTERN("Investment Scam Pattern"),
     CRYPTO_PUMP_DUMP_DETECTION("Crypto Pump Dump Detection"),
-    PIG_BUTCHERING_INDICATOR("Indicador de pig butchering scam");
+    PIG_BUTCHERING_INDICATOR("Indicador de pig butchering scam"),
+
+    // ========== OPERADORES SINCRONIZADOS V49 ==========
+    // Operadores lógicos
+    AND("And"),
+    OR("Or"),
+    NOT("Not"),
+    XOR("Xor"),
+    NAND("Nand"),
+    NOR("Nor"),
+
+    // Operadores de anomalia
+    AMOUNT_ANOMALY("Amount Anomaly"),
+    TIME_ANOMALY("Time Anomaly"),
+    VELOCITY_ANOMALY("Velocity Anomaly"),
+    MCC_ANOMALY("Mcc Anomaly"),
+    MERCHANT_ANOMALY("Merchant Anomaly"),
+
+    // Operadores de dispositivo/sessão
+    IS_NEW_DEVICE("Is New Device"),
+    IS_NEW_LOCATION("Is New Location"),
+    DEVICE_FINGERPRINT_MISMATCH("Device Fingerprint Mismatch"),
+    SESSION_DURATION_LT("Session Duration Lt"),
+    CLICK_VELOCITY_GT("Click Velocity Gt"),
+    MOUSE_MOVEMENT_ANOMALY("Mouse Movement Anomaly"),
+    TYPING_SPEED_ANOMALY("Typing Speed Anomaly"),
+    USER_AGENT_SUSPICIOUS("User Agent Suspicious"),
+
+    // Operadores de fraude de cartão
+    EXPIRED_CARD("Expired Card"),
+    CARD_CAPTURE_FRAUD("Card Capture Fraud"),
+    PIN_CVV_LIMIT_EXCEEDED("Pin Cvv Limit Exceeded"),
+    OFFLINE_PIN_FAILED("Offline Pin Failed"),
+    EMV_SECURITY_CHECK("Emv Security Check"),
+    ECOMMERCE_NO_AVS("Ecommerce No Avs"),
+    POS_SECURITY_MISSING("Pos Security Missing"),
+    TERMINAL_VERIFICATION_FAILED("Terminal Verification Failed"),
+    SUSPICIOUS_TERMINAL("Suspicious Terminal"),
+    UNUSUAL_CARD_MEDIA("Unusual Card Media"),
+
+    // Operadores de transferência
+    TRANSFER_AMOUNT_GT("Transfer Amount Gt"),
+    TRANSFER_VELOCITY_GT("Transfer Velocity Gt"),
+    RECIPIENT_IN_WATCHLIST("Recipient In Watchlist"),
+    RECIPIENT_IS_NEW("Recipient Is New"),
+
+    // Operadores de validação
+    ADDRESS_MISMATCH("Address Mismatch"),
+    PHONE_COUNTRY_MISMATCH("Phone Country Mismatch"),
+    EMAIL_DOMAIN_AGE_LT_DAYS("Email Domain Age Lt Days"),
+    NAME_SIMILARITY_GT("Name Similarity Gt"),
+    ACCOUNT_AGE_LT_DAYS("Account Age Lt Days"),
+
+    // Operadores de contexto/classificação
+    CONTEXT("Context"),
+    FRAUD("Fraud"),
+    SECURITY("Security"),
+    SUSPICIOUS("Suspicious"),
+    SUSPICIOUS_TRANSACTION_TYPE("Suspicious Transaction Type"),
+    VELOCITY("Velocity"),
+    ROUND_AMOUNT("Round Amount"),
+    IMPOSSIBLE_TRAVEL("Impossible Travel"),
+    NOT_IN_LIST("Not In List"),
+    CAPTCHA_FAILED("Captcha Failed");
 
     private final String description;
 

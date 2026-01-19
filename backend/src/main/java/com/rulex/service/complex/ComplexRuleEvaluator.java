@@ -867,6 +867,70 @@ public class ComplexRuleEvaluator {
       case CRYPTO_PUMP_DUMP_DETECTION -> evaluateCryptoPumpDumpDetection(condition, context);
       case PIG_BUTCHERING_INDICATOR -> evaluatePigButcheringIndicator(condition, context);
 
+        // ========== OPERADORES SINCRONIZADOS V49 ==========
+        // Operadores lógicos (delegados para grupos)
+      case AND -> evaluateLogicalAnd(condition, context);
+      case OR -> evaluateLogicalOr(condition, context);
+      case NOT -> evaluateLogicalNot(condition, context);
+      case XOR -> evaluateLogicalXor(condition, context);
+      case NAND -> evaluateLogicalNand(condition, context);
+      case NOR -> evaluateLogicalNor(condition, context);
+
+        // Operadores de anomalia
+      case AMOUNT_ANOMALY -> evaluateAmountAnomalyOp(condition, context);
+      case TIME_ANOMALY -> evaluateTimeAnomalyOp(condition, context);
+      case VELOCITY_ANOMALY -> evaluateVelocityAnomalyOp(condition, context);
+      case MCC_ANOMALY -> evaluateMccAnomalyOp(condition, context);
+      case MERCHANT_ANOMALY -> evaluateMerchantAnomalyOp(condition, context);
+
+        // Operadores de dispositivo/sessão
+      case IS_NEW_DEVICE -> evaluateIsNewDeviceOp(fieldValue);
+      case IS_NEW_LOCATION -> evaluateIsNewLocationOp(fieldValue);
+      case DEVICE_FINGERPRINT_MISMATCH -> evaluateDeviceFingerprintMismatchOp(fieldValue);
+      case SESSION_DURATION_LT -> evaluateSessionDurationLtOp(fieldValue, condition);
+      case CLICK_VELOCITY_GT -> evaluateClickVelocityGtOp(fieldValue, condition);
+      case MOUSE_MOVEMENT_ANOMALY -> evaluateMouseMovementAnomalyOp(fieldValue);
+      case TYPING_SPEED_ANOMALY -> evaluateTypingSpeedAnomalyOp(fieldValue);
+      case USER_AGENT_SUSPICIOUS -> evaluateUserAgentSuspiciousOp(fieldValue);
+
+        // Operadores de fraude de cartão
+      case EXPIRED_CARD -> evaluateExpiredCardOp(fieldValue);
+      case CARD_CAPTURE_FRAUD -> evaluateCardCaptureFraudOp(fieldValue);
+      case PIN_CVV_LIMIT_EXCEEDED -> evaluatePinCvvLimitExceededOp(fieldValue);
+      case OFFLINE_PIN_FAILED -> evaluateOfflinePinFailedOp(fieldValue);
+      case EMV_SECURITY_CHECK -> evaluateEmvSecurityCheckOp(fieldValue);
+      case ECOMMERCE_NO_AVS -> evaluateEcommerceNoAvsOp(fieldValue);
+      case POS_SECURITY_MISSING -> evaluatePosSecurityMissingOp(fieldValue);
+      case TERMINAL_VERIFICATION_FAILED -> evaluateTerminalVerificationFailedOp(fieldValue);
+      case SUSPICIOUS_TERMINAL -> evaluateSuspiciousTerminalOp(fieldValue);
+      case UNUSUAL_CARD_MEDIA -> evaluateUnusualCardMediaOp(fieldValue);
+
+        // Operadores de transferência
+      case TRANSFER_AMOUNT_GT -> evaluateTransferAmountGtOp(fieldValue, condition);
+      case TRANSFER_VELOCITY_GT -> evaluateTransferVelocityGtOp(fieldValue, condition);
+      case RECIPIENT_IN_WATCHLIST -> evaluateRecipientInWatchlistOp(fieldValue);
+      case RECIPIENT_IS_NEW -> evaluateRecipientIsNewOp(fieldValue);
+
+        // Operadores de validação
+      case ADDRESS_MISMATCH -> evaluateAddressMismatchOp(fieldValue);
+      case PHONE_COUNTRY_MISMATCH -> evaluatePhoneCountryMismatchOp(fieldValue);
+      case EMAIL_DOMAIN_AGE_LT_DAYS -> evaluateEmailDomainAgeLtDaysOp(fieldValue, condition);
+      case NAME_SIMILARITY_GT -> evaluateNameSimilarityGtOp(fieldValue, condition);
+      case ACCOUNT_AGE_LT_DAYS -> evaluateAccountAgeLtDaysOp(fieldValue, condition);
+
+        // Operadores de contexto/classificação
+      case CONTEXT -> evaluateContextOp(fieldValue, condition, context);
+      case FRAUD -> evaluateFraudOp(fieldValue);
+      case SECURITY -> evaluateSecurityOp(fieldValue);
+      case SUSPICIOUS -> evaluateSuspiciousOp(fieldValue);
+      case SUSPICIOUS_TRANSACTION_TYPE -> evaluateSuspiciousTransactionTypeOp(fieldValue);
+      case VELOCITY -> evaluateVelocityOp(fieldValue, condition);
+      case ROUND_AMOUNT -> evaluateRoundAmountOp(fieldValue);
+      case IMPOSSIBLE_TRAVEL -> evaluateImpossibleTravelOp(fieldValue);
+      case NOT_IN_LIST -> evaluateNotInListOp(fieldValue, condition);
+      case CAPTCHA_FAILED -> evaluateCaptchaFailedOp(fieldValue);
+      case COUNT_DISTINCT_COUNTRIES_LAST_N_DAYS -> evaluateCountDistinctCountriesLastNDaysOp(condition, context);
+
       default -> {
         log.error("Operador desconhecido ou não mapeado no switch: {}", operator);
         throw new UnsupportedOperatorException(
@@ -8801,5 +8865,349 @@ public class ComplexRuleEvaluator {
     throw new UnsupportedOperatorException(
         ConditionOperator.PIG_BUTCHERING_INDICATOR,
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
+  }
+
+  // ========== OPERADORES SINCRONIZADOS V49 - IMPLEMENTAÇÕES ==========
+
+  // Operadores lógicos
+  private boolean evaluateLogicalAnd(RuleCondition condition, EvaluationContext context) {
+    Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+    boolean a = Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
+    boolean b = Boolean.parseBoolean(condition.getValueSingle());
+    return a && b;
+  }
+
+  private boolean evaluateLogicalOr(RuleCondition condition, EvaluationContext context) {
+    Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+    boolean a = Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
+    boolean b = Boolean.parseBoolean(condition.getValueSingle());
+    return a || b;
+  }
+
+  private boolean evaluateLogicalNot(RuleCondition condition, EvaluationContext context) {
+    Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+    return !Boolean.TRUE.equals(fieldValue) && !"true".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateLogicalXor(RuleCondition condition, EvaluationContext context) {
+    Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+    boolean a = Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
+    boolean b = Boolean.parseBoolean(condition.getValueSingle());
+    return a ^ b;
+  }
+
+  private boolean evaluateLogicalNand(RuleCondition condition, EvaluationContext context) {
+    return !evaluateLogicalAnd(condition, context);
+  }
+
+  private boolean evaluateLogicalNor(RuleCondition condition, EvaluationContext context) {
+    return !evaluateLogicalOr(condition, context);
+  }
+
+  // Operadores de anomalia
+  private boolean evaluateAmountAnomalyOp(RuleCondition condition, EvaluationContext context) {
+    try {
+      Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      double amount = Double.parseDouble(String.valueOf(fieldValue));
+      Map<String, Object> payload = context.getPayload();
+      double avgAmount = payload != null && payload.containsKey("avgAmount")
+          ? Double.parseDouble(payload.get("avgAmount").toString()) : 0;
+      double stdDev = payload != null && payload.containsKey("amountStdDev")
+          ? Double.parseDouble(payload.get("amountStdDev").toString()) : 1;
+      double threshold = condition.getValueSingle() != null
+          ? Double.parseDouble(condition.getValueSingle()) : 3.0;
+      return Math.abs(amount - avgAmount) > threshold * stdDev;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean evaluateTimeAnomalyOp(RuleCondition condition, EvaluationContext context) {
+    try {
+      Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      int hour = Integer.parseInt(String.valueOf(fieldValue));
+      return hour >= 2 && hour <= 5; // Horário suspeito: 2h-5h
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean evaluateVelocityAnomalyOp(RuleCondition condition, EvaluationContext context) {
+    try {
+      Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      double velocity = Double.parseDouble(String.valueOf(fieldValue));
+      Map<String, Object> payload = context.getPayload();
+      double avgVelocity = payload != null && payload.containsKey("avgVelocity")
+          ? Double.parseDouble(payload.get("avgVelocity").toString()) : 0;
+      double stdDev = payload != null && payload.containsKey("velocityStdDev")
+          ? Double.parseDouble(payload.get("velocityStdDev").toString()) : 1;
+      double threshold = condition.getValueSingle() != null
+          ? Double.parseDouble(condition.getValueSingle()) : 2.0;
+      return Math.abs(velocity - avgVelocity) > threshold * stdDev;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean evaluateMccAnomalyOp(RuleCondition condition, EvaluationContext context) {
+    Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "ANOMALY".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateMerchantAnomalyOp(RuleCondition condition, EvaluationContext context) {
+    Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "ANOMALY".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  // Operadores de dispositivo/sessão
+  private boolean evaluateIsNewDeviceOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "NEW".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateIsNewLocationOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "NEW".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateDeviceFingerprintMismatchOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "MISMATCH".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateSessionDurationLtOp(Object fieldValue, RuleCondition condition) {
+    try {
+      double duration = Double.parseDouble(String.valueOf(fieldValue));
+      double threshold = Double.parseDouble(condition.getValueSingle());
+      return duration < threshold;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean evaluateClickVelocityGtOp(Object fieldValue, RuleCondition condition) {
+    try {
+      double velocity = Double.parseDouble(String.valueOf(fieldValue));
+      double threshold = Double.parseDouble(condition.getValueSingle());
+      return velocity > threshold;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean evaluateMouseMovementAnomalyOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "ANOMALY".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateTypingSpeedAnomalyOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "ANOMALY".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateUserAgentSuspiciousOp(Object fieldValue) {
+    if (fieldValue == null) return false;
+    String userAgent = String.valueOf(fieldValue).toLowerCase();
+    return userAgent.contains("bot") || userAgent.contains("crawler") || userAgent.contains("spider")
+        || userAgent.contains("headless") || userAgent.contains("phantom");
+  }
+
+  // Operadores de fraude de cartão
+  private boolean evaluateExpiredCardOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "EXPIRED".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateCardCaptureFraudOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluatePinCvvLimitExceededOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "EXCEEDED".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateOfflinePinFailedOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "FAILED".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateEmvSecurityCheckOp(Object fieldValue) {
+    return Boolean.FALSE.equals(fieldValue) || "false".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "FAILED".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateEcommerceNoAvsOp(Object fieldValue) {
+    return fieldValue == null || Boolean.TRUE.equals(fieldValue)
+        || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "NO_AVS".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluatePosSecurityMissingOp(Object fieldValue) {
+    return fieldValue == null || Boolean.TRUE.equals(fieldValue)
+        || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "MISSING".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateTerminalVerificationFailedOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "FAILED".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateSuspiciousTerminalOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "SUSPICIOUS".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateUnusualCardMediaOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "UNUSUAL".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  // Operadores de transferência
+  private boolean evaluateTransferAmountGtOp(Object fieldValue, RuleCondition condition) {
+    try {
+      double amount = Double.parseDouble(String.valueOf(fieldValue));
+      double threshold = Double.parseDouble(condition.getValueSingle());
+      return amount > threshold;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean evaluateTransferVelocityGtOp(Object fieldValue, RuleCondition condition) {
+    try {
+      double velocity = Double.parseDouble(String.valueOf(fieldValue));
+      double threshold = Double.parseDouble(condition.getValueSingle());
+      return velocity > threshold;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean evaluateRecipientInWatchlistOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "WATCHLIST".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateRecipientIsNewOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "NEW".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  // Operadores de validação
+  private boolean evaluateAddressMismatchOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "MISMATCH".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluatePhoneCountryMismatchOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "MISMATCH".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateEmailDomainAgeLtDaysOp(Object fieldValue, RuleCondition condition) {
+    try {
+      double domainAgeDays = Double.parseDouble(String.valueOf(fieldValue));
+      double threshold = Double.parseDouble(condition.getValueSingle());
+      return domainAgeDays < threshold;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean evaluateNameSimilarityGtOp(Object fieldValue, RuleCondition condition) {
+    try {
+      double similarity = Double.parseDouble(String.valueOf(fieldValue));
+      double threshold = Double.parseDouble(condition.getValueSingle());
+      return similarity > threshold;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean evaluateAccountAgeLtDaysOp(Object fieldValue, RuleCondition condition) {
+    try {
+      double accountAgeDays = Double.parseDouble(String.valueOf(fieldValue));
+      double threshold = Double.parseDouble(condition.getValueSingle());
+      return accountAgeDays < threshold;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  // Operadores de contexto/classificação
+  private boolean evaluateContextOp(Object fieldValue, RuleCondition condition, EvaluationContext context) {
+    if (condition.getValueSingle() == null || context.getPayload() == null) return false;
+    Object contextValue = context.getPayload().get(condition.getValueSingle());
+    return fieldValue != null && fieldValue.equals(contextValue);
+  }
+
+  private boolean evaluateFraudOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "FRAUD".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateSecurityOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateSuspiciousOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "SUSPICIOUS".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateSuspiciousTransactionTypeOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "SUSPICIOUS".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateVelocityOp(Object fieldValue, RuleCondition condition) {
+    try {
+      double velocity = Double.parseDouble(String.valueOf(fieldValue));
+      double threshold = Double.parseDouble(condition.getValueSingle());
+      return velocity > threshold;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean evaluateRoundAmountOp(Object fieldValue) {
+    try {
+      double amount = Double.parseDouble(String.valueOf(fieldValue));
+      return amount == Math.round(amount) && amount % 100 == 0;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private boolean evaluateImpossibleTravelOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "IMPOSSIBLE".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateNotInListOp(Object fieldValue, RuleCondition condition) {
+    if (fieldValue == null) return true;
+    if (condition.getValueArray() == null || condition.getValueArray().isEmpty()) return true;
+    String fieldStr = String.valueOf(fieldValue);
+    return !condition.getValueArray().contains(fieldStr);
+  }
+
+  private boolean evaluateCaptchaFailedOp(Object fieldValue) {
+    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+        || "FAILED".equalsIgnoreCase(String.valueOf(fieldValue));
+  }
+
+  private boolean evaluateCountDistinctCountriesLastNDaysOp(RuleCondition condition, EvaluationContext context) {
+    try {
+      Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+      int count = Integer.parseInt(String.valueOf(fieldValue));
+      int threshold = Integer.parseInt(condition.getValueSingle());
+      return count > threshold;
+    } catch (Exception e) {
+      return false;
+    }
   }
 }
