@@ -1,6 +1,6 @@
 # 🔴 GAPS IDENTIFICADOS - DOUBLE CHECK 100X RIGOROSO
 
-> **Data:** 2026-01-12  
+> **Data:** 2026-01-12
 > **Revisão:** Double Check de PROMPT_BACKUP_DEVIN.md e PROMPT_ANALISE_DEVIN.md
 
 ---
@@ -68,16 +68,9 @@
 | `docs/adr/0001-clean-architecture.md` | **MENCIONADO MAS NÃO LIDO** | 🟡 MÉDIO |
 | `docs/adr/0002-hikaricp-pool-optimization.md` | **MENCIONADO MAS NÃO LIDO** | 🟡 MÉDIO |
 
-### 7. ARQUIVOS AUDIT OMITIDOS
+### 7. ~~ARQUIVOS AUDIT OMITIDOS~~ (REMOVIDOS)
 
-| Arquivo | Status | Criticidade |
-|---------|--------|-------------|
-| `audit/filetype_counts_all.json` | **OMITIDO** | 🟢 BAIXO |
-| `audit/filetype_counts_all.txt` | **OMITIDO** | 🟢 BAIXO |
-| `audit/filetype_counts_git.json` | **OMITIDO** | 🟢 BAIXO |
-| `audit/filetype_counts_git.txt` | **OMITIDO** | 🟢 BAIXO |
-| `audit/inventory_all_files.txt` | **OMITIDO** | 🟢 BAIXO |
-| `audit/inventory_git_ls_files.txt` | **OMITIDO** | 🟢 BAIXO |
+> **Nota**: O diretório `audit/` foi removido em cleanup (2026-01-19) por conter apenas artefatos de auditoria one-time não utilizados pelo build/CI/código.
 
 ---
 
@@ -173,8 +166,8 @@
 
 ### PRIORIDADE 3 (BAIXO)
 
-13. Documentar arquivos `.serena/`
-14. Documentar arquivos `audit/`
+13. ~~Documentar arquivos `.serena/`~~ (removido em cleanup 2026-01-19)
+14. ~~Documentar arquivos `audit/`~~ (removido em cleanup 2026-01-19)
 15. Documentar `.replit`
 
 ---

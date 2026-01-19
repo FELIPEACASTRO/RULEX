@@ -92,23 +92,11 @@ RULEX/
     └── maven-wrapper.properties
 ```
 
-### .serena/ (2 arquivos)
-```
-.serena/
-├── .gitignore
-└── project.yml                     # Configuração Serena IDE
-```
+### ~~.serena/~~ (REMOVIDO)
+> Diretório removido em cleanup 2026-01-19 (configuração de IDE não utilizada).
 
-### audit/ (6 arquivos)
-```
-audit/
-├── filetype_counts_all.json
-├── filetype_counts_all.txt
-├── filetype_counts_git.json
-├── filetype_counts_git.txt
-├── inventory_all_files.txt
-└── inventory_git_ls_files.txt
-```
+### ~~audit/~~ (REMOVIDO)
+> Diretório removido em cleanup 2026-01-19 (artefatos de auditoria one-time).
 
 ### backend/ (284 arquivos Java)
 
