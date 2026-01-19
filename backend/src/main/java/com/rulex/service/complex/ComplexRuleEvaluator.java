@@ -14,6 +14,8 @@ import com.rulex.service.StatisticalAnalysisService;
 import com.rulex.service.StringSimilarityService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
+import com.rulex.service.complex.evaluator.OperatorEvaluator;
+import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
 import com.rulex.util.RegexValidator;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -47,6 +49,9 @@ public class ComplexRuleEvaluator {
   private final StatisticalAnalysisService statisticalAnalysisService;
   private final FuzzyLogicService fuzzyLogicService;
   private final StringSimilarityService stringSimilarityService;
+
+  // ARCH-001 FIX: Integração com OperatorEvaluatorRegistry para delegação modular
+  private final OperatorEvaluatorRegistry operatorEvaluatorRegistry;
 
   /** Resultado da avaliação de uma regra */
   @Data
@@ -931,13 +936,28 @@ public class ComplexRuleEvaluator {
       case CAPTCHA_FAILED -> evaluateCaptchaFailedOp(fieldValue);
       case COUNT_DISTINCT_COUNTRIES_LAST_N_DAYS -> evaluateCountDistinctCountriesLastNDaysOp(condition, context);
 
-      default -> {
-        log.error("Operador desconhecido ou não mapeado no switch: {}", operator);
-        throw new UnsupportedOperatorException(
-            operator,
-            "Operador não mapeado no evaluateOperator switch. Verifique se o operador está registrado.");
-      }
+      default -> delegateToRegistry(operator, condition, context);
     };
+  }
+
+  /**
+   * ARCH-001 FIX: Delega avaliação para OperatorEvaluatorRegistry.
+   * Isso permite adicionar novos operadores sem modificar o switch principal.
+   */
+  private boolean delegateToRegistry(ConditionOperator operator, RuleCondition condition, EvaluationContext context) {
+    try {
+      OperatorEvaluator evaluator = operatorEvaluatorRegistry.getEvaluator(operator);
+      log.debug("Delegando operador {} para {}", operator, evaluator.getClass().getSimpleName());
+      return evaluator.evaluate(condition, context);
+    } catch (UnsupportedOperatorException e) {
+      log.error("Operador não suportado: {} - nem no switch nem no registry", operator);
+      throw e;
+    } catch (Exception e) {
+      log.error("Erro ao delegar operador {} para registry: {}", operator, e.getMessage());
+      throw new UnsupportedOperatorException(
+          operator,
+          "Erro ao avaliar operador via registry: " + e.getMessage());
+    }
   }
 
   // ========== Métodos auxiliares de avaliação ==========

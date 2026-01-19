@@ -18,7 +18,9 @@ import com.rulex.service.StatisticalAnalysisService;
 import com.rulex.service.StringSimilarityService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
+import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +46,7 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
   private StatisticalAnalysisService statisticalAnalysisService;
   private FuzzyLogicService fuzzyLogicService;
   private StringSimilarityService stringSimilarityService;
+  private OperatorEvaluatorRegistry operatorEvaluatorRegistry;
   private ComplexRuleEvaluator evaluator;
 
   private TransactionRequest transactionRequest;
@@ -59,6 +62,8 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
     statisticalAnalysisService = Mockito.mock(StatisticalAnalysisService.class);
     fuzzyLogicService = Mockito.mock(FuzzyLogicService.class);
     stringSimilarityService = Mockito.mock(StringSimilarityService.class);
+    // ARCH-001 FIX: Adicionado mock do OperatorEvaluatorRegistry
+    operatorEvaluatorRegistry = new OperatorEvaluatorRegistry(Collections.emptyList());
     evaluator =
         new ComplexRuleEvaluator(
             geoService,
@@ -68,7 +73,8 @@ class ComplexRuleEvaluatorV4PhaseOneTest {
             neo4jGraphService,
             statisticalAnalysisService,
             fuzzyLogicService,
-            stringSimilarityService);
+            stringSimilarityService,
+            operatorEvaluatorRegistry);
 
     transactionRequest = new TransactionRequest();
     transactionRequest.setTransactionAmount(BigDecimal.valueOf(1000));

@@ -172,11 +172,17 @@ public class SecurityConfig {
   }
 
   /**
-   * Valida força da senha. Em produção, rejeita senhas fracas/default.
+   * Valida força da senha. Em produção/staging/homolog, rejeita senhas fracas/default.
    * Em dev/test, apenas emite warning.
+   * 
+   * SEC-003 FIX: Expandido para incluir staging e homolog na validação estrita.
    */
   private void validatePasswordStrength(String password, String userType, String profile) {
-    boolean isProduction = "prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile);
+    // SEC-003 FIX: Incluir staging, homolog, uat na validação estrita (não apenas prod)
+    boolean isStrictEnvironment = Set.of("prod", "production", "staging", "homolog", "hml", "uat")
+        .contains(profile.toLowerCase());
+    boolean isDevelopment = Set.of("dev", "development", "test", "local")
+        .contains(profile.toLowerCase());
 
     // Verificar senhas conhecidas como fracas
     if (WEAK_PASSWORDS.contains(password.toLowerCase())) {
@@ -185,26 +191,31 @@ public class SecurityConfig {
           "Senhas como '%s' são conhecidas e facilmente comprometidas.",
           userType, password);
 
-      if (isProduction) {
+      if (isStrictEnvironment) {
         throw new IllegalStateException(
             message + " Configure uma senha forte via variável de ambiente.");
-      } else {
+      } else if (isDevelopment) {
         log.warn(message + " Isso é aceitável apenas em ambiente de desenvolvimento.");
+      } else {
+        // Profile desconhecido - tratar como produção por segurança
+        log.error("Profile '{}' desconhecido. Tratando como ambiente de produção.", profile);
+        throw new IllegalStateException(
+            message + " Configure uma senha forte via variável de ambiente.");
       }
     }
 
-    // Verificar comprimento mínimo em produção
-    if (isProduction && password.length() < 12) {
+    // Verificar comprimento mínimo em ambientes estritos
+    if (isStrictEnvironment && password.length() < 12) {
       throw new IllegalStateException(String.format(
-          "Senha do usuário '%s' deve ter no mínimo 12 caracteres em produção (atual: %d)",
-          userType, password.length()));
+          "Senha do usuário '%s' deve ter no mínimo 12 caracteres em %s (atual: %d)",
+          userType, profile, password.length()));
     }
 
-    // Verificar complexidade em produção
-    if (isProduction && !isStrongPassword(password)) {
+    // Verificar complexidade em ambientes estritos
+    if (isStrictEnvironment && !isStrongPassword(password)) {
       throw new IllegalStateException(String.format(
-          "Senha do usuário '%s' deve conter letras maiúsculas, minúsculas, números e caracteres especiais",
-          userType));
+          "Senha do usuário '%s' deve conter letras maiúsculas, minúsculas, números e caracteres especiais em %s",
+          userType, profile));
     }
   }
 
