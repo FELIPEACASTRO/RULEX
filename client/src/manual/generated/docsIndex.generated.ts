@@ -74,6 +74,13 @@ export const DOCS_INDEX: DocEntry[] = [
     "isEssential": false
   },
   {
+    "id": "CONTRIBUTING",
+    "filename": "CONTRIBUTING.md",
+    "title": "Guia de Contribuição - RULEX",
+    "category": "Outros",
+    "isEssential": false
+  },
+  {
     "id": "DB_SCHEMA_RULES",
     "filename": "DB_SCHEMA_RULES.md",
     "title": "RULEX - Schema do Banco de Dados (Regras)",
@@ -81,10 +88,10 @@ export const DOCS_INDEX: DocEntry[] = [
     "isEssential": true
   },
   {
-    "id": "DEVIN_ANALYSIS_RULEX_EVOLUTION",
-    "filename": "DEVIN_ANALYSIS_RULEX_EVOLUTION.md",
-    "title": "📊 DEVIN ANALYSIS: RULEX EVOLUTION TO WORLD #1",
-    "category": "Regras",
+    "id": "DIAGRAMAS",
+    "filename": "DIAGRAMAS.md",
+    "title": "DIAGRAMAS — Documentação Oficial do RULEX",
+    "category": "Outros",
     "isEssential": false
   },
   {
@@ -214,20 +221,6 @@ export const DOCS_INDEX: DocEntry[] = [
     "isEssential": true
   },
   {
-    "id": "perf-baseline",
-    "filename": "perf-baseline.md",
-    "title": "RULEX Performance Baseline",
-    "category": "Outros",
-    "isEssential": false
-  },
-  {
-    "id": "perf",
-    "filename": "perf.md",
-    "title": "Performance Report — RULEX Engine",
-    "category": "Outros",
-    "isEssential": false
-  },
-  {
     "id": "PESQUISA_REGRAS_DURAS_EFICIENTES",
     "filename": "PESQUISA_REGRAS_DURAS_EFICIENTES.md",
     "title": "Pesquisa: Como Montar Regras Duras Eficientes para Detecção de Fraude",
@@ -324,10 +317,31 @@ export const DOCS_INDEX: DocEntry[] = [
     "title": "RULEX - Capacidades do Motor de Regras",
     "category": "Regras",
     "isEssential": true
+  },
+  {
+    "id": "RUNBOOK",
+    "filename": "RUNBOOK.md",
+    "title": "Runbook de Operações - RULEX",
+    "category": "Outros",
+    "isEssential": false
+  },
+  {
+    "id": "perf-baseline",
+    "filename": "perf-baseline.md",
+    "title": "RULEX Performance Baseline",
+    "category": "Outros",
+    "isEssential": false
+  },
+  {
+    "id": "perf",
+    "filename": "perf.md",
+    "title": "Performance Report — RULEX Engine",
+    "category": "Outros",
+    "isEssential": false
   }
 ];
 
-export const DOCS_COUNT = 45;
+export const DOCS_COUNT = 47;
 
 export const ESSENTIAL_DOCS = DOCS_INDEX.filter(d => d.isEssential);
 

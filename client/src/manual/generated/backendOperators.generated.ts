@@ -2243,9 +2243,254 @@ export const BACKEND_OPERATORS: BackendOperator[] = [
     "name": "PIG_BUTCHERING_INDICATOR",
     "comment": "Indicador de pig butchering scam",
     "category": "Emerging Fraud Types"
+  },
+  {
+    "name": "AND",
+    "comment": "Operador lógico AND",
+    "category": "Operadores lógicos"
+  },
+  {
+    "name": "OR",
+    "comment": "Operador lógico OR",
+    "category": "Operadores lógicos"
+  },
+  {
+    "name": "NOT",
+    "comment": "Operador lógico NOT",
+    "category": "Operadores lógicos"
+  },
+  {
+    "name": "XOR",
+    "comment": "Operador lógico XOR",
+    "category": "Operadores lógicos"
+  },
+  {
+    "name": "NAND",
+    "comment": "Operador lógico NAND",
+    "category": "Operadores lógicos"
+  },
+  {
+    "name": "NOR",
+    "comment": "Operador lógico NOR",
+    "category": "Operadores lógicos"
+  },
+  {
+    "name": "CONTEXT",
+    "comment": "Operador de contexto",
+    "category": "Operadores de contexto e lista"
+  },
+  {
+    "name": "NOT_IN_LIST",
+    "comment": "Não está na lista",
+    "category": "Operadores de contexto e lista"
+  },
+  {
+    "name": "ACCOUNT_AGE_LT_DAYS",
+    "comment": "Idade da conta menor que N dias",
+    "category": "Operadores de conta e idade"
+  },
+  {
+    "name": "EMAIL_DOMAIN_AGE_LT_DAYS",
+    "comment": "Idade do domínio do email menor que N dias",
+    "category": "Operadores de conta e idade"
+  },
+  {
+    "name": "FRAUD",
+    "comment": "Indicador de fraude",
+    "category": "Operadores de fraude e segurança"
+  },
+  {
+    "name": "SUSPICIOUS",
+    "comment": "Indicador de suspeita",
+    "category": "Operadores de fraude e segurança"
+  },
+  {
+    "name": "SECURITY",
+    "comment": "Verificação de segurança",
+    "category": "Operadores de fraude e segurança"
+  },
+  {
+    "name": "VELOCITY",
+    "comment": "Verificação de velocidade",
+    "category": "Operadores de fraude e segurança"
+  },
+  {
+    "name": "VELOCITY_ANOMALY",
+    "comment": "Anomalia de velocidade",
+    "category": "Operadores de fraude e segurança"
+  },
+  {
+    "name": "TRANSFER_AMOUNT_GT",
+    "comment": "Valor de transferência maior que",
+    "category": "Operadores de transação"
+  },
+  {
+    "name": "TRANSFER_VELOCITY_GT",
+    "comment": "Velocidade de transferência maior que",
+    "category": "Operadores de transação"
+  },
+  {
+    "name": "ROUND_AMOUNT",
+    "comment": "Valor redondo",
+    "category": "Operadores de transação"
+  },
+  {
+    "name": "TIME_ANOMALY",
+    "comment": "Anomalia de tempo",
+    "category": "Operadores de transação"
+  },
+  {
+    "name": "AMOUNT_ANOMALY",
+    "comment": "Anomalia de valor",
+    "category": "Operadores de transação"
+  },
+  {
+    "name": "IS_NEW_DEVICE",
+    "comment": "É novo dispositivo",
+    "category": "Operadores de device e sessão"
+  },
+  {
+    "name": "IS_NEW_LOCATION",
+    "comment": "É nova localização",
+    "category": "Operadores de device e sessão"
+  },
+  {
+    "name": "DEVICE_FINGERPRINT_MISMATCH",
+    "comment": "Incompatibilidade de fingerprint",
+    "category": "Operadores de device e sessão"
+  },
+  {
+    "name": "SESSION_DURATION_LT",
+    "comment": "Duração da sessão menor que",
+    "category": "Operadores de device e sessão"
+  },
+  {
+    "name": "CLICK_VELOCITY_GT",
+    "comment": "Velocidade de clique maior que",
+    "category": "Operadores de comportamento"
+  },
+  {
+    "name": "MOUSE_MOVEMENT_ANOMALY",
+    "comment": "Anomalia de movimento do mouse",
+    "category": "Operadores de comportamento"
+  },
+  {
+    "name": "TYPING_SPEED_ANOMALY",
+    "comment": "Anomalia de velocidade de digitação",
+    "category": "Operadores de comportamento"
+  },
+  {
+    "name": "USER_AGENT_SUSPICIOUS",
+    "comment": "User agent suspeito",
+    "category": "Operadores de comportamento"
+  },
+  {
+    "name": "CAPTCHA_FAILED",
+    "comment": "Falha no captcha",
+    "category": "Operadores de comportamento"
+  },
+  {
+    "name": "EXPIRED_CARD",
+    "comment": "Cartão expirado",
+    "category": "Operadores de cartão e terminal"
+  },
+  {
+    "name": "CARD_CAPTURE_FRAUD",
+    "comment": "Fraude de captura de cartão",
+    "category": "Operadores de cartão e terminal"
+  },
+  {
+    "name": "SUSPICIOUS_TERMINAL",
+    "comment": "Terminal suspeito",
+    "category": "Operadores de cartão e terminal"
+  },
+  {
+    "name": "TERMINAL_VERIFICATION_FAILED",
+    "comment": "Falha na verificação do terminal",
+    "category": "Operadores de cartão e terminal"
+  },
+  {
+    "name": "POS_SECURITY_MISSING",
+    "comment": "Segurança POS ausente",
+    "category": "Operadores de cartão e terminal"
+  },
+  {
+    "name": "UNUSUAL_CARD_MEDIA",
+    "comment": "Mídia de cartão incomum",
+    "category": "Operadores de cartão e terminal"
+  },
+  {
+    "name": "OFFLINE_PIN_FAILED",
+    "comment": "Falha no PIN offline",
+    "category": "Operadores de cartão e terminal"
+  },
+  {
+    "name": "PIN_CVV_LIMIT_EXCEEDED",
+    "comment": "Limite de PIN/CVV excedido",
+    "category": "Operadores de cartão e terminal"
+  },
+  {
+    "name": "EMV_SECURITY_CHECK",
+    "comment": "Verificação de segurança EMV",
+    "category": "Operadores de cartão e terminal"
+  },
+  {
+    "name": "ECOMMERCE_NO_AVS",
+    "comment": "E-commerce sem AVS",
+    "category": "Operadores de cartão e terminal"
+  },
+  {
+    "name": "IMPOSSIBLE_TRAVEL",
+    "comment": "Viagem impossível",
+    "category": "Operadores de viagem e localização"
+  },
+  {
+    "name": "PHONE_COUNTRY_MISMATCH",
+    "comment": "Incompatibilidade de país do telefone",
+    "category": "Operadores de viagem e localização"
+  },
+  {
+    "name": "ADDRESS_MISMATCH",
+    "comment": "Incompatibilidade de endereço",
+    "category": "Operadores de viagem e localização"
+  },
+  {
+    "name": "MERCHANT_ANOMALY",
+    "comment": "Anomalia de merchant",
+    "category": "Operadores de merchant e MCC"
+  },
+  {
+    "name": "MCC_ANOMALY",
+    "comment": "Anomalia de MCC",
+    "category": "Operadores de merchant e MCC"
+  },
+  {
+    "name": "SUSPICIOUS_TRANSACTION_TYPE",
+    "comment": "Tipo de transação suspeito",
+    "category": "Operadores de merchant e MCC"
+  },
+  {
+    "name": "RECIPIENT_IN_WATCHLIST",
+    "comment": "Destinatário na watchlist",
+    "category": "Operadores de beneficiário e destinatário"
+  },
+  {
+    "name": "RECIPIENT_IS_NEW",
+    "comment": "Destinatário é novo",
+    "category": "Operadores de beneficiário e destinatário"
+  },
+  {
+    "name": "NAME_SIMILARITY_GT",
+    "comment": "Similaridade de nome maior que",
+    "category": "Operadores de beneficiário e destinatário"
+  },
+  {
+    "name": "COUNT_DISTINCT_COUNTRIES_LAST_N_DAYS",
+    "comment": "Países distintos nos últimos N dias",
+    "category": "Operadores de contagem"
   }
 ];
 
-export const BACKEND_OPERATOR_COUNT = 447;
+export const BACKEND_OPERATOR_COUNT = 496;
 
 export const BACKEND_OPERATOR_CATEGORIES = [...new Set(BACKEND_OPERATORS.map(o => o.category))];
