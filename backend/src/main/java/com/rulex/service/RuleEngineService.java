@@ -204,8 +204,8 @@ public class RuleEngineService {
       if (redisVelocityEnabled) {
         try {
           redisVelocityService.recordTransaction(request);
-        } catch (Exception ignored) {
-          // best-effort; never break fraud decisions
+        } catch (Exception e) { // SEC-006 FIX
+          log.warn("Erro best-effort (não bloqueia decisão): {}", e.getMessage());
         }
       }
 
@@ -338,8 +338,8 @@ public class RuleEngineService {
       if (redisVelocityEnabled) {
         try {
           redisVelocityService.recordTransaction(request);
-        } catch (Exception ignored) {
-          // best-effort; never break fraud decisions
+        } catch (Exception e) { // SEC-006 FIX
+          log.warn("Erro best-effort (não bloqueia decisão): {}", e.getMessage());
         }
       }
 
@@ -592,7 +592,7 @@ public class RuleEngineService {
         long elapsed = System.nanoTime() - startNanos;
         try {
           ruleOrderingService.recordExecution(rule.getRuleName(), elapsed, ruleMatch.triggered);
-        } catch (Exception ignored) {
+        } catch (Exception e) { // SEC-006 FIX
           // ordering is best-effort; never break fraud decisions
         }
       }
@@ -757,7 +757,7 @@ public class RuleEngineService {
             return TransactionDecision.TransactionClassification.FRAUD;
           }
         }
-      } catch (Exception ignored) {
+      } catch (Exception e) { // SEC-006 FIX
         // best-effort
       }
     }
@@ -821,7 +821,7 @@ public class RuleEngineService {
             max = maxSeverity(max, TransactionDecision.TransactionClassification.SUSPICIOUS);
           }
         }
-      } catch (Exception ignored) {
+      } catch (Exception e) { // SEC-006 FIX
         // best-effort
       }
     }
@@ -1679,7 +1679,7 @@ public class RuleEngineService {
     try {
       new BigDecimal(t);
       return null;
-    } catch (Exception ignored) {
+    } catch (Exception e) { // SEC-006 FIX
       return t;
     }
   }
@@ -1999,7 +1999,7 @@ public class RuleEngineService {
     if (t.isEmpty()) return null;
     try {
       return new BigDecimal(t);
-    } catch (Exception ignored) {
+    } catch (Exception e) { // SEC-006 FIX
       // not a literal
     }
     Object v = readFieldValue(request, TransactionRequest.class, t);

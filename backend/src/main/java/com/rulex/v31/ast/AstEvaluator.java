@@ -127,7 +127,7 @@ public class AstEvaluator {
       if (raw.isTextual()) {
         try {
           return Long.parseLong(raw.asText());
-        } catch (Exception ignored) {
+        } catch (Exception e) { // SEC-006 FIX
           return raw.asText();
         }
       }
@@ -139,7 +139,7 @@ public class AstEvaluator {
       if (raw.isTextual()) {
         try {
           return new BigDecimal(raw.asText());
-        } catch (Exception ignored) {
+        } catch (Exception e) { // SEC-006 FIX
           return raw.asText();
         }
       }
