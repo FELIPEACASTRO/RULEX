@@ -119,8 +119,10 @@ if command -v docker &> /dev/null && docker info > /dev/null 2>&1; then
     
     if curl -fsS "$HEALTH_URL" > /dev/null 2>&1; then
         export PLAYWRIGHT_BASE_URL=http://localhost:5173
-        export E2E_USERNAME=admin
-        export E2E_PASSWORD=rulex
+        # GAP-B FIX: Derivar credenciais E2E do .env para consistência
+        export E2E_USERNAME="${RULEX_ADMIN_USERNAME:-admin}"
+        export E2E_PASSWORD="${RULEX_ADMIN_PASSWORD:-rulex}"
+        echo "E2E usando credenciais: $E2E_USERNAME / [MASKED]"
         pnpm exec playwright test > /tmp/e2e.log 2>&1
         E2E_STATUS=$?
         report "E2E Tests (Playwright)" $E2E_STATUS
