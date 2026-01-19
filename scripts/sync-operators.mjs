@@ -78,7 +78,7 @@ missingOperators.forEach(op => {
 });
 
 // Gerar novo arquivo operators.ts
-const newContent = `// Auto-generated from RuleCondition.java - ${allOperators.length} operators
+const newContent = `// Auto-generated from ConditionOperator.java - ${allOperators.length} operators
 // DO NOT EDIT MANUALLY - Run scripts/sync-operators.mjs to update
 
 export interface OperatorDefinition {

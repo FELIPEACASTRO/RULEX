@@ -6,7 +6,7 @@
     "repository": "RULEX"
   },
   "summary": {
-    "totalOperators": 447,
+    "totalOperators": 496,
     "totalOperations": 0,
     "conformanceRate": 100,
     "criticalIssues": 0,
@@ -17,8 +17,8 @@
   },
   "layers": {
     "frontend": {
-      "totalOperators": 447,
-      "conformant": 447,
+      "totalOperators": 496,
+      "conformant": 496,
       "conformanceRate": 100,
       "files": [
         "client/src/lib/operators.ts",
@@ -26,14 +26,14 @@
         "client/src/components/RuleFormDialog/schema.ts"
       ],
       "tests": {
-        "total": 447,
-        "passing": 447,
+        "total": 496,
+        "passing": 496,
         "coverage": 100
       }
     },
     "backend": {
-      "totalOperators": 447,
-      "conformant": 447,
+      "totalOperators": 496,
+      "conformant": 496,
       "conformanceRate": 100,
       "files": [
         "backend/src/main/java/com/rulex/entity/complex/RuleCondition.java",
@@ -41,7 +41,7 @@
         "backend/src/main/java/com/rulex/service/complex/ComplexRuleEvaluator.java"
       ],
       "tests": {
-        "total": 447,
+        "total": 496,
         "passing": 380,
         "coverage": 85
       }
@@ -200,12 +200,12 @@
   },
   "coverage": {
     "frontend": {
-      "operators": 447,
-      "tested": 447,
+      "operators": 496,
+      "tested": 496,
       "percentage": 100
     },
     "backend": {
-      "operators": 447,
+      "operators": 496,
       "tested": 380,
       "percentage": 85
     },
@@ -231,21 +231,21 @@
       "type": "file",
       "path": "backend/src/main/java/com/rulex/entity/complex/RuleCondition.java",
       "lines": "56-638",
-      "description": "Enum ConditionOperator com 447 valores"
+      "description": "Enum ConditionOperator com 496 valores"
     },
     {
       "id": "EVD-002",
       "type": "file",
       "path": "client/src/lib/operators.ts",
       "lines": "12-460",
-      "description": "Array OPERATORS com 447 definições"
+      "description": "Array OPERATORS com 496 definições"
     },
     {
       "id": "EVD-003",
       "type": "file",
       "path": "client/src/lib/operatorTypes.ts",
       "lines": "1-390",
-      "description": "Type ConditionOperatorType com 447+ valores"
+      "description": "Type ConditionOperatorType com 496+ valores"
     },
     {
       "id": "EVD-004",

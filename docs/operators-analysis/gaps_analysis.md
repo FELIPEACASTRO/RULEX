@@ -15,7 +15,7 @@
 | MÉDIO | 3 | 3 | 0 |
 | BAIXO | 5 | 5 | 0 |
 
-**Conformidade Geral:** 100% (447/447 operadores sincronizados entre FE e BE)
+**Conformidade Geral:** 100% (496/496 operadores sincronizados entre FE e BE)
 **Status:** ✅ TODOS OS GAPS RESOLVIDOS
 
 ---
@@ -27,7 +27,7 @@
 - **Solução:** Criado `OperatorNullEdgeCaseTest.java`
 - **Arquivo:** `backend/src/test/java/com/rulex/service/complex/OperatorNullEdgeCaseTest.java`
 - **Testes adicionados:**
-  - Testes parametrizados para todos os 447 operadores
+  - Testes parametrizados para todos os 496 operadores
   - Testes de comportamento NULL
   - Testes de edge cases (lista vazia, valores invertidos, regex inválida)
   - Testes de contagem por categoria (Neo4j, FATF, PLT)

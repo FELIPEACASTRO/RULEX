@@ -2,7 +2,7 @@
 
 **Gerado em:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 **Versão:** 2.0
-**Total de Operadores:** 447
+**Total de Operadores:** 496
 
 ## Sumário por Categoria
 
@@ -54,7 +54,7 @@
 
 **Evidências:**
 - Frontend: `client/src/lib/operators.ts:12-17`
-- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:56-61`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/ConditionOperator.java:56-61`
 
 ---
 
@@ -67,7 +67,7 @@
 
 **Evidências:**
 - Frontend: `client/src/lib/operators.ts:18-19`
-- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:62-63`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/ConditionOperator.java:62-63`
 
 ---
 
@@ -84,7 +84,7 @@
 
 **Evidências:**
 - Frontend: `client/src/lib/operators.ts:20-25`
-- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:64-69`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/ConditionOperator.java:64-69`
 
 ---
 
@@ -99,7 +99,7 @@
 
 **Evidências:**
 - Frontend: `client/src/lib/operators.ts:26-29`
-- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:70-73`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/ConditionOperator.java:70-73`
 
 ---
 
@@ -112,7 +112,7 @@
 
 **Evidências:**
 - Frontend: `client/src/lib/operators.ts:30-31`
-- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:74-75`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/ConditionOperator.java:74-75`
 
 ---
 
@@ -129,7 +129,7 @@
 
 **Evidências:**
 - Frontend: `client/src/lib/operators.ts:32-37`
-- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:76-81`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/ConditionOperator.java:76-81`
 
 ---
 
@@ -146,7 +146,7 @@
 
 **Evidências:**
 - Frontend: `client/src/lib/operators.ts:38-43`
-- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:82-87`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/ConditionOperator.java:82-87`
 
 ---
 
@@ -175,7 +175,7 @@
 
 **Evidências:**
 - Frontend: `client/src/lib/operators.ts:145-162`
-- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:520-537`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/ConditionOperator.java:520-537`
 - Service: `backend/src/main/java/com/rulex/service/Neo4jGraphService.java`
 
 ---
@@ -195,12 +195,12 @@
 
 **Evidências:**
 - Frontend: `client/src/lib/operators.ts:54-61`
-- Backend: `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java:98-105`
+- Backend: `backend/src/main/java/com/rulex/entity/complex/ConditionOperator.java:98-105`
 - Redis Service: `backend/src/main/java/com/rulex/service/RedisVelocityService.java`
 
 ---
 
-## Lista Completa de Operadores (447)
+## Lista Completa de Operadores (496)
 
 - `ACCOUNT_AGE_LT_MINUTES`
 - `ACCOUNT_LINK_DEPTH`
@@ -660,7 +660,7 @@
 - **Schema de Validação:** `client/src/components/RuleFormDialog/schema.ts`
 
 ### Backend (Java/Spring)
-- **Enum Principal:** `backend/src/main/java/com/rulex/entity/complex/RuleCondition.java`
+- **Enum Principal:** `backend/src/main/java/com/rulex/entity/complex/ConditionOperator.java`
 - **DTO:** `backend/src/main/java/com/rulex/dto/complex/ConditionDTO.java`
 - **Evaluator:** `backend/src/main/java/com/rulex/service/complex/ComplexRuleEvaluator.java`
 

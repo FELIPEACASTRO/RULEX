@@ -172,7 +172,7 @@
 | PLT | 28 | 18 | 64% |
 | Outros | ~328 | ~250 | ~76% |
 
-**Total:** 447 operadores, ~380 testados (~85%)
+**Total:** 496 operadores, ~380 testados (~85%)
 
 ### Operadores sem Teste (Amostra)
 

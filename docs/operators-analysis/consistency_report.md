@@ -13,9 +13,9 @@
 
 | Métrica | Valor |
 |---------|-------|
-| **Total de Operadores** | 447 |
+| **Total de Operadores** | 496 |
 | **Total de Operações** | 0 (operadores incluem funções) |
-| **Conformidade FE/BE** | 100% (447/447) |
+| **Conformidade FE/BE** | 100% (496/496) |
 | **Conformidade PostgreSQL** | 100% (471 valores no enum) |
 | **Conformidade Redis** | 100% (17 operadores velocity) |
 | **Conformidade Neo4j** | 100% (18 operadores graph) |
@@ -45,8 +45,8 @@
 
 | Aspecto | Status | Detalhes |
 |---------|--------|----------|
-| Operadores declarados | 447 | `client/src/lib/operators.ts` |
-| Tipos TypeScript | 447 | `client/src/lib/operatorTypes.ts` |
+| Operadores declarados | 496 | `client/src/lib/operators.ts` |
+| Tipos TypeScript | 496 | `client/src/lib/operatorTypes.ts` |
 | Schema de validação | ✅ | Zod schema completo |
 | Testes | 100% | `operators.test.ts`, `schema.test.ts` |
 
@@ -61,8 +61,8 @@
 
 | Aspecto | Status | Detalhes |
 |---------|--------|----------|
-| Enum ConditionOperator | 447 | `RuleCondition.java` |
-| DTO OperatorType | 447 | `ConditionDTO.java` |
+| Enum ConditionOperator | 496 | `ConditionOperator.java` |
+| DTO OperatorType | 496 | `ConditionDTO.java` |
 | Evaluator | ✅ | `ComplexRuleEvaluator.java` |
 | Validação | ✅ | `RuleValidationService.java` |
 | Testes | 85% | ~380 operadores testados |
@@ -145,7 +145,7 @@
 **Recomendação:** Usar o enum Java `ConditionOperator` como fonte única.
 
 ```
-RuleCondition.java (FONTE)
+ConditionOperator.java (FONTE)
     ↓ (script de geração)
 operators.ts (GERADO)
 operatorTypes.ts (GERADO)
@@ -173,7 +173,7 @@ jobs:
       - name: Extract Java operators
         run: |
           grep -E "^\s+[A-Z][A-Z0-9_]*[,;]" \
-            backend/src/main/java/com/rulex/entity/complex/RuleCondition.java \
+            backend/src/main/java/com/rulex/entity/complex/ConditionOperator.java \
             | sed 's/[,;].*//; s/^\s*//' | sort > /tmp/java_ops.txt
       
       - name: Extract TS operators
@@ -214,8 +214,8 @@ void testAllOperatorsHaveEvaluatorSupport() {
 
 | Arquivo | Linha | Descrição |
 |---------|-------|-----------|
-| `RuleCondition.java` | 56-638 | Enum ConditionOperator (447 valores) |
-| `operators.ts` | 12-460 | Array OPERATORS (447 valores) |
+| `ConditionOperator.java` | 56-638 | Enum ConditionOperator (496 valores) |
+| `operators.ts` | 12-460 | Array OPERATORS (496 valores) |
 | `operatorTypes.ts` | 1-390 | Type ConditionOperatorType |
 | `V34__add_v31_plus_operators.sql` | 1-471 | Migration PostgreSQL |
 | `ComplexRuleEvaluator.java` | 200-800 | Lógica de avaliação |
@@ -225,7 +225,7 @@ void testAllOperatorsHaveEvaluatorSupport() {
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `operators_inventory.md` | Inventário completo (447 operadores) |
+| `operators_inventory.md` | Inventário completo (496 operadores) |
 | `conformidade_matriz.csv` | Matriz de conformidade (448 linhas) |
 | `gaps_analysis.md` | Análise de 8 GAPs |
 | `validation_report.md` | Relatório de validação |
