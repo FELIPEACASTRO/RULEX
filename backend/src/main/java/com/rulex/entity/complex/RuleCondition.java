@@ -635,7 +635,81 @@ public class RuleCondition {
     ROMANCE_SCAM_INDICATOR, // Indicador de golpe romântico
     INVESTMENT_SCAM_PATTERN, // Padrão de golpe de investimento
     CRYPTO_PUMP_DUMP_DETECTION, // Detecção de pump and dump crypto
-    PIG_BUTCHERING_INDICATOR // Indicador de pig butchering scam
+    PIG_BUTCHERING_INDICATOR, // Indicador de pig butchering scam
+
+    // ========== OPERADORES V4.0 PHASE 6 (50 novos) - DB Sync ==========
+    // Operadores lógicos
+    AND, // Operador lógico AND
+    OR, // Operador lógico OR
+    NOT, // Operador lógico NOT
+    XOR, // Operador lógico XOR
+    NAND, // Operador lógico NAND
+    NOR, // Operador lógico NOR
+    
+    // Operadores de contexto e lista
+    CONTEXT, // Operador de contexto
+    NOT_IN_LIST, // Não está na lista
+    
+    // Operadores de conta e idade
+    ACCOUNT_AGE_LT_DAYS, // Idade da conta menor que N dias
+    EMAIL_DOMAIN_AGE_LT_DAYS, // Idade do domínio do email menor que N dias
+    
+    // Operadores de fraude e segurança
+    FRAUD, // Indicador de fraude
+    SUSPICIOUS, // Indicador de suspeita
+    SECURITY, // Verificação de segurança
+    VELOCITY, // Verificação de velocidade
+    VELOCITY_ANOMALY, // Anomalia de velocidade
+    
+    // Operadores de transação
+    TRANSFER_AMOUNT_GT, // Valor de transferência maior que
+    TRANSFER_VELOCITY_GT, // Velocidade de transferência maior que
+    ROUND_AMOUNT, // Valor redondo
+    TIME_ANOMALY, // Anomalia de tempo
+    AMOUNT_ANOMALY, // Anomalia de valor
+    
+    // Operadores de device e sessão
+    IS_NEW_DEVICE, // É novo dispositivo
+    IS_NEW_LOCATION, // É nova localização
+    DEVICE_FINGERPRINT_MISMATCH, // Incompatibilidade de fingerprint
+    SESSION_DURATION_LT, // Duração da sessão menor que
+    
+    // Operadores de comportamento
+    CLICK_VELOCITY_GT, // Velocidade de clique maior que
+    MOUSE_MOVEMENT_ANOMALY, // Anomalia de movimento do mouse
+    TYPING_SPEED_ANOMALY, // Anomalia de velocidade de digitação
+    USER_AGENT_SUSPICIOUS, // User agent suspeito
+    CAPTCHA_FAILED, // Falha no captcha
+    
+    // Operadores de cartão e terminal
+    EXPIRED_CARD, // Cartão expirado
+    CARD_CAPTURE_FRAUD, // Fraude de captura de cartão
+    SUSPICIOUS_TERMINAL, // Terminal suspeito
+    TERMINAL_VERIFICATION_FAILED, // Falha na verificação do terminal
+    POS_SECURITY_MISSING, // Segurança POS ausente
+    UNUSUAL_CARD_MEDIA, // Mídia de cartão incomum
+    OFFLINE_PIN_FAILED, // Falha no PIN offline
+    PIN_CVV_LIMIT_EXCEEDED, // Limite de PIN/CVV excedido
+    EMV_SECURITY_CHECK, // Verificação de segurança EMV
+    ECOMMERCE_NO_AVS, // E-commerce sem AVS
+    
+    // Operadores de viagem e localização
+    IMPOSSIBLE_TRAVEL, // Viagem impossível
+    PHONE_COUNTRY_MISMATCH, // Incompatibilidade de país do telefone
+    ADDRESS_MISMATCH, // Incompatibilidade de endereço
+    
+    // Operadores de merchant e MCC
+    MERCHANT_ANOMALY, // Anomalia de merchant
+    MCC_ANOMALY, // Anomalia de MCC
+    SUSPICIOUS_TRANSACTION_TYPE, // Tipo de transação suspeito
+    
+    // Operadores de beneficiário e destinatário
+    RECIPIENT_IN_WATCHLIST, // Destinatário na watchlist
+    RECIPIENT_IS_NEW, // Destinatário é novo
+    NAME_SIMILARITY_GT, // Similaridade de nome maior que
+    
+    // Operadores de contagem
+    COUNT_DISTINCT_COUNTRIES_LAST_N_DAYS // Países distintos nos últimos N dias
   }
 
   /** Tipos de valor suportados */

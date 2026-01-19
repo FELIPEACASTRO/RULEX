@@ -31,6 +31,9 @@ public class StubOperatorEvaluator implements OperatorEvaluator {
      * Identificados via: grep "stub - retornando false" ComplexRuleEvaluator.java
      */
     private static final Set<ConditionOperator> PLANNED_OPERATORS = Set.of(
+        // Emerging Fraud Types
+        ConditionOperator.PIG_BUTCHERING_INDICATOR,
+        
         // FATF (Financial Action Task Force) - 23 operadores
         ConditionOperator.FATF_BLACK_MARKET_EXCHANGE,
         ConditionOperator.FATF_CORRESPONDENT_LAYERING,

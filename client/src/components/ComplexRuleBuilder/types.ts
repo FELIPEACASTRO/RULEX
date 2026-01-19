@@ -22,41 +22,15 @@ export const LOGIC_OPERATORS: { value: LogicOperator; label: string; description
 // OPERADORES DE COMPARAÇÃO
 // ============================================
 
-export type ComparisonOperator =
-  // Básicos
-  | 'EQ' | 'NEQ' | 'GT' | 'GTE' | 'LT' | 'LTE'
-  // Listas
-  | 'IN' | 'NOT_IN'
-  // Range
-  | 'BETWEEN' | 'NOT_BETWEEN'
-  // Strings (REGEX alinhado com backend, MATCHES_REGEX mantido para compatibilidade)
-  | 'CONTAINS' | 'NOT_CONTAINS' | 'STARTS_WITH' | 'ENDS_WITH' | 'REGEX' | 'NOT_REGEX' | 'MATCHES_REGEX'
-  // Nulos (NOT_NULL alinhado com backend, IS_NOT_NULL mantido para compatibilidade)
-  | 'IS_NULL' | 'NOT_NULL' | 'IS_NOT_NULL'
-  // Booleanos
-  | 'IS_TRUE' | 'IS_FALSE'
-  // Comparação entre campos
-  | 'FIELD_EQ' | 'FIELD_NEQ' | 'FIELD_GT' | 'FIELD_GTE' | 'FIELD_LT' | 'FIELD_LTE'
-  // Data/Hora
-  | 'DATE_BEFORE' | 'DATE_AFTER' | 'DATE_BETWEEN'
-  | 'TIME_BEFORE' | 'TIME_AFTER' | 'TIME_BETWEEN'
-  // Arrays
-  | 'ARRAY_CONTAINS' | 'ARRAY_NOT_CONTAINS' | 'ARRAY_SIZE_EQ' | 'ARRAY_SIZE_GT' | 'ARRAY_SIZE_LT'
-  // Matemáticos
-  | 'MOD_EQ' | 'MOD_NEQ'
-  // Geolocalização
-  | 'GEO_DISTANCE_LT' | 'GEO_DISTANCE_GT' | 'GEO_IN_POLYGON'
-  // Velocity (agregações temporais)
-  | 'VELOCITY_COUNT_GT' | 'VELOCITY_COUNT_LT'
-  | 'VELOCITY_SUM_GT' | 'VELOCITY_SUM_LT'
-  | 'VELOCITY_AVG_GT' | 'VELOCITY_AVG_LT'
-  | 'VELOCITY_DISTINCT_GT' | 'VELOCITY_DISTINCT_LT';
+// ComparisonOperator - Todos os 489+ operadores suportados
+// Usando string para permitir extensibilidade com os 489 operadores do backend
+export type ComparisonOperator = string;
 
 export interface OperatorInfo {
   value: ComparisonOperator;
   label: string;
   description: string;
-  category: 'basic' | 'list' | 'range' | 'string' | 'null' | 'boolean' | 'field' | 'date' | 'array' | 'math' | 'geo' | 'velocity';
+  category: 'basic' | 'list' | 'range' | 'string' | 'null' | 'boolean' | 'field' | 'date' | 'array' | 'math' | 'geo' | 'velocity' | 'advanced' | 'graph' | 'regulatory' | 'platform';
   requiresValue: boolean;
   requiresSecondValue?: boolean;
   requiresFieldRef?: boolean;
@@ -539,6 +513,70 @@ export const COMPARISON_OPERATORS: OperatorInfo[] = [
   { value: 'WEEKEND_VS_WEEKDAY_PATTERN', label: 'Weekend vs weekday pattern', description: 'Operador WEEKEND_VS_WEEKDAY_PATTERN', category: 'advanced', requiresValue: true, applicableTypes: ['STRING', 'NUMBER', 'BOOLEAN'] },
   { value: 'WEEKLY_LIMIT_PROXIMITY', label: 'Weekly limit proximity', description: 'Operador WEEKLY_LIMIT_PROXIMITY', category: 'advanced', requiresValue: true, applicableTypes: ['STRING', 'NUMBER', 'BOOLEAN'] },
   { value: 'Z_SCORE_GT', label: 'Z score gt', description: 'Operador Z_SCORE_GT', category: 'advanced', requiresValue: true, applicableTypes: ['STRING', 'NUMBER', 'BOOLEAN'] },
+
+  // ============================================
+  // OPERADORES DB SYNC (60 novos)
+  // ============================================
+  { value: 'ACCOUNT_AGE_LT_DAYS', label: 'Account age less than days', description: 'Idade da conta menor que N dias', category: 'advanced', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'ADDRESS_MISMATCH', label: 'Address mismatch', description: 'Incompatibilidade de endereço', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'AMOUNT_ANOMALY', label: 'Amount anomaly', description: 'Anomalia de valor', category: 'advanced', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'CAPTCHA_FAILED', label: 'Captcha failed', description: 'Falha no captcha', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'CARD_CAPTURE_FRAUD', label: 'Card capture fraud', description: 'Fraude de captura de cartão', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'CLICK_VELOCITY_GT', label: 'Click velocity greater than', description: 'Velocidade de clique maior que', category: 'advanced', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'CONTEXT', label: 'Context', description: 'Operador de contexto', category: 'advanced', requiresValue: true, applicableTypes: ['STRING'] },
+  { value: 'DEVICE_FINGERPRINT_MISMATCH', label: 'Device fingerprint mismatch', description: 'Incompatibilidade de fingerprint', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'ECOMMERCE_NO_AVS', label: 'E-commerce no AVS', description: 'E-commerce sem AVS', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'EMAIL_DOMAIN_AGE_LT_DAYS', label: 'Email domain age less than days', description: 'Idade do domínio do email menor que N dias', category: 'advanced', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'EMV_SECURITY_CHECK', label: 'EMV security check', description: 'Verificação de segurança EMV', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'EXPIRED_CARD', label: 'Expired card', description: 'Cartão expirado', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'FRAUD', label: 'Fraud', description: 'Indicador de fraude', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'HAS_FAILED_3DS_LAST_N_MINUTES', label: 'Has failed 3DS last N minutes', description: 'Houve falha 3DS nos últimos N minutos', category: 'advanced', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'IMPOSSIBLE_TRAVEL', label: 'Impossible travel', description: 'Viagem impossível', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'IS_NEW_DEVICE', label: 'Is new device', description: 'É novo dispositivo', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'IS_NEW_LOCATION', label: 'Is new location', description: 'É nova localização', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'MOUSE_MOVEMENT_ANOMALY', label: 'Mouse movement anomaly', description: 'Anomalia de movimento do mouse', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'NEO4J_BETWEENNESS_CENTRALITY_MULE', label: 'Neo4j betweenness centrality mule', description: 'Centralidade de intermediação para mules', category: 'graph', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'NEO4J_CIRCULAR_TRANSACTION_DETECTION', label: 'Neo4j circular transaction detection', description: 'Detecção de transação circular', category: 'graph', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'NEO4J_DEGREE_CENTRALITY', label: 'Neo4j degree centrality', description: 'Centralidade de grau', category: 'graph', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'NEO4J_ENTITY_RESOLUTION_SHARED_PII', label: 'Neo4j entity resolution shared PII', description: 'Resolução de entidade por PII compartilhado', category: 'graph', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'NEO4J_FIRST_PARTY_FRAUD_CLUSTERING', label: 'Neo4j first party fraud clustering', description: 'Clustering de fraude de primeira parte', category: 'graph', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'NEO4J_FRAUD_RING_DETECTION', label: 'Neo4j fraud ring detection', description: 'Detecção de anel de fraude', category: 'graph', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION', label: 'Neo4j graph embedding fraud prediction', description: 'Predição de fraude via embedding de grafo', category: 'graph', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD', label: 'Neo4j label propagation fraud spread', description: 'Propagação de label de fraude', category: 'graph', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'NEO4J_LOUVAIN_COMMUNITY_DETECTION', label: 'Neo4j Louvain community detection', description: 'Detecção de comunidade Louvain', category: 'graph', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'NEO4J_MONEY_MULE_NETWORK_ANALYSIS', label: 'Neo4j money mule network analysis', description: 'Análise de rede de money mules', category: 'graph', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'NEO4J_NODE_SIMILARITY_SYNTHETIC_ID', label: 'Neo4j node similarity synthetic ID', description: 'Similaridade de nó para ID sintético', category: 'graph', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'NEO4J_PAGERANK_FRAUD_SCORE', label: 'Neo4j PageRank fraud score', description: 'Score de fraude via PageRank', category: 'graph', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'NEO4J_PAIRWISE_SIMILARITY_PII', label: 'Neo4j pairwise similarity PII', description: 'Similaridade de PII entre pares', category: 'graph', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'NEO4J_SECOND_LEVEL_FRAUDSTER_ID', label: 'Neo4j second level fraudster ID', description: 'Identificação de fraudador de segundo nível', category: 'graph', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'NEO4J_SHORTEST_PATH_AML_TRACKING', label: 'Neo4j shortest path AML tracking', description: 'Rastreamento AML via caminho mais curto', category: 'graph', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'NEO4J_TEMPORAL_MOTIF_PATTERN', label: 'Neo4j temporal motif pattern', description: 'Padrão de motif temporal', category: 'graph', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'NEO4J_TRIANGLE_COUNT_COLLUSION', label: 'Neo4j triangle count collusion', description: 'Contagem de triângulos para colusão', category: 'graph', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'NEO4J_WEAKLY_CONNECTED_COMPONENTS', label: 'Neo4j weakly connected components', description: 'Componentes fracamente conectados', category: 'graph', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'NOT_IN_LIST', label: 'Not in list', description: 'Não está na lista', category: 'advanced', requiresValue: true, applicableTypes: ['STRING', 'NUMBER'] },
+  { value: 'OFFLINE_PIN_FAILED', label: 'Offline PIN failed', description: 'Falha no PIN offline', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'PACS008_FIELD_VALIDATION', label: 'PACS008 field validation', description: 'Validação campos PACS008', category: 'regulatory', requiresValue: true, applicableTypes: ['STRING'] },
+  { value: 'PHONE_COUNTRY_MISMATCH', label: 'Phone country mismatch', description: 'Incompatibilidade de país do telefone', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'PIG_BUTCHERING_INDICATOR', label: 'Pig butchering indicator', description: 'Indicador de pig butchering scam', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'PIN_CVV_LIMIT_EXCEEDED', label: 'PIN/CVV limit exceeded', description: 'Limite de PIN/CVV excedido', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'PLT_DS2_RULE_ENGINE', label: 'PLT DS2 rule engine', description: 'SAS DS2 rule engine', category: 'platform', requiresValue: true, applicableTypes: ['STRING'] },
+  { value: 'POS_SECURITY_MISSING', label: 'POS security missing', description: 'Segurança POS ausente', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'PSD3_COP_NAME_MATCH', label: 'PSD3 CoP name match', description: 'Match de nome CoP PSD3', category: 'regulatory', requiresValue: true, applicableTypes: ['STRING'] },
+  { value: 'ROUND_AMOUNT', label: 'Round amount', description: 'Valor redondo', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'SCA_DYNAMIC_3DS_ROUTING', label: 'SCA dynamic 3DS routing', description: 'Dynamic 3DS exemption routing', category: 'regulatory', requiresValue: true, applicableTypes: ['STRING'] },
+  { value: 'SECURITY', label: 'Security', description: 'Verificação de segurança', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'SESSION_DURATION_LT', label: 'Session duration less than', description: 'Duração da sessão menor que', category: 'advanced', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'SUSPICIOUS', label: 'Suspicious', description: 'Indicador de suspeita', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'SUSPICIOUS_TERMINAL', label: 'Suspicious terminal', description: 'Terminal suspeito', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'TERMINAL_VERIFICATION_FAILED', label: 'Terminal verification failed', description: 'Falha na verificação do terminal', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'TIME_ANOMALY', label: 'Time anomaly', description: 'Anomalia de tempo', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'TRANSFER_AMOUNT_GT', label: 'Transfer amount greater than', description: 'Valor de transferência maior que', category: 'advanced', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'TRANSFER_VELOCITY_GT', label: 'Transfer velocity greater than', description: 'Velocidade de transferência maior que', category: 'advanced', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'TYPING_SPEED_ANOMALY', label: 'Typing speed anomaly', description: 'Anomalia de velocidade de digitação', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'UNUSUAL_CARD_MEDIA', label: 'Unusual card media', description: 'Mídia de cartão incomum', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'USER_AGENT_SUSPICIOUS', label: 'User agent suspicious', description: 'User agent suspeito', category: 'advanced', requiresValue: false, applicableTypes: ['BOOLEAN'] },
+  { value: 'VELOCITY', label: 'Velocity', description: 'Verificação de velocidade', category: 'advanced', requiresValue: true, applicableTypes: ['NUMBER'] },
+  { value: 'VELOCITY_ANOMALY', label: 'Velocity anomaly', description: 'Anomalia de velocidade', category: 'advanced', requiresValue: true, applicableTypes: ['NUMBER'] },
 ];
 
 // ============================================
