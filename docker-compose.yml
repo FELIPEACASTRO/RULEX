@@ -94,7 +94,7 @@ services:
     environment:
       VITE_API_PROXY_TARGET: http://backend:8080
       # SEC-001 FIX: Removido fallback de credenciais fracas
-      VITE_API_BASIC_AUTH: ${VITE_API_BASIC_AUTH:?VITE_API_BASIC_AUTH is required (format: user:password)}
+      VITE_API_BASIC_AUTH: ${VITE_API_BASIC_AUTH:?VITE_API_BASIC_AUTH is required}
     ports:
       - "5173:5173"
     depends_on:
