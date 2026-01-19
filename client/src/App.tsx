@@ -15,6 +15,7 @@ import Monitoring from "./pages/Monitoring";
 import Settings from "./pages/Settings";
 import Manual from "./pages/Manual";
 import DiagramsHubPage from "./pages/DiagramsHub";
+import RuleApprovals from "./pages/RuleApprovals";
 
 function Router() {
   // Login é uma rota pública (não deve passar pelo DashboardLayout/useAuth gate).
@@ -35,6 +36,7 @@ function Router() {
             <Route path={"/settings"} component={Settings} />
             <Route path={"/manual"} component={Manual} />
             <Route path={"/diagrams"} component={DiagramsHubPage} />
+            <Route path={"/approvals"} component={RuleApprovals} />
             <Route path={"/404"} component={NotFound} />
             <Route component={NotFound} />
           </Switch>

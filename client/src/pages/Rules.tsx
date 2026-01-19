@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +49,9 @@ import {
   listFieldDictionary,
   listRules,
   listComplexRules,
+  requestCreateApproval,
+  requestUpdateApproval,
+  requestDeleteApproval,
   simulateRule,
   backtestRule,
   toggleRuleStatus,
@@ -204,6 +208,7 @@ export default function Rules() {
   const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
   const [pendingClose, setPendingClose] = useState(false);
+  const [requiresApproval, setRequiresApproval] = useState(false);
 
   // P1-09: Estado para confirmação de delete
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
@@ -256,6 +261,7 @@ export default function Rules() {
     if (!open) {
       setIsDirty(false);
       setValidationErrors({});
+      setRequiresApproval(false);
     }
   }, [isDirty]);
 
@@ -267,6 +273,7 @@ export default function Rules() {
     setIsDirty(false);
     setValidationErrors({});
     setEditingRule(null);
+    setRequiresApproval(false);
   }, []);
 
   // P0-04: Cancelar descarte
@@ -292,18 +299,30 @@ export default function Rules() {
       };
 
       if (editingRule) {
-        // P0-05: Enviar version para optimistic locking
         payload.version = editingRule.version;
+        if (requiresApproval) {
+          return requestUpdateApproval(editingRule.id, payload as RuleConfiguration);
+        }
         return updateRule(editingRule.id, payload);
+      }
+      if (requiresApproval) {
+        return requestCreateApproval(payload as RuleConfiguration);
       }
       return createRule(payload);
     },
     onSuccess: () => {
-      toast.success(editingRule ? 'Regra atualizada com sucesso!' : 'Regra criada com sucesso!');
+      toast.success(
+        requiresApproval
+          ? 'Solicitação enviada para aprovação'
+          : editingRule
+            ? 'Regra atualizada com sucesso!'
+            : 'Regra criada com sucesso!'
+      );
       setShowDialog(false);
       setEditingRule(null);
       setIsDirty(false);
       setValidationErrors({});
+      setRequiresApproval(false);
       setFormData({
         ruleName: '',
         description: '',
@@ -347,6 +366,16 @@ export default function Rules() {
     onError: () => toast.error('Não foi possível deletar a regra'),
   });
 
+  const deleteApprovalMutation = useMutation({
+    mutationFn: (id: number) => requestDeleteApproval(id),
+    onSuccess: () => {
+      toast.success('Solicitação de exclusão enviada para aprovação');
+      invalidateRules();
+      setDeleteConfirmId(null);
+    },
+    onError: (error: Error) => toast.error(`Não foi possível solicitar aprovação: ${error.message}`),
+  });
+
   const toggleMutation = useMutation({
     mutationFn: (id: number) => {
       const current = rules.find((r: RuleConfiguration) => r.id === id);
@@ -377,6 +406,7 @@ export default function Rules() {
 
   const handleEdit = (rule: RuleConfiguration) => {
     setEditingRule(rule);
+    setRequiresApproval(false);
     setFormData({
       ruleName: rule.ruleName,
       description: rule.description ?? '',
@@ -575,6 +605,7 @@ export default function Rules() {
                 setEditingRule(null);
                 setIsDirty(false);
                 setValidationErrors({});
+                setRequiresApproval(false);
                 setFormData({
                   ruleName: '',
                   description: '',
@@ -601,6 +632,21 @@ export default function Rules() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Governança</p>
+                  <p className="text-xs text-muted-foreground">
+                    Envie esta regra para aprovação antes de publicar.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="requiresApproval"
+                    checked={requiresApproval}
+                    onCheckedChange={setRequiresApproval}
+                  />
+                </div>
+              </div>
               <div>
                 <label htmlFor="ruleName" className="block text-sm font-medium text-foreground mb-2">
                   Nome da Regra <span className="text-red-500">*</span>
@@ -1514,6 +1560,16 @@ export default function Rules() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={cancelDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteConfirmId !== null) {
+                  deleteApprovalMutation.mutate(deleteConfirmId);
+                }
+              }}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              Solicitar aprovação
+            </AlertDialogAction>
             <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
               Deletar
             </AlertDialogAction>

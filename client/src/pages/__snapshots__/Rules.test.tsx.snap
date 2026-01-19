@@ -34,6 +34,42 @@ exports[`Rules popup (Rules.tsx) > snapshot: popup visual regression (modal cont
   <div
     class="space-y-4"
   >
+    <div
+      class="flex items-center justify-between rounded-lg border border-border p-3"
+    >
+      <div>
+        <p
+          class="text-sm font-medium text-foreground"
+        >
+          Governança
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          Envie esta regra para aprovação antes de publicar.
+        </p>
+      </div>
+      <div
+        class="flex items-center gap-2"
+      >
+        <button
+          aria-checked="false"
+          class="peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
+          data-slot="switch"
+          data-state="unchecked"
+          id="requiresApproval"
+          role="switch"
+          type="button"
+          value="on"
+        >
+          <span
+            class="bg-background dark:data-[state=unchecked]:bg-foreground dark:data-[state=checked]:bg-primary-foreground pointer-events-none block size-4 rounded-full ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0"
+            data-slot="switch-thumb"
+            data-state="unchecked"
+          />
+        </button>
+      </div>
+    </div>
     <div>
       <label
         class="block text-sm font-medium text-foreground mb-2"
