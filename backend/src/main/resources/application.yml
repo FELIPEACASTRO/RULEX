@@ -175,3 +175,29 @@ rulex:
     uri: ${RULEX_NEO4J_URI:bolt://localhost:7687}
     username: ${RULEX_NEO4J_USERNAME:neo4j}
     password: ${RULEX_NEO4J_PASSWORD:rulex123}
+
+  # QUAL-002 FIX: Configurações externalizadas (substitui magic numbers)
+  limits:
+    max-request-body-size: ${RULEX_MAX_REQUEST_BODY_SIZE:1000000}
+    max-rules-per-transaction: ${RULEX_MAX_RULES_PER_TX:100}
+    max-conditions-per-rule: ${RULEX_MAX_CONDITIONS_PER_RULE:50}
+    max-nested-groups: ${RULEX_MAX_NESTED_GROUPS:5}
+    rule-evaluation-timeout-ms: ${RULEX_RULE_EVAL_TIMEOUT_MS:5000}
+  velocity:
+    threshold5min: ${RULEX_VELOCITY_5MIN:3}
+    threshold1hour: ${RULEX_VELOCITY_1HOUR:10}
+    threshold-daily: ${RULEX_VELOCITY_DAILY:50}
+    distinct-merchants-threshold: ${RULEX_DISTINCT_MERCHANTS:10}
+    distinct-countries-threshold: ${RULEX_DISTINCT_COUNTRIES:5}
+    max-devices-per-card: ${RULEX_MAX_DEVICES_PER_CARD:5}
+  fraud:
+    high-risk-amount-threshold: ${RULEX_HIGH_RISK_AMOUNT:10000.0}
+    impossible-travel-distance-km: ${RULEX_IMPOSSIBLE_TRAVEL_KM:500}
+    impossible-travel-time-minutes: ${RULEX_IMPOSSIBLE_TRAVEL_MIN:60}
+    min-device-trust-score: ${RULEX_MIN_DEVICE_TRUST:50}
+    amount-deviation-percent-threshold: ${RULEX_AMOUNT_DEVIATION_PCT:300}
+  cache:
+    rules-cache-ttl-seconds: ${RULEX_RULES_CACHE_TTL:300}
+    velocity-cache-ttl-seconds: ${RULEX_VELOCITY_CACHE_TTL:30}
+    velocity-cache-max-size: ${RULEX_VELOCITY_CACHE_SIZE:10000}
+    bin-cache-ttl-seconds: ${RULEX_BIN_CACHE_TTL:3600}

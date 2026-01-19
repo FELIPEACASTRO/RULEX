@@ -15,6 +15,8 @@ import com.rulex.service.VelocityService.AggregationType;
 import com.rulex.service.VelocityService.KeyType;
 import com.rulex.service.VelocityService.TimeWindow;
 import com.rulex.service.VelocityService.VelocityStats;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -34,11 +36,14 @@ class VelocityServiceTest {
   @Mock private VelocityCounterRepository counterRepository;
   @Mock private VelocityTransactionLogRepository logRepository;
 
+  private MeterRegistry meterRegistry;
   private VelocityService velocityService;
 
   @BeforeEach
   void setUp() {
-    velocityService = new VelocityService(counterRepository, logRepository);
+    // PERF-002 FIX: Adicionado MeterRegistry para métricas de cache
+    meterRegistry = new SimpleMeterRegistry();
+    velocityService = new VelocityService(counterRepository, logRepository, meterRegistry);
   }
 
   private TransactionRequest createValidRequest() {
