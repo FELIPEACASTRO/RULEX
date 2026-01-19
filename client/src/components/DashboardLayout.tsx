@@ -54,7 +54,8 @@ const menuSections = [
     label: "Governança de Risco",
     icon: Shield,
     items: [
-      { icon: Layers, label: "Regras de Fraude", path: "/rules" },
+      { icon: FileText, label: "Regras Simples", path: "/rules-simple" },
+      { icon: Layers, label: "Regras Complexas", path: "/rules" },
       { icon: CheckSquare, label: "Aprovações", path: "/approvals" },
       { icon: BookOpen, label: "Manual do RULEX", path: "/manual" },
       { icon: GitBranch, label: "Diagramas", path: "/diagrams" },

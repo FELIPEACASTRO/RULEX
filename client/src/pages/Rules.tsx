@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Trash2, ToggleRight, Loader2, AlertTriangle, Filter, Layers, Search, Play, BarChart2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, ToggleRight, Loader2, AlertTriangle, Filter, Layers, Search, Play, BarChart2, ArrowRight } from 'lucide-react';
+import { useLocation } from 'wouter';
 import {
   Select,
   SelectContent,
@@ -65,6 +66,7 @@ import { toast } from 'sonner';
  * Página de configuração dinâmica de regras.
  */
 export default function Rules() {
+  const [, setLocation] = useLocation();
   const DEFAULT_SIMULATION_PAYLOAD = `{
   "externalTransactionId": "TXN-SIM-001",
   "customerIdFromHeader": "CUST-123",
@@ -1096,6 +1098,20 @@ export default function Rules() {
             </SelectContent>
           </Select>
         </div>
+        <Card className="border border-dashed">
+          <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Precisa de regras avançadas?</p>
+              <p className="text-xs text-muted-foreground">
+                Use o construtor de regras complexas com grupos, condições aninhadas e templates.
+              </p>
+            </div>
+            <Button onClick={() => setLocation('/rules')} variant="secondary">
+              Ir para Regras Complexas
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Tabela de Regras */}
