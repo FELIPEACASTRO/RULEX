@@ -27,9 +27,7 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
         ConditionOperator.AMOUNT_SUM_PER_CUSTOMER_DAY,
         ConditionOperator.AMOUNT_VARIANCE_ANOMALY,
         ConditionOperator.DECIMAL_PLACES_GT,
-        ConditionOperator.PERCENTAGE_OF_BALANCE_GT,
         ConditionOperator.ROUND_AMOUNT_FREQUENCY,
-        ConditionOperator.ROUND_AMOUNT_PATTERN,
         ConditionOperator.SMALL_AMOUNT_VELOCITY,
         ConditionOperator.LARGE_AMOUNT_FREQUENCY
     );
@@ -52,9 +50,7 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
             case AMOUNT_SUM_PER_CUSTOMER_DAY -> evaluateAmountSumPerCustomerDay(condition, context);
             case AMOUNT_VARIANCE_ANOMALY -> evaluateAmountVarianceAnomaly(condition, context);
             case DECIMAL_PLACES_GT -> evaluateDecimalPlacesGt(condition, context);
-            case PERCENTAGE_OF_BALANCE_GT -> evaluatePercentageOfBalanceGt(condition, context);
             case ROUND_AMOUNT_FREQUENCY -> evaluateRoundAmountFrequency(condition, context);
-            case ROUND_AMOUNT_PATTERN -> evaluateRoundAmountPattern(condition, context);
             case SMALL_AMOUNT_VELOCITY -> evaluateSmallAmountVelocity(condition, context);
             case LARGE_AMOUNT_FREQUENCY -> evaluateLargeAmountFrequency(condition, context);
             default -> false;
@@ -64,11 +60,11 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
     private BigDecimal getAmount(EvaluationContext context) {
         Map<String, Object> payload = context.getPayload();
         if (payload == null) return null;
-        
+
         Object amount = payload.get("amount");
         if (amount == null) amount = payload.get("transactionAmount");
         if (amount == null) return null;
-        
+
         try {
             return new BigDecimal(String.valueOf(amount));
         } catch (Exception e) {
@@ -87,7 +83,7 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
         Object avgObj = payload.get("averageAmount");
         if (avgObj == null) avgObj = payload.get("avgAmount");
         if (avgObj == null) avgObj = payload.get("historicalAvgAmount");
-        
+
         if (avgObj == null) return false;
 
         BigDecimal avg = new BigDecimal(String.valueOf(avgObj));
@@ -99,8 +95,8 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
             .multiply(new BigDecimal("100"));
 
         BigDecimal threshold = parseThreshold(condition.getValueSingle(), new BigDecimal("50"));
-        
-        log.debug("AMOUNT_DEVIATION_FROM_AVG: amount={}, avg={}, deviation={}%, threshold={}%", 
+
+        log.debug("AMOUNT_DEVIATION_FROM_AVG: amount={}, avg={}, deviation={}%, threshold={}%",
             amount, avg, deviation, threshold);
         return deviation.compareTo(threshold) > 0;
     }
@@ -141,7 +137,7 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
         Map<String, Object> payload = context.getPayload();
         Object maxHistObj = payload.get("maxHistoricalAmount");
         if (maxHistObj == null) maxHistObj = payload.get("maxAmount");
-        
+
         if (maxHistObj == null) {
             // Se não há histórico, considerar spike se valor > threshold
             BigDecimal threshold = parseThreshold(condition.getValueSingle(), new BigDecimal("10000"));
@@ -150,10 +146,10 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal maxHist = new BigDecimal(String.valueOf(maxHistObj));
         BigDecimal multiplier = parseThreshold(condition.getValueSingle(), new BigDecimal("2"));
-        
+
         // Spike se valor > maxHistórico * multiplier
         BigDecimal spikeThreshold = maxHist.multiply(multiplier);
-        
+
         log.debug("AMOUNT_SPIKE: amount={}, maxHist={}, threshold={}", amount, maxHist, spikeThreshold);
         return amount.compareTo(spikeThreshold) > 0;
     }
@@ -171,7 +167,7 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal sum = new BigDecimal(String.valueOf(sumObj));
         BigDecimal threshold = parseThreshold(condition.getValueSingle(), new BigDecimal("5000"));
-        
+
         return sum.compareTo(threshold) > 0;
     }
 
@@ -188,7 +184,7 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal sum = new BigDecimal(String.valueOf(sumObj));
         BigDecimal threshold = parseThreshold(condition.getValueSingle(), new BigDecimal("50000"));
-        
+
         return sum.compareTo(threshold) > 0;
     }
 
@@ -204,7 +200,7 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal variance = new BigDecimal(String.valueOf(varianceObj));
         BigDecimal threshold = parseThreshold(condition.getValueSingle(), new BigDecimal("1000000"));
-        
+
         return variance.compareTo(threshold) > 0;
     }
 
@@ -217,7 +213,7 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
 
         int decimalPlaces = amount.scale();
         int threshold = parseIntSafe(condition.getValueSingle(), 2);
-        
+
         return decimalPlaces > threshold;
     }
 
@@ -239,7 +235,7 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
         BigDecimal percentage = amount.divide(balance, 4, RoundingMode.HALF_UP)
             .multiply(new BigDecimal("100"));
         BigDecimal threshold = parseThreshold(condition.getValueSingle(), new BigDecimal("80"));
-        
+
         return percentage.compareTo(threshold) > 0;
     }
 
@@ -255,7 +251,7 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal frequency = new BigDecimal(String.valueOf(freqObj));
         BigDecimal threshold = parseThreshold(condition.getValueSingle(), new BigDecimal("70"));
-        
+
         return frequency.compareTo(threshold) > 0;
     }
 
@@ -301,7 +297,7 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
 
         int velocity = parseIntSafe(String.valueOf(velocityObj), 0);
         int threshold = parseIntSafe(condition.getValueSingle(), 10);
-        
+
         return velocity > threshold;
     }
 
@@ -317,7 +313,7 @@ public class AmountOperatorEvaluator implements OperatorEvaluator {
 
         int frequency = parseIntSafe(String.valueOf(freqObj), 0);
         int threshold = parseIntSafe(condition.getValueSingle(), 5);
-        
+
         return frequency > threshold;
     }
 

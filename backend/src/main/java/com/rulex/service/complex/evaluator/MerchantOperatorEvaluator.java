@@ -35,10 +35,10 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
         ConditionOperator.MERCHANT_REPUTATION_SCORE,
         ConditionOperator.MERCHANT_TIME_PATTERN,
         ConditionOperator.MERCHANT_TRANSACTION_VOLUME,
-        ConditionOperator.MERCHANT_CATEGORY_MISMATCH,
+        ConditionOperator.MERCHANT_CATEGORY_CHANGE,
         ConditionOperator.MERCHANT_FIRST_SEEN,
-        ConditionOperator.MERCHANT_RISK_SCORE_GT,
-        ConditionOperator.MERCHANT_VELOCITY_ANOMALY
+        ConditionOperator.MERCHANT_COUNTRY_MISMATCH,
+        ConditionOperator.MERCHANT_VELOCITY_SPIKE
     );
 
     @Override
@@ -68,10 +68,10 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
             case MERCHANT_REPUTATION_SCORE -> evaluateMerchantReputationScore(condition, context);
             case MERCHANT_TIME_PATTERN -> evaluateMerchantTimePattern(condition, context);
             case MERCHANT_TRANSACTION_VOLUME -> evaluateMerchantTransactionVolume(condition, context);
-            case MERCHANT_CATEGORY_MISMATCH -> evaluateMerchantCategoryMismatch(condition, context);
+            case MERCHANT_CATEGORY_CHANGE -> evaluateMerchantCategoryChange(condition, context);
             case MERCHANT_FIRST_SEEN -> evaluateMerchantFirstSeen(condition, context);
-            case MERCHANT_RISK_SCORE_GT -> evaluateMerchantRiskScoreGt(condition, context);
-            case MERCHANT_VELOCITY_ANOMALY -> evaluateMerchantVelocityAnomaly(condition, context);
+            case MERCHANT_COUNTRY_MISMATCH -> evaluateMerchantCountryMismatch(condition, context);
+            case MERCHANT_VELOCITY_SPIKE -> evaluateMerchantVelocitySpike(condition, context);
             default -> false;
         };
     }
@@ -79,7 +79,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
     private Object getPayloadValue(EvaluationContext context, String... keys) {
         Map<String, Object> payload = context.getPayload();
         if (payload == null) return null;
-        
+
         for (String key : keys) {
             Object value = payload.get(key);
             if (value != null) return value;
@@ -96,7 +96,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         int age = parseIntSafe(String.valueOf(ageObj), Integer.MAX_VALUE);
         int threshold = parseIntSafe(condition.getValueSingle(), 30);
-        
+
         log.debug("MERCHANT_AGE_CHECK: age={} days, threshold={}", age, threshold);
         return age < threshold;
     }
@@ -110,7 +110,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal score = parseBigDecimal(String.valueOf(distObj), BigDecimal.ZERO);
         BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("0.7"));
-        
+
         return score.compareTo(threshold) > 0;
     }
 
@@ -123,7 +123,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal rate = parseBigDecimal(String.valueOf(rateObj), BigDecimal.ZERO);
         BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("1"));
-        
+
         log.debug("MERCHANT_CHARGEBACK_HISTORY: rate={}%, threshold={}%", rate, threshold);
         return rate.compareTo(threshold) > 0;
     }
@@ -137,7 +137,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal ratio = parseBigDecimal(String.valueOf(ratioObj), BigDecimal.ZERO);
         BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("30"));
-        
+
         return ratio.compareTo(threshold) > 0;
     }
 
@@ -150,7 +150,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal concentration = parseBigDecimal(String.valueOf(concObj), BigDecimal.ZERO);
         BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("80"));
-        
+
         // Alta concentração = poucos clientes representam maioria das transações
         return concentration.compareTo(threshold) > 0;
     }
@@ -164,7 +164,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal deviation = parseBigDecimal(String.valueOf(devObj), BigDecimal.ZERO);
         BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("2"));
-        
+
         return deviation.compareTo(threshold) > 0;
     }
 
@@ -177,7 +177,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         int diversity = parseIntSafe(String.valueOf(divObj), 0);
         int threshold = parseIntSafe(condition.getValueSingle(), 100);
-        
+
         // Muitos dispositivos diferentes = suspeito
         return diversity > threshold;
     }
@@ -195,7 +195,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         int dormantDays = parseIntSafe(String.valueOf(dormantObj), 0);
         int threshold = parseIntSafe(condition.getValueSingle(), 90);
-        
+
         return dormantDays > threshold;
     }
 
@@ -208,7 +208,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal rate = parseBigDecimal(String.valueOf(rateObj), BigDecimal.ZERO);
         BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("0.5"));
-        
+
         return rate.compareTo(threshold) > 0;
     }
 
@@ -221,7 +221,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         int spread = parseIntSafe(String.valueOf(spreadObj), 0);
         int threshold = parseIntSafe(condition.getValueSingle(), 10);
-        
+
         return spread > threshold;
     }
 
@@ -234,7 +234,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal frequency = parseBigDecimal(String.valueOf(freqObj), BigDecimal.ZERO);
         BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("20"));
-        
+
         return frequency.compareTo(threshold) > 0;
     }
 
@@ -247,7 +247,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal ratio = parseBigDecimal(String.valueOf(ratioObj), BigDecimal.ZERO);
         BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("80"));
-        
+
         return ratio.compareTo(threshold) > 0;
     }
 
@@ -260,7 +260,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal ratio = parseBigDecimal(String.valueOf(ratioObj), BigDecimal.ZERO);
         BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("10"));
-        
+
         return ratio.compareTo(threshold) > 0;
     }
 
@@ -273,7 +273,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal score = parseBigDecimal(String.valueOf(scoreObj), new BigDecimal("100"));
         BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("50"));
-        
+
         // Score baixo = suspeito
         return score.compareTo(threshold) < 0;
     }
@@ -291,7 +291,7 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         BigDecimal anomalyScore = parseBigDecimal(String.valueOf(patternObj), BigDecimal.ZERO);
         BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("0.7"));
-        
+
         return anomalyScore.compareTo(threshold) > 0;
     }
 
@@ -304,22 +304,22 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
 
         int volume = parseIntSafe(String.valueOf(volumeObj), 0);
         int threshold = parseIntSafe(condition.getValueSingle(), 1000);
-        
+
         return volume > threshold;
     }
 
     /**
-     * MERCHANT_CATEGORY_MISMATCH - MCC não corresponde ao tipo de transação.
+     * MERCHANT_CATEGORY_CHANGE - Mudança de categoria do merchant.
      */
-    private boolean evaluateMerchantCategoryMismatch(RuleCondition condition, EvaluationContext context) {
-        Object mismatchObj = getPayloadValue(context, "merchantCategoryMismatch", "mccMismatch");
-        if (mismatchObj == null) return false;
+    private boolean evaluateMerchantCategoryChange(RuleCondition condition, EvaluationContext context) {
+        Object changeObj = getPayloadValue(context, "merchantCategoryChange", "categoryChanged");
+        if (changeObj == null) return false;
 
-        if (mismatchObj instanceof Boolean) {
-            return (Boolean) mismatchObj;
+        if (changeObj instanceof Boolean) {
+            return (Boolean) changeObj;
         }
 
-        return "true".equalsIgnoreCase(String.valueOf(mismatchObj));
+        return "true".equalsIgnoreCase(String.valueOf(changeObj));
     }
 
     /**
@@ -337,33 +337,34 @@ public class MerchantOperatorEvaluator implements OperatorEvaluator {
     }
 
     /**
-     * MERCHANT_RISK_SCORE_GT - Score de risco do merchant maior que threshold.
+     * MERCHANT_COUNTRY_MISMATCH - País do merchant não corresponde.
      */
-    private boolean evaluateMerchantRiskScoreGt(RuleCondition condition, EvaluationContext context) {
-        Object scoreObj = getPayloadValue(context, "merchantRiskScore", "riskScore");
-        if (scoreObj == null) return false;
+    private boolean evaluateMerchantCountryMismatch(RuleCondition condition, EvaluationContext context) {
+        Object mismatchObj = getPayloadValue(context, "merchantCountryMismatch", "countryMismatch");
+        if (mismatchObj == null) return false;
 
-        BigDecimal score = parseBigDecimal(String.valueOf(scoreObj), BigDecimal.ZERO);
-        BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("70"));
-        
-        return score.compareTo(threshold) > 0;
+        if (mismatchObj instanceof Boolean) {
+            return (Boolean) mismatchObj;
+        }
+
+        return "true".equalsIgnoreCase(String.valueOf(mismatchObj));
     }
 
     /**
-     * MERCHANT_VELOCITY_ANOMALY - Anomalia na velocidade de transações do merchant.
+     * MERCHANT_VELOCITY_SPIKE - Pico na velocidade de transações do merchant.
      */
-    private boolean evaluateMerchantVelocityAnomaly(RuleCondition condition, EvaluationContext context) {
-        Object anomalyObj = getPayloadValue(context, "merchantVelocityAnomaly", "velocityAnomaly");
-        if (anomalyObj == null) return false;
+    private boolean evaluateMerchantVelocitySpike(RuleCondition condition, EvaluationContext context) {
+        Object spikeObj = getPayloadValue(context, "merchantVelocitySpike", "velocitySpike");
+        if (spikeObj == null) return false;
 
-        if (anomalyObj instanceof Boolean) {
-            return (Boolean) anomalyObj;
+        if (spikeObj instanceof Boolean) {
+            return (Boolean) spikeObj;
         }
 
-        BigDecimal anomalyScore = parseBigDecimal(String.valueOf(anomalyObj), BigDecimal.ZERO);
+        BigDecimal spikeScore = parseBigDecimal(String.valueOf(spikeObj), BigDecimal.ZERO);
         BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("0.8"));
-        
-        return anomalyScore.compareTo(threshold) > 0;
+
+        return spikeScore.compareTo(threshold) > 0;
     }
 
     private int parseIntSafe(String value, int defaultValue) {

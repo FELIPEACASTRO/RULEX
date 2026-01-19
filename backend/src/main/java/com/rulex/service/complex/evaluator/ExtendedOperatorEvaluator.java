@@ -50,6 +50,11 @@ public class ExtendedOperatorEvaluator implements OperatorEvaluator {
         ConditionOperator.TIME_SINCE_LAST_LT,
         ConditionOperator.TIMEZONE_MISMATCH,
         ConditionOperator.WEEKEND_VS_WEEKDAY_PATTERN,
+        ConditionOperator.GT_CURRENT_DATE,
+        ConditionOperator.LT_CURRENT_DATE,
+
+        // Compliance
+        ConditionOperator.PACS008_FIELD_VALIDATION,
 
         // Campos
         ConditionOperator.FIELD_EQ,
@@ -232,6 +237,19 @@ public class ExtendedOperatorEvaluator implements OperatorEvaluator {
                 yield a < threshold;
             }
             case HOLIDAY_TRANSACTION_SPIKE -> evaluateBoolean(payload, "holidayTransactionSpike");
+            case GT_CURRENT_DATE -> {
+                Object date = payload.get(condition.getFieldName());
+                if (date == null) yield false;
+                LocalDate d = parseDate(date);
+                yield d != null && d.isAfter(LocalDate.now());
+            }
+            case LT_CURRENT_DATE -> {
+                Object date = payload.get(condition.getFieldName());
+                if (date == null) yield false;
+                LocalDate d = parseDate(date);
+                yield d != null && d.isBefore(LocalDate.now());
+            }
+            case PACS008_FIELD_VALIDATION -> evaluateBoolean(payload, "pacs008FieldValid");
             default -> evaluateBoolean(payload, camelCase(op.name()));
         };
     }
