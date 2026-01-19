@@ -8,25 +8,32 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ## [Unreleased]
 
 ### Added
-- `RulexProperties.java` - Configurações centralizadas substituindo magic numbers (QUAL-002)
-- Rate limiting por usuário autenticado além de IP (SEC-005)
-- Métricas de cache expostas via Actuator
+- `RulexProperties.java` - Configuracoes centralizadas substituindo magic numbers (QUAL-002)
+- `ValidationGroups.java` - Grupos de validacao para TransactionRequest (QUAL-001)
+- `RuleEvaluator.java` - Interface unificada para engines de regras (ARCH-003)
+- `RuleEvaluatorOrchestrator.java` - Orquestrador central para avaliadores (ARCH-003)
+- Rate limiting por usuario autenticado alem de IP (SEC-005)
+- Metricas de cache expostas via Actuator (PERF-002)
 
 ### Changed
-- CORS: Whitelist explícita de headers permitidos, removido wildcard (SEC-007)
-- HikariCP: Pool reduzido de 100 para 30 conexões (PERF-001)
-- SecurityConfig: Validação de senhas expandida para staging/homolog/uat (SEC-003)
+- CORS: Whitelist explicita de headers permitidos, removido wildcard (SEC-007)
+- HikariCP: Pool reduzido de 100 para 30 conexoes (PERF-001)
+- SecurityConfig: Validacao de senhas expandida para staging/homolog/uat (SEC-003)
 - ComplexRuleEvaluator: Integrado com OperatorEvaluatorRegistry (ARCH-001)
+- TransactionRequest: Validacoes adicionadas para merchantId, merchantCountryCode, posEntryMode (QUAL-001)
+- Dockerfile: Multi-stage build otimizado com imagem Alpine e usuario nao-root (INFRA-002)
 
 ### Fixed
 - Credenciais default removidas do docker-compose.yml (SEC-001)
 - Neo4j health check habilitado (INFRA-001)
-- Avisos de segurança adicionados para localStorage no frontend (SEC-002)
+- Avisos de seguranca adicionados para localStorage no frontend (SEC-002)
+- Catch Exception ignored substituido por logging adequado (SEC-006)
 
 ### Security
-- Todas as variáveis de ambiente de credenciais agora são obrigatórias
+- Todas as variaveis de ambiente de credenciais agora sao obrigatorias
 - Rate limiting melhorado para prevenir bypass via proxy/VPN
-- Headers de segurança (CSP, HSTS, X-Frame-Options) já implementados
+- Headers de seguranca (CSP, HSTS, X-Frame-Options) ja implementados
+- SensitiveDataMasker.java ja existia para sanitizacao de logs (SEC-009)
 
 ## [2.1.0] - 2026-01-19
 
