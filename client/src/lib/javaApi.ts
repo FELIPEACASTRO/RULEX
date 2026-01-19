@@ -173,6 +173,40 @@ export interface RuleConfiguration {
   version: number;
 }
 
+export interface RuleSimulationConditionResult {
+  field: string;
+  operator: string;
+  expectedValue: string;
+  actualValue: string;
+  met: boolean;
+}
+
+export interface RuleSimulationResult {
+  ruleName: string;
+  triggered: boolean;
+  classification?: string | null;
+  weight?: number | null;
+  reason: string;
+  logicOperator?: string | null;
+  processingTimeMs: number;
+  conditionResults: RuleSimulationConditionResult[];
+}
+
+export interface RuleBacktestResult {
+  ruleId: number;
+  ruleName: string;
+  startDate: string;
+  endDate: string;
+  totalEvaluated: number;
+  totalTriggered: number;
+  triggerRate: number;
+  wouldApprove: number;
+  wouldSuspect: number;
+  wouldBlock: number;
+  totalAmountAffected: number;
+  sampleResults: RuleSimulationResult[];
+}
+
 export interface AuditLog {
   id: number;
   transactionId: number | null;
@@ -431,6 +465,32 @@ export async function toggleRuleStatus(
   return apiRequest<RuleConfiguration>(`/api/rules/${ruleId}/toggle`, {
     method: "PATCH",
     body: JSON.stringify({ enabled }),
+  });
+}
+
+export async function simulateRule(
+  rule: RuleConfiguration,
+  testPayload: TransactionRequest
+): Promise<RuleSimulationResult> {
+  return apiRequest<RuleSimulationResult>("/api/rules/simulation/test", {
+    method: "POST",
+    body: JSON.stringify({ rule, testPayload }),
+  });
+}
+
+export async function backtestRule(
+  ruleId: number,
+  startDate: string,
+  endDate: string,
+  sampleSize: number
+): Promise<RuleBacktestResult> {
+  const params = new URLSearchParams({
+    startDate,
+    endDate,
+    sampleSize: String(sampleSize),
+  });
+  return apiRequest<RuleBacktestResult>(`/api/rules/simulation/backtest/${ruleId}?${params.toString()}`, {
+    method: "POST",
   });
 }
 

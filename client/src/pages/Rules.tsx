@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Trash2, ToggleRight, Loader2, AlertTriangle, Filter, Layers, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, ToggleRight, Loader2, AlertTriangle, Filter, Layers, Search, Play, BarChart2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -40,11 +40,16 @@ import {
   FieldDictionaryItem,
   RuleConfiguration,
   ComplexRuleDTO,
+  RuleSimulationResult,
+  RuleBacktestResult,
+  TransactionRequest,
   createRule,
   deleteRule,
   listFieldDictionary,
   listRules,
   listComplexRules,
+  simulateRule,
+  backtestRule,
   toggleRuleStatus,
   toggleComplexRuleStatus,
   updateRule,
@@ -56,6 +61,31 @@ import { toast } from 'sonner';
  * Página de configuração dinâmica de regras.
  */
 export default function Rules() {
+  const DEFAULT_SIMULATION_PAYLOAD = `{
+  "externalTransactionId": "TXN-SIM-001",
+  "customerIdFromHeader": "CUST-123",
+  "customerAcctNumber": 1234567890,
+  "pan": "4111111111111111",
+  "merchantId": "MERCH-TEST-001",
+  "merchantCountryCode": "BR",
+  "transactionAmount": 15000,
+  "transactionDate": 20241216,
+  "transactionTime": 143000,
+  "transactionCurrencyCode": 986,
+  "mcc": 5411,
+  "posEntryMode": "010",
+  "consumerAuthenticationScore": 500,
+  "externalScore3": 85,
+  "cavvResult": 1,
+  "eciIndicator": 5,
+  "atcCard": 10,
+  "atcHost": 10,
+  "tokenAssuranceLevel": 2,
+  "availableCredit": 100000,
+  "cardCashBalance": 50000,
+  "cardDelinquentAmount": 0
+}`;
+
   const queryClient = useQueryClient();
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['rules'],
@@ -180,6 +210,29 @@ export default function Rules() {
 
   // P1-02: Estado para erros de validação
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // P0: Simulação e backtest
+  const [isSimulationOpen, setIsSimulationOpen] = useState(false);
+  const [simulationRule, setSimulationRule] = useState<RuleConfiguration | null>(null);
+  const [simulationPayload, setSimulationPayload] = useState(DEFAULT_SIMULATION_PAYLOAD);
+  const [simulationResult, setSimulationResult] = useState<RuleSimulationResult | null>(null);
+  const [simulationError, setSimulationError] = useState<string | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
+
+  const [isBacktestOpen, setIsBacktestOpen] = useState(false);
+  const [backtestRule, setBacktestRule] = useState<RuleConfiguration | null>(null);
+  const [backtestStart, setBacktestStart] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 7);
+    return date.toISOString().slice(0, 16);
+  });
+  const [backtestEnd, setBacktestEnd] = useState(() => new Date().toISOString().slice(0, 16));
+  const [backtestSampleSize, setBacktestSampleSize] = useState(1000);
+  const [backtestResult, setBacktestResult] = useState<RuleBacktestResult | null>(null);
+  const [backtestError, setBacktestError] = useState<string | null>(null);
+  const [isBacktesting, setIsBacktesting] = useState(false);
+
+  const normalizeDateTime = (value: string) => (value.length === 16 ? `${value}:00` : value);
 
   const invalidateRules = () => {
     queryClient.invalidateQueries({ queryKey: ['rules'] });
@@ -337,6 +390,63 @@ export default function Rules() {
       conditions: rule.conditions ?? [],
     });
     setShowDialog(true);
+  };
+
+  const openSimulation = (rule: RuleConfiguration) => {
+    setSimulationRule(rule);
+    setSimulationPayload(DEFAULT_SIMULATION_PAYLOAD);
+    setSimulationResult(null);
+    setSimulationError(null);
+    setIsSimulationOpen(true);
+  };
+
+  const runSimulation = async () => {
+    if (!simulationRule) return;
+    setIsSimulating(true);
+    setSimulationError(null);
+    setSimulationResult(null);
+    try {
+      const parsedPayload = JSON.parse(simulationPayload) as TransactionRequest;
+      const result = await simulateRule(simulationRule, parsedPayload);
+      setSimulationResult(result);
+      toast.success('Simulação concluída!');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro desconhecido';
+      setSimulationError(message);
+      toast.error(`Erro na simulação: ${message}`);
+    } finally {
+      setIsSimulating(false);
+    }
+  };
+
+  const openBacktest = (rule: RuleConfiguration) => {
+    setBacktestRule(rule);
+    setBacktestResult(null);
+    setBacktestError(null);
+    setIsBacktestOpen(true);
+  };
+
+  const runBacktest = async () => {
+    if (!backtestRule) return;
+    setIsBacktesting(true);
+    setBacktestError(null);
+    setBacktestResult(null);
+    try {
+      const result = await backtestRule(
+        backtestRule.id,
+        normalizeDateTime(backtestStart),
+        normalizeDateTime(backtestEnd),
+        backtestSampleSize,
+      );
+      setBacktestResult(result);
+      toast.success('Backtest concluído!');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro desconhecido';
+      setBacktestError(message);
+      toast.error(`Erro no backtest: ${message}`);
+    } finally {
+      setIsBacktesting(false);
+    }
   };
 
   // P1-01/P1-02: Validação antes de salvar
@@ -1055,6 +1165,45 @@ export default function Rules() {
                         >
                           <ToggleRight className="h-4 w-4" />
                         </Button>
+                        {rule.type === 'simple' ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openSimulation(rule.original as RuleConfiguration)}
+                              title="Simular regra"
+                            >
+                              <Play className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openBacktest(rule.original as RuleConfiguration)}
+                              title="Backtest"
+                            >
+                              <BarChart2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toast.info('Simulação para regras complexas ainda não está disponível.')}
+                              title="Simulação indisponível para regras complexas"
+                            >
+                              <Play className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toast.info('Backtest para regras complexas ainda não está disponível.')}
+                              title="Backtest indisponível para regras complexas"
+                            >
+                              <BarChart2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
                         {rule.type === 'simple' && (
                           <Button
                             variant="ghost"
@@ -1089,6 +1238,270 @@ export default function Rules() {
           )}
         </CardContent>
       </Card>
+
+      {/* P0: Simulação de regra (simple rules) */}
+      <Dialog open={isSimulationOpen} onOpenChange={(open) => {
+        setIsSimulationOpen(open);
+        if (!open) {
+          setSimulationResult(null);
+          setSimulationError(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Simular regra</DialogTitle>
+            <DialogDescription>
+              Execute a regra selecionada contra um payload de teste.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="rounded-lg border border-border p-3 text-sm text-muted-foreground">
+              Regra: <span className="font-medium text-foreground">{simulationRule?.ruleName ?? '-'}</span>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Payload de teste (JSON)
+              </label>
+              <Textarea
+                value={simulationPayload}
+                onChange={(e) => setSimulationPayload(e.target.value)}
+                rows={10}
+                className="font-mono text-xs"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Campos obrigatórios devem estar presentes para validação do backend.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                onClick={runSimulation}
+                disabled={isSimulating || !simulationPayload.trim() || !simulationRule}
+              >
+                {isSimulating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Simulando...
+                  </>
+                ) : (
+                  <>
+                    <Play className="mr-2 h-4 w-4" />
+                    Simular
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {simulationError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+                {simulationError}
+              </div>
+            )}
+
+            {simulationResult && (
+              <div className="space-y-3 rounded-lg border border-border bg-muted/40 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium text-foreground">
+                    Resultado da simulação
+                  </div>
+                  <Badge variant={simulationResult.triggered ? 'destructive' : 'secondary'}>
+                    {simulationResult.triggered ? 'Disparou' : 'Não disparou'}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-xs text-muted-foreground">Classificação</div>
+                    <div className="font-medium">{simulationResult.classification ?? '—'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Peso</div>
+                    <div className="font-medium">{simulationResult.weight ?? 0}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Operador lógico</div>
+                    <div className="font-medium">{simulationResult.logicOperator ?? 'AND'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Tempo (ms)</div>
+                    <div className="font-medium">{simulationResult.processingTimeMs}</div>
+                  </div>
+                </div>
+                <div className="text-sm">
+                  <div className="text-xs text-muted-foreground">Motivo</div>
+                  <div className="font-medium">{simulationResult.reason}</div>
+                </div>
+
+                {simulationResult.conditionResults?.length ? (
+                  <div className="mt-2">
+                    <div className="text-xs text-muted-foreground mb-2">Condições avaliadas</div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-1">Campo</th>
+                            <th className="text-left py-1">Operador</th>
+                            <th className="text-left py-1">Esperado</th>
+                            <th className="text-left py-1">Atual</th>
+                            <th className="text-left py-1">Resultado</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {simulationResult.conditionResults.map((condition, index) => (
+                            <tr key={`${condition.field}-${index}`} className="border-b">
+                              <td className="py-1 pr-2">{condition.field}</td>
+                              <td className="py-1 pr-2">{condition.operator}</td>
+                              <td className="py-1 pr-2">{condition.expectedValue}</td>
+                              <td className="py-1 pr-2">{condition.actualValue}</td>
+                              <td className="py-1">
+                                <Badge variant={condition.met ? 'default' : 'secondary'}>
+                                  {condition.met ? 'OK' : 'NOK'}
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* P0: Backtest de regra (simple rules) */}
+      <Dialog open={isBacktestOpen} onOpenChange={(open) => {
+        setIsBacktestOpen(open);
+        if (!open) {
+          setBacktestResult(null);
+          setBacktestError(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Backtest de regra</DialogTitle>
+            <DialogDescription>
+              Executa a regra contra transações históricas para estimar impacto.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="rounded-lg border border-border p-3 text-sm text-muted-foreground">
+              Regra: <span className="font-medium text-foreground">{backtestRule?.ruleName ?? '-'}</span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Início</label>
+                <Input
+                  type="datetime-local"
+                  value={backtestStart}
+                  onChange={(e) => setBacktestStart(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Fim</label>
+                <Input
+                  type="datetime-local"
+                  value={backtestEnd}
+                  onChange={(e) => setBacktestEnd(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Amostra</label>
+                <Input
+                  type="number"
+                  min="10"
+                  value={backtestSampleSize}
+                  onChange={(e) => setBacktestSampleSize(Number(e.target.value))}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                onClick={runBacktest}
+                disabled={isBacktesting || !backtestRule}
+              >
+                {isBacktesting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Executando...
+                  </>
+                ) : (
+                  <>
+                    <BarChart2 className="mr-2 h-4 w-4" />
+                    Executar backtest
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {backtestError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+                {backtestError}
+              </div>
+            )}
+
+            {backtestResult && (
+              <div className="space-y-3 rounded-lg border border-border bg-muted/40 p-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-xs text-muted-foreground">Avaliações</div>
+                    <div className="font-medium">{backtestResult.totalEvaluated}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Disparos</div>
+                    <div className="font-medium">{backtestResult.totalTriggered}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Taxa de disparo</div>
+                    <div className="font-medium">{backtestResult.triggerRate.toFixed(2)}%</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Valor impactado</div>
+                    <div className="font-medium">{backtestResult.totalAmountAffected}</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <div className="text-xs text-muted-foreground">Aprovaria</div>
+                    <div className="font-medium">{backtestResult.wouldApprove}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Suspeita</div>
+                    <div className="font-medium">{backtestResult.wouldSuspect}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Bloquearia</div>
+                    <div className="font-medium">{backtestResult.wouldBlock}</div>
+                  </div>
+                </div>
+
+                {backtestResult.sampleResults?.length ? (
+                  <div className="mt-2">
+                    <div className="text-xs text-muted-foreground mb-2">Amostra (até 10)</div>
+                    <div className="space-y-2">
+                      {backtestResult.sampleResults.map((sample, index) => (
+                        <div key={`${sample.ruleName}-${index}`} className="text-xs flex items-center justify-between border-b pb-1">
+                          <span>{sample.reason}</span>
+                          <Badge variant={sample.triggered ? 'destructive' : 'secondary'}>
+                            {sample.triggered ? 'Disparou' : 'Não disparou'}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* P1-09: AlertDialog para confirmação de delete */}
       <AlertDialog open={deleteConfirmId !== null} onOpenChange={(open) => !open && cancelDelete()}>
