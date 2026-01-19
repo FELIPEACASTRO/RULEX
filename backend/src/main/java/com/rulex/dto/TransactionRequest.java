@@ -34,6 +34,9 @@ public class TransactionRequest {
   @JsonProperty("pan")
   private String pan;
 
+  // QUAL-001 FIX: merchantId obrigatorio para avaliacao de regras de fraude
+  @NotBlank(message = "merchantId e obrigatorio para avaliacao de regras",
+            groups = com.rulex.dto.validation.ValidationGroups.RuleEvaluationValidation.class)
   @JsonProperty("merchantId")
   private String merchantId;
 
@@ -258,6 +261,9 @@ public class TransactionRequest {
   @JsonProperty("transactionCurrencyConversionRate")
   private BigDecimal transactionCurrencyConversionRate;
 
+  // QUAL-001 FIX: merchantCountryCode obrigatorio para avaliacao de regras de fraude
+  @NotBlank(message = "merchantCountryCode e obrigatorio para avaliacao de regras",
+            groups = com.rulex.dto.validation.ValidationGroups.RuleEvaluationValidation.class)
   @JsonProperty("merchantCountryCode")
   private String merchantCountryCode;
 
@@ -270,10 +276,13 @@ public class TransactionRequest {
   @JsonProperty("merchantPostalCode")
   private String merchantPostalCode;
 
-  @NotNull(message = "mcc é obrigatório")
+  @NotNull(message = "mcc e obrigatorio")
   @JsonProperty("mcc")
   private Integer mcc;
 
+  // QUAL-001 FIX: posEntryMode obrigatorio para avaliacao de regras de fraude
+  @NotBlank(message = "posEntryMode e obrigatorio para avaliacao de regras",
+            groups = com.rulex.dto.validation.ValidationGroups.RuleEvaluationValidation.class)
   @JsonProperty("posEntryMode")
   private String posEntryMode;
 
