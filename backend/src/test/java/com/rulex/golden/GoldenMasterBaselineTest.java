@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.rulex.dto.complex.ConditionDTO.OperatorType;
-import com.rulex.entity.complex.RuleCondition.ConditionOperator;
+import com.rulex.entity.complex.ConditionOperator;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

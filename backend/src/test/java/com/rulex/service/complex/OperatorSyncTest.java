@@ -3,6 +3,7 @@ package com.rulex.service.complex;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.rulex.dto.complex.ConditionDTO;
+import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleCondition;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -11,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * TRIPLE CHECK AVASSALADOR - Testes de Sincronização de Operadores Verifica que TODOS os operadores
- * estão sincronizados entre: - Entity (RuleCondition.ConditionOperator) - DTO
+ * estão sincronizados entre: - Entity (ConditionOperator) - DTO
  * (ConditionDTO.OperatorType) - Evaluator (ComplexRuleEvaluator)
  */
 public class OperatorSyncTest {
@@ -23,7 +24,7 @@ public class OperatorSyncTest {
     Set<String> dtoOps = new HashSet<>();
 
     // Extrair operadores da Entity
-    for (RuleCondition.ConditionOperator op : RuleCondition.ConditionOperator.values()) {
+    for (ConditionOperator op : ConditionOperator.values()) {
       entityOps.add(op.name());
     }
 
@@ -67,7 +68,7 @@ public class OperatorSyncTest {
     Set<String> missingMethods = new HashSet<>();
 
     // Extrair operadores da Entity
-    for (RuleCondition.ConditionOperator op : RuleCondition.ConditionOperator.values()) {
+    for (ConditionOperator op : ConditionOperator.values()) {
       entityOps.add(op.name());
     }
 
@@ -100,7 +101,7 @@ public class OperatorSyncTest {
   @Test
   @DisplayName("🔥 DEVASTADOR: Contagem total de operadores")
   void testOperatorCount() {
-    int entityCount = RuleCondition.ConditionOperator.values().length;
+    int entityCount = ConditionOperator.values().length;
     int dtoCount = ConditionDTO.OperatorType.values().length;
 
     System.out.println("═══════════════════════════════════════════════════════════════");
@@ -156,7 +157,7 @@ public class OperatorSyncTest {
   void testListAllOperatorsByCategory() {
     Map<String, List<String>> categories = new LinkedHashMap<>();
 
-    for (RuleCondition.ConditionOperator op : RuleCondition.ConditionOperator.values()) {
+    for (ConditionOperator op : ConditionOperator.values()) {
       String name = op.name();
       String category = getCategory(name);
       categories.computeIfAbsent(category, k -> new ArrayList<>()).add(name);

@@ -2,7 +2,7 @@ package com.rulex.service.complex;
 
 import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.complex.RuleCondition;
-import com.rulex.entity.complex.RuleCondition.ConditionOperator;
+import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleExecutionDetail;
 import com.rulex.exception.UnsupportedOperatorException;
@@ -232,7 +232,7 @@ public class ComplexRuleEvaluator {
   /** Avalia o operador da condição */
   private boolean evaluateOperator(
       RuleCondition condition, Object fieldValue, EvaluationContext context) {
-    RuleCondition.ConditionOperator operator = condition.getOperator();
+    ConditionOperator operator = condition.getOperator();
 
     return switch (operator) {
         // Comparação básica

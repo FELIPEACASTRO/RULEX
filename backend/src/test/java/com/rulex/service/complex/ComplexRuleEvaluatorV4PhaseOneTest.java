@@ -7,7 +7,7 @@ import static org.mockito.Mockito.*;
 
 import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.complex.RuleCondition;
-import com.rulex.entity.complex.RuleCondition.ConditionOperator;
+import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleConditionGroup.GroupLogicOperator;
 import com.rulex.service.FuzzyLogicService;

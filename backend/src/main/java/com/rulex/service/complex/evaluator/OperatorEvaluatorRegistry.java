@@ -1,7 +1,7 @@
 package com.rulex.service.complex.evaluator;
 
 import com.rulex.entity.complex.OperatorStatus;
-import com.rulex.entity.complex.RuleCondition.ConditionOperator;
+import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.exception.UnsupportedOperatorException;
 import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;

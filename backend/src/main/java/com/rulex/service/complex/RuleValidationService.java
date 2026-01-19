@@ -2,6 +2,7 @@ package com.rulex.service.complex;
 
 import com.rulex.dto.complex.ConditionDTO;
 import com.rulex.dto.complex.ConditionGroupDTO;
+import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleCondition;
 import java.util.ArrayList;
 import java.util.List;
@@ -289,7 +290,7 @@ public class RuleValidationService {
       return ValidationResult.success();
     }
 
-    RuleCondition.ConditionOperator operator = condition.getOperator();
+    ConditionOperator operator = condition.getOperator();
     if (operator != null && UNSUPPORTED_OPERATORS.contains(operator.name())) {
       errors.add(String.format("Operador '%s' não está implementado", operator.name()));
     }

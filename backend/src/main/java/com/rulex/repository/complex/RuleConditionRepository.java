@@ -1,5 +1,6 @@
 package com.rulex.repository.complex;
 
+import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleCondition;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +23,7 @@ public interface RuleConditionRepository extends JpaRepository<RuleCondition, UU
   List<RuleCondition> findByFieldName(String fieldName);
 
   /** Busca condições por operador */
-  List<RuleCondition> findByOperator(RuleCondition.ConditionOperator operator);
+  List<RuleCondition> findByOperator(ConditionOperator operator);
 
   /** Conta condições em um grupo */
   long countByGroupId(UUID groupId);

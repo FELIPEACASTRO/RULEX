@@ -1,7 +1,7 @@
 package com.rulex.controller;
 
 import com.rulex.entity.complex.OperatorStatus;
-import com.rulex.entity.complex.RuleCondition.ConditionOperator;
+import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

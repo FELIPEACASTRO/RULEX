@@ -1,6 +1,6 @@
 package com.rulex.exception;
 
-import com.rulex.entity.complex.RuleCondition.ConditionOperator;
+import com.rulex.entity.complex.ConditionOperator;
 
 /**
  * Exceção lançada quando um operador não está implementado.

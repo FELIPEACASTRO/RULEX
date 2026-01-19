@@ -2,7 +2,7 @@ package com.rulex.service.complex;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.rulex.entity.complex.RuleCondition.ConditionOperator;
+import com.rulex.entity.complex.ConditionOperator;
 import java.util.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -3,6 +3,7 @@ package com.rulex.service.complex;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.rulex.dto.complex.ConditionDTO;
+import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleCondition;
 import java.io.IOException;
 import java.nio.file.*;
@@ -21,9 +22,9 @@ import org.junit.jupiter.params.provider.EnumSource;
 public class AllOperatorsIntegrationTest {
 
   @ParameterizedTest
-  @EnumSource(RuleCondition.ConditionOperator.class)
+  @EnumSource(ConditionOperator.class)
   @DisplayName("🔥 Cada operador da Entity deve existir no DTO")
-  void testEachEntityOperatorExistsInDto(RuleCondition.ConditionOperator entityOp) {
+  void testEachEntityOperatorExistsInDto(ConditionOperator entityOp) {
     String opName = entityOp.name();
     boolean foundInDto = false;
     for (ConditionDTO.OperatorType dtoOp : ConditionDTO.OperatorType.values()) {
@@ -41,7 +42,7 @@ public class AllOperatorsIntegrationTest {
   void testEachDtoOperatorExistsInEntity(ConditionDTO.OperatorType dtoOp) {
     String opName = dtoOp.name();
     boolean foundInEntity = false;
-    for (RuleCondition.ConditionOperator entityOp : RuleCondition.ConditionOperator.values()) {
+    for (ConditionOperator entityOp : ConditionOperator.values()) {
       if (entityOp.name().equals(opName)) {
         foundInEntity = true;
         break;
@@ -72,7 +73,7 @@ public class AllOperatorsIntegrationTest {
     System.out.println("Cases encontrados no switch: " + foundCases.size());
 
     Set<String> missingCases = new HashSet<>();
-    for (RuleCondition.ConditionOperator op : RuleCondition.ConditionOperator.values()) {
+    for (ConditionOperator op : ConditionOperator.values()) {
       if (!foundCases.contains(op.name())) {
         missingCases.add(op.name());
       }
@@ -114,7 +115,7 @@ public class AllOperatorsIntegrationTest {
     System.out.println("Operadores no V34: " + pgOperators.size());
 
     Set<String> missingInPg = new HashSet<>();
-    for (RuleCondition.ConditionOperator op : RuleCondition.ConditionOperator.values()) {
+    for (ConditionOperator op : ConditionOperator.values()) {
       if (!pgOperators.contains(op.name())) {
         missingInPg.add(op.name());
       }
@@ -140,7 +141,7 @@ public class AllOperatorsIntegrationTest {
   @Test
   @DisplayName("🔥 DEVASTADOR: Relatório completo de operadores")
   void testGenerateCompleteReport() {
-    int entityCount = RuleCondition.ConditionOperator.values().length;
+    int entityCount = ConditionOperator.values().length;
     int dtoCount = ConditionDTO.OperatorType.values().length;
     int entityValueTypes = RuleCondition.ConditionValueType.values().length;
     int dtoValueTypes = ConditionDTO.ValueType.values().length;

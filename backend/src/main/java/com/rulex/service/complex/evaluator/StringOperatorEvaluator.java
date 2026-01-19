@@ -1,7 +1,7 @@
 package com.rulex.service.complex.evaluator;
 
 import com.rulex.entity.complex.RuleCondition;
-import com.rulex.entity.complex.RuleCondition.ConditionOperator;
+import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.service.complex.ComplexRuleEvaluator.EvaluationContext;
 import com.rulex.util.RegexValidator;
 import java.util.Locale;
