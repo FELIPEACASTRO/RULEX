@@ -128,14 +128,10 @@ public class StringOperatorEvaluator implements OperatorEvaluator {
         if (pattern == null) return false;
 
         try {
-            // Usar validador seguro de regex
-            if (!RegexValidator.isPatternSafe(pattern)) {
-                log.warn("Padrão regex potencialmente inseguro: {}", pattern);
-                return false;
-            }
-            return Pattern.compile(pattern).matcher(fieldValue).matches();
+            // GAP-C FIX: Usar RegexValidator.safeMatches() com timeout e validação anti-ReDoS
+            return RegexValidator.safeMatches(pattern, fieldValue);
         } catch (Exception e) {
-            log.warn("Erro ao compilar regex '{}': {}", pattern, e.getMessage());
+            log.warn("Erro ao avaliar regex '{}': {}", pattern, e.getMessage());
             return false;
         }
     }
@@ -152,8 +148,11 @@ public class StringOperatorEvaluator implements OperatorEvaluator {
             .replace("?", ".");
 
         try {
-            int flags = (caseSensitive != null && caseSensitive) ? 0 : Pattern.CASE_INSENSITIVE;
-            return Pattern.compile("^" + regex + "$", flags).matcher(fieldValue).matches();
+            // GAP-C FIX: Usar RegexValidator para LIKE também (regex gerado é seguro mas input pode ser malicioso)
+            String fullRegex = (caseSensitive != null && caseSensitive)
+                ? "^" + regex + "$"
+                : "(?i)^" + regex + "$";
+            return RegexValidator.safeMatches(fullRegex, fieldValue);
         } catch (Exception e) {
             log.warn("Erro ao avaliar LIKE '{}': {}", pattern, e.getMessage());
             return false;

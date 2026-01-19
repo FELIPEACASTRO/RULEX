@@ -1069,13 +1069,10 @@ public class ComplexRuleEvaluator {
     }
 
     try {
-      Pattern compiledPattern = Pattern.compile(pattern);
-      return RegexValidator.matchWithTimeout(compiledPattern, String.valueOf(fieldValue));
-    } catch (RegexValidator.TimeoutException e) {
-      log.warn("Regex timeout: {} - {}", pattern, e.getMessage());
-      return false;
+      // GAP-C FIX: Usar safeMatches que valida pattern + aplica timeout
+      return RegexValidator.safeMatches(pattern, String.valueOf(fieldValue));
     } catch (Exception e) {
-      log.warn("Regex inválida: {}", pattern);
+      log.warn("Erro ao avaliar regex '{}': {}", pattern, e.getMessage());
       return false;
     }
   }
