@@ -202,3 +202,16 @@ rulex:
     velocity-cache-ttl-seconds: ${RULEX_VELOCITY_CACHE_TTL:30}
     velocity-cache-max-size: ${RULEX_VELOCITY_CACHE_SIZE:10000}
     bin-cache-ttl-seconds: ${RULEX_BIN_CACHE_TTL:3600}
+
+# GAP-E: Configuração SpringDoc OpenAPI
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api/v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /api/swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  packages-to-scan: com.rulex.controller
+  paths-to-match: /**
