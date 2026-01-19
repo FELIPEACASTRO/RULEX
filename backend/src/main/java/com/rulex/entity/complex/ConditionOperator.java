@@ -638,6 +638,7 @@ public enum ConditionOperator {
   NAME_SIMILARITY_GT, // Similaridade de nome maior que
   
   // Operadores de contagem
-  COUNT_DISTINCT_COUNTRIES_LAST_N_DAYS // Países distintos nos últimos N dias
+  COUNT_DISTINCT_COUNTRIES_LAST_N_DAYS, // Países distintos nos últimos N dias
+  ; // GAP-J FIX: Vírgula final para facilitar parsing por scripts
 }
 
