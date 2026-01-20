@@ -713,7 +713,7 @@ export interface ComplexRuleDTO {
   title: string;
   description?: string;
   version?: number;
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'TESTING';
+  status: 'DRAFT' | 'PUBLISHED' | 'DEPRECATED' | 'ARCHIVED' | 'TESTING';
   priority: number;
   severity: number;
   decision: 'APROVADO' | 'SUSPEITA_DE_FRAUDE' | 'FRAUDE';

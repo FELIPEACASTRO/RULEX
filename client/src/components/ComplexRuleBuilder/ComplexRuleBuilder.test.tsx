@@ -155,9 +155,10 @@ describe('ComplexRuleBuilder Types', () => {
     });
 
     it('RULE_STATUSES has all expected statuses', () => {
-      expect(RULE_STATUSES.length).toBe(4);
+      expect(RULE_STATUSES.length).toBe(5);
       expect(RULE_STATUSES.map(s => s.value)).toContain('DRAFT');
       expect(RULE_STATUSES.map(s => s.value)).toContain('PUBLISHED');
+      expect(RULE_STATUSES.map(s => s.value)).toContain('DEPRECATED');
     });
 
     it('DECISION_TYPES has all expected decisions', () => {

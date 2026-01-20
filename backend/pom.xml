@@ -342,6 +342,8 @@
                 <configuration>
                     <source>21</source>
                     <target>21</target>
+                    <useIncrementalCompilation>false</useIncrementalCompilation>
+                    <forceJavacCompilerUse>true</forceJavacCompilerUse>
                     <compilerArgs>
                         <arg>-Werror</arg>
                         <arg>-Xlint:all,-processing</arg>
@@ -364,6 +366,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.4</version>
                 <configuration>
+                    <argLine>-XX:+EnableDynamicAgentLoading</argLine>
                     <excludes>
                         <!-- Testes de integração requerem Testcontainers/Docker -->
                         <exclude>**/*IntegrationTest.java</exclude>

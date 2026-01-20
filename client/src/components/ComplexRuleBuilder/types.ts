@@ -639,12 +639,13 @@ export interface ConditionGroup {
 // STATUS E DECISÃO
 // ============================================
 
-export type RuleStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'TESTING';
+export type RuleStatus = 'DRAFT' | 'PUBLISHED' | 'DEPRECATED' | 'ARCHIVED' | 'TESTING';
 export type DecisionType = 'APROVADO' | 'SUSPEITA_DE_FRAUDE' | 'FRAUDE';
 
 export const RULE_STATUSES: { value: RuleStatus; label: string; color: string }[] = [
   { value: 'DRAFT', label: 'Rascunho', color: 'bg-gray-500' },
   { value: 'PUBLISHED', label: 'Publicada', color: 'bg-green-500' },
+  { value: 'DEPRECATED', label: 'Descontinuada', color: 'bg-orange-500' },
   { value: 'TESTING', label: 'Em Teste', color: 'bg-yellow-500' },
   { value: 'ARCHIVED', label: 'Arquivada', color: 'bg-red-500' },
 ];

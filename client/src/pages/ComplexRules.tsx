@@ -269,6 +269,8 @@ export default function ComplexRules() {
         return 'bg-green-500';
       case 'DRAFT':
         return 'bg-gray-500';
+      case 'DEPRECATED':
+        return 'bg-orange-500';
       case 'TESTING':
         return 'bg-yellow-500';
       case 'ARCHIVED':
@@ -395,6 +397,7 @@ export default function ComplexRules() {
                 <SelectItem value="all">Todos Status</SelectItem>
                 <SelectItem value="DRAFT">Rascunho</SelectItem>
                 <SelectItem value="PUBLISHED">Publicada</SelectItem>
+                <SelectItem value="DEPRECATED">Descontinuada</SelectItem>
                 <SelectItem value="TESTING">Em Teste</SelectItem>
                 <SelectItem value="ARCHIVED">Arquivada</SelectItem>
               </SelectContent>

@@ -3,6 +3,10 @@ server:
     context-path: /api
 
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.neo4j.Neo4jDataAutoConfiguration
   # DataSource é configurado dinamicamente pelo BaseIntegrationTest via @DynamicPropertySource
   datasource:
     hikari:
@@ -30,6 +34,8 @@ spring:
         enabled: false
 
 rulex:
+  neo4j:
+    enabled: false
   security:
     enabled: false
   access-log:
@@ -38,3 +44,8 @@ rulex:
     velocity:
       redis:
         enabled: false
+
+management:
+  health:
+    neo4j:
+      enabled: false

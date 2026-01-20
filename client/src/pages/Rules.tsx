@@ -135,6 +135,8 @@ export default function Rules() {
     threshold?: number;
     severity?: number;
     conditionsCount: number;
+    complexId?: string;
+    complexKey?: string;
     original: RuleConfiguration | ComplexRuleDTO;
   };
 
@@ -164,6 +166,8 @@ export default function Rules() {
       priority: r.priority,
       severity: r.severity,
       conditionsCount: r.rootConditionGroup?.conditions?.length ?? 0,
+      complexId: r.id,
+      complexKey: r.key,
       original: r,
     }));
 
@@ -589,6 +593,36 @@ export default function Rules() {
     }
   };
 
+  const getComplexStatusColor = (status?: ComplexRuleDTO['status']) => {
+    switch (status) {
+      case 'PUBLISHED':
+        return 'bg-green-100 text-green-800';
+      case 'DRAFT':
+        return 'bg-gray-100 text-gray-800';
+      case 'DEPRECATED':
+        return 'bg-orange-100 text-orange-800';
+      case 'TESTING':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'ARCHIVED':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getDecisionLabel = (decision?: ComplexRuleDTO['decision']) => {
+    switch (decision) {
+      case 'APROVADO':
+        return 'Aprovado';
+      case 'SUSPEITA_DE_FRAUDE':
+        return 'Suspeita de Fraude';
+      case 'FRAUDE':
+        return 'Fraude';
+      default:
+        return decision ?? '-';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -691,7 +725,7 @@ export default function Rules() {
                 <Textarea
                   id="parameters"
                   value={formData.parameters}
-                  onChange={(e) => setFormData({ ...formData, parameters: e.target.value })}
+                  onChange={(e) => updateFormData({ parameters: e.target.value })}
                   placeholder={
                     formData.ruleType === 'VELOCITY'
                       ? `Ex (velocity/state):\n{\n  "velocity": {\n    "metric": "COUNT",\n    "dimension": "CUSTOMER",\n    "windowSeconds": 3600,\n    "operator": "GT",\n    "threshold": 3\n  }\n}`
@@ -716,8 +750,7 @@ export default function Rules() {
                     id="ruleType"
                     value={formData.ruleType}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
+                      updateFormData({
                         ruleType: e.target.value as RuleConfiguration['ruleType'],
                       })
                     }
@@ -737,8 +770,7 @@ export default function Rules() {
                     id="classification"
                     value={formData.classification}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
+                      updateFormData({
                         classification: e.target.value as RuleConfiguration['classification'],
                       })
                     }
@@ -760,8 +792,7 @@ export default function Rules() {
                     type="number"
                     value={formData.threshold}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
+                      updateFormData({
                         threshold: e.target.value === '' ? 0 : parseInt(e.target.value, 10),
                       })
                     }
@@ -786,8 +817,7 @@ export default function Rules() {
                     max="100"
                     value={formData.weight}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
+                      updateFormData({
                         weight: e.target.value === '' ? 0 : parseInt(e.target.value, 10),
                       })
                     }
@@ -820,8 +850,7 @@ export default function Rules() {
                       id="logicOperator"
                       value={formData.logicOperator}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
+                        updateFormData({
                           logicOperator: e.target.value as RuleConfiguration['logicOperator'],
                         })
                       }
@@ -933,7 +962,7 @@ export default function Rules() {
                             onChange={(e) => {
                               const next = [...formData.conditions];
                               next[idx] = { ...next[idx], field: e.target.value };
-                              setFormData({ ...formData, conditions: next });
+                              updateFormData({ conditions: next });
                             }}
                             placeholder="Ex: consumerAuthenticationScore"
                             list="rule-condition-fields"
@@ -972,7 +1001,7 @@ export default function Rules() {
                                   ? ''
                                   : next[idx].value,
                               };
-                              setFormData({ ...formData, conditions: next });
+                              updateFormData({ conditions: next });
                             }}
                             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
                           >
@@ -995,7 +1024,7 @@ export default function Rules() {
                               onChange={(e) => {
                                 const next = [...formData.conditions];
                                 next[idx] = { ...next[idx], value: e.target.value };
-                                setFormData({ ...formData, conditions: next });
+                                updateFormData({ conditions: next });
                               }}
                               placeholder={
                                 c.operator === 'IN' || c.operator === 'NOT_IN'
@@ -1020,7 +1049,7 @@ export default function Rules() {
                             variant="ghost"
                             onClick={() => {
                               const next = formData.conditions.filter((_, i) => i !== idx);
-                              setFormData({ ...formData, conditions: next });
+                              updateFormData({ conditions: next });
                             }}
                             title="Remover condição"
                           >
@@ -1035,8 +1064,7 @@ export default function Rules() {
                     type="button"
                     variant="outline"
                     onClick={() =>
-                      setFormData({
-                        ...formData,
+                      updateFormData({
                         conditions: [
                           ...formData.conditions,
                           { field: '', operator: 'EQ', value: '' } as RuleConfiguration['conditions'][number],
@@ -1054,7 +1082,7 @@ export default function Rules() {
                   type="checkbox"
                   id="enabled"
                   checked={formData.enabled}
-                  onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
+                  onChange={(e) => updateFormData({ enabled: e.target.checked })}
                   className="w-4 h-4 rounded border-input"
                 />
                 <label htmlFor="enabled" className="text-sm font-medium text-foreground">
@@ -1159,7 +1187,11 @@ export default function Rules() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRules.map((rule) => (
+                  {filteredRules.map((rule) => {
+                    const complexId = rule.type === 'complex' ? (rule.original as ComplexRuleDTO).id : undefined;
+                    const complexKey = rule.type === 'complex' ? (rule.original as ComplexRuleDTO).key : undefined;
+                    const complexActionDisabled = rule.type === 'complex' && !complexId;
+                    return (
                     <tr key={`${rule.type}-${rule.id}`} className="border-b border-border hover:bg-muted/50 transition-colors">
                       <td className="py-3 px-4">
                         <div className="flex flex-col">
@@ -1189,12 +1221,16 @@ export default function Rules() {
                           </Badge>
                         ) : (
                           <Badge className="bg-emerald-100 text-emerald-800">
-                            {rule.decision}
+                            {getDecisionLabel(rule.decision)}
                           </Badge>
                         )}
                       </td>
                       <td className="py-3 px-4 text-sm text-center text-foreground">
-                        {rule.type === 'simple' ? `${rule.weight}%` : `P${rule.priority}`}
+                        {rule.type === 'simple'
+                          ? `${rule.weight}%`
+                          : rule.priority !== undefined
+                            ? `P${rule.priority}`
+                            : '-'}
                       </td>
                       <td className="py-3 px-4 text-sm">
                         {rule.type === 'simple' ? (
@@ -1208,9 +1244,20 @@ export default function Rules() {
                         )}
                       </td>
                       <td className="py-3 px-4 text-sm text-center">
-                        <Badge variant={rule.enabled ? 'default' : 'secondary'}>
-                          {rule.enabled ? 'Ativa' : 'Inativa'}
-                        </Badge>
+                        {rule.type === 'simple' ? (
+                          <Badge variant={rule.enabled ? 'default' : 'secondary'}>
+                            {rule.enabled ? 'Ativa' : 'Inativa'}
+                          </Badge>
+                        ) : (
+                          <div className="flex flex-col items-center gap-1">
+                            <Badge className={getComplexStatusColor((rule.original as ComplexRuleDTO).status)}>
+                              {(rule.original as ComplexRuleDTO).status}
+                            </Badge>
+                            {!rule.enabled && (
+                              <span className="text-xs text-muted-foreground">Inativa</span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-center space-x-2">
                         <Button
@@ -1219,11 +1266,14 @@ export default function Rules() {
                           onClick={() => {
                             if (rule.type === 'simple') {
                               handleToggle(rule.id as number);
+                            } else if (complexId) {
+                              toggleComplexMutation.mutate(complexId);
                             } else {
-                              toggleComplexMutation.mutate(rule.id as string);
+                              toast.error(`Regra complexa sem ID válido (${complexKey ?? 'chave indisponível'}).`);
                             }
                           }}
                           title={rule.enabled ? 'Desativar' : 'Ativar'}
+                          disabled={complexActionDisabled}
                         >
                           <ToggleRight className="h-4 w-4" />
                         </Button>
@@ -1282,18 +1332,22 @@ export default function Rules() {
                           onClick={() => {
                             if (rule.type === 'simple') {
                               handleDeleteClick(rule.id as number);
+                            } else if (complexId) {
+                              deleteComplexMutation.mutate(complexId);
                             } else {
-                              deleteComplexMutation.mutate(rule.id as string);
+                              toast.error(`Regra complexa sem ID válido (${complexKey ?? 'chave indisponível'}).`);
                             }
                           }}
                           title="Deletar"
                           className="text-red-600 hover:text-red-700"
+                          disabled={complexActionDisabled}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </td>
                     </tr>
-                  ))}
+                  );
+                  })}
                 </tbody>
               </table>
             </div>

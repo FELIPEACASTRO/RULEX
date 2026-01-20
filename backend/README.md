@@ -45,6 +45,15 @@ Serviços:
 - **Unit + IT (Testcontainers)**: `mvn -q test`
   - Se não houver Docker disponível, os testes de integração com Testcontainers ficam **skipped** automaticamente.
 
+### Windows: erro AccessDenied no `ComplexRuleEvaluator.class`
+
+Se ocorrer erro de bloqueio de arquivo durante `mvn test`, use o script:
+
+- `scripts/run-backend-tests.ps1` (recompila e executa testes)
+- `scripts/run-backend-tests-clean.ps1` (cópia para diretório temporário)
+
+O primeiro força recompilação do `ComplexRuleEvaluator.class`. O segundo copia o backend para um diretório temporário e executa os testes fora do workspace para evitar locks.
+
 ## Migrations (Flyway)
 
 As migrations ficam em `src/main/resources/db/migration/` e rodam no startup (ou em testes) via Flyway.
