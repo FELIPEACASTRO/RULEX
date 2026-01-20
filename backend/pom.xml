@@ -366,7 +366,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.4</version>
                 <configuration>
-                    <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                    <argLine>-XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
                     <excludes>
                         <!-- Testes de integração requerem Testcontainers/Docker -->
                         <exclude>**/*IntegrationTest.java</exclude>
