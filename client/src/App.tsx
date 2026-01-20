@@ -15,7 +15,6 @@ import TransactionSimulator from "./pages/TransactionSimulator";
 import Monitoring from "./pages/Monitoring";
 import Settings from "./pages/Settings";
 import Manual from "./pages/Manual";
-import DiagramsHubPage from "./pages/DiagramsHub";
 import RuleApprovals from "./pages/RuleApprovals";
 
 function Router() {
@@ -37,7 +36,6 @@ function Router() {
             <Route path={"/monitoring"} component={Monitoring} />
             <Route path={"/settings"} component={Settings} />
             <Route path={"/manual"} component={Manual} />
-            <Route path={"/diagrams"} component={DiagramsHubPage} />
             <Route path={"/approvals"} component={RuleApprovals} />
             <Route path={"/404"} component={NotFound} />
             <Route component={NotFound} />

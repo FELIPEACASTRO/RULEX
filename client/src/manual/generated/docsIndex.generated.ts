@@ -88,34 +88,6 @@ export const DOCS_INDEX: DocEntry[] = [
     "isEssential": true
   },
   {
-    "id": "DIAGRAMAS",
-    "filename": "DIAGRAMAS.md",
-    "title": "DIAGRAMAS — Documentação Oficial do RULEX",
-    "category": "Outros",
-    "isEssential": false
-  },
-  {
-    "id": "DIAGRAMS_RULEX_PASSADA2_REPORT",
-    "filename": "DIAGRAMS_RULEX_PASSADA2_REPORT.md",
-    "title": "Central de Diagramas — Solução RULEX (PASSADA 2: Consistência)",
-    "category": "Regras",
-    "isEssential": false
-  },
-  {
-    "id": "DIAGRAMS_RULEX_PASSADA3_REPORT",
-    "filename": "DIAGRAMS_RULEX_PASSADA3_REPORT.md",
-    "title": "Central de Diagramas — Solução RULEX (PASSADA 3: Validação Executável)",
-    "category": "Regras",
-    "isEssential": false
-  },
-  {
-    "id": "DIAGRAMS_RULEX_REPORT",
-    "filename": "DIAGRAMS_RULEX_REPORT.md",
-    "title": "Central de Diagramas — Solução RULEX (Relatório)",
-    "category": "Regras",
-    "isEssential": false
-  },
-  {
     "id": "DSL_ADVANCED_AGGREGATIONS",
     "filename": "DSL_ADVANCED_AGGREGATIONS.md",
     "title": "DSL Avançada: Operadores de Agregação Temporal",
