@@ -112,6 +112,8 @@ temp/
 
 # Temporary development artifacts
 DEVIN_*.md
+!DEVIN_PROGRESS.md
+!DEVIN_EVIDENCE_LOG.md
 SOLUTION_INDEX.csv
 Prompt/
 info/
