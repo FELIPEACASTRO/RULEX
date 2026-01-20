@@ -2,6 +2,7 @@ package com.rulex.golden;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.rulex.dto.complex.ConditionDTO.OperatorType;
@@ -59,10 +60,14 @@ class GoldenMasterBaselineTest {
     String currentJson = MAPPER.writeValueAsString(currentState);
 
     if (Files.exists(baselinePath)) {
-      String baselineJson = Files.readString(baselinePath);
-      assertEquals(
-          baselineJson.trim(),
-          currentJson.trim(),
+        String baselineJson = Files.readString(baselinePath);
+        Map<String, Object> baselineState =
+          MAPPER.readValue(baselineJson, new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> currentStateNormalized =
+          MAPPER.readValue(currentJson, new TypeReference<Map<String, Object>>() {});
+        assertEquals(
+          baselineState,
+          currentStateNormalized,
           "Operator inventory changed! If intentional, update baseline and document in CHANGELOG.");
     } else {
       // Create baseline
@@ -86,10 +91,14 @@ class GoldenMasterBaselineTest {
     String currentJson = MAPPER.writeValueAsString(categories);
 
     if (Files.exists(baselinePath)) {
-      String baselineJson = Files.readString(baselinePath);
-      assertEquals(
-          baselineJson.trim(),
-          currentJson.trim(),
+        String baselineJson = Files.readString(baselinePath);
+        Map<String, Integer> baselineCategories =
+          MAPPER.readValue(baselineJson, new TypeReference<Map<String, Integer>>() {});
+        Map<String, Integer> currentCategories =
+          MAPPER.readValue(currentJson, new TypeReference<Map<String, Integer>>() {});
+        assertEquals(
+          baselineCategories,
+          currentCategories,
           "Operator categories changed! If intentional, update baseline.");
     } else {
       Files.writeString(baselinePath, currentJson);

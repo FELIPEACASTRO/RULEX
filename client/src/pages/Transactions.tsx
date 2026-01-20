@@ -39,6 +39,9 @@ export default function Transactions() {
   const fetchTransactions = async () => {
     setLoading(true);
     try {
+      const baseUrl =
+        import.meta.env.VITE_JAVA_API_URL ||
+        (typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
       const params = new URLSearchParams({
         page: page.toString(),
         size: size.toString(),
@@ -49,7 +52,10 @@ export default function Transactions() {
       if (filters.minAmount) params.append('minAmount', filters.minAmount);
       if (filters.maxAmount) params.append('maxAmount', filters.maxAmount);
 
-      const response = await fetch(`/api/transactions?${params}`);
+      const response = await fetch(`${baseUrl}/api/transactions?${params}`);
+      if (!response.ok) {
+        throw new Error(`Falha ao carregar transações: ${response.status}`);
+      }
       const data = await response.json();
       setTransactions(data.content || []);
       setTotalElements(data.totalElements || 0);

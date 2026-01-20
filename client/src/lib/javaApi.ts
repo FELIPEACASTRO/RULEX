@@ -14,6 +14,8 @@ import type { ConditionOperatorType } from "./operatorTypes";
 
 // Preferir same-origin (Vite proxy em dev). Pode ser sobrescrito por env.
 const JAVA_API_BASE_URL: string = import.meta.env.VITE_JAVA_API_URL || "";
+const DEFAULT_API_BASE_URL =
+  JAVA_API_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost");
 
 // Opcional: Basic Auth (Spring Security HTTP Basic).
 // Formato: "usuario:senha" (ex.: "admin:rulex").
@@ -257,7 +259,7 @@ export interface FieldDictionaryItem {
 // ========================================
 
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${JAVA_API_BASE_URL}${endpoint}`;
+  const url = `${DEFAULT_API_BASE_URL}${endpoint}`;
 
   const token = getAccessToken();
   const basicAuthRaw = BASIC_AUTH_RAW || getBasicAuthRaw() || undefined;
@@ -345,7 +347,7 @@ export async function exportTransactions(
   if (filters.startDate) params.append("startDate", filters.startDate);
   if (filters.endDate) params.append("endDate", filters.endDate);
 
-  const url = `${JAVA_API_BASE_URL}/api/transactions/export?${params.toString()}`;
+  const url = `${DEFAULT_API_BASE_URL}/api/transactions/export?${params.toString()}`;
   const token = getAccessToken();
   const basicAuthHeader =
     !token && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
@@ -612,7 +614,7 @@ export async function exportAuditLogs(
   if (filters.endDate) params.append("endDate", filters.endDate);
   params.append("limit", String(filters.limit ?? 10000));
 
-  const url = `${JAVA_API_BASE_URL}/api/audit/export?${params.toString()}`;
+  const url = `${DEFAULT_API_BASE_URL}/api/audit/export?${params.toString()}`;
   const token = getAccessToken();
   const basicAuthHeader =
     !token && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
@@ -662,7 +664,7 @@ export async function checkApiHealth(): Promise<{
 }> {
   const start = Date.now();
   try {
-    const response = await fetch(`${JAVA_API_BASE_URL}/actuator/health`, {
+    const response = await fetch(`${DEFAULT_API_BASE_URL}/actuator/health`, {
       method: "GET",
       headers: { Accept: "application/json" },
     });

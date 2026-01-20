@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Transactions from "./Transactions";
@@ -10,6 +10,8 @@ vi.mock("wouter", () => ({
     <a href={href}>{children}</a>
   ),
 }));
+
+const mockFetch = vi.fn();
 
 const createTestQueryClient = () =>
   new QueryClient({
@@ -30,6 +32,15 @@ const renderWithProviders = (ui: React.ReactElement) => {
 describe("Transactions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [], totalElements: 0 }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("renders without crashing", () => {
