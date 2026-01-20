@@ -73,6 +73,10 @@ public class VelocityServiceFacade {
         RedisVelocityService.KeyType redisKeyType = convertKeyType(keyType);
         RedisVelocityService.TimeWindow redisWindow = convertTimeWindow(window);
 
+        if (redisWindow == null) {
+          return velocityService.getStats(request, keyType, window);
+        }
+
         RedisVelocityService.VelocityStats redisStats =
             redisVelocityService.getStats(request, redisKeyType, redisWindow);
 
@@ -106,9 +110,12 @@ public class VelocityServiceFacade {
     long count = redisVelocityCacheService.getTransactionCount(request, cacheKeyType, cacheWindow);
     BigDecimal total = redisVelocityCacheService.getTotalAmount(request, cacheKeyType, cacheWindow);
     BigDecimal avg = redisVelocityCacheService.getAverageAmount(request, cacheKeyType, cacheWindow);
-    long distinctMerchants = redisVelocityCacheService.getDistinctMerchants(request, cacheKeyType);
-    long distinctMccs = redisVelocityCacheService.getDistinctMccs(request, cacheKeyType);
-    long distinctCountries = redisVelocityCacheService.getDistinctCountries(request, cacheKeyType);
+    long distinctMerchants =
+      redisVelocityCacheService.getDistinctMerchants(request, cacheKeyType, cacheWindow);
+    long distinctMccs =
+      redisVelocityCacheService.getDistinctMccs(request, cacheKeyType, cacheWindow);
+    long distinctCountries =
+      redisVelocityCacheService.getDistinctCountries(request, cacheKeyType, cacheWindow);
 
     return VelocityService.VelocityStats.builder()
         .transactionCount(count)
@@ -252,7 +259,7 @@ public class VelocityServiceFacade {
       case HOUR_12 -> RedisVelocityService.TimeWindow.HOUR_12;
       case HOUR_24 -> RedisVelocityService.TimeWindow.HOUR_24;
       case DAY_7 -> RedisVelocityService.TimeWindow.DAY_7;
-      case DAY_30 -> RedisVelocityService.TimeWindow.DAY_7; // Fallback para 7 dias
+      case DAY_30 -> null; // Cache em memória não suporta 30 dias
     };
   }
 
@@ -278,8 +285,8 @@ public class VelocityServiceFacade {
       case HOUR_6 -> RedisVelocityCacheService.TimeWindow.HOUR_6;
       case HOUR_12 -> RedisVelocityCacheService.TimeWindow.HOUR_12;
       case HOUR_24 -> RedisVelocityCacheService.TimeWindow.HOUR_24;
-      case DAY_7 -> RedisVelocityCacheService.TimeWindow.HOUR_24; // Fallback
-      case DAY_30 -> RedisVelocityCacheService.TimeWindow.HOUR_24; // Fallback
+      case DAY_7 -> RedisVelocityCacheService.TimeWindow.DAY_7;
+      case DAY_30 -> RedisVelocityCacheService.TimeWindow.DAY_30;
     };
   }
 }

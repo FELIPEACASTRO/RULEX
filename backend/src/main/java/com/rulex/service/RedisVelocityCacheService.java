@@ -25,12 +25,12 @@ import org.springframework.stereotype.Service;
  * <ul>
  *   <li>velocity:{keyType}:{keyHash}:count:{window} - Contador de transações
  *   <li>velocity:{keyType}:{keyHash}:sum:{window} - Soma de valores
- *   <li>velocity:{keyType}:{keyHash}:distinct:merchants - HyperLogLog de merchants
- *   <li>velocity:{keyType}:{keyHash}:distinct:mccs - HyperLogLog de MCCs
- *   <li>velocity:{keyType}:{keyHash}:distinct:countries - HyperLogLog de países
+ *   <li>velocity:{keyType}:{keyHash}:distinct:merchants:{window} - HyperLogLog de merchants
+ *   <li>velocity:{keyType}:{keyHash}:distinct:mccs:{window} - HyperLogLog de MCCs
+ *   <li>velocity:{keyType}:{keyHash}:distinct:countries:{window} - HyperLogLog de países
  * </ul>
  *
- * <p>Janelas temporais suportadas: 5min, 15min, 30min, 1h, 6h, 12h, 24h
+ * <p>Janelas temporais suportadas: 5min, 15min, 30min, 1h, 6h, 12h, 24h, 7d, 30d
  */
 @Service
 @RequiredArgsConstructor
@@ -53,7 +53,9 @@ public class RedisVelocityCacheService {
     HOUR_1(60, Duration.ofMinutes(65)),
     HOUR_6(360, Duration.ofHours(7)),
     HOUR_12(720, Duration.ofHours(13)),
-    HOUR_24(1440, Duration.ofHours(25));
+    HOUR_24(1440, Duration.ofHours(25)),
+    DAY_7(10080, Duration.ofDays(8)),
+    DAY_30(43200, Duration.ofDays(31));
 
     private final int minutes;
     private final Duration ttl;
@@ -200,12 +202,16 @@ public class RedisVelocityCacheService {
    * @return Estimativa de merchants distintos
    */
   public long getDistinctMerchants(TransactionRequest request, KeyType keyType) {
+    return getDistinctMerchants(request, keyType, TimeWindow.HOUR_24);
+  }
+
+  public long getDistinctMerchants(TransactionRequest request, KeyType keyType, TimeWindow window) {
     String keyValue = extractKeyValue(request, keyType);
     if (keyValue == null) {
       return 0;
     }
 
-    String redisKey = buildDistinctKey(keyType, keyValue, "merchants");
+    String redisKey = buildDistinctKey(keyType, keyValue, "merchants", window);
     try {
       Long count = redisTemplate.opsForHyperLogLog().size(redisKey);
       return count != null ? count : 0;
@@ -223,12 +229,16 @@ public class RedisVelocityCacheService {
    * @return Estimativa de MCCs distintos
    */
   public long getDistinctMccs(TransactionRequest request, KeyType keyType) {
+    return getDistinctMccs(request, keyType, TimeWindow.HOUR_24);
+  }
+
+  public long getDistinctMccs(TransactionRequest request, KeyType keyType, TimeWindow window) {
     String keyValue = extractKeyValue(request, keyType);
     if (keyValue == null) {
       return 0;
     }
 
-    String redisKey = buildDistinctKey(keyType, keyValue, "mccs");
+    String redisKey = buildDistinctKey(keyType, keyValue, "mccs", window);
     try {
       Long count = redisTemplate.opsForHyperLogLog().size(redisKey);
       return count != null ? count : 0;
@@ -246,12 +256,17 @@ public class RedisVelocityCacheService {
    * @return Estimativa de países distintos
    */
   public long getDistinctCountries(TransactionRequest request, KeyType keyType) {
+    return getDistinctCountries(request, keyType, TimeWindow.HOUR_24);
+  }
+
+  public long getDistinctCountries(
+      TransactionRequest request, KeyType keyType, TimeWindow window) {
     String keyValue = extractKeyValue(request, keyType);
     if (keyValue == null) {
       return 0;
     }
 
-    String redisKey = buildDistinctKey(keyType, keyValue, "countries");
+    String redisKey = buildDistinctKey(keyType, keyValue, "countries", window);
     try {
       Long count = redisTemplate.opsForHyperLogLog().size(redisKey);
       return count != null ? count : 0;
@@ -293,25 +308,25 @@ public class RedisVelocityCacheService {
       long amountCents = amount.multiply(new BigDecimal("100")).longValue();
       redisTemplate.opsForValue().increment(sumKey, amountCents);
       setTtlIfNew(sumKey, window.getTtl());
-    }
 
-    // Adicionar aos HyperLogLogs (sem TTL, pois são acumulativos)
-    if (request.getMerchantId() != null) {
-      String merchantKey = buildDistinctKey(keyType, keyValue, "merchants");
-      redisTemplate.opsForHyperLogLog().add(merchantKey, request.getMerchantId());
-      redisTemplate.expire(merchantKey, Duration.ofHours(25));
-    }
+      // Adicionar aos HyperLogLogs por janela
+      if (request.getMerchantId() != null) {
+        String merchantKey = buildDistinctKey(keyType, keyValue, "merchants", window);
+        redisTemplate.opsForHyperLogLog().add(merchantKey, request.getMerchantId());
+        setTtlIfNew(merchantKey, window.getTtl());
+      }
 
-    if (request.getMcc() != null) {
-      String mccKey = buildDistinctKey(keyType, keyValue, "mccs");
-      redisTemplate.opsForHyperLogLog().add(mccKey, String.valueOf(request.getMcc()));
-      redisTemplate.expire(mccKey, Duration.ofHours(25));
-    }
+      if (request.getMcc() != null) {
+        String mccKey = buildDistinctKey(keyType, keyValue, "mccs", window);
+        redisTemplate.opsForHyperLogLog().add(mccKey, String.valueOf(request.getMcc()));
+        setTtlIfNew(mccKey, window.getTtl());
+      }
 
-    if (request.getMerchantCountryCode() != null) {
-      String countryKey = buildDistinctKey(keyType, keyValue, "countries");
-      redisTemplate.opsForHyperLogLog().add(countryKey, request.getMerchantCountryCode());
-      redisTemplate.expire(countryKey, Duration.ofHours(25));
+      if (request.getMerchantCountryCode() != null) {
+        String countryKey = buildDistinctKey(keyType, keyValue, "countries", window);
+        redisTemplate.opsForHyperLogLog().add(countryKey, request.getMerchantCountryCode());
+        setTtlIfNew(countryKey, window.getTtl());
+      }
     }
   }
 
@@ -353,12 +368,19 @@ public class RedisVelocityCacheService {
   }
 
   private String buildDistinctKey(KeyType keyType, String keyValue, String distinctType) {
+    return buildDistinctKey(keyType, keyValue, distinctType, TimeWindow.HOUR_24);
+  }
+
+  private String buildDistinctKey(
+      KeyType keyType, String keyValue, String distinctType, TimeWindow window) {
     return KEY_PREFIX
         + keyType.name().toLowerCase()
         + ":"
         + keyValue
         + DISTINCT_PREFIX
-        + distinctType;
+        + distinctType
+        + ":"
+        + window.getKey();
   }
 
   private TimeWindow findClosestWindow(int minutes) {
