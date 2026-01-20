@@ -1715,6 +1715,26 @@ public class RuleEngineService {
         // seguir
     }
 
+    // Operadores que comparam com outro campo
+    switch (operator) {
+      case "GT_FIELD", "EQ_FIELD", "NE_FIELD", "GTE_FIELD", "LT_FIELD", "LTE_FIELD" -> {
+        Object rightValue = readComputedLeftValue(request, rawValue);
+        return compareFieldValues(leftValue, rightValue, operator);
+      }
+      case "PERCENTAGE_OF_FIELD" -> {
+        return evaluatePercentageOfField(leftValue, request, rawValue);
+      }
+      case "MODULO_ZERO" -> {
+        return evaluateModuloZero(leftValue, rawValue);
+      }
+      case "DECIMAL_PLACES_GT" -> {
+        return evaluateDecimalPlacesGt(leftValue, rawValue);
+      }
+      default -> {
+        // seguir
+      }
+    }
+
     if (leftValue == null) {
       return false;
     }
@@ -1778,8 +1798,122 @@ public class RuleEngineService {
       case "<" -> "LT";
       case ">=" -> "GTE";
       case "<=" -> "LTE";
+      case "IN_LIST" -> "IN";
+      case "NOT_IN_LIST" -> "NOT_IN";
+      case "NEQ_FIELD" -> "NE_FIELD";
       default -> o.toUpperCase(java.util.Locale.ROOT);
     };
+  }
+
+  private boolean compareFieldValues(Object leftValue, Object rightValue, String operator) {
+    if (leftValue == null || rightValue == null) {
+      return false;
+    }
+
+    if (leftValue instanceof Number || leftValue instanceof BigDecimal
+        || rightValue instanceof Number || rightValue instanceof BigDecimal) {
+      BigDecimal left = toBigDecimal(leftValue);
+      BigDecimal right = toBigDecimal(rightValue);
+      if (left == null || right == null) {
+        return false;
+      }
+      return switch (operator) {
+        case "GT_FIELD" -> left.compareTo(right) > 0;
+        case "GTE_FIELD" -> left.compareTo(right) >= 0;
+        case "LT_FIELD" -> left.compareTo(right) < 0;
+        case "LTE_FIELD" -> left.compareTo(right) <= 0;
+        case "EQ_FIELD" -> left.compareTo(right) == 0;
+        case "NE_FIELD" -> left.compareTo(right) != 0;
+        default -> false;
+      };
+    }
+
+    String left = String.valueOf(leftValue);
+    String right = String.valueOf(rightValue);
+    return switch (operator) {
+      case "EQ_FIELD" -> left.equals(right);
+      case "NE_FIELD" -> !left.equals(right);
+      case "GT_FIELD" -> left.compareTo(right) > 0;
+      case "GTE_FIELD" -> left.compareTo(right) >= 0;
+      case "LT_FIELD" -> left.compareTo(right) < 0;
+      case "LTE_FIELD" -> left.compareTo(right) <= 0;
+      default -> false;
+    };
+  }
+
+  private BigDecimal toBigDecimal(Object value) {
+    if (value == null) return null;
+    if (value instanceof BigDecimal bd) return bd;
+    try {
+      return new BigDecimal(String.valueOf(value));
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private boolean evaluatePercentageOfField(
+      Object leftValue, TransactionRequest request, String rawValue) {
+    if (leftValue == null || rawValue == null || rawValue.isBlank()) {
+      return false;
+    }
+    String[] parts = rawValue.split(":");
+    if (parts.length < 2) {
+      return false;
+    }
+
+    String otherField = parts[0].trim();
+    BigDecimal min = parseBigDecimalSafe(parts[1]);
+    BigDecimal max = parts.length >= 3 ? parseBigDecimalSafe(parts[2]) : null;
+    if (min == null) {
+      return false;
+    }
+
+    Object otherValue = readComputedLeftValue(request, otherField);
+    BigDecimal left = toBigDecimal(leftValue);
+    BigDecimal right = toBigDecimal(otherValue);
+    if (left == null || right == null || right.compareTo(BigDecimal.ZERO) == 0) {
+      return false;
+    }
+
+    BigDecimal pct = left.multiply(BigDecimal.valueOf(100)).divide(right, 6, java.math.RoundingMode.HALF_UP);
+    if (max == null) {
+      return pct.compareTo(min) >= 0;
+    }
+    return pct.compareTo(min) >= 0 && pct.compareTo(max) <= 0;
+  }
+
+  private BigDecimal parseBigDecimalSafe(String value) {
+    try {
+      return new BigDecimal(value.trim());
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private boolean evaluateModuloZero(Object leftValue, String rawValue) {
+    BigDecimal left = toBigDecimal(leftValue);
+    BigDecimal divisor = parseBigDecimalSafe(rawValue == null ? "" : rawValue);
+    if (left == null || divisor == null || divisor.compareTo(BigDecimal.ZERO) == 0) {
+      return false;
+    }
+    return left.remainder(divisor).compareTo(BigDecimal.ZERO) == 0;
+  }
+
+  private boolean evaluateDecimalPlacesGt(Object leftValue, String rawValue) {
+    BigDecimal left = toBigDecimal(leftValue);
+    if (left == null) {
+      return false;
+    }
+    int threshold = 0;
+    try {
+      threshold = Integer.parseInt(rawValue.trim());
+    } catch (Exception e) {
+      return false;
+    }
+    String normalized = left.stripTrailingZeros().toPlainString();
+    int idx = normalized.indexOf('.');
+    int decimals = idx >= 0 ? normalized.length() - idx - 1 : 0;
+    return decimals > threshold;
   }
 
   private boolean betweenNumber(BigDecimal left, String raw, boolean inclusive) {

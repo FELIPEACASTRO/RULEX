@@ -1,8 +1,7 @@
 -- ============================================================================
--- Migration V36: Correção de Campos e Operadores Inválidos
--- Data: 2026-01-06
--- Objetivo: Corrigir regras que usam campos inexistentes no payload ou
---           operadores inexistentes no enum ConditionOperator
+-- Migration V46: Correção pós-seed de campos e operadores
+-- Data: 2026-01-20
+-- Objetivo: Aplicar as correções de operadores/campos às regras semeadas após V39
 -- ============================================================================
 
 -- ============================================================================
@@ -84,11 +83,5 @@ WHERE id IN (
 );
 
 -- ============================================================================
--- PARTE 4: Adicionar comentário de auditoria
--- ============================================================================
-
-COMMENT ON TABLE complex_rules IS 'Regras complexas de fraude. Auditado em 2026-01-06 via Triple Check V36.';
-
--- ============================================================================
--- FIM DA MIGRATION V36
+-- FIM DA MIGRATION V46
 -- ============================================================================

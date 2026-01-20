@@ -11,3 +11,4 @@
 - Ações de toggle/delete de regras complexas agora usam ID real e bloqueiam operações sem ID.
 - Tabela unificada agora mostra status real e decisão legível para regras complexas.
 - Aviso de alterações não salvas agora cobre todos os campos do formulário de regras simples.
+- Seeds pendentes de regras promovidas para migrações ativas, com normalização de operadores/campos pós-seed (V46).

@@ -46,9 +46,12 @@ public class VelocityOperatorEvaluator implements OperatorEvaluator {
         ConditionOperator.VELOCITY_DISTINCT_GT,
         ConditionOperator.VELOCITY_DISTINCT_LT,
         ConditionOperator.SUM_LAST_N_DAYS,
+        ConditionOperator.SUM_LAST_N_HOURS,
         ConditionOperator.COUNT_LAST_N_HOURS,
         ConditionOperator.AVG_LAST_N_DAYS,
         ConditionOperator.COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS,
+        ConditionOperator.COUNT_DISTINCT_MERCHANTS_LAST_N_HOURS,
+        ConditionOperator.MIN_AMOUNT_LAST_N_DAYS,
         ConditionOperator.COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS
     );
 
@@ -81,9 +84,12 @@ public class VelocityOperatorEvaluator implements OperatorEvaluator {
                 case VELOCITY_DISTINCT_GT -> evaluateVelocityDistinctGt(keyValue, condition, context);
                 case VELOCITY_DISTINCT_LT -> evaluateVelocityDistinctLt(keyValue, condition, context);
                 case SUM_LAST_N_DAYS -> evaluateSumLastNDays(keyValue, condition, context);
+                case SUM_LAST_N_HOURS -> evaluateSumLastNHours(keyValue, condition, context);
                 case COUNT_LAST_N_HOURS -> evaluateCountLastNHours(keyValue, condition, context);
                 case AVG_LAST_N_DAYS -> evaluateAvgLastNDays(keyValue, condition, context);
                 case COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS -> evaluateCountDistinctMerchantsLastNDays(keyValue, condition, context);
+                case COUNT_DISTINCT_MERCHANTS_LAST_N_HOURS -> evaluateCountDistinctMerchantsLastNHours(keyValue, condition, context);
+                case MIN_AMOUNT_LAST_N_DAYS -> evaluateMinAmountLastNDays(keyValue, condition, context);
                 case COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS -> evaluateCountDistinctCountriesLastNHours(keyValue, condition, context);
                 default -> false;
             };
@@ -229,13 +235,29 @@ public class VelocityOperatorEvaluator implements OperatorEvaluator {
         TransactionRequest request = context.getTransactionRequest();
         if (request == null) return false;
 
-        int days = parseIntSafe(condition.getValueMin(), 1);
+        ThresholdWindow tw = parseThresholdAndWindow(condition);
+        double days = tw.window > 0 ? tw.window : 1;
         KeyType keyType = resolveKeyType(condition.getFieldName());
         TimeWindow window = resolveTimeWindowFromDays(days);
         BigDecimal sum = velocityService.getAggregation(request, keyType, window, AggregationType.SUM);
 
-        BigDecimal threshold = parseBigDecimalThreshold(condition.getValueSingle());
+        BigDecimal threshold = tw.threshold != null ? tw.threshold : parseBigDecimalThreshold(condition.getValueSingle());
         log.debug("SUM_LAST_N_DAYS: days={}, sum={}, threshold={}", days, sum, threshold);
+        return sum.compareTo(threshold) > 0;
+    }
+
+    private boolean evaluateSumLastNHours(String keyValue, RuleCondition condition, EvaluationContext context) {
+        TransactionRequest request = context.getTransactionRequest();
+        if (request == null) return false;
+
+        ThresholdWindow tw = parseThresholdAndWindow(condition);
+        double hours = tw.window > 0 ? tw.window : 1;
+        KeyType keyType = resolveKeyType(condition.getFieldName());
+        TimeWindow window = resolveTimeWindowFromHours(hours);
+        BigDecimal sum = velocityService.getAggregation(request, keyType, window, AggregationType.SUM);
+
+        BigDecimal threshold = tw.threshold != null ? tw.threshold : parseBigDecimalThreshold(condition.getValueSingle());
+        log.debug("SUM_LAST_N_HOURS: hours={}, sum={}, threshold={}", hours, sum, threshold);
         return sum.compareTo(threshold) > 0;
     }
 
@@ -243,12 +265,13 @@ public class VelocityOperatorEvaluator implements OperatorEvaluator {
         TransactionRequest request = context.getTransactionRequest();
         if (request == null) return false;
 
-        int hours = parseIntSafe(condition.getValueMin(), 1);
+        ThresholdWindow tw = parseThresholdAndWindow(condition);
+        double hours = tw.window > 0 ? tw.window : 1;
         KeyType keyType = resolveKeyType(condition.getFieldName());
         TimeWindow window = resolveTimeWindowFromHours(hours);
         BigDecimal count = velocityService.getAggregation(request, keyType, window, AggregationType.COUNT);
 
-        long threshold = parseThreshold(condition.getValueSingle());
+        long threshold = tw.threshold != null ? tw.threshold.longValue() : parseThreshold(condition.getValueSingle());
         log.debug("COUNT_LAST_N_HOURS: hours={}, count={}, threshold={}", hours, count, threshold);
         return count.longValue() > threshold;
     }
@@ -257,12 +280,13 @@ public class VelocityOperatorEvaluator implements OperatorEvaluator {
         TransactionRequest request = context.getTransactionRequest();
         if (request == null) return false;
 
-        int days = parseIntSafe(condition.getValueMin(), 1);
+        ThresholdWindow tw = parseThresholdAndWindow(condition);
+        double days = tw.window > 0 ? tw.window : 1;
         KeyType keyType = resolveKeyType(condition.getFieldName());
         TimeWindow window = resolveTimeWindowFromDays(days);
         BigDecimal avg = velocityService.getAggregation(request, keyType, window, AggregationType.AVG);
 
-        BigDecimal threshold = parseBigDecimalThreshold(condition.getValueSingle());
+        BigDecimal threshold = tw.threshold != null ? tw.threshold : parseBigDecimalThreshold(condition.getValueSingle());
         log.debug("AVG_LAST_N_DAYS: days={}, avg={}, threshold={}", days, avg, threshold);
         return avg.compareTo(threshold) > 0;
     }
@@ -271,26 +295,58 @@ public class VelocityOperatorEvaluator implements OperatorEvaluator {
         TransactionRequest request = context.getTransactionRequest();
         if (request == null) return false;
 
-        int days = parseIntSafe(condition.getValueMin(), 1);
+        ThresholdWindow tw = parseThresholdAndWindow(condition);
+        double days = tw.window > 0 ? tw.window : 1;
         KeyType keyType = resolveKeyType(condition.getFieldName());
         TimeWindow window = resolveTimeWindowFromDays(days);
         BigDecimal count = velocityService.getAggregation(request, keyType, window, AggregationType.DISTINCT_MERCHANTS);
 
-        long threshold = parseThreshold(condition.getValueSingle());
+        long threshold = tw.threshold != null ? tw.threshold.longValue() : parseThreshold(condition.getValueSingle());
         log.debug("COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS: days={}, count={}, threshold={}", days, count, threshold);
         return count.longValue() > threshold;
+    }
+
+    private boolean evaluateCountDistinctMerchantsLastNHours(String keyValue, RuleCondition condition, EvaluationContext context) {
+        TransactionRequest request = context.getTransactionRequest();
+        if (request == null) return false;
+
+        ThresholdWindow tw = parseThresholdAndWindow(condition);
+        double hours = tw.window > 0 ? tw.window : 1;
+        KeyType keyType = resolveKeyType(condition.getFieldName());
+        TimeWindow window = resolveTimeWindowFromHours(hours);
+        BigDecimal count = velocityService.getAggregation(request, keyType, window, AggregationType.DISTINCT_MERCHANTS);
+
+        long threshold = tw.threshold != null ? tw.threshold.longValue() : parseThreshold(condition.getValueSingle());
+        log.debug("COUNT_DISTINCT_MERCHANTS_LAST_N_HOURS: hours={}, count={}, threshold={}", hours, count, threshold);
+        return count.longValue() > threshold;
+    }
+
+    private boolean evaluateMinAmountLastNDays(String keyValue, RuleCondition condition, EvaluationContext context) {
+        TransactionRequest request = context.getTransactionRequest();
+        if (request == null) return false;
+
+        ThresholdWindow tw = parseThresholdAndWindow(condition);
+        double days = tw.window > 0 ? tw.window : 1;
+        KeyType keyType = resolveKeyType(condition.getFieldName());
+        TimeWindow window = resolveTimeWindowFromDays(days);
+        BigDecimal min = velocityService.getAggregation(request, keyType, window, AggregationType.MIN);
+
+        BigDecimal threshold = tw.threshold != null ? tw.threshold : parseBigDecimalThreshold(condition.getValueSingle());
+        log.debug("MIN_AMOUNT_LAST_N_DAYS: days={}, min={}, threshold={}", days, min, threshold);
+        return min.compareTo(threshold) < 0;
     }
 
     private boolean evaluateCountDistinctCountriesLastNHours(String keyValue, RuleCondition condition, EvaluationContext context) {
         TransactionRequest request = context.getTransactionRequest();
         if (request == null) return false;
 
-        int hours = parseIntSafe(condition.getValueMin(), 1);
+        ThresholdWindow tw = parseThresholdAndWindow(condition);
+        double hours = tw.window > 0 ? tw.window : 1;
         KeyType keyType = resolveKeyType(condition.getFieldName());
         TimeWindow window = resolveTimeWindowFromHours(hours);
         BigDecimal count = velocityService.getAggregation(request, keyType, window, AggregationType.DISTINCT_COUNTRIES);
 
-        long threshold = parseThreshold(condition.getValueSingle());
+        long threshold = tw.threshold != null ? tw.threshold.longValue() : parseThreshold(condition.getValueSingle());
         log.debug("COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS: hours={}, count={}, threshold={}", hours, count, threshold);
         return count.longValue() > threshold;
     }
@@ -314,25 +370,42 @@ public class VelocityOperatorEvaluator implements OperatorEvaluator {
     }
 
     private TimeWindow resolveTimeWindowFromHours(int hours) {
-        return switch (hours) {
+        return resolveTimeWindowFromHours((double) hours);
+    }
+
+    private TimeWindow resolveTimeWindowFromHours(double hours) {
+        double minutes = hours * 60;
+        if (minutes <= 15) {
+            return TimeWindow.MINUTE_15;
+        }
+        if (minutes <= 30) {
+            return TimeWindow.MINUTE_30;
+        }
+        if (minutes < 60) {
+            return TimeWindow.HOUR_1;
+        }
+        int rounded = (int) Math.ceil(hours);
+        return switch (rounded) {
             case 1 -> TimeWindow.HOUR_1;
             case 6 -> TimeWindow.HOUR_6;
             case 12 -> TimeWindow.HOUR_12;
             case 24 -> TimeWindow.HOUR_24;
-            default -> hours <= 1 ? TimeWindow.HOUR_1 :
-                       hours <= 6 ? TimeWindow.HOUR_6 :
-                       hours <= 12 ? TimeWindow.HOUR_12 : TimeWindow.HOUR_24;
+            default -> rounded <= 24 * 7 ? TimeWindow.DAY_7 : TimeWindow.DAY_30;
         };
     }
 
     private TimeWindow resolveTimeWindowFromDays(int days) {
-        return switch (days) {
-            case 1 -> TimeWindow.HOUR_24;
-            case 7 -> TimeWindow.DAY_7;
-            case 30 -> TimeWindow.DAY_30;
-            default -> days <= 1 ? TimeWindow.HOUR_24 :
-                       days <= 7 ? TimeWindow.DAY_7 : TimeWindow.DAY_30;
-        };
+        return resolveTimeWindowFromDays((double) days);
+    }
+
+    private TimeWindow resolveTimeWindowFromDays(double days) {
+        if (days <= 1) {
+            return TimeWindow.HOUR_24;
+        }
+        if (days <= 7) {
+            return TimeWindow.DAY_7;
+        }
+        return TimeWindow.DAY_30;
     }
 
     private TimeWindow parseTimeWindow(String expression) {
@@ -348,6 +421,28 @@ public class VelocityOperatorEvaluator implements OperatorEvaluator {
         if (lower.contains("7d")) return TimeWindow.DAY_7;
         if (lower.contains("30d")) return TimeWindow.DAY_30;
         return TimeWindow.HOUR_1;
+    }
+
+    private record ThresholdWindow(BigDecimal threshold, double window) {}
+
+    private ThresholdWindow parseThresholdAndWindow(RuleCondition condition) {
+        String valueSingle = condition.getValueSingle();
+        String valueMin = condition.getValueMin();
+
+        BigDecimal threshold = null;
+        double window = parseDoubleSafe(valueMin, 0);
+
+        if (valueSingle != null && valueSingle.contains(":")) {
+            String[] parts = valueSingle.split(":", 2);
+            threshold = parseBigDecimalThreshold(parts[0]);
+            if (window <= 0) {
+                window = parseDoubleSafe(parts[1], 0);
+            }
+        } else {
+            threshold = parseBigDecimalThreshold(valueSingle);
+        }
+
+        return new ThresholdWindow(threshold, window);
     }
 
     private long parseThreshold(String value) {
@@ -371,6 +466,14 @@ public class VelocityOperatorEvaluator implements OperatorEvaluator {
     private int parseIntSafe(String value, int defaultValue) {
         try {
             return Integer.parseInt(value);
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    private double parseDoubleSafe(String value, double defaultValue) {
+        try {
+            return Double.parseDouble(value);
         } catch (Exception e) {
             return defaultValue;
         }
