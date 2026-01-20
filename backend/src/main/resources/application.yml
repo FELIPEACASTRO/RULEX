@@ -21,12 +21,12 @@ spring:
     uri: ${RULEX_NEO4J_URI:bolt://localhost:7687}
     authentication:
       username: ${RULEX_NEO4J_USERNAME:neo4j}
-      password: ${RULEX_NEO4J_PASSWORD:rulex123}
+      password: ${RULEX_NEO4J_PASSWORD:}
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/rulex_db}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    username: ${SPRING_DATASOURCE_USERNAME:}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     # HikariCP Connection Pool Configuration
     # PERF-001 FIX: Reduzido pool de 100→30 para evitar exaustão do PostgreSQL
@@ -175,7 +175,7 @@ rulex:
     enabled: ${RULEX_NEO4J_ENABLED:true}
     uri: ${RULEX_NEO4J_URI:bolt://localhost:7687}
     username: ${RULEX_NEO4J_USERNAME:neo4j}
-    password: ${RULEX_NEO4J_PASSWORD:rulex123}
+    password: ${RULEX_NEO4J_PASSWORD:}
 
   # QUAL-002 FIX: Configurações externalizadas (substitui magic numbers)
   limits:

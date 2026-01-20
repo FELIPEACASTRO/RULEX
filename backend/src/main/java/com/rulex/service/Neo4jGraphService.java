@@ -32,14 +32,20 @@ public class Neo4jGraphService {
           String uri,
       @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.username:neo4j}")
           String username,
-      @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.password:rulex123}")
+      @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.password:}")
           String password,
       @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.enabled:true}")
           boolean enabled) {
-    this.enabled = enabled;
+    boolean resolvedEnabled = enabled;
+    if (enabled && (password == null || password.isBlank())) {
+      resolvedEnabled = false;
+      log.warn(
+        "Neo4j integration disabled: missing rulex.neo4j.password. Provide RULEX_NEO4J_PASSWORD to enable.");
+    }
+    this.enabled = resolvedEnabled;
     this.uri = uri;
 
-    if (enabled) {
+    if (resolvedEnabled) {
       Driver tempDriver = null;
       boolean tempAvailable = false;
       try {

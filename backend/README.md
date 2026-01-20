@@ -26,12 +26,17 @@ Serviços:
 - `SPRING_DATASOURCE_USERNAME`
 - `SPRING_DATASOURCE_PASSWORD`
 
-2) Configure autenticação (HTTP Basic) se `RULEX_SECURITY_ENABLED=true`:
+2) (Opcional) Neo4j:
+
+- Para habilitar integração com grafos, defina `RULEX_NEO4J_PASSWORD` (e opcionalmente `RULEX_NEO4J_URI` e `RULEX_NEO4J_USERNAME`).
+- Se `RULEX_NEO4J_PASSWORD` não estiver definido, a integração Neo4j é desabilitada automaticamente.
+
+3) Configure autenticação (HTTP Basic) se `RULEX_SECURITY_ENABLED=true`:
 
 - `RULEX_ADMIN_USERNAME` / `RULEX_ADMIN_PASSWORD`
 - `RULEX_ANALYST_USERNAME` / `RULEX_ANALYST_PASSWORD`
 
-3) Execute:
+4) Execute:
 
 - `mvn -q clean spring-boot:run`
 
