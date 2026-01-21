@@ -10,18 +10,18 @@
 -- Campos usados: transactionAmount, availableCredit, cardDelinquentAmount
 -- ============================================================================
 
-INSERT INTO complex_rules (key, name, description, logic_operator, decision, severity, priority, status, enabled, created_by)
+INSERT INTO complex_rules (key, title, description, decision, severity, priority, status, enabled, created_by)
 VALUES 
-('VAL001_HIGH_AMOUNT', 'Valor Alto', 'Transação acima de R$ 10.000', 'AND', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
-('VAL002_VERY_HIGH_AMOUNT', 'Valor Muito Alto', 'Transação acima de R$ 50.000', 'AND', 'SUSPEITA_DE_FRAUDE', 85, 90, 'PUBLISHED', false, NULL),
-('VAL003_EXTREME_AMOUNT', 'Valor Extremo', 'Transação acima de R$ 100.000', 'AND', 'FRAUDE', 95, 99, 'PUBLISHED', false, NULL),
-('VAL004_MICRO_AMOUNT', 'Valor Micro', 'Transação abaixo de R$ 1 (card testing)', 'AND', 'SUSPEITA_DE_FRAUDE', 60, 65, 'PUBLISHED', false, NULL),
-('VAL005_ROUND_AMOUNT', 'Valor Redondo Suspeito', 'Transação com valor redondo alto', 'AND', 'SUSPEITA_DE_FRAUDE', 55, 60, 'PUBLISHED', false, NULL),
-('VAL006_EXCEEDS_CREDIT', 'Excede Crédito', 'Transação excede crédito disponível', 'AND', 'FRAUDE', 90, 95, 'PUBLISHED', false, NULL),
-('VAL007_DELINQUENT_HIGH', 'Inadimplência Alta', 'Cliente com inadimplência alta', 'AND', 'SUSPEITA_DE_FRAUDE', 75, 80, 'PUBLISHED', false, NULL),
-('VAL008_STRUCTURING_9999', 'Structuring 9999', 'Valor próximo ao limite de reporte', 'AND', 'SUSPEITA_DE_FRAUDE', 80, 85, 'PUBLISHED', false, NULL),
-('VAL009_ODD_CENTS', 'Centavos Estranhos', 'Valor com centavos incomuns', 'AND', 'SUSPEITA_DE_FRAUDE', 45, 50, 'PUBLISHED', false, NULL),
-('VAL010_ZERO_AMOUNT', 'Valor Zero', 'Transação com valor zero', 'AND', 'FRAUDE', 95, 99, 'PUBLISHED', false, NULL);
+('VAL001_HIGH_AMOUNT', 'Valor Alto', 'Transação acima de R$ 10.000', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
+('VAL002_VERY_HIGH_AMOUNT', 'Valor Muito Alto', 'Transação acima de R$ 50.000', 'SUSPEITA_DE_FRAUDE', 85, 90, 'PUBLISHED', false, NULL),
+('VAL003_EXTREME_AMOUNT', 'Valor Extremo', 'Transação acima de R$ 100.000', 'FRAUDE', 95, 99, 'PUBLISHED', false, NULL),
+('VAL004_MICRO_AMOUNT', 'Valor Micro', 'Transação abaixo de R$ 1 (card testing)', 'SUSPEITA_DE_FRAUDE', 60, 65, 'PUBLISHED', false, NULL),
+('VAL005_ROUND_AMOUNT', 'Valor Redondo Suspeito', 'Transação com valor redondo alto', 'SUSPEITA_DE_FRAUDE', 55, 60, 'PUBLISHED', false, NULL),
+('VAL006_EXCEEDS_CREDIT', 'Excede Crédito', 'Transação excede crédito disponível', 'FRAUDE', 90, 95, 'PUBLISHED', false, NULL),
+('VAL007_DELINQUENT_HIGH', 'Inadimplência Alta', 'Cliente com inadimplência alta', 'SUSPEITA_DE_FRAUDE', 75, 80, 'PUBLISHED', false, NULL),
+('VAL008_STRUCTURING_9999', 'Structuring 9999', 'Valor próximo ao limite de reporte', 'SUSPEITA_DE_FRAUDE', 80, 85, 'PUBLISHED', false, NULL),
+('VAL009_ODD_CENTS', 'Centavos Estranhos', 'Valor com centavos incomuns', 'SUSPEITA_DE_FRAUDE', 45, 50, 'PUBLISHED', false, NULL),
+('VAL010_ZERO_AMOUNT', 'Valor Zero', 'Transação com valor zero', 'FRAUDE', 95, 99, 'PUBLISHED', false, NULL);
 
 -- Condições para VAL001
 INSERT INTO rule_condition_groups (complex_rule_id, position, logic_operator)
@@ -84,18 +84,18 @@ FROM rule_condition_groups rcg JOIN complex_rules cr ON rcg.complex_rule_id = cr
 -- Campos usados: mcc
 -- ============================================================================
 
-INSERT INTO complex_rules (key, name, description, logic_operator, decision, severity, priority, status, enabled, created_by)
+INSERT INTO complex_rules (key, title, description, decision, severity, priority, status, enabled, created_by)
 VALUES 
-('MCC001_GIFT_CARDS', 'MCC Gift Cards', 'Transação em MCC de gift cards (5944)', 'AND', 'SUSPEITA_DE_FRAUDE', 65, 70, 'PUBLISHED', false, NULL),
-('MCC002_CRYPTO', 'MCC Cripto', 'Transação em MCC de criptomoedas (6051)', 'AND', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
-('MCC003_GAMBLING', 'MCC Apostas', 'Transação em MCC de apostas (7995)', 'AND', 'SUSPEITA_DE_FRAUDE', 75, 80, 'PUBLISHED', false, NULL),
-('MCC004_JEWELRY', 'MCC Joias', 'Transação em MCC de joias (5944)', 'AND', 'SUSPEITA_DE_FRAUDE', 60, 65, 'PUBLISHED', false, NULL),
-('MCC005_WIRE_TRANSFER', 'MCC Wire Transfer', 'Transação em MCC de transferência (4829)', 'AND', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
-('MCC006_MONEY_ORDER', 'MCC Money Order', 'Transação em MCC de ordem de pagamento (6050)', 'AND', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
-('MCC007_PAWN_SHOP', 'MCC Casa de Penhores', 'Transação em MCC de casa de penhores (5933)', 'AND', 'SUSPEITA_DE_FRAUDE', 65, 70, 'PUBLISHED', false, NULL),
-('MCC008_DATING', 'MCC Dating', 'Transação em MCC de dating (5968)', 'AND', 'SUSPEITA_DE_FRAUDE', 55, 60, 'PUBLISHED', false, NULL),
-('MCC009_ADULT', 'MCC Adult', 'Transação em MCC de conteúdo adulto (5967)', 'AND', 'SUSPEITA_DE_FRAUDE', 60, 65, 'PUBLISHED', false, NULL),
-('MCC010_HIGH_RISK_COMBO', 'MCC Alto Risco Combo', 'Transação em MCCs de alto risco combinados', 'AND', 'SUSPEITA_DE_FRAUDE', 80, 85, 'PUBLISHED', false, NULL);
+('MCC001_GIFT_CARDS', 'MCC Gift Cards', 'Transação em MCC de gift cards (5944)', 'SUSPEITA_DE_FRAUDE', 65, 70, 'PUBLISHED', false, NULL),
+('MCC002_CRYPTO', 'MCC Cripto', 'Transação em MCC de criptomoedas (6051)', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
+('MCC003_GAMBLING', 'MCC Apostas', 'Transação em MCC de apostas (7995)', 'SUSPEITA_DE_FRAUDE', 75, 80, 'PUBLISHED', false, NULL),
+('MCC004_JEWELRY', 'MCC Joias', 'Transação em MCC de joias (5944)', 'SUSPEITA_DE_FRAUDE', 60, 65, 'PUBLISHED', false, NULL),
+('MCC005_WIRE_TRANSFER', 'MCC Wire Transfer', 'Transação em MCC de transferência (4829)', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
+('MCC006_MONEY_ORDER', 'MCC Money Order', 'Transação em MCC de ordem de pagamento (6050)', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
+('MCC007_PAWN_SHOP', 'MCC Casa de Penhores', 'Transação em MCC de casa de penhores (5933)', 'SUSPEITA_DE_FRAUDE', 65, 70, 'PUBLISHED', false, NULL),
+('MCC008_DATING', 'MCC Dating', 'Transação em MCC de dating (5968)', 'SUSPEITA_DE_FRAUDE', 55, 60, 'PUBLISHED', false, NULL),
+('MCC009_ADULT', 'MCC Adult', 'Transação em MCC de conteúdo adulto (5967)', 'SUSPEITA_DE_FRAUDE', 60, 65, 'PUBLISHED', false, NULL),
+('MCC010_HIGH_RISK_COMBO', 'MCC Alto Risco Combo', 'Transação em MCCs de alto risco combinados', 'SUSPEITA_DE_FRAUDE', 80, 85, 'PUBLISHED', false, NULL);
 
 -- Condições para MCC001-MCC009 (IN list)
 INSERT INTO rule_condition_groups (complex_rule_id, position, logic_operator)
@@ -133,18 +133,18 @@ FROM rule_condition_groups rcg JOIN complex_rules cr ON rcg.complex_rule_id = cr
 -- Campos usados: merchantCountryCode, acquirerCountry
 -- ============================================================================
 
-INSERT INTO complex_rules (key, name, description, logic_operator, decision, severity, priority, status, enabled, created_by)
+INSERT INTO complex_rules (key, title, description, decision, severity, priority, status, enabled, created_by)
 VALUES 
-('GEO001_HIGH_RISK_COUNTRY', 'País Alto Risco', 'Transação em país de alto risco', 'AND', 'SUSPEITA_DE_FRAUDE', 75, 80, 'PUBLISHED', false, NULL),
-('GEO002_NIGERIA', 'País Nigéria', 'Transação na Nigéria', 'AND', 'SUSPEITA_DE_FRAUDE', 80, 85, 'PUBLISHED', false, NULL),
-('GEO003_RUSSIA', 'País Rússia', 'Transação na Rússia', 'AND', 'SUSPEITA_DE_FRAUDE', 80, 85, 'PUBLISHED', false, NULL),
-('GEO004_UKRAINE', 'País Ucrânia', 'Transação na Ucrânia', 'AND', 'SUSPEITA_DE_FRAUDE', 75, 80, 'PUBLISHED', false, NULL),
-('GEO005_NORTH_KOREA', 'País Coreia do Norte', 'Transação na Coreia do Norte', 'AND', 'FRAUDE', 99, 99, 'PUBLISHED', false, NULL),
-('GEO006_IRAN', 'País Irã', 'Transação no Irã', 'AND', 'FRAUDE', 99, 99, 'PUBLISHED', false, NULL),
-('GEO007_CUBA', 'País Cuba', 'Transação em Cuba', 'AND', 'FRAUDE', 95, 99, 'PUBLISHED', false, NULL),
-('GEO008_SYRIA', 'País Síria', 'Transação na Síria', 'AND', 'FRAUDE', 99, 99, 'PUBLISHED', false, NULL),
-('GEO009_VENEZUELA', 'País Venezuela', 'Transação na Venezuela', 'AND', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
-('GEO010_CROSS_BORDER', 'Cross-Border', 'Transação cross-border (acquirer != merchant)', 'AND', 'SUSPEITA_DE_FRAUDE', 50, 55, 'PUBLISHED', false, NULL);
+('GEO001_HIGH_RISK_COUNTRY', 'País Alto Risco', 'Transação em país de alto risco', 'SUSPEITA_DE_FRAUDE', 75, 80, 'PUBLISHED', false, NULL),
+('GEO002_NIGERIA', 'País Nigéria', 'Transação na Nigéria', 'SUSPEITA_DE_FRAUDE', 80, 85, 'PUBLISHED', false, NULL),
+('GEO003_RUSSIA', 'País Rússia', 'Transação na Rússia', 'SUSPEITA_DE_FRAUDE', 80, 85, 'PUBLISHED', false, NULL),
+('GEO004_UKRAINE', 'País Ucrânia', 'Transação na Ucrânia', 'SUSPEITA_DE_FRAUDE', 75, 80, 'PUBLISHED', false, NULL),
+('GEO005_NORTH_KOREA', 'País Coreia do Norte', 'Transação na Coreia do Norte', 'FRAUDE', 99, 99, 'PUBLISHED', false, NULL),
+('GEO006_IRAN', 'País Irã', 'Transação no Irã', 'FRAUDE', 99, 99, 'PUBLISHED', false, NULL),
+('GEO007_CUBA', 'País Cuba', 'Transação em Cuba', 'FRAUDE', 95, 99, 'PUBLISHED', false, NULL),
+('GEO008_SYRIA', 'País Síria', 'Transação na Síria', 'FRAUDE', 99, 99, 'PUBLISHED', false, NULL),
+('GEO009_VENEZUELA', 'País Venezuela', 'Transação na Venezuela', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
+('GEO010_CROSS_BORDER', 'Cross-Border', 'Transação cross-border (acquirer != merchant)', 'SUSPEITA_DE_FRAUDE', 50, 55, 'PUBLISHED', false, NULL);
 
 -- Condições para GEO002-GEO009
 INSERT INTO rule_condition_groups (complex_rule_id, position, logic_operator)
@@ -195,18 +195,18 @@ FROM rule_condition_groups rcg JOIN complex_rules cr ON rcg.complex_rule_id = cr
 -- Campos usados: cvv2Response, cvv2Present, avsRequest, cvvVerifyCode
 -- ============================================================================
 
-INSERT INTO complex_rules (key, name, description, logic_operator, decision, severity, priority, status, enabled, created_by)
+INSERT INTO complex_rules (key, title, description, decision, severity, priority, status, enabled, created_by)
 VALUES 
-('CVV001_CVV_FAIL', 'CVV Falhou', 'CVV não corresponde', 'AND', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
-('CVV002_CVV_NOT_PRESENT', 'CVV Ausente', 'CVV não fornecido', 'AND', 'SUSPEITA_DE_FRAUDE', 60, 65, 'PUBLISHED', false, NULL),
-('CVV003_CVV_FAIL_HIGH_AMOUNT', 'CVV Falhou + Alto Valor', 'CVV falhou em transação de alto valor', 'AND', 'FRAUDE', 85, 90, 'PUBLISHED', false, NULL),
-('CVV004_AVS_FAIL', 'AVS Falhou', 'AVS não corresponde', 'AND', 'SUSPEITA_DE_FRAUDE', 65, 70, 'PUBLISHED', false, NULL),
-('CVV005_CVV_AVS_BOTH_FAIL', 'CVV e AVS Falharam', 'Ambos CVV e AVS falharam', 'AND', 'FRAUDE', 90, 95, 'PUBLISHED', false, NULL),
-('CVV006_NO_VERIFICATION', 'Sem Verificação', 'Transação sem CVV nem AVS', 'AND', 'SUSPEITA_DE_FRAUDE', 75, 80, 'PUBLISHED', false, NULL),
-('CVV007_CVV_ISSUER_UNABLE', 'CVV Issuer Unable', 'Emissor não conseguiu verificar CVV', 'AND', 'SUSPEITA_DE_FRAUDE', 55, 60, 'PUBLISHED', false, NULL),
-('CVV008_CVV_NOT_PROCESSED', 'CVV Não Processado', 'CVV não foi processado', 'AND', 'SUSPEITA_DE_FRAUDE', 50, 55, 'PUBLISHED', false, NULL),
-('CVV009_PIN_FAIL', 'PIN Falhou', 'Verificação de PIN falhou', 'AND', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
-('CVV010_PIN_LIMIT_EXCEEDED', 'PIN Limite Excedido', 'Limite de tentativas de PIN excedido', 'AND', 'FRAUDE', 90, 95, 'PUBLISHED', false, NULL);
+('CVV001_CVV_FAIL', 'CVV Falhou', 'CVV não corresponde', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
+('CVV002_CVV_NOT_PRESENT', 'CVV Ausente', 'CVV não fornecido', 'SUSPEITA_DE_FRAUDE', 60, 65, 'PUBLISHED', false, NULL),
+('CVV003_CVV_FAIL_HIGH_AMOUNT', 'CVV Falhou + Alto Valor', 'CVV falhou em transação de alto valor', 'FRAUDE', 85, 90, 'PUBLISHED', false, NULL),
+('CVV004_AVS_FAIL', 'AVS Falhou', 'AVS não corresponde', 'SUSPEITA_DE_FRAUDE', 65, 70, 'PUBLISHED', false, NULL),
+('CVV005_CVV_AVS_BOTH_FAIL', 'CVV e AVS Falharam', 'Ambos CVV e AVS falharam', 'FRAUDE', 90, 95, 'PUBLISHED', false, NULL),
+('CVV006_NO_VERIFICATION', 'Sem Verificação', 'Transação sem CVV nem AVS', 'SUSPEITA_DE_FRAUDE', 75, 80, 'PUBLISHED', false, NULL),
+('CVV007_CVV_ISSUER_UNABLE', 'CVV Issuer Unable', 'Emissor não conseguiu verificar CVV', 'SUSPEITA_DE_FRAUDE', 55, 60, 'PUBLISHED', false, NULL),
+('CVV008_CVV_NOT_PROCESSED', 'CVV Não Processado', 'CVV não foi processado', 'SUSPEITA_DE_FRAUDE', 50, 55, 'PUBLISHED', false, NULL),
+('CVV009_PIN_FAIL', 'PIN Falhou', 'Verificação de PIN falhou', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
+('CVV010_PIN_LIMIT_EXCEEDED', 'PIN Limite Excedido', 'Limite de tentativas de PIN excedido', 'FRAUDE', 90, 95, 'PUBLISHED', false, NULL);
 
 -- Condições para CVV001
 INSERT INTO rule_condition_groups (complex_rule_id, position, logic_operator)
@@ -244,18 +244,18 @@ FROM rule_condition_groups rcg JOIN complex_rules cr ON rcg.complex_rule_id = cr
 -- Campos usados: terminalType, posEntryMode, customerPresent, posConditionCode
 -- ============================================================================
 
-INSERT INTO complex_rules (key, name, description, logic_operator, decision, severity, priority, status, enabled, created_by)
+INSERT INTO complex_rules (key, title, description, decision, severity, priority, status, enabled, created_by)
 VALUES 
-('POS001_ECOM', 'Terminal E-Commerce', 'Transação e-commerce', 'AND', 'SUSPEITA_DE_FRAUDE', 40, 45, 'PUBLISHED', false, NULL),
-('POS002_ECOM_HIGH_AMOUNT', 'E-Commerce Alto Valor', 'E-commerce com valor alto', 'AND', 'SUSPEITA_DE_FRAUDE', 65, 70, 'PUBLISHED', false, NULL),
-('POS003_CNP', 'Card Not Present', 'Transação sem cartão presente', 'AND', 'SUSPEITA_DE_FRAUDE', 50, 55, 'PUBLISHED', false, NULL),
-('POS004_MANUAL_ENTRY', 'Entrada Manual', 'Dados do cartão digitados manualmente', 'AND', 'SUSPEITA_DE_FRAUDE', 60, 65, 'PUBLISHED', false, NULL),
-('POS005_FALLBACK', 'Fallback Magnético', 'Fallback para tarja magnética', 'AND', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
-('POS006_MOTO', 'MOTO', 'Transação Mail Order/Telephone Order', 'AND', 'SUSPEITA_DE_FRAUDE', 55, 60, 'PUBLISHED', false, NULL),
-('POS007_RECURRING', 'Recorrente', 'Transação recorrente', 'AND', 'SUSPEITA_DE_FRAUDE', 35, 40, 'PUBLISHED', false, NULL),
-('POS008_INSTALLMENT', 'Parcelamento', 'Transação parcelada', 'AND', 'SUSPEITA_DE_FRAUDE', 30, 35, 'PUBLISHED', false, NULL),
-('POS009_OFF_PREMISES', 'Off Premises', 'Terminal fora do estabelecimento', 'AND', 'SUSPEITA_DE_FRAUDE', 55, 60, 'PUBLISHED', false, NULL),
-('POS010_NO_SECURITY', 'Sem Segurança POS', 'POS sem recursos de segurança', 'AND', 'SUSPEITA_DE_FRAUDE', 65, 70, 'PUBLISHED', false, NULL);
+('POS001_ECOM', 'Terminal E-Commerce', 'Transação e-commerce', 'SUSPEITA_DE_FRAUDE', 40, 45, 'PUBLISHED', false, NULL),
+('POS002_ECOM_HIGH_AMOUNT', 'E-Commerce Alto Valor', 'E-commerce com valor alto', 'SUSPEITA_DE_FRAUDE', 65, 70, 'PUBLISHED', false, NULL),
+('POS003_CNP', 'Card Not Present', 'Transação sem cartão presente', 'SUSPEITA_DE_FRAUDE', 50, 55, 'PUBLISHED', false, NULL),
+('POS004_MANUAL_ENTRY', 'Entrada Manual', 'Dados do cartão digitados manualmente', 'SUSPEITA_DE_FRAUDE', 60, 65, 'PUBLISHED', false, NULL),
+('POS005_FALLBACK', 'Fallback Magnético', 'Fallback para tarja magnética', 'SUSPEITA_DE_FRAUDE', 70, 75, 'PUBLISHED', false, NULL),
+('POS006_MOTO', 'MOTO', 'Transação Mail Order/Telephone Order', 'SUSPEITA_DE_FRAUDE', 55, 60, 'PUBLISHED', false, NULL),
+('POS007_RECURRING', 'Recorrente', 'Transação recorrente', 'SUSPEITA_DE_FRAUDE', 35, 40, 'PUBLISHED', false, NULL),
+('POS008_INSTALLMENT', 'Parcelamento', 'Transação parcelada', 'SUSPEITA_DE_FRAUDE', 30, 35, 'PUBLISHED', false, NULL),
+('POS009_OFF_PREMISES', 'Off Premises', 'Terminal fora do estabelecimento', 'SUSPEITA_DE_FRAUDE', 55, 60, 'PUBLISHED', false, NULL),
+('POS010_NO_SECURITY', 'Sem Segurança POS', 'POS sem recursos de segurança', 'SUSPEITA_DE_FRAUDE', 65, 70, 'PUBLISHED', false, NULL);
 
 -- Condições para POS001
 INSERT INTO rule_condition_groups (complex_rule_id, position, logic_operator)
