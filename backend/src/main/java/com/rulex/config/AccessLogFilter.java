@@ -7,12 +7,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Set;
-import lombok.RequiredArgsConstructor;
+import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -26,22 +28,43 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE - 10)
-@RequiredArgsConstructor
 @Slf4j
+@ConditionalOnProperty(name = "rulex.access-log.enabled", havingValue = "true", matchIfMissing = true)
 public class AccessLogFilter extends OncePerRequestFilter {
 
   private final AccessLogService accessLogService;
+  private final double successSamplingRate;
 
-  /** Paths to exclude from access logging */
+  public AccessLogFilter(
+      AccessLogService accessLogService,
+      @Value("${rulex.access-log.success-sampling-rate:0.1}") double successSamplingRate) {
+    this.accessLogService = accessLogService;
+    this.successSamplingRate = Math.max(0.0, Math.min(1.0, successSamplingRate));
+    log.info("AccessLogFilter initialized with success sampling rate: {}", this.successSamplingRate);
+  }
+
+  /** Paths to exclude from access logging (without context-path prefix) */
   private static final Set<String> EXCLUDED_PATHS =
       Set.of(
           "/actuator/health",
           "/actuator/prometheus",
           "/actuator/info",
+          "/actuator/metrics",
+          "/actuator",
           "/health",
           "/favicon.ico",
           "/static",
           "/assets");
+
+  /** Paths to exclude WITH context-path prefix (for when context-path=/api) */
+  private static final Set<String> EXCLUDED_PATHS_WITH_CONTEXT =
+      Set.of(
+          "/api/actuator/health",
+          "/api/actuator/prometheus",
+          "/api/actuator/info",
+          "/api/actuator/metrics",
+          "/api/actuator",
+          "/api/health");
 
   @Override
   protected void doFilterInternal(
@@ -66,11 +89,22 @@ public class AccessLogFilter extends OncePerRequestFilter {
 
   /** Determines if the request should be logged. */
   private boolean shouldSkip(HttpServletRequest request) {
-    String path = request.getRequestURI();
+    String requestUri = request.getRequestURI();
+    String servletPath = request.getServletPath();
 
-    // Skip actuator and health endpoints
+    // Use servletPath if available (excludes context-path), otherwise use requestURI
+    String pathToCheck = (servletPath != null && !servletPath.isEmpty()) ? servletPath : requestUri;
+
+    // Skip actuator and health endpoints (check both with and without context-path)
     for (String excluded : EXCLUDED_PATHS) {
-      if (path.startsWith(excluded)) {
+      if (pathToCheck.startsWith(excluded)) {
+        return true;
+      }
+    }
+
+    // Also check full requestURI against paths with context-path prefix
+    for (String excluded : EXCLUDED_PATHS_WITH_CONTEXT) {
+      if (requestUri.startsWith(excluded)) {
         return true;
       }
     }
@@ -83,26 +117,48 @@ public class AccessLogFilter extends OncePerRequestFilter {
     return false;
   }
 
-  /** Logs the access event. */
+  /** Logs the access event with sampling for success responses. */
   private void logAccess(HttpServletRequest request, HttpServletResponse response, long duration) {
     try {
       String username = getUsername();
       int status = response.getStatus();
 
-      // Log based on response status
+      // SEMPRE logar: erros de segurança, erros de servidor, rate limiting
       if (status == 401 || status == 403 || status == 429 || status >= 500) {
-        // Log security and error events
         accessLogService.logApiAccess(username, request, status, duration);
-      } else if (isModifyingRequest(request)) {
-        // Log all modifying requests (POST, PUT, DELETE, PATCH)
+        return;
+      }
+
+      // SEMPRE logar: requisições que modificam dados
+      if (isModifyingRequest(request)) {
         accessLogService.logApiAccess(username, request, status, duration);
-      } else if (log.isDebugEnabled()) {
-        // Log all requests in debug mode
+        return;
+      }
+
+      // SEMPRE logar: erros do cliente (4xx)
+      if (status >= 400) {
+        accessLogService.logApiAccess(username, request, status, duration);
+        return;
+      }
+
+      // SAMPLING: para requisições de sucesso (2xx/3xx), aplicar taxa de amostragem
+      if (shouldSample()) {
         accessLogService.logApiAccess(username, request, status, duration);
       }
     } catch (Exception e) {
       log.error("Failed to log access event", e);
     }
+  }
+
+  /** Determina se deve amostrar baseado na taxa configurada. */
+  private boolean shouldSample() {
+    if (successSamplingRate >= 1.0) {
+      return true;
+    }
+    if (successSamplingRate <= 0.0) {
+      return false;
+    }
+    return ThreadLocalRandom.current().nextDouble() < successSamplingRate;
   }
 
   /** Gets the authenticated username, or "anonymous" if not authenticated. */

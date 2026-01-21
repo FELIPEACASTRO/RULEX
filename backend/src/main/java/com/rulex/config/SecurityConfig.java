@@ -2,6 +2,9 @@ package com.rulex.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +23,17 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 @Configuration
 @EnableWebSecurity
 @EnableConfigurationProperties(RulexSecurityProperties.class)
+@Slf4j
 public class SecurityConfig {
+
+  /** Senhas conhecidas como fracas/default que não devem ser usadas em produção */
+  private static final Set<String> WEAK_PASSWORDS = Set.of(
+      "admin", "password", "123456", "rulex", "rulex123", "changeme",
+      "secret", "test", "demo", "default", "postgres", "neo4j"
+  );
+
+  @Value("${spring.profiles.active:dev}")
+  private String activeProfile;
 
   @Bean
   PasswordEncoder passwordEncoder() {
@@ -53,6 +66,10 @@ public class SecurityConfig {
       throw new IllegalStateException(
           "rulex.security.analyst.username/password devem estar configurados quando rulex.security.enabled=true");
     }
+
+    // Validar senhas fracas/default em produção
+    validatePasswordStrength(admin.password(), "admin", activeProfile);
+    validatePasswordStrength(analyst.password(), "analyst", activeProfile);
 
     return new InMemoryUserDetailsManager(
         User.withUsername(admin.username())
@@ -88,11 +105,18 @@ public class SecurityConfig {
         csrf ->
             csrf.csrfTokenRepository(csrfTokenRepository)
                 .csrfTokenRequestHandler(requestHandler)
-                // Ignore CSRF for stateless API endpoints (they use Basic Auth)
+                // Ignore CSRF for all API endpoints (they use Basic Auth which is stateless)
+                // CSRF protection is primarily for browser-based sessions with cookies
                 .ignoringRequestMatchers(
-                    "/transactions/analyze",
-                    "/transactions/analyze-advanced",
-                    "/evaluate",
+                    "/transactions/**",
+                    "/evaluate/**",
+                    "/rules/**",
+                    "/complex-rules/**",
+                    "/audit/**",
+                    "/metrics/**",
+                    "/field-dictionary/**",
+                    "/homolog/**",
+                    "/api/**",
                     "/actuator/**"));
 
     http.authorizeHttpRequests(
@@ -145,5 +169,64 @@ public class SecurityConfig {
         .httpBasic(withDefaults());
 
     return http.build();
+  }
+
+  /**
+   * Valida força da senha. Em produção/staging/homolog, rejeita senhas fracas/default.
+   * Em dev/test, apenas emite warning.
+   * 
+   * SEC-003 FIX: Expandido para incluir staging e homolog na validação estrita.
+   */
+  private void validatePasswordStrength(String password, String userType, String profile) {
+    // SEC-003 FIX: Incluir staging, homolog, uat na validação estrita (não apenas prod)
+    boolean isStrictEnvironment = Set.of("prod", "production", "staging", "homolog", "hml", "uat")
+        .contains(profile.toLowerCase());
+    boolean isDevelopment = Set.of("dev", "development", "test", "local")
+        .contains(profile.toLowerCase());
+
+    // Verificar senhas conhecidas como fracas
+    if (WEAK_PASSWORDS.contains(password.toLowerCase())) {
+      String message = String.format(
+          "⚠️ ALERTA DE SEGURANÇA: Senha fraca/default detectada para usuário '%s'. " +
+          "Senhas como '%s' são conhecidas e facilmente comprometidas.",
+          userType, password);
+
+      if (isStrictEnvironment) {
+        throw new IllegalStateException(
+            message + " Configure uma senha forte via variável de ambiente.");
+      } else if (isDevelopment) {
+        log.warn(message + " Isso é aceitável apenas em ambiente de desenvolvimento.");
+      } else {
+        // Profile desconhecido - tratar como produção por segurança
+        log.error("Profile '{}' desconhecido. Tratando como ambiente de produção.", profile);
+        throw new IllegalStateException(
+            message + " Configure uma senha forte via variável de ambiente.");
+      }
+    }
+
+    // Verificar comprimento mínimo em ambientes estritos
+    if (isStrictEnvironment && password.length() < 12) {
+      throw new IllegalStateException(String.format(
+          "Senha do usuário '%s' deve ter no mínimo 12 caracteres em %s (atual: %d)",
+          userType, profile, password.length()));
+    }
+
+    // Verificar complexidade em ambientes estritos
+    if (isStrictEnvironment && !isStrongPassword(password)) {
+      throw new IllegalStateException(String.format(
+          "Senha do usuário '%s' deve conter letras maiúsculas, minúsculas, números e caracteres especiais em %s",
+          userType, profile));
+    }
+  }
+
+  /**
+   * Verifica se a senha atende requisitos de complexidade.
+   */
+  private boolean isStrongPassword(String password) {
+    boolean hasUpper = password.chars().anyMatch(Character::isUpperCase);
+    boolean hasLower = password.chars().anyMatch(Character::isLowerCase);
+    boolean hasDigit = password.chars().anyMatch(Character::isDigit);
+    boolean hasSpecial = password.chars().anyMatch(c -> "!@#$%^&*()_+-=[]{}|;':\",./<>?".indexOf(c) >= 0);
+    return hasUpper && hasLower && hasDigit && hasSpecial;
   }
 }

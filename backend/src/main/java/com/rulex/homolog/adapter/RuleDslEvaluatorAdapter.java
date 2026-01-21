@@ -57,8 +57,8 @@ public class RuleDslEvaluatorAdapter implements RuleDslEvaluatorPort {
     String expectedRaw = c.getValue();
 
     return switch (operator) {
-      case "EQ" -> Objects.equals(coerce(actual, expectedRaw), actual);
-      case "NEQ" -> !Objects.equals(coerce(actual, expectedRaw), actual);
+      case "EQ" -> equalsNormalized(actual, expectedRaw);
+      case "NEQ" -> !equalsNormalized(actual, expectedRaw);
       case "GT" -> compare(actual, expectedRaw) > 0;
       case "GTE" -> compare(actual, expectedRaw) >= 0;
       case "LT" -> compare(actual, expectedRaw) < 0;
@@ -85,6 +85,65 @@ public class RuleDslEvaluatorAdapter implements RuleDslEvaluatorPort {
     return normalized;
   }
 
+  /**
+   * Compara igualdade normalizando tipos numéricos para evitar problemas Integer vs Long.
+   * Usa BigDecimal para comparação numérica precisa.
+   */
+  private boolean equalsNormalized(Object actual, String expectedRaw) {
+    if (actual == null && expectedRaw == null) {
+      return true;
+    }
+    if (actual == null || expectedRaw == null) {
+      return false;
+    }
+
+    // Para números, usar BigDecimal para comparação precisa (evita Integer vs Long)
+    if (actual instanceof Number actualNum) {
+      try {
+        BigDecimal actualBd = toBigDecimal(actualNum);
+        BigDecimal expectedBd = new BigDecimal(expectedRaw.trim());
+        return actualBd.compareTo(expectedBd) == 0;
+      } catch (NumberFormatException e) {
+        // expectedRaw não é número, comparar como string
+        return String.valueOf(actual).equals(expectedRaw);
+      }
+    }
+
+    // Para Boolean
+    if (actual instanceof Boolean actualBool) {
+      return actualBool.equals(Boolean.parseBoolean(expectedRaw));
+    }
+
+    // Para OffsetDateTime
+    if (actual instanceof OffsetDateTime actualDt) {
+      try {
+        return actualDt.equals(OffsetDateTime.parse(expectedRaw));
+      } catch (Exception e) {
+        return false;
+      }
+    }
+
+    // Para String e outros tipos
+    return String.valueOf(actual).equals(expectedRaw);
+  }
+
+  /**
+   * Converte Number para BigDecimal de forma segura.
+   */
+  private BigDecimal toBigDecimal(Number num) {
+    if (num instanceof BigDecimal bd) {
+      return bd;
+    }
+    if (num instanceof Integer || num instanceof Long || num instanceof Short || num instanceof Byte) {
+      return BigDecimal.valueOf(num.longValue());
+    }
+    if (num instanceof Float || num instanceof Double) {
+      return BigDecimal.valueOf(num.doubleValue());
+    }
+    return new BigDecimal(num.toString());
+  }
+
+  @Deprecated // Mantido para compatibilidade, usar equalsNormalized para EQ/NEQ
   private Object coerce(Object actual, String expectedRaw) {
     if (actual == null) {
       return expectedRaw;

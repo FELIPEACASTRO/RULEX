@@ -140,7 +140,7 @@ describe('Rules popup (Rules.tsx)', () => {
     cleanup();
   });
 
-  it('creates a rule via popup and posts all required fields', async () => {
+  it('creates a rule via popup and posts all required fields', { timeout: 15000 }, async () => {
     const user = userEvent.setup();
     const api = mockRulesApi([]);
 

@@ -23,6 +23,8 @@ public class Neo4jGraphService {
 
   private final Driver driver;
   private final boolean enabled;
+  private volatile boolean available;
+  private final String uri;
 
   public Neo4jGraphService(
       @org.springframework.beans.factory.annotation.Value(
@@ -30,22 +32,42 @@ public class Neo4jGraphService {
           String uri,
       @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.username:neo4j}")
           String username,
-      @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.password:rulex123}")
+      @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.password:}")
           String password,
       @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.enabled:true}")
           boolean enabled) {
-    this.enabled = enabled;
-    if (enabled) {
+    boolean resolvedEnabled = enabled;
+    if (enabled && (password == null || password.isBlank())) {
+      resolvedEnabled = false;
+      log.warn(
+        "Neo4j integration disabled: missing rulex.neo4j.password. Provide RULEX_NEO4J_PASSWORD to enable.");
+    }
+    this.enabled = resolvedEnabled;
+    this.uri = uri;
+
+    if (resolvedEnabled) {
+      Driver tempDriver = null;
+      boolean tempAvailable = false;
       try {
-        this.driver = GraphDatabase.driver(uri, AuthTokens.basic(username, password));
-        log.info("Neo4j driver initialized: {}", uri);
+        tempDriver = GraphDatabase.driver(uri, AuthTokens.basic(username, password));
+        // Testar conexão sem bloquear startup
+        tempDriver.verifyConnectivity();
+        tempAvailable = true;
+        log.info("Neo4j driver initialized and connected: {}", uri);
       } catch (Exception e) {
-        log.warn("Failed to initialize Neo4j driver: {}", e.getMessage());
-        throw new RuntimeException("Neo4j initialization failed", e);
+        // DEGRADAÇÃO GRACIOSA: não quebrar startup, apenas marcar como indisponível
+        log.warn("⚠️ Neo4j não disponível na inicialização: {}. " +
+                 "Operadores de grafo retornarão valores conservadores. " +
+                 "Reconexão será tentada automaticamente.", e.getMessage());
+        tempAvailable = false;
+        // Manter o driver para tentativas futuras (se foi criado)
       }
+      this.driver = tempDriver;
+      this.available = tempAvailable;
     } else {
       this.driver = null;
-      log.info("Neo4j integration disabled");
+      this.available = false;
+      log.info("Neo4j integration disabled by configuration");
     }
   }
 
@@ -505,21 +527,59 @@ public class Neo4jGraphService {
     }
   }
 
-  /** Verifica se o serviço está habilitado e conectado */
+  /**
+   * Verifica se o serviço está habilitado e conectado.
+   * Tenta reconectar se estava indisponível.
+   */
   public boolean isAvailable() {
     if (!enabled || driver == null) return false;
+
+    // Se já está marcado como disponível, verificar se ainda está
+    if (available) {
+      try (Session session = driver.session()) {
+        session.run("RETURN 1");
+        return true;
+      } catch (Exception e) {
+        log.warn("Neo4j connection lost: {}", e.getMessage());
+        available = false;
+        return false;
+      }
+    }
+
+    // Tentar reconectar se estava indisponível
     try (Session session = driver.session()) {
       session.run("RETURN 1");
+      available = true;
+      log.info("Neo4j reconnected successfully: {}", uri);
       return true;
     } catch (Exception e) {
+      log.debug("Neo4j still unavailable: {}", e.getMessage());
       return false;
     }
+  }
+
+  /**
+   * Retorna se o serviço está habilitado na configuração.
+   */
+  public boolean isEnabled() {
+    return enabled;
+  }
+
+  /**
+   * Retorna o status atual de disponibilidade (sem verificar conexão).
+   */
+  public boolean isCurrentlyAvailable() {
+    return enabled && available;
   }
 
   /** Fecha a conexão com o Neo4j */
   public void close() {
     if (driver != null) {
-      driver.close();
+      try {
+        driver.close();
+      } catch (Exception e) {
+        log.warn("Error closing Neo4j driver: {}", e.getMessage());
+      }
     }
   }
 }

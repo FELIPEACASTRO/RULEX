@@ -3,6 +3,11 @@ package com.rulex.service.enrichment;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.service.GeoService;
 import com.rulex.service.GeoService.GeoCoordinates;
+import com.rulex.service.ImpossibleTravelService;
+import com.rulex.service.ImpossibleTravelService.TravelAnalysis;
+import com.rulex.util.PanHashUtil;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +47,7 @@ import org.springframework.stereotype.Component;
 public class GeoEnrichment {
 
   private final GeoService geoService;
+  private final ImpossibleTravelService impossibleTravelService;
 
   // Países de alto risco (FATF + outros)
   private static final Set<String> HIGH_RISK_COUNTRIES =
@@ -234,12 +240,42 @@ public class GeoEnrichment {
       boolean isDomestic = isDomesticTransaction(countryCode, homeCountry);
       boolean isCrossBorder = !isDomestic;
 
-      // Por enquanto, não temos análise de viagem impossível integrada
-      // TODO: Integrar com ImpossibleTravelService quando a API estiver disponível
+      // Análise de viagem impossível usando ImpossibleTravelService
       boolean isImpossibleTravel = false;
       double travelSpeedKmh = 0;
       double travelDistanceKm = 0;
       int timeSinceLastMinutes = 0;
+
+      if (coords.isFound() && request.getPan() != null) {
+        try {
+          String panHash = PanHashUtil.sha256Hex(request.getPan());
+          LocalDateTime txTime = parseTransactionTime(request);
+          boolean isCardPresent = request.getCustomerPresent() != null
+              && "1".equals(String.valueOf(request.getCustomerPresent()));
+
+          TravelAnalysis travelAnalysis = impossibleTravelService.analyzeTravel(
+              panHash,
+              coords.getLatitude(),
+              coords.getLongitude(),
+              city,
+              countryCode,
+              txTime,
+              request.getExternalTransactionId(),
+              isCardPresent
+          );
+
+          // Verificar se é viagem impossível baseado no riskLevel
+          isImpossibleTravel = travelAnalysis.riskLevel() == ImpossibleTravelService.TravelRisk.IMPOSSIBLE;
+          travelSpeedKmh = travelAnalysis.speedKmh();
+          travelDistanceKm = travelAnalysis.distanceKm();
+          timeSinceLastMinutes = (int) travelAnalysis.elapsedMinutes();
+
+          log.debug("Análise de viagem: impossible={}, speed={}km/h, distance={}km",
+              isImpossibleTravel, travelSpeedKmh, travelDistanceKm);
+        } catch (Exception e) {
+          log.debug("Erro ao analisar viagem impossível: {}", e.getMessage());
+        }
+      }
 
       // Calcular score de risco regional
       int regionRiskScore =
@@ -384,5 +420,29 @@ public class GeoEnrichment {
       case "PE", "604" -> "PERU";
       default -> countryCode;
     };
+  }
+
+  /** Converte data e hora da transação para LocalDateTime. */
+  private LocalDateTime parseTransactionTime(TransactionRequest request) {
+    if (request.getTransactionDate() == null || request.getTransactionTime() == null) {
+      return LocalDateTime.now();
+    }
+    try {
+      // Formato esperado: transactionDate=YYYYMMDD (Integer), transactionTime=HHmmss (Integer)
+      String dateStr = String.valueOf(request.getTransactionDate());
+      String timeStr = String.format("%06d", request.getTransactionTime());
+
+      int year = Integer.parseInt(dateStr.substring(0, 4));
+      int month = Integer.parseInt(dateStr.substring(4, 6));
+      int day = Integer.parseInt(dateStr.substring(6, 8));
+      int hour = Integer.parseInt(timeStr.substring(0, 2));
+      int minute = Integer.parseInt(timeStr.substring(2, 4));
+      int second = timeStr.length() >= 6 ? Integer.parseInt(timeStr.substring(4, 6)) : 0;
+
+      return LocalDateTime.of(year, month, day, hour, minute, second);
+    } catch (Exception e) {
+      log.debug("Erro ao parsear data/hora da transação: {}", e.getMessage());
+      return LocalDateTime.now();
+    }
   }
 }

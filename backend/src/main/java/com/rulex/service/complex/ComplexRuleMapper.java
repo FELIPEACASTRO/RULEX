@@ -251,12 +251,12 @@ public class ComplexRuleMapper {
     return ConditionGroupDTO.LogicOperatorType.valueOf(type.name());
   }
 
-  private RuleCondition.ConditionOperator mapOperator(ConditionDTO.OperatorType type) {
-    if (type == null) return RuleCondition.ConditionOperator.EQ;
-    return RuleCondition.ConditionOperator.valueOf(type.name());
+  private ConditionOperator mapOperator(ConditionDTO.OperatorType type) {
+    if (type == null) return ConditionOperator.EQ;
+    return ConditionOperator.valueOf(type.name());
   }
 
-  private ConditionDTO.OperatorType mapOperatorToDTO(RuleCondition.ConditionOperator type) {
+  private ConditionDTO.OperatorType mapOperatorToDTO(ConditionOperator type) {
     if (type == null) return ConditionDTO.OperatorType.EQ;
     return ConditionDTO.OperatorType.valueOf(type.name());
   }

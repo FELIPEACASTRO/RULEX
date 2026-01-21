@@ -6,6 +6,8 @@ import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.VelocityTransactionLog;
 import com.rulex.repository.VelocityCounterRepository;
 import com.rulex.repository.VelocityTransactionLogRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
@@ -40,7 +42,9 @@ public class VelocityService {
   private final Cache<String, VelocityStats> statsCache;
 
   public VelocityService(
-      VelocityCounterRepository counterRepository, VelocityTransactionLogRepository logRepository) {
+      VelocityCounterRepository counterRepository,
+      VelocityTransactionLogRepository logRepository,
+      MeterRegistry meterRegistry) {
     this.counterRepository = counterRepository;
     this.logRepository = logRepository;
     this.statsCache =
@@ -49,6 +53,10 @@ public class VelocityService {
             .maximumSize(10_000)
             .recordStats()
             .build();
+
+    // PERF-002 FIX: Expor métricas de cache via Actuator/Prometheus
+    CaffeineCacheMetrics.monitor(meterRegistry, statsCache, "velocity.stats.cache");
+    log.info("VelocityService inicializado com métricas de cache expostas");
   }
 
   /** Estatísticas de velocidade. */

@@ -1,12 +1,19 @@
 package com.rulex.service.enrichment;
 
 import com.rulex.dto.TransactionRequest;
+import com.rulex.entity.DeviceFingerprint;
+import com.rulex.repository.DeviceFingerprintRepository;
+import com.rulex.repository.DevicePanAssociationRepository;
+import com.rulex.service.BloomFilterService;
 import com.rulex.service.DeviceFingerprintService;
 import com.rulex.service.DeviceFingerprintService.FingerprintAnalysis;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +49,9 @@ import org.springframework.stereotype.Component;
 public class DeviceEnrichment {
 
   private final DeviceFingerprintService deviceFingerprintService;
+  private final DeviceFingerprintRepository deviceFingerprintRepository;
+  private final DevicePanAssociationRepository devicePanAssociationRepository;
+  private final BloomFilterService bloomFilterService;
 
   /** Resultado do enriquecimento de device. */
   @Data
@@ -232,8 +242,44 @@ public class DeviceEnrichment {
               hasScreenAnomaly,
               hasBrowserAnomaly);
 
+      // Calcular ageDays e lastSeenHours a partir do histórico
+      int ageDays = 0;
+      int lastSeenHours = 0;
+      if (analysis.fingerprintHash() != null) {
+        Optional<DeviceFingerprint> deviceOpt =
+            deviceFingerprintRepository.findByFingerprintHash(analysis.fingerprintHash());
+        if (deviceOpt.isPresent()) {
+          DeviceFingerprint device = deviceOpt.get();
+          if (device.getFirstSeen() != null) {
+            ageDays = (int) ChronoUnit.DAYS.between(device.getFirstSeen(), OffsetDateTime.now());
+          }
+          if (device.getLastSeen() != null) {
+            lastSeenHours = (int) ChronoUnit.HOURS.between(device.getLastSeen(), OffsetDateTime.now());
+          }
+        }
+      }
+
+      // Calcular distinctDevices7d e distinctPans7d
+      // Por enquanto, usamos os valores de 24h como aproximação
+      // Uma implementação completa requer queries com janela temporal
+      int distinctDevices7d = analysis.devicesForCard();
+      int distinctPans7d = analysis.cardsOnDevice();
+
+      // Verificar se fingerprint está em lista de bloqueio
+      boolean isFingerprintBlocked = false;
+      if (analysis.fingerprintHash() != null) {
+        try {
+          var blocklistResult = bloomFilterService.isBlacklisted(
+              com.rulex.entity.RuleList.EntityType.DEVICE_ID,
+              analysis.fingerprintHash());
+          isFingerprintBlocked = blocklistResult.inList();
+        } catch (Exception e) {
+          log.debug("Erro ao verificar blocklist de fingerprint: {}", e.getMessage());
+        }
+      }
+
       // Flags compostas
-      boolean isHighRisk = riskScore >= 70 || isEmulator || isRooted || isTor;
+      boolean isHighRisk = riskScore >= 70 || isEmulator || isRooted || isTor || isFingerprintBlocked;
       boolean isSuspicious = riskScore >= 50 || isVpn || isProxy || anomalyScore >= 30;
 
       return DeviceContext.builder()
@@ -241,19 +287,19 @@ public class DeviceEnrichment {
           .fingerprintHash(analysis.fingerprintHash())
           .isNew(analysis.isNewDevice())
           .isKnown(!analysis.isNewDevice())
-          .ageDays(0) // TODO: calcular a partir do histórico
-          .lastSeenHours(0) // TODO: calcular a partir do histórico
+          .ageDays(ageDays)
+          .lastSeenHours(lastSeenHours)
           .distinctDevices24h(analysis.devicesForCard())
-          .distinctDevices7d(analysis.devicesForCard()) // TODO: janela de 7d
+          .distinctDevices7d(distinctDevices7d)
           .distinctPans24h(analysis.cardsOnDevice())
-          .distinctPans7d(analysis.cardsOnDevice()) // TODO: janela de 7d
+          .distinctPans7d(distinctPans7d)
           .isEmulator(isEmulator)
           .isRooted(isRooted)
           .isVpn(isVpn)
           .isProxy(isProxy)
           .isTor(isTor)
           .isDatacenterIp(isDatacenterIp)
-          .isFingerprintBlocked(false) // TODO: verificar lista de bloqueio
+          .isFingerprintBlocked(isFingerprintBlocked)
           .hasTimezoneMismatch(hasTimezoneMismatch)
           .hasLanguageMismatch(hasLanguageMismatch)
           .hasScreenAnomaly(hasScreenAnomaly)

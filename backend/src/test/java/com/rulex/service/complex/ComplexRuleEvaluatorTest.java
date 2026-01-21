@@ -4,18 +4,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.complex.RuleCondition;
-import com.rulex.entity.complex.RuleCondition.ConditionOperator;
+import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleConditionGroup.GroupLogicOperator;
+import com.rulex.service.FuzzyLogicService;
 import com.rulex.service.GeoService;
+import com.rulex.service.Neo4jGraphService;
 import com.rulex.service.OperatorDataService;
+import com.rulex.service.StatisticalAnalysisService;
+import com.rulex.service.StringSimilarityService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
-import com.rulex.service.Neo4jGraphService;
-import com.rulex.service.StatisticalAnalysisService;
-import com.rulex.service.FuzzyLogicService;
-import com.rulex.service.StringSimilarityService;
+import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +42,7 @@ class ComplexRuleEvaluatorTest {
   private StatisticalAnalysisService statisticalAnalysisService;
   private FuzzyLogicService fuzzyLogicService;
   private StringSimilarityService stringSimilarityService;
+  private OperatorEvaluatorRegistry operatorEvaluatorRegistry;
   private ComplexRuleEvaluator evaluator;
 
   @BeforeEach
@@ -52,10 +55,19 @@ class ComplexRuleEvaluatorTest {
     statisticalAnalysisService = Mockito.mock(StatisticalAnalysisService.class);
     fuzzyLogicService = Mockito.mock(FuzzyLogicService.class);
     stringSimilarityService = Mockito.mock(StringSimilarityService.class);
+    // ARCH-001 FIX: Adicionado mock do OperatorEvaluatorRegistry
+    operatorEvaluatorRegistry = new OperatorEvaluatorRegistry(Collections.emptyList());
     evaluator =
         new ComplexRuleEvaluator(
-            geoService, velocityService, velocityServiceFacade, operatorDataService,
-            neo4jGraphService, statisticalAnalysisService, fuzzyLogicService, stringSimilarityService);
+            geoService,
+            velocityService,
+            velocityServiceFacade,
+            operatorDataService,
+            neo4jGraphService,
+            statisticalAnalysisService,
+            fuzzyLogicService,
+            stringSimilarityService,
+            operatorEvaluatorRegistry);
   }
 
   @Nested

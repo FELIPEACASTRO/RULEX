@@ -10,6 +10,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,6 +67,7 @@ import {
   Loader2,
   RefreshCw,
   Eye,
+  ArrowRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -85,6 +87,7 @@ import {
 type ViewMode = 'list' | 'create' | 'edit' | 'view';
 
 export default function ComplexRules() {
+  const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
   // State
@@ -266,6 +269,8 @@ export default function ComplexRules() {
         return 'bg-green-500';
       case 'DRAFT':
         return 'bg-gray-500';
+      case 'DEPRECATED':
+        return 'bg-orange-500';
       case 'TESTING':
         return 'bg-yellow-500';
       case 'ARCHIVED':
@@ -352,6 +357,21 @@ export default function ComplexRules() {
         </Button>
       </div>
 
+      <Card className="border border-dashed">
+        <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-foreground">Fluxo rápido para regras simples</p>
+            <p className="text-xs text-muted-foreground">
+              Precisa de algo direto? Use a criação de regras simples com menos campos.
+            </p>
+          </div>
+          <Button onClick={() => setLocation('/rules-simple')} variant="secondary">
+            Ir para Regras Simples
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -377,6 +397,7 @@ export default function ComplexRules() {
                 <SelectItem value="all">Todos Status</SelectItem>
                 <SelectItem value="DRAFT">Rascunho</SelectItem>
                 <SelectItem value="PUBLISHED">Publicada</SelectItem>
+                <SelectItem value="DEPRECATED">Descontinuada</SelectItem>
                 <SelectItem value="TESTING">Em Teste</SelectItem>
                 <SelectItem value="ARCHIVED">Arquivada</SelectItem>
               </SelectContent>

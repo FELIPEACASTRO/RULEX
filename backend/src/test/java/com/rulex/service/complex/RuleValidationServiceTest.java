@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.rulex.dto.complex.ConditionDTO;
 import com.rulex.dto.complex.ConditionGroupDTO;
 import com.rulex.dto.complex.ConditionGroupDTO.LogicOperatorType;
+import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleCondition;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -277,7 +278,7 @@ class RuleValidationServiceTest {
       RuleCondition condition =
           RuleCondition.builder()
               .fieldName("transactionAmount")
-              .operator(RuleCondition.ConditionOperator.GT)
+              .operator(ConditionOperator.GT)
               .valueSingle("1000")
               .build();
 
@@ -301,7 +302,7 @@ class RuleValidationServiceTest {
       RuleCondition condition =
           RuleCondition.builder()
               .fieldName("location")
-              .operator(RuleCondition.ConditionOperator.GEO_DISTANCE_LT)
+              .operator(ConditionOperator.GEO_DISTANCE_LT)
               .valueSingle("-23.55,-46.63,100")
               .build();
 

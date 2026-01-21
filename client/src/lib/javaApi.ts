@@ -14,6 +14,8 @@ import type { ConditionOperatorType } from "./operatorTypes";
 
 // Preferir same-origin (Vite proxy em dev). Pode ser sobrescrito por env.
 const JAVA_API_BASE_URL: string = import.meta.env.VITE_JAVA_API_URL || "";
+const DEFAULT_API_BASE_URL =
+  JAVA_API_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost");
 
 // Opcional: Basic Auth (Spring Security HTTP Basic).
 // Formato: "usuario:senha" (ex.: "admin:rulex").
@@ -173,6 +175,40 @@ export interface RuleConfiguration {
   version: number;
 }
 
+export interface RuleSimulationConditionResult {
+  field: string;
+  operator: string;
+  expectedValue: string;
+  actualValue: string;
+  met: boolean;
+}
+
+export interface RuleSimulationResult {
+  ruleName: string;
+  triggered: boolean;
+  classification?: string | null;
+  weight?: number | null;
+  reason: string;
+  logicOperator?: string | null;
+  processingTimeMs: number;
+  conditionResults: RuleSimulationConditionResult[];
+}
+
+export interface RuleBacktestResult {
+  ruleId: number;
+  ruleName: string;
+  startDate: string;
+  endDate: string;
+  totalEvaluated: number;
+  totalTriggered: number;
+  triggerRate: number;
+  wouldApprove: number;
+  wouldSuspect: number;
+  wouldBlock: number;
+  totalAmountAffected: number;
+  sampleResults: RuleSimulationResult[];
+}
+
 export interface AuditLog {
   id: number;
   transactionId: number | null;
@@ -184,6 +220,23 @@ export interface AuditLog {
   errorMessage?: string | null;
   sourceIp?: string | null;
   createdAt: string;
+}
+
+export interface RuleApproval {
+  id: number;
+  ruleId: number;
+  ruleName: string;
+  actionType: "CREATE" | "UPDATE" | "DELETE" | "TOGGLE";
+  requestedBy: string;
+  requestedAt: string;
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  rejectedBy?: string | null;
+  rejectedAt?: string | null;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+  payloadJson?: string | null;
+  comments?: string | null;
+  clientIp?: string | null;
 }
 
 export interface FieldDictionaryItem {
@@ -206,7 +259,7 @@ export interface FieldDictionaryItem {
 // ========================================
 
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${JAVA_API_BASE_URL}${endpoint}`;
+  const url = `${DEFAULT_API_BASE_URL}${endpoint}`;
 
   const token = getAccessToken();
   const basicAuthRaw = BASIC_AUTH_RAW || getBasicAuthRaw() || undefined;
@@ -294,7 +347,7 @@ export async function exportTransactions(
   if (filters.startDate) params.append("startDate", filters.startDate);
   if (filters.endDate) params.append("endDate", filters.endDate);
 
-  const url = `${JAVA_API_BASE_URL}/api/transactions/export?${params.toString()}`;
+  const url = `${DEFAULT_API_BASE_URL}/api/transactions/export?${params.toString()}`;
   const token = getAccessToken();
   const basicAuthHeader =
     !token && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
@@ -434,6 +487,90 @@ export async function toggleRuleStatus(
   });
 }
 
+export async function simulateRule(
+  rule: RuleConfiguration,
+  testPayload: TransactionRequest
+): Promise<RuleSimulationResult> {
+  return apiRequest<RuleSimulationResult>("/api/rules/simulation/test", {
+    method: "POST",
+    body: JSON.stringify({ rule, testPayload }),
+  });
+}
+
+export async function backtestRule(
+  ruleId: number,
+  startDate: string,
+  endDate: string,
+  sampleSize: number
+): Promise<RuleBacktestResult> {
+  const params = new URLSearchParams({
+    startDate,
+    endDate,
+    sampleSize: String(sampleSize),
+  });
+  return apiRequest<RuleBacktestResult>(`/api/rules/simulation/backtest/${ruleId}?${params.toString()}`, {
+    method: "POST",
+  });
+}
+
+export async function requestCreateApproval(
+  rule: RuleConfiguration
+): Promise<RuleApproval> {
+  return apiRequest<RuleApproval>("/api/rules/approvals/create", {
+    method: "POST",
+    body: JSON.stringify(rule),
+  });
+}
+
+export async function requestUpdateApproval(
+  ruleId: number,
+  rule: RuleConfiguration
+): Promise<RuleApproval> {
+  return apiRequest<RuleApproval>(`/api/rules/approvals/update/${ruleId}`, {
+    method: "POST",
+    body: JSON.stringify(rule),
+  });
+}
+
+export async function requestDeleteApproval(ruleId: number): Promise<RuleApproval> {
+  return apiRequest<RuleApproval>(`/api/rules/approvals/delete/${ruleId}`, {
+    method: "POST",
+  });
+}
+
+export async function listPendingRuleApprovals(): Promise<RuleApproval[]> {
+  return apiRequest<RuleApproval[]>("/api/rules/approvals/pending");
+}
+
+export async function approveRuleApproval(
+  approvalId: number,
+  comments?: string
+): Promise<{ approval: RuleApproval; success: boolean; message: string }> {
+  return apiRequest<{ approval: RuleApproval; success: boolean; message: string }>(
+    `/api/rules/approvals/${approvalId}/approve`,
+    {
+      method: "POST",
+      body: comments ? JSON.stringify({ comments }) : undefined,
+    }
+  );
+}
+
+export async function rejectRuleApproval(
+  approvalId: number,
+  reason: string
+): Promise<RuleApproval> {
+  return apiRequest<RuleApproval>(`/api/rules/approvals/${approvalId}/reject`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+export async function cancelRuleApproval(approvalId: number): Promise<RuleApproval> {
+  return apiRequest<RuleApproval>(`/api/rules/approvals/${approvalId}/cancel`, {
+    method: "POST",
+  });
+}
+
 // ========================================
 // AUDIT
 // ========================================
@@ -477,7 +614,7 @@ export async function exportAuditLogs(
   if (filters.endDate) params.append("endDate", filters.endDate);
   params.append("limit", String(filters.limit ?? 10000));
 
-  const url = `${JAVA_API_BASE_URL}/api/audit/export?${params.toString()}`;
+  const url = `${DEFAULT_API_BASE_URL}/api/audit/export?${params.toString()}`;
   const token = getAccessToken();
   const basicAuthHeader =
     !token && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
@@ -527,7 +664,7 @@ export async function checkApiHealth(): Promise<{
 }> {
   const start = Date.now();
   try {
-    const response = await fetch(`${JAVA_API_BASE_URL}/actuator/health`, {
+    const response = await fetch(`${DEFAULT_API_BASE_URL}/actuator/health`, {
       method: "GET",
       headers: { Accept: "application/json" },
     });
@@ -576,7 +713,7 @@ export interface ComplexRuleDTO {
   title: string;
   description?: string;
   version?: number;
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'TESTING';
+  status: 'DRAFT' | 'PUBLISHED' | 'DEPRECATED' | 'ARCHIVED' | 'TESTING';
   priority: number;
   severity: number;
   decision: 'APROVADO' | 'SUSPEITA_DE_FRAUDE' | 'FRAUDE';

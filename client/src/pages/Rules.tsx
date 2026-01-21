@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Trash2, ToggleRight, Loader2, AlertTriangle, Filter, Layers, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, ToggleRight, Loader2, AlertTriangle, Filter, Layers, Search, Play, BarChart2, ArrowRight } from 'lucide-react';
+import { useLocation } from 'wouter';
 import {
   Select,
   SelectContent,
@@ -20,6 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,11 +42,19 @@ import {
   FieldDictionaryItem,
   RuleConfiguration,
   ComplexRuleDTO,
+  RuleSimulationResult,
+  RuleBacktestResult,
+  TransactionRequest,
   createRule,
   deleteRule,
   listFieldDictionary,
   listRules,
   listComplexRules,
+  requestCreateApproval,
+  requestUpdateApproval,
+  requestDeleteApproval,
+  simulateRule,
+  backtestRule,
   toggleRuleStatus,
   toggleComplexRuleStatus,
   updateRule,
@@ -56,6 +66,32 @@ import { toast } from 'sonner';
  * Página de configuração dinâmica de regras.
  */
 export default function Rules() {
+  const [, setLocation] = useLocation();
+  const DEFAULT_SIMULATION_PAYLOAD = `{
+  "externalTransactionId": "TXN-SIM-001",
+  "customerIdFromHeader": "CUST-123",
+  "customerAcctNumber": 1234567890,
+  "pan": "4111111111111111",
+  "merchantId": "MERCH-TEST-001",
+  "merchantCountryCode": "BR",
+  "transactionAmount": 15000,
+  "transactionDate": 20241216,
+  "transactionTime": 143000,
+  "transactionCurrencyCode": 986,
+  "mcc": 5411,
+  "posEntryMode": "010",
+  "consumerAuthenticationScore": 500,
+  "externalScore3": 85,
+  "cavvResult": 1,
+  "eciIndicator": 5,
+  "atcCard": 10,
+  "atcHost": 10,
+  "tokenAssuranceLevel": 2,
+  "availableCredit": 100000,
+  "cardCashBalance": 50000,
+  "cardDelinquentAmount": 0
+}`;
+
   const queryClient = useQueryClient();
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['rules'],
@@ -92,13 +128,15 @@ export default function Rules() {
     type: 'simple' | 'complex';
     ruleType?: string;
     classification?: string;
-    decision?: string;
+    decision?: ComplexRuleDTO['decision'];
     enabled: boolean;
     weight?: number;
     priority?: number;
     threshold?: number;
     severity?: number;
     conditionsCount: number;
+    complexId?: string;
+    complexKey?: string;
     original: RuleConfiguration | ComplexRuleDTO;
   };
 
@@ -128,6 +166,8 @@ export default function Rules() {
       priority: r.priority,
       severity: r.severity,
       conditionsCount: r.rootConditionGroup?.conditions?.length ?? 0,
+      complexId: r.id,
+      complexKey: r.key,
       original: r,
     }));
 
@@ -174,12 +214,36 @@ export default function Rules() {
   const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
   const [pendingClose, setPendingClose] = useState(false);
+  const [requiresApproval, setRequiresApproval] = useState(false);
 
   // P1-09: Estado para confirmação de delete
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   // P1-02: Estado para erros de validação
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // P0: Simulação e backtest
+  const [isSimulationOpen, setIsSimulationOpen] = useState(false);
+  const [simulationRule, setSimulationRule] = useState<RuleConfiguration | null>(null);
+  const [simulationPayload, setSimulationPayload] = useState(DEFAULT_SIMULATION_PAYLOAD);
+  const [simulationResult, setSimulationResult] = useState<RuleSimulationResult | null>(null);
+  const [simulationError, setSimulationError] = useState<string | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
+
+  const [isBacktestOpen, setIsBacktestOpen] = useState(false);
+  const [selectedBacktestRule, setSelectedBacktestRule] = useState<RuleConfiguration | null>(null);
+  const [backtestStart, setBacktestStart] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 7);
+    return date.toISOString().slice(0, 16);
+  });
+  const [backtestEnd, setBacktestEnd] = useState(() => new Date().toISOString().slice(0, 16));
+  const [backtestSampleSize, setBacktestSampleSize] = useState(1000);
+  const [backtestResult, setBacktestResult] = useState<RuleBacktestResult | null>(null);
+  const [backtestError, setBacktestError] = useState<string | null>(null);
+  const [isBacktesting, setIsBacktesting] = useState(false);
+
+  const normalizeDateTime = (value: string) => (value.length === 16 ? `${value}:00` : value);
 
   const invalidateRules = () => {
     queryClient.invalidateQueries({ queryKey: ['rules'] });
@@ -203,6 +267,7 @@ export default function Rules() {
     if (!open) {
       setIsDirty(false);
       setValidationErrors({});
+      setRequiresApproval(false);
     }
   }, [isDirty]);
 
@@ -214,6 +279,7 @@ export default function Rules() {
     setIsDirty(false);
     setValidationErrors({});
     setEditingRule(null);
+    setRequiresApproval(false);
   }, []);
 
   // P0-04: Cancelar descarte
@@ -239,18 +305,30 @@ export default function Rules() {
       };
 
       if (editingRule) {
-        // P0-05: Enviar version para optimistic locking
         payload.version = editingRule.version;
+        if (requiresApproval) {
+          return requestUpdateApproval(editingRule.id, payload as RuleConfiguration);
+        }
         return updateRule(editingRule.id, payload);
+      }
+      if (requiresApproval) {
+        return requestCreateApproval(payload as RuleConfiguration);
       }
       return createRule(payload);
     },
     onSuccess: () => {
-      toast.success(editingRule ? 'Regra atualizada com sucesso!' : 'Regra criada com sucesso!');
+      toast.success(
+        requiresApproval
+          ? 'Solicitação enviada para aprovação'
+          : editingRule
+            ? 'Regra atualizada com sucesso!'
+            : 'Regra criada com sucesso!'
+      );
       setShowDialog(false);
       setEditingRule(null);
       setIsDirty(false);
       setValidationErrors({});
+      setRequiresApproval(false);
       setFormData({
         ruleName: '',
         description: '',
@@ -294,6 +372,16 @@ export default function Rules() {
     onError: () => toast.error('Não foi possível deletar a regra'),
   });
 
+  const deleteApprovalMutation = useMutation({
+    mutationFn: (id: number) => requestDeleteApproval(id),
+    onSuccess: () => {
+      toast.success('Solicitação de exclusão enviada para aprovação');
+      invalidateRules();
+      setDeleteConfirmId(null);
+    },
+    onError: (error: Error) => toast.error(`Não foi possível solicitar aprovação: ${error.message}`),
+  });
+
   const toggleMutation = useMutation({
     mutationFn: (id: number) => {
       const current = rules.find((r: RuleConfiguration) => r.id === id);
@@ -324,6 +412,7 @@ export default function Rules() {
 
   const handleEdit = (rule: RuleConfiguration) => {
     setEditingRule(rule);
+    setRequiresApproval(false);
     setFormData({
       ruleName: rule.ruleName,
       description: rule.description ?? '',
@@ -337,6 +426,63 @@ export default function Rules() {
       conditions: rule.conditions ?? [],
     });
     setShowDialog(true);
+  };
+
+  const openSimulation = (rule: RuleConfiguration) => {
+    setSimulationRule(rule);
+    setSimulationPayload(DEFAULT_SIMULATION_PAYLOAD);
+    setSimulationResult(null);
+    setSimulationError(null);
+    setIsSimulationOpen(true);
+  };
+
+  const runSimulation = async () => {
+    if (!simulationRule) return;
+    setIsSimulating(true);
+    setSimulationError(null);
+    setSimulationResult(null);
+    try {
+      const parsedPayload = JSON.parse(simulationPayload) as TransactionRequest;
+      const result = await simulateRule(simulationRule, parsedPayload);
+      setSimulationResult(result);
+      toast.success('Simulação concluída!');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro desconhecido';
+      setSimulationError(message);
+      toast.error(`Erro na simulação: ${message}`);
+    } finally {
+      setIsSimulating(false);
+    }
+  };
+
+  const openBacktest = (rule: RuleConfiguration) => {
+    setSelectedBacktestRule(rule);
+    setBacktestResult(null);
+    setBacktestError(null);
+    setIsBacktestOpen(true);
+  };
+
+  const runBacktest = async () => {
+    if (!selectedBacktestRule) return;
+    setIsBacktesting(true);
+    setBacktestError(null);
+    setBacktestResult(null);
+    try {
+      const result = await backtestRule(
+        selectedBacktestRule.id,
+        normalizeDateTime(backtestStart),
+        normalizeDateTime(backtestEnd),
+        backtestSampleSize,
+      );
+      setBacktestResult(result);
+      toast.success('Backtest concluído!');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro desconhecido';
+      setBacktestError(message);
+      toast.error(`Erro no backtest: ${message}`);
+    } finally {
+      setIsBacktesting(false);
+    }
   };
 
   // P1-01/P1-02: Validação antes de salvar
@@ -447,6 +593,36 @@ export default function Rules() {
     }
   };
 
+  const getComplexStatusColor = (status?: ComplexRuleDTO['status']) => {
+    switch (status) {
+      case 'PUBLISHED':
+        return 'bg-green-100 text-green-800';
+      case 'DRAFT':
+        return 'bg-gray-100 text-gray-800';
+      case 'DEPRECATED':
+        return 'bg-orange-100 text-orange-800';
+      case 'TESTING':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'ARCHIVED':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getDecisionLabel = (decision?: ComplexRuleDTO['decision']) => {
+    switch (decision) {
+      case 'APROVADO':
+        return 'Aprovado';
+      case 'SUSPEITA_DE_FRAUDE':
+        return 'Suspeita de Fraude';
+      case 'FRAUDE':
+        return 'Fraude';
+      default:
+        return decision ?? '-';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -465,6 +641,7 @@ export default function Rules() {
                 setEditingRule(null);
                 setIsDirty(false);
                 setValidationErrors({});
+                setRequiresApproval(false);
                 setFormData({
                   ruleName: '',
                   description: '',
@@ -491,6 +668,21 @@ export default function Rules() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Governança</p>
+                  <p className="text-xs text-muted-foreground">
+                    Envie esta regra para aprovação antes de publicar.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="requiresApproval"
+                    checked={requiresApproval}
+                    onCheckedChange={setRequiresApproval}
+                  />
+                </div>
+              </div>
               <div>
                 <label htmlFor="ruleName" className="block text-sm font-medium text-foreground mb-2">
                   Nome da Regra <span className="text-red-500">*</span>
@@ -533,7 +725,7 @@ export default function Rules() {
                 <Textarea
                   id="parameters"
                   value={formData.parameters}
-                  onChange={(e) => setFormData({ ...formData, parameters: e.target.value })}
+                  onChange={(e) => updateFormData({ parameters: e.target.value })}
                   placeholder={
                     formData.ruleType === 'VELOCITY'
                       ? `Ex (velocity/state):\n{\n  "velocity": {\n    "metric": "COUNT",\n    "dimension": "CUSTOMER",\n    "windowSeconds": 3600,\n    "operator": "GT",\n    "threshold": 3\n  }\n}`
@@ -558,8 +750,7 @@ export default function Rules() {
                     id="ruleType"
                     value={formData.ruleType}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
+                      updateFormData({
                         ruleType: e.target.value as RuleConfiguration['ruleType'],
                       })
                     }
@@ -579,8 +770,7 @@ export default function Rules() {
                     id="classification"
                     value={formData.classification}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
+                      updateFormData({
                         classification: e.target.value as RuleConfiguration['classification'],
                       })
                     }
@@ -602,8 +792,7 @@ export default function Rules() {
                     type="number"
                     value={formData.threshold}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
+                      updateFormData({
                         threshold: e.target.value === '' ? 0 : parseInt(e.target.value, 10),
                       })
                     }
@@ -628,8 +817,7 @@ export default function Rules() {
                     max="100"
                     value={formData.weight}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
+                      updateFormData({
                         weight: e.target.value === '' ? 0 : parseInt(e.target.value, 10),
                       })
                     }
@@ -662,8 +850,7 @@ export default function Rules() {
                       id="logicOperator"
                       value={formData.logicOperator}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
+                        updateFormData({
                           logicOperator: e.target.value as RuleConfiguration['logicOperator'],
                         })
                       }
@@ -775,7 +962,7 @@ export default function Rules() {
                             onChange={(e) => {
                               const next = [...formData.conditions];
                               next[idx] = { ...next[idx], field: e.target.value };
-                              setFormData({ ...formData, conditions: next });
+                              updateFormData({ conditions: next });
                             }}
                             placeholder="Ex: consumerAuthenticationScore"
                             list="rule-condition-fields"
@@ -814,7 +1001,7 @@ export default function Rules() {
                                   ? ''
                                   : next[idx].value,
                               };
-                              setFormData({ ...formData, conditions: next });
+                              updateFormData({ conditions: next });
                             }}
                             className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
                           >
@@ -837,7 +1024,7 @@ export default function Rules() {
                               onChange={(e) => {
                                 const next = [...formData.conditions];
                                 next[idx] = { ...next[idx], value: e.target.value };
-                                setFormData({ ...formData, conditions: next });
+                                updateFormData({ conditions: next });
                               }}
                               placeholder={
                                 c.operator === 'IN' || c.operator === 'NOT_IN'
@@ -862,7 +1049,7 @@ export default function Rules() {
                             variant="ghost"
                             onClick={() => {
                               const next = formData.conditions.filter((_, i) => i !== idx);
-                              setFormData({ ...formData, conditions: next });
+                              updateFormData({ conditions: next });
                             }}
                             title="Remover condição"
                           >
@@ -877,8 +1064,7 @@ export default function Rules() {
                     type="button"
                     variant="outline"
                     onClick={() =>
-                      setFormData({
-                        ...formData,
+                      updateFormData({
                         conditions: [
                           ...formData.conditions,
                           { field: '', operator: 'EQ', value: '' } as RuleConfiguration['conditions'][number],
@@ -896,7 +1082,7 @@ export default function Rules() {
                   type="checkbox"
                   id="enabled"
                   checked={formData.enabled}
-                  onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
+                  onChange={(e) => updateFormData({ enabled: e.target.checked })}
                   className="w-4 h-4 rounded border-input"
                 />
                 <label htmlFor="enabled" className="text-sm font-medium text-foreground">
@@ -940,6 +1126,20 @@ export default function Rules() {
             </SelectContent>
           </Select>
         </div>
+        <Card className="border border-dashed">
+          <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Precisa de regras avançadas?</p>
+              <p className="text-xs text-muted-foreground">
+                Use o construtor de regras complexas com grupos, condições aninhadas e templates.
+              </p>
+            </div>
+            <Button onClick={() => setLocation('/rules')} variant="secondary">
+              Ir para Regras Complexas
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Tabela de Regras */}
@@ -987,7 +1187,11 @@ export default function Rules() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRules.map((rule) => (
+                  {filteredRules.map((rule) => {
+                    const complexId = rule.type === 'complex' ? (rule.original as ComplexRuleDTO).id : undefined;
+                    const complexKey = rule.type === 'complex' ? (rule.original as ComplexRuleDTO).key : undefined;
+                    const complexActionDisabled = rule.type === 'complex' && !complexId;
+                    return (
                     <tr key={`${rule.type}-${rule.id}`} className="border-b border-border hover:bg-muted/50 transition-colors">
                       <td className="py-3 px-4">
                         <div className="flex flex-col">
@@ -1017,12 +1221,16 @@ export default function Rules() {
                           </Badge>
                         ) : (
                           <Badge className="bg-emerald-100 text-emerald-800">
-                            {rule.decision}
+                            {getDecisionLabel(rule.decision)}
                           </Badge>
                         )}
                       </td>
                       <td className="py-3 px-4 text-sm text-center text-foreground">
-                        {rule.type === 'simple' ? `${rule.weight}%` : `P${rule.priority}`}
+                        {rule.type === 'simple'
+                          ? `${rule.weight}%`
+                          : rule.priority !== undefined
+                            ? `P${rule.priority}`
+                            : '-'}
                       </td>
                       <td className="py-3 px-4 text-sm">
                         {rule.type === 'simple' ? (
@@ -1036,9 +1244,20 @@ export default function Rules() {
                         )}
                       </td>
                       <td className="py-3 px-4 text-sm text-center">
-                        <Badge variant={rule.enabled ? 'default' : 'secondary'}>
-                          {rule.enabled ? 'Ativa' : 'Inativa'}
-                        </Badge>
+                        {rule.type === 'simple' ? (
+                          <Badge variant={rule.enabled ? 'default' : 'secondary'}>
+                            {rule.enabled ? 'Ativa' : 'Inativa'}
+                          </Badge>
+                        ) : (
+                          <div className="flex flex-col items-center gap-1">
+                            <Badge className={getComplexStatusColor((rule.original as ComplexRuleDTO).status)}>
+                              {(rule.original as ComplexRuleDTO).status}
+                            </Badge>
+                            {!rule.enabled && (
+                              <span className="text-xs text-muted-foreground">Inativa</span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-center space-x-2">
                         <Button
@@ -1047,14 +1266,56 @@ export default function Rules() {
                           onClick={() => {
                             if (rule.type === 'simple') {
                               handleToggle(rule.id as number);
+                            } else if (complexId) {
+                              toggleComplexMutation.mutate(complexId);
                             } else {
-                              toggleComplexMutation.mutate(rule.id as string);
+                              toast.error(`Regra complexa sem ID válido (${complexKey ?? 'chave indisponível'}).`);
                             }
                           }}
                           title={rule.enabled ? 'Desativar' : 'Ativar'}
+                          disabled={complexActionDisabled}
                         >
                           <ToggleRight className="h-4 w-4" />
                         </Button>
+                        {rule.type === 'simple' ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openSimulation(rule.original as RuleConfiguration)}
+                              title="Simular regra"
+                            >
+                              <Play className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openBacktest(rule.original as RuleConfiguration)}
+                              title="Backtest"
+                            >
+                              <BarChart2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toast.info('Simulação para regras complexas ainda não está disponível.')}
+                              title="Simulação indisponível para regras complexas"
+                            >
+                              <Play className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toast.info('Backtest para regras complexas ainda não está disponível.')}
+                              title="Backtest indisponível para regras complexas"
+                            >
+                              <BarChart2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
                         {rule.type === 'simple' && (
                           <Button
                             variant="ghost"
@@ -1071,24 +1332,292 @@ export default function Rules() {
                           onClick={() => {
                             if (rule.type === 'simple') {
                               handleDeleteClick(rule.id as number);
+                            } else if (complexId) {
+                              deleteComplexMutation.mutate(complexId);
                             } else {
-                              deleteComplexMutation.mutate(rule.id as string);
+                              toast.error(`Regra complexa sem ID válido (${complexKey ?? 'chave indisponível'}).`);
                             }
                           }}
                           title="Deletar"
                           className="text-red-600 hover:text-red-700"
+                          disabled={complexActionDisabled}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </td>
                     </tr>
-                  ))}
+                  );
+                  })}
                 </tbody>
               </table>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* P0: Simulação de regra (simple rules) */}
+      <Dialog open={isSimulationOpen} onOpenChange={(open) => {
+        setIsSimulationOpen(open);
+        if (!open) {
+          setSimulationResult(null);
+          setSimulationError(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Simular regra</DialogTitle>
+            <DialogDescription>
+              Execute a regra selecionada contra um payload de teste.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="rounded-lg border border-border p-3 text-sm text-muted-foreground">
+              Regra: <span className="font-medium text-foreground">{simulationRule?.ruleName ?? '-'}</span>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Payload de teste (JSON)
+              </label>
+              <Textarea
+                value={simulationPayload}
+                onChange={(e) => setSimulationPayload(e.target.value)}
+                rows={10}
+                className="font-mono text-xs"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Campos obrigatórios devem estar presentes para validação do backend.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                onClick={runSimulation}
+                disabled={isSimulating || !simulationPayload.trim() || !simulationRule}
+              >
+                {isSimulating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Simulando...
+                  </>
+                ) : (
+                  <>
+                    <Play className="mr-2 h-4 w-4" />
+                    Simular
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {simulationError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+                {simulationError}
+              </div>
+            )}
+
+            {simulationResult && (
+              <div className="space-y-3 rounded-lg border border-border bg-muted/40 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium text-foreground">
+                    Resultado da simulação
+                  </div>
+                  <Badge variant={simulationResult.triggered ? 'destructive' : 'secondary'}>
+                    {simulationResult.triggered ? 'Disparou' : 'Não disparou'}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-xs text-muted-foreground">Classificação</div>
+                    <div className="font-medium">{simulationResult.classification ?? '—'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Peso</div>
+                    <div className="font-medium">{simulationResult.weight ?? 0}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Operador lógico</div>
+                    <div className="font-medium">{simulationResult.logicOperator ?? 'AND'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Tempo (ms)</div>
+                    <div className="font-medium">{simulationResult.processingTimeMs}</div>
+                  </div>
+                </div>
+                <div className="text-sm">
+                  <div className="text-xs text-muted-foreground">Motivo</div>
+                  <div className="font-medium">{simulationResult.reason}</div>
+                </div>
+
+                {simulationResult.conditionResults?.length ? (
+                  <div className="mt-2">
+                    <div className="text-xs text-muted-foreground mb-2">Condições avaliadas</div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-1">Campo</th>
+                            <th className="text-left py-1">Operador</th>
+                            <th className="text-left py-1">Esperado</th>
+                            <th className="text-left py-1">Atual</th>
+                            <th className="text-left py-1">Resultado</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {simulationResult.conditionResults.map((condition, index) => (
+                            <tr key={`${condition.field}-${index}`} className="border-b">
+                              <td className="py-1 pr-2">{condition.field}</td>
+                              <td className="py-1 pr-2">{condition.operator}</td>
+                              <td className="py-1 pr-2">{condition.expectedValue}</td>
+                              <td className="py-1 pr-2">{condition.actualValue}</td>
+                              <td className="py-1">
+                                <Badge variant={condition.met ? 'default' : 'secondary'}>
+                                  {condition.met ? 'OK' : 'NOK'}
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* P0: Backtest de regra (simple rules) */}
+      <Dialog open={isBacktestOpen} onOpenChange={(open) => {
+        setIsBacktestOpen(open);
+        if (!open) {
+          setBacktestResult(null);
+          setBacktestError(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Backtest de regra</DialogTitle>
+            <DialogDescription>
+              Executa a regra contra transações históricas para estimar impacto.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="rounded-lg border border-border p-3 text-sm text-muted-foreground">
+              Regra: <span className="font-medium text-foreground">{selectedBacktestRule?.ruleName ?? '-'}</span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Início</label>
+                <Input
+                  type="datetime-local"
+                  value={backtestStart}
+                  onChange={(e) => setBacktestStart(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Fim</label>
+                <Input
+                  type="datetime-local"
+                  value={backtestEnd}
+                  onChange={(e) => setBacktestEnd(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Amostra</label>
+                <Input
+                  type="number"
+                  min="10"
+                  value={backtestSampleSize}
+                  onChange={(e) => setBacktestSampleSize(Number(e.target.value))}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                onClick={runBacktest}
+                disabled={isBacktesting || !selectedBacktestRule}
+              >
+                {isBacktesting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Executando...
+                  </>
+                ) : (
+                  <>
+                    <BarChart2 className="mr-2 h-4 w-4" />
+                    Executar backtest
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {backtestError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+                {backtestError}
+              </div>
+            )}
+
+            {backtestResult && (
+              <div className="space-y-3 rounded-lg border border-border bg-muted/40 p-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-xs text-muted-foreground">Avaliações</div>
+                    <div className="font-medium">{backtestResult.totalEvaluated}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Disparos</div>
+                    <div className="font-medium">{backtestResult.totalTriggered}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Taxa de disparo</div>
+                    <div className="font-medium">{backtestResult.triggerRate.toFixed(2)}%</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Valor impactado</div>
+                    <div className="font-medium">{backtestResult.totalAmountAffected}</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <div className="text-xs text-muted-foreground">Aprovaria</div>
+                    <div className="font-medium">{backtestResult.wouldApprove}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Suspeita</div>
+                    <div className="font-medium">{backtestResult.wouldSuspect}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Bloquearia</div>
+                    <div className="font-medium">{backtestResult.wouldBlock}</div>
+                  </div>
+                </div>
+
+                {backtestResult.sampleResults?.length ? (
+                  <div className="mt-2">
+                    <div className="text-xs text-muted-foreground mb-2">Amostra (até 10)</div>
+                    <div className="space-y-2">
+                      {backtestResult.sampleResults.map((sample, index) => (
+                        <div key={`${sample.ruleName}-${index}`} className="text-xs flex items-center justify-between border-b pb-1">
+                          <span>{sample.reason}</span>
+                          <Badge variant={sample.triggered ? 'destructive' : 'secondary'}>
+                            {sample.triggered ? 'Disparou' : 'Não disparou'}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* P1-09: AlertDialog para confirmação de delete */}
       <AlertDialog open={deleteConfirmId !== null} onOpenChange={(open) => !open && cancelDelete()}>
@@ -1101,6 +1630,16 @@ export default function Rules() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={cancelDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteConfirmId !== null) {
+                  deleteApprovalMutation.mutate(deleteConfirmId);
+                }
+              }}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              Solicitar aprovação
+            </AlertDialogAction>
             <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
               Deletar
             </AlertDialogAction>

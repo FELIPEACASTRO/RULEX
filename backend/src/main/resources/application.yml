@@ -17,18 +17,26 @@ spring:
           max-idle: 8
           min-idle: 2
 
+  neo4j:
+    uri: ${RULEX_NEO4J_URI:bolt://localhost:7687}
+    authentication:
+      username: ${RULEX_NEO4J_USERNAME:neo4j}
+      password: ${RULEX_NEO4J_PASSWORD:}
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/rulex_db}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    username: ${SPRING_DATASOURCE_USERNAME:}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     # HikariCP Connection Pool Configuration
-    # P0-PATCH: Increased pool from 20→100, timeout 30s→5s (ADR-0002)
-    # MOTIVO: Pool exhaustion at 20 VUs causing 53% errors (docs/perf.md baseline)
+    # PERF-001 FIX: Reduzido pool de 100→30 para evitar exaustão do PostgreSQL
+    # PostgreSQL default max_connections=100, múltiplas instâncias precisam compartilhar
+    # Recomendação: Use PgBouncer para connection pooling em produção
     hikari:
       pool-name: RulexHikariPool
-      minimum-idle: ${HIKARI_MIN_IDLE:20}
-      maximum-pool-size: ${HIKARI_MAX_POOL_SIZE:100}
+      # PERF-001: Valores otimizados - fórmula: (core_count * 2) + effective_spindle_count
+      minimum-idle: ${HIKARI_MIN_IDLE:5}
+      maximum-pool-size: ${HIKARI_MAX_POOL_SIZE:20}
       idle-timeout: ${HIKARI_IDLE_TIMEOUT:300000}
       max-lifetime: ${HIKARI_MAX_LIFETIME:1800000}
       connection-timeout: ${HIKARI_CONNECTION_TIMEOUT:5000}
@@ -88,7 +96,8 @@ management:
       show-details: when_authorized
   health:
     neo4j:
-      enabled: false
+      # INFRA-001 FIX: Habilitado health check do Neo4j para detecção de falhas
+      enabled: true
   metrics:
     export:
       prometheus:
@@ -141,7 +150,13 @@ rulex:
         enabled: true
   audit:
     enabled: true
-    log-all-decisions: true
+    # ATENÇÃO: Em produção com alto TPS, considere desabilitar ou usar sampling
+    log-all-decisions: ${RULEX_AUDIT_LOG_ALL:false}
+  access-log:
+    enabled: ${RULEX_ACCESS_LOG_ENABLED:true}
+    # Sampling rate para logs de sucesso (0.0 = nenhum, 1.0 = todos)
+    # Erros (4xx/5xx) e mutações (POST/PUT/DELETE) são sempre logados
+    success-sampling-rate: ${RULEX_ACCESS_LOG_SAMPLING:0.1}
   security:
     enabled: ${RULEX_SECURITY_ENABLED:true}
     admin:
@@ -160,4 +175,43 @@ rulex:
     enabled: ${RULEX_NEO4J_ENABLED:true}
     uri: ${RULEX_NEO4J_URI:bolt://localhost:7687}
     username: ${RULEX_NEO4J_USERNAME:neo4j}
-    password: ${RULEX_NEO4J_PASSWORD:rulex123}
+    password: ${RULEX_NEO4J_PASSWORD:}
+
+  # QUAL-002 FIX: Configurações externalizadas (substitui magic numbers)
+  limits:
+    max-request-body-size: ${RULEX_MAX_REQUEST_BODY_SIZE:1000000}
+    max-rules-per-transaction: ${RULEX_MAX_RULES_PER_TX:100}
+    max-conditions-per-rule: ${RULEX_MAX_CONDITIONS_PER_RULE:50}
+    max-nested-groups: ${RULEX_MAX_NESTED_GROUPS:5}
+    rule-evaluation-timeout-ms: ${RULEX_RULE_EVAL_TIMEOUT_MS:5000}
+  velocity:
+    threshold5min: ${RULEX_VELOCITY_5MIN:3}
+    threshold1hour: ${RULEX_VELOCITY_1HOUR:10}
+    threshold-daily: ${RULEX_VELOCITY_DAILY:50}
+    distinct-merchants-threshold: ${RULEX_DISTINCT_MERCHANTS:10}
+    distinct-countries-threshold: ${RULEX_DISTINCT_COUNTRIES:5}
+    max-devices-per-card: ${RULEX_MAX_DEVICES_PER_CARD:5}
+  fraud:
+    high-risk-amount-threshold: ${RULEX_HIGH_RISK_AMOUNT:10000.0}
+    impossible-travel-distance-km: ${RULEX_IMPOSSIBLE_TRAVEL_KM:500}
+    impossible-travel-time-minutes: ${RULEX_IMPOSSIBLE_TRAVEL_MIN:60}
+    min-device-trust-score: ${RULEX_MIN_DEVICE_TRUST:50}
+    amount-deviation-percent-threshold: ${RULEX_AMOUNT_DEVIATION_PCT:300}
+  cache:
+    rules-cache-ttl-seconds: ${RULEX_RULES_CACHE_TTL:300}
+    velocity-cache-ttl-seconds: ${RULEX_VELOCITY_CACHE_TTL:30}
+    velocity-cache-max-size: ${RULEX_VELOCITY_CACHE_SIZE:10000}
+    bin-cache-ttl-seconds: ${RULEX_BIN_CACHE_TTL:3600}
+
+# GAP-E: Configuração SpringDoc OpenAPI
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api/v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /api/swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  packages-to-scan: com.rulex.controller
+  paths-to-match: /**

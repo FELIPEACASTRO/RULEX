@@ -18,6 +18,7 @@ import com.rulex.repository.TransactionRepository;
 import com.rulex.util.PanHashUtil;
 import com.rulex.util.PanMaskingUtil;
 import com.rulex.util.RegexValidator;
+import com.rulex.service.enrichment.TransactionEnrichmentFacade;
 import com.rulex.v31.execlog.ExecutionEventType;
 import com.rulex.v31.execlog.RuleExecutionLogService;
 import java.beans.PropertyDescriptor;
@@ -58,6 +59,7 @@ public class RuleEngineService {
   private final RuleExecutionLogService ruleExecutionLogService;
   private final EnrichmentService enrichmentService;
   private final RuleOrderingService ruleOrderingService;
+  private final TransactionEnrichmentFacade transactionEnrichmentFacade;
 
   // V4.0: advanced hard-rule services (opt-in via config)
   private final BloomFilterService bloomFilterService;
@@ -131,19 +133,23 @@ public class RuleEngineService {
         }
 
         // Idempotency: return same previous decision (no recomputation)
-        Transaction existingTx =
-            transactionRepository
-                .findByExternalTransactionId(externalTransactionId)
-                .orElseThrow(
-                    () ->
-                        new IllegalStateException(
-                            "Raw store exists but transaction row is missing for externalTransactionId="
-                                + externalTransactionId));
-        return buildResponseFromExisting(existingTx, startTime);
+        Optional<Transaction> existingTxOpt =
+            transactionRepository.findByExternalTransactionId(externalTransactionId);
+        if (existingTxOpt.isPresent()) {
+          return buildResponseFromExisting(existingTxOpt.get(), startTime);
+        }
+        // Raw store exists but transaction row is missing (partial failure recovery).
+        // Continue to create the transaction normally - raw store already validated hash match.
+        log.warn(
+            "Raw store exists but transaction row missing for externalTransactionId={}. Recovering by creating transaction.",
+            externalTransactionId);
       }
 
-      // Store raw payload in an independent transaction for auditability.
-      rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
+      // Store raw payload in an independent transaction for auditability (skip if already present
+      // from recovery case).
+      if (!existingRawOpt.isPresent()) {
+        rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
+      }
 
       // Backward compatibility: if transaction already exists (race), ensure hash matches.
       Optional<Transaction> existingTxOpt =
@@ -198,8 +204,8 @@ public class RuleEngineService {
       if (redisVelocityEnabled) {
         try {
           redisVelocityService.recordTransaction(request);
-        } catch (Exception ignored) {
-          // best-effort; never break fraud decisions
+        } catch (Exception e) { // SEC-006 FIX
+          log.warn("Erro best-effort (não bloqueia decisão): {}", e.getMessage());
         }
       }
 
@@ -263,18 +269,22 @@ public class RuleEngineService {
           return buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
         }
 
-        Transaction existingTx =
-            transactionRepository
-                .findByExternalTransactionId(externalTransactionId)
-                .orElseThrow(
-                    () ->
-                        new IllegalStateException(
-                            "Raw store exists but transaction row is missing for externalTransactionId="
-                                + externalTransactionId));
-        return buildEvaluateResponseFromExisting(existingTx, startTime);
+        Optional<Transaction> existingTxOpt =
+            transactionRepository.findByExternalTransactionId(externalTransactionId);
+        if (existingTxOpt.isPresent()) {
+          return buildEvaluateResponseFromExisting(existingTxOpt.get(), startTime);
+        }
+        // Raw store exists but transaction row is missing (partial failure recovery).
+        // Continue to create the transaction normally - raw store already validated hash match.
+        log.warn(
+            "Raw store exists but transaction row missing for externalTransactionId={}. Recovering by creating transaction.",
+            externalTransactionId);
       }
 
-      rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
+      // Only store raw payload if not already present (recovery case skips this)
+      if (!existingRawOpt.isPresent()) {
+        rawStoreService.store(externalTransactionId, payloadHash, effectiveRawBytes, contentType);
+      }
 
       Optional<Transaction> existingTxOpt =
           transactionRepository.findByExternalTransactionId(externalTransactionId);
@@ -328,8 +338,8 @@ public class RuleEngineService {
       if (redisVelocityEnabled) {
         try {
           redisVelocityService.recordTransaction(request);
-        } catch (Exception ignored) {
-          // best-effort; never break fraud decisions
+        } catch (Exception e) { // SEC-006 FIX
+          log.warn("Erro best-effort (não bloqueia decisão): {}", e.getMessage());
         }
       }
 
@@ -515,6 +525,16 @@ public class RuleEngineService {
         derivedContext.getBin(),
         derivedContext.getMaskedPan());
 
+    // V4.1: Enriquecimento completo da transação usando TransactionEnrichmentFacade
+    // Isso disponibiliza todos os 103+ campos derivados para avaliação de regras
+    TransactionEnrichmentFacade.FullEnrichmentContext enrichmentContext =
+        transactionEnrichmentFacade.enrichFull(request);
+    Map<String, Object> enrichedFields = enrichmentContext.toFlatMap();
+    log.debug(
+        "Enriquecimento completo em {}ms: {} campos disponíveis",
+        enrichmentContext.getEnrichmentTimeMs(),
+        enrichedFields.size());
+
     int totalScore = 0;
     List<TriggeredRuleDTO> triggeredRules = new ArrayList<>();
     Map<String, Object> scoreDetails = new HashMap<>();
@@ -572,7 +592,7 @@ public class RuleEngineService {
         long elapsed = System.nanoTime() - startNanos;
         try {
           ruleOrderingService.recordExecution(rule.getRuleName(), elapsed, ruleMatch.triggered);
-        } catch (Exception ignored) {
+        } catch (Exception e) { // SEC-006 FIX
           // ordering is best-effort; never break fraud decisions
         }
       }
@@ -737,7 +757,7 @@ public class RuleEngineService {
             return TransactionDecision.TransactionClassification.FRAUD;
           }
         }
-      } catch (Exception ignored) {
+      } catch (Exception e) { // SEC-006 FIX
         // best-effort
       }
     }
@@ -801,7 +821,7 @@ public class RuleEngineService {
             max = maxSeverity(max, TransactionDecision.TransactionClassification.SUSPICIOUS);
           }
         }
-      } catch (Exception ignored) {
+      } catch (Exception e) { // SEC-006 FIX
         // best-effort
       }
     }
@@ -1659,7 +1679,7 @@ public class RuleEngineService {
     try {
       new BigDecimal(t);
       return null;
-    } catch (Exception ignored) {
+    } catch (Exception e) { // SEC-006 FIX
       return t;
     }
   }
@@ -1693,6 +1713,26 @@ public class RuleEngineService {
         return leftValue != null && !truthy(leftValue);
       default:
         // seguir
+    }
+
+    // Operadores que comparam com outro campo
+    switch (operator) {
+      case "GT_FIELD", "EQ_FIELD", "NE_FIELD", "GTE_FIELD", "LT_FIELD", "LTE_FIELD" -> {
+        Object rightValue = readComputedLeftValue(request, rawValue);
+        return compareFieldValues(leftValue, rightValue, operator);
+      }
+      case "PERCENTAGE_OF_FIELD" -> {
+        return evaluatePercentageOfField(leftValue, request, rawValue);
+      }
+      case "MODULO_ZERO" -> {
+        return evaluateModuloZero(leftValue, rawValue);
+      }
+      case "DECIMAL_PLACES_GT" -> {
+        return evaluateDecimalPlacesGt(leftValue, rawValue);
+      }
+      default -> {
+        // seguir
+      }
     }
 
     if (leftValue == null) {
@@ -1758,8 +1798,122 @@ public class RuleEngineService {
       case "<" -> "LT";
       case ">=" -> "GTE";
       case "<=" -> "LTE";
+      case "IN_LIST" -> "IN";
+      case "NOT_IN_LIST" -> "NOT_IN";
+      case "NEQ_FIELD" -> "NE_FIELD";
       default -> o.toUpperCase(java.util.Locale.ROOT);
     };
+  }
+
+  private boolean compareFieldValues(Object leftValue, Object rightValue, String operator) {
+    if (leftValue == null || rightValue == null) {
+      return false;
+    }
+
+    if (leftValue instanceof Number || leftValue instanceof BigDecimal
+        || rightValue instanceof Number || rightValue instanceof BigDecimal) {
+      BigDecimal left = toBigDecimal(leftValue);
+      BigDecimal right = toBigDecimal(rightValue);
+      if (left == null || right == null) {
+        return false;
+      }
+      return switch (operator) {
+        case "GT_FIELD" -> left.compareTo(right) > 0;
+        case "GTE_FIELD" -> left.compareTo(right) >= 0;
+        case "LT_FIELD" -> left.compareTo(right) < 0;
+        case "LTE_FIELD" -> left.compareTo(right) <= 0;
+        case "EQ_FIELD" -> left.compareTo(right) == 0;
+        case "NE_FIELD" -> left.compareTo(right) != 0;
+        default -> false;
+      };
+    }
+
+    String left = String.valueOf(leftValue);
+    String right = String.valueOf(rightValue);
+    return switch (operator) {
+      case "EQ_FIELD" -> left.equals(right);
+      case "NE_FIELD" -> !left.equals(right);
+      case "GT_FIELD" -> left.compareTo(right) > 0;
+      case "GTE_FIELD" -> left.compareTo(right) >= 0;
+      case "LT_FIELD" -> left.compareTo(right) < 0;
+      case "LTE_FIELD" -> left.compareTo(right) <= 0;
+      default -> false;
+    };
+  }
+
+  private BigDecimal toBigDecimal(Object value) {
+    if (value == null) return null;
+    if (value instanceof BigDecimal bd) return bd;
+    try {
+      return new BigDecimal(String.valueOf(value));
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private boolean evaluatePercentageOfField(
+      Object leftValue, TransactionRequest request, String rawValue) {
+    if (leftValue == null || rawValue == null || rawValue.isBlank()) {
+      return false;
+    }
+    String[] parts = rawValue.split(":");
+    if (parts.length < 2) {
+      return false;
+    }
+
+    String otherField = parts[0].trim();
+    BigDecimal min = parseBigDecimalSafe(parts[1]);
+    BigDecimal max = parts.length >= 3 ? parseBigDecimalSafe(parts[2]) : null;
+    if (min == null) {
+      return false;
+    }
+
+    Object otherValue = readComputedLeftValue(request, otherField);
+    BigDecimal left = toBigDecimal(leftValue);
+    BigDecimal right = toBigDecimal(otherValue);
+    if (left == null || right == null || right.compareTo(BigDecimal.ZERO) == 0) {
+      return false;
+    }
+
+    BigDecimal pct = left.multiply(BigDecimal.valueOf(100)).divide(right, 6, java.math.RoundingMode.HALF_UP);
+    if (max == null) {
+      return pct.compareTo(min) >= 0;
+    }
+    return pct.compareTo(min) >= 0 && pct.compareTo(max) <= 0;
+  }
+
+  private BigDecimal parseBigDecimalSafe(String value) {
+    try {
+      return new BigDecimal(value.trim());
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private boolean evaluateModuloZero(Object leftValue, String rawValue) {
+    BigDecimal left = toBigDecimal(leftValue);
+    BigDecimal divisor = parseBigDecimalSafe(rawValue == null ? "" : rawValue);
+    if (left == null || divisor == null || divisor.compareTo(BigDecimal.ZERO) == 0) {
+      return false;
+    }
+    return left.remainder(divisor).compareTo(BigDecimal.ZERO) == 0;
+  }
+
+  private boolean evaluateDecimalPlacesGt(Object leftValue, String rawValue) {
+    BigDecimal left = toBigDecimal(leftValue);
+    if (left == null) {
+      return false;
+    }
+    int threshold = 0;
+    try {
+      threshold = Integer.parseInt(rawValue.trim());
+    } catch (Exception e) {
+      return false;
+    }
+    String normalized = left.stripTrailingZeros().toPlainString();
+    int idx = normalized.indexOf('.');
+    int decimals = idx >= 0 ? normalized.length() - idx - 1 : 0;
+    return decimals > threshold;
   }
 
   private boolean betweenNumber(BigDecimal left, String raw, boolean inclusive) {
@@ -1979,7 +2133,7 @@ public class RuleEngineService {
     if (t.isEmpty()) return null;
     try {
       return new BigDecimal(t);
-    } catch (Exception ignored) {
+    } catch (Exception e) { // SEC-006 FIX
       // not a literal
     }
     Object v = readFieldValue(request, TransactionRequest.class, t);

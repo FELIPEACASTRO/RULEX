@@ -116,6 +116,11 @@ SOLUTION_INDEX.csv
 Prompt/
 info/
 reports/
+!reports/
+reports/*
+!reports/manual/
+!reports/manual/**
+!reports/manual_page_implementation.md
 evidence/
 research_output/
 *.docx
@@ -126,3 +131,6 @@ docs/qa/DEVIN_*.json
 docs/qa/*_BACKUP*.md
 docs/qa/*_SCORECARD*.md
 docs/qa/*_GAPS*.md
+
+# Audit artifacts (temporary reports)
+artifacts/

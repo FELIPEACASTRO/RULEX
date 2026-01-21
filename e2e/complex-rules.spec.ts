@@ -16,7 +16,7 @@ async function loginAsAdmin(page: Page) {
 
 // Helper to navigate to rules page
 async function navigateToRules(page: Page) {
-  await page.getByRole("button", { name: "Regras de Fraude" }).click();
+  await page.getByRole("button", { name: "Regras Complexas" }).click();
   await expect(page).toHaveURL(/rules/);
   await page.waitForLoadState("networkidle");
 }

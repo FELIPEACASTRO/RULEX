@@ -1,0 +1,20 @@
+﻿ M .gitignore
+ M client/src/manual/FieldDictionary.tsx
+ M client/src/manual/OperatorCatalog.tsx
+ M client/src/manual/TemplatesGallery.tsx
+ M client/src/manual/generated/astAllowlist.generated.ts
+ M client/src/manual/generated/backendActions.generated.ts
+ M client/src/manual/generated/backendOperators.generated.ts
+ M client/src/manual/generated/docsIndex.generated.ts
+ M client/src/manual/generated/expressionFunctions.generated.ts
+ M client/src/manual/generated/index.ts
+ M client/src/manual/generated/logicOperators.generated.ts
+ M client/src/manual/generated/openapiSummary.generated.ts
+ M client/src/manual/index.ts
+ M client/src/pages/Manual.test.tsx
+ M client/src/pages/Manual.tsx
+ M client/src/pages/Rules.test.tsx
+ M scripts/manual-generate.mjs
+?? client/src/manual/ComplexRulesGuide.tsx
+?? client/src/manual/InfraRunbook.tsx
+?? reports/manual/

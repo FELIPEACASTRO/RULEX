@@ -2,12 +2,12 @@
 
 exports[`Rules popup (Rules.tsx) > snapshot: popup visual regression (modal content) 1`] = `
 <div
-  aria-describedby="radix-_r_19_"
-  aria-labelledby="radix-_r_18_"
+  aria-describedby="radix-_r_1r_"
+  aria-labelledby="radix-_r_1q_"
   class="bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] max-h-[calc(100vh-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto overscroll-contain rounded-lg border p-6 shadow-lg duration-200 sm:max-w-2xl"
   data-slot="dialog-content"
   data-state="open"
-  id="radix-_r_17_"
+  id="radix-_r_1p_"
   role="dialog"
   style="pointer-events: auto;"
   tabindex="-1"
@@ -19,14 +19,14 @@ exports[`Rules popup (Rules.tsx) > snapshot: popup visual regression (modal cont
     <h2
       class="text-lg leading-none font-semibold"
       data-slot="dialog-title"
-      id="radix-_r_18_"
+      id="radix-_r_1q_"
     >
       Nova Regra
     </h2>
     <p
       class="text-muted-foreground text-sm"
       data-slot="dialog-description"
-      id="radix-_r_19_"
+      id="radix-_r_1r_"
     >
       Configure os parâmetros da regra de detecção de fraude
     </p>
@@ -34,6 +34,42 @@ exports[`Rules popup (Rules.tsx) > snapshot: popup visual regression (modal cont
   <div
     class="space-y-4"
   >
+    <div
+      class="flex items-center justify-between rounded-lg border border-border p-3"
+    >
+      <div>
+        <p
+          class="text-sm font-medium text-foreground"
+        >
+          Governança
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          Envie esta regra para aprovação antes de publicar.
+        </p>
+      </div>
+      <div
+        class="flex items-center gap-2"
+      >
+        <button
+          aria-checked="false"
+          class="peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
+          data-slot="switch"
+          data-state="unchecked"
+          id="requiresApproval"
+          role="switch"
+          type="button"
+          value="on"
+        >
+          <span
+            class="bg-background dark:data-[state=unchecked]:bg-foreground dark:data-[state=checked]:bg-primary-foreground pointer-events-none block size-4 rounded-full ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0"
+            data-slot="switch-thumb"
+            data-state="unchecked"
+          />
+        </button>
+      </div>
+    </div>
     <div>
       <label
         class="block text-sm font-medium text-foreground mb-2"

@@ -73,12 +73,16 @@ public class EvaluateController {
   /**
    * Endpoint legado que aceita raw JSON. Mantido para compatibilidade com integrações existentes.
    *
-   * @deprecated Use o endpoint principal com EvaluateRequestDTO
+   * @deprecated Desde v2.0. Use {@link #evaluate(EvaluateRequestDTO, HttpServletRequest)} em vez
+   *     disso. Este endpoint será removido na versão 3.0 (estimado Q2 2026). Migração: Altere o
+   *     path de /evaluate/raw para /evaluate e use EvaluateRequestDTO como payload.
    */
   @Operation(
-      summary = "Avaliar transação (raw JSON)",
+      summary = "Avaliar transação (raw JSON) - DEPRECATED",
       description =
-          "Endpoint legado que aceita JSON raw. Use o endpoint principal /evaluate para novas integrações",
+          "⚠️ DEPRECATED: Este endpoint será removido na v3.0. "
+              + "Use POST /evaluate com EvaluateRequestDTO para novas integrações. "
+              + "Migração: Altere o path de /evaluate/raw para /evaluate.",
       deprecated = true)
   @ApiResponses(
       value = {
@@ -92,7 +96,7 @@ public class EvaluateController {
         @ApiResponse(responseCode = "400", description = "Body vazio ou inválido"),
         @ApiResponse(responseCode = "413", description = "Payload muito grande (limite: 1MB)")
       })
-  @Deprecated
+  @Deprecated(since = "2.0", forRemoval = true)
   @PostMapping("/raw")
   public ResponseEntity<EvaluateResponse> evaluateRaw(
       @RequestBody(required = false) String rawBody, HttpServletRequest httpRequest) {

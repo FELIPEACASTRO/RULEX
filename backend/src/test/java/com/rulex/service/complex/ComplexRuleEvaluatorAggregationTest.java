@@ -5,16 +5,18 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.rulex.dto.TransactionRequest;
+import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleCondition;
 import com.rulex.entity.complex.RuleConditionGroup;
+import com.rulex.service.FuzzyLogicService;
 import com.rulex.service.GeoService;
+import com.rulex.service.Neo4jGraphService;
 import com.rulex.service.OperatorDataService;
+import com.rulex.service.StatisticalAnalysisService;
+import com.rulex.service.StringSimilarityService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
-import com.rulex.service.Neo4jGraphService;
-import com.rulex.service.StatisticalAnalysisService;
-import com.rulex.service.FuzzyLogicService;
-import com.rulex.service.StringSimilarityService;
+import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
 import java.math.BigDecimal;
 import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,14 +40,24 @@ class ComplexRuleEvaluatorAggregationTest {
   @Mock private FuzzyLogicService fuzzyLogicService;
   @Mock private StringSimilarityService stringSimilarityService;
 
+  private OperatorEvaluatorRegistry operatorEvaluatorRegistry;
   private ComplexRuleEvaluator evaluator;
 
   @BeforeEach
   void setUp() {
+    // ARCH-001 FIX: Adicionado mock do OperatorEvaluatorRegistry
+    operatorEvaluatorRegistry = new OperatorEvaluatorRegistry(Collections.emptyList());
     evaluator =
         new ComplexRuleEvaluator(
-            geoService, velocityService, velocityServiceFacade, operatorDataService,
-            neo4jGraphService, statisticalAnalysisService, fuzzyLogicService, stringSimilarityService);
+            geoService,
+            velocityService,
+            velocityServiceFacade,
+            operatorDataService,
+            neo4jGraphService,
+            statisticalAnalysisService,
+            fuzzyLogicService,
+            stringSimilarityService,
+            operatorEvaluatorRegistry);
   }
 
   @Test
@@ -53,7 +65,7 @@ class ComplexRuleEvaluatorAggregationTest {
     // Arrange
     RuleConditionGroup group =
         createGroupWithCondition(
-            RuleCondition.ConditionOperator.SUM_LAST_N_DAYS,
+            ConditionOperator.SUM_LAST_N_DAYS,
             "amount|7|5000|GT" // Soma nos últimos 7 dias > 5000
             );
 
@@ -86,7 +98,7 @@ class ComplexRuleEvaluatorAggregationTest {
     // Arrange
     RuleConditionGroup group =
         createGroupWithCondition(
-            RuleCondition.ConditionOperator.COUNT_LAST_N_HOURS,
+            ConditionOperator.COUNT_LAST_N_HOURS,
             "24|100|LT" // Menos de 100 transações nas últimas 24 horas
             );
 
@@ -117,7 +129,7 @@ class ComplexRuleEvaluatorAggregationTest {
     // Arrange
     RuleConditionGroup group =
         createGroupWithCondition(
-            RuleCondition.ConditionOperator.AVG_LAST_N_DAYS,
+            ConditionOperator.AVG_LAST_N_DAYS,
             "amount|30|500|GTE" // Média nos últimos 30 dias >= 500
             );
 
@@ -148,7 +160,7 @@ class ComplexRuleEvaluatorAggregationTest {
     // Arrange
     RuleConditionGroup group =
         createGroupWithCondition(
-            RuleCondition.ConditionOperator.COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS,
+            ConditionOperator.COUNT_DISTINCT_MERCHANTS_LAST_N_DAYS,
             "7|10|GT" // Mais de 10 merchants distintos nos últimos 7 dias
             );
 
@@ -179,7 +191,7 @@ class ComplexRuleEvaluatorAggregationTest {
     // Arrange
     RuleConditionGroup group =
         createGroupWithCondition(
-            RuleCondition.ConditionOperator.COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS,
+            ConditionOperator.COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS,
             "24|5|LTE" // Até 5 países distintos nas últimas 24 horas
             );
 
@@ -210,7 +222,7 @@ class ComplexRuleEvaluatorAggregationTest {
     // Arrange
     RuleConditionGroup group =
         createGroupWithCondition(
-            RuleCondition.ConditionOperator.MAX_AMOUNT_LAST_N_DAYS,
+            ConditionOperator.MAX_AMOUNT_LAST_N_DAYS,
             "30|10000|GT" // Valor máximo nos últimos 30 dias > 10000
             );
 
@@ -241,7 +253,7 @@ class ComplexRuleEvaluatorAggregationTest {
     // Arrange
     RuleConditionGroup group =
         createGroupWithCondition(
-            RuleCondition.ConditionOperator.MIN_AMOUNT_LAST_N_DAYS,
+            ConditionOperator.MIN_AMOUNT_LAST_N_DAYS,
             "7|10|LT" // Valor mínimo nos últimos 7 dias < 10
             );
 
@@ -272,7 +284,7 @@ class ComplexRuleEvaluatorAggregationTest {
     // Arrange
     RuleConditionGroup group =
         createGroupWithCondition(
-            RuleCondition.ConditionOperator.SUM_LAST_N_DAYS, "invalid_format" // Formato inválido
+            ConditionOperator.SUM_LAST_N_DAYS, "invalid_format" // Formato inválido
             );
 
     Map<String, Object> payload = Map.of("cardNumber", "1234567890123456");
@@ -293,7 +305,7 @@ class ComplexRuleEvaluatorAggregationTest {
   // ========== Métodos Auxiliares ==========
 
   private RuleConditionGroup createGroupWithCondition(
-      RuleCondition.ConditionOperator operator, String valueSingle) {
+      ConditionOperator operator, String valueSingle) {
 
     RuleCondition condition =
         RuleCondition.builder()

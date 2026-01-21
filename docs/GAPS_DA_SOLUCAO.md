@@ -80,3 +80,21 @@ Este documento lista **gaps reais** (com evidência) e **pontos a validar** ante
 
 **EVIDÊNCIA**
 - Regras de security: [backend/src/main/java/com/rulex/config/SecurityConfig.java](../backend/src/main/java/com/rulex/config/SecurityConfig.java#L60-L120)
+
+## GAP-006 — Campos antifraude essenciais ausentes/sem garantia no payload
+
+**Descrição**
+- Documentação de payload indica ausência de campos críticos para fraude bancária (deviceId, ipAddress, userAgent, sessionId, email, phone, geo).
+- Sem esses dados, regras avançadas de device/IP/session e validação de contato ficam inviáveis.
+
+**Impacto**
+- Limita cobertura de fraudes modernas (ATO, bots, device-farming, proxy/VPN, account recovery fraud).
+
+**Ação sugerida (ROADMAP)**
+- Formalizar plano de enriquecimento de payload e integrações externas.
+- Consolidar em um plano único de execução com fases e owners.
+
+**EVIDÊNCIA**
+- Gaps de payload: [docs/PAYLOAD_DICTIONARY.md](PAYLOAD_DICTIONARY.md#L227-L242)
+- Capacidades bloqueadas por dados: [docs/02_CAPABILITIES_EXTRACTION.md](02_CAPABILITIES_EXTRACTION.md#L239-L260)
+- Plano de campos derivados: [docs/PLANO_IMPLEMENTACAO_CAMPOS_DERIVADOS.md](PLANO_IMPLEMENTACAO_CAMPOS_DERIVADOS.md)

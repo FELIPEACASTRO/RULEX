@@ -7,7 +7,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
@@ -58,8 +62,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
       return;
     }
 
-    String clientIp = getClientIp(request);
-    Bucket bucket = buckets.computeIfAbsent(clientIp, this::createNewBucket);
+    // SEC-005 FIX: Rate limiting por usuário autenticado + IP + User-Agent
+    String rateLimitKey = getRateLimitKey(request);
+    Bucket bucket = buckets.computeIfAbsent(rateLimitKey, this::createNewBucket);
 
     ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
 
@@ -74,8 +79,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
       long waitForRefillSeconds = waitForRefillNanos / 1_000_000_000;
 
       log.warn(
-          "Rate limit exceeded for IP: {} on path: {}. Wait time: {}s",
-          clientIp,
+          "Rate limit exceeded for key: {} on path: {}. Wait time: {}s",
+          rateLimitKey,
           path,
           waitForRefillSeconds);
 
@@ -97,6 +102,52 @@ public class RateLimitingFilter extends OncePerRequestFilter {
                     .capacity(requestsPerMinute)
                     .refillGreedy(requestsPerMinute, Duration.ofMinutes(1)))
         .build();
+  }
+
+  /**
+   * SEC-005 FIX: Gera chave de rate limiting combinando múltiplos fatores.
+   * Prioridade: 1) Usuário autenticado, 2) IP + User-Agent hash
+   * Isso previne bypass via proxies/VPNs e permite rate limiting por usuário.
+   */
+  private String getRateLimitKey(HttpServletRequest request) {
+    // Tentar extrair usuário do header Authorization (Basic Auth)
+    String authHeader = request.getHeader("Authorization");
+    if (authHeader != null && authHeader.startsWith("Basic ")) {
+      try {
+        String base64Credentials = authHeader.substring("Basic ".length());
+        String credentials = new String(Base64.getDecoder().decode(base64Credentials), StandardCharsets.UTF_8);
+        String username = credentials.split(":")[0];
+        if (username != null && !username.isBlank()) {
+          return "user:" + username;
+        }
+      } catch (Exception e) {
+        log.debug("Não foi possível extrair usuário do header Authorization: {}", e.getMessage());
+      }
+    }
+
+    // Fallback: IP + User-Agent hash para identificação mais robusta
+    String clientIp = getClientIp(request);
+    String userAgent = request.getHeader("User-Agent");
+    String userAgentHash = hashUserAgent(userAgent);
+
+    return "ip:" + clientIp + ":ua:" + userAgentHash;
+  }
+
+  /**
+   * Gera hash curto do User-Agent para identificação.
+   */
+  private String hashUserAgent(String userAgent) {
+    if (userAgent == null || userAgent.isBlank()) {
+      return "unknown";
+    }
+    try {
+      MessageDigest md = MessageDigest.getInstance("SHA-256");
+      byte[] hash = md.digest(userAgent.getBytes(StandardCharsets.UTF_8));
+      // Usar apenas os primeiros 8 caracteres do hash
+      return Base64.getEncoder().encodeToString(hash).substring(0, 8);
+    } catch (NoSuchAlgorithmException e) {
+      return "unknown";
+    }
   }
 
   /**

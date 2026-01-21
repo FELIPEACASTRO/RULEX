@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  * grupos aninhados.
  */
 @RestController
-@RequestMapping("/api/v1/complex-rules")
+@RequestMapping("/v1/complex-rules")
 @RequiredArgsConstructor
 @Slf4j
 public class ComplexRuleController {

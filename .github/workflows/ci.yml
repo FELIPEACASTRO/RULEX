@@ -99,14 +99,19 @@ jobs:
     runs-on: ubuntu-latest
     needs: [appsec, backend, frontend]
     env:
+      # Database credentials
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      NEO4J_PASSWORD: neo4jpassword
+      # RULEX application credentials
       RULEX_SECURITY_ENABLED: "true"
       RULEX_ADMIN_USERNAME: admin
       RULEX_ADMIN_PASSWORD: rulex
       RULEX_ANALYST_USERNAME: analyst
       RULEX_ANALYST_PASSWORD: rulex
+      # Frontend credentials
       VITE_API_BASIC_AUTH: admin:rulex
+      # E2E test credentials
       E2E_USERNAME: admin
       E2E_PASSWORD: rulex
       E2E_ANALYST_USERNAME: analyst

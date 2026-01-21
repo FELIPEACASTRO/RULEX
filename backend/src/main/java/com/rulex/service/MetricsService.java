@@ -88,19 +88,19 @@ public class MetricsService {
 
     LocalDateTime since = calculateSince(period != null ? period : "24h");
     for (Object[] row : decisionRepository.aggregateByMerchantSince(since)) {
-      String merchantId = (String) row[0];
-      String merchantName = (String) row[1];
+      String merchantId = row[0] != null ? (String) row[0] : "UNKNOWN";
+      String merchantName = row[1] != null ? (String) row[1] : "N/A";
       long total = ((Number) row[2]).longValue();
       long fraud = ((Number) row[3]).longValue();
 
-      merchantMetrics.put(
-          merchantId != null ? merchantId : "UNKNOWN",
-          Map.of(
-              "merchantId", merchantId,
-              "merchantName", merchantName,
-              "total", total,
-              "fraud", fraud,
-              "fraudRate", calculatePercentage(fraud, total)));
+      Map<String, Object> metrics = new java.util.HashMap<>();
+      metrics.put("merchantId", merchantId);
+      metrics.put("merchantName", merchantName);
+      metrics.put("total", total);
+      metrics.put("fraud", fraud);
+      metrics.put("fraudRate", calculatePercentage(fraud, total));
+
+      merchantMetrics.put(merchantId, metrics);
     }
 
     return merchantMetrics;

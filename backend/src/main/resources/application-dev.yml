@@ -14,8 +14,8 @@ rulex:
   security:
     enabled: ${RULEX_SECURITY_ENABLED:true}
     admin:
-      username: ${RULEX_ADMIN_USERNAME:admin}
-      password: ${RULEX_ADMIN_PASSWORD:rulex}
+      username: ${RULEX_ADMIN_USERNAME:}
+      password: ${RULEX_ADMIN_PASSWORD:}
     analyst:
-      username: ${RULEX_ANALYST_USERNAME:analyst}
-      password: ${RULEX_ANALYST_PASSWORD:rulex}
+      username: ${RULEX_ANALYST_USERNAME:}
+      password: ${RULEX_ANALYST_PASSWORD:}

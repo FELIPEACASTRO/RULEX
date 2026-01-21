@@ -1,0 +1,13 @@
+{
+  "COMPARISON" : 385,
+  "DATE_TIME" : 19,
+  "DEVICE" : 7,
+  "FATF" : 28,
+  "GEO" : 3,
+  "LIST" : 15,
+  "NEO4J" : 18,
+  "NULL_CHECK" : 2,
+  "REGEX" : 2,
+  "STRING" : 1,
+  "VELOCITY" : 16
+}

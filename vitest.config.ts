@@ -33,11 +33,14 @@ export default defineConfig({
         "client/src/lib/api.generated.ts",
         "client/src/components/ui/**",
       ],
+      // TEST-001: Thresholds ajustados para cobertura atual (~29%)
+      // TODO: Aumentar gradualmente conforme mais testes são adicionados
+      // Meta futura: lines: 70, branches: 60, functions: 70, statements: 70
       thresholds: {
-        lines: 15,
-        branches: 10,
-        functions: 12,
-        statements: 15,
+        lines: 29,
+        branches: 25,
+        functions: 23,
+        statements: 29,
       },
     },
     setupFiles: ["./client/src/test/setup.ts"],

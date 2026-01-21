@@ -28,7 +28,24 @@ public class CorsConfig implements WebMvcConfigurer {
         .addMapping("/**")
         .allowedOrigins(allowedOrigins)
         .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-        .allowedHeaders("*")
+        // SEC-007 FIX: Whitelist explícita de headers permitidos (removido wildcard)
+        .allowedHeaders(
+            "Content-Type",
+            "Authorization",
+            "X-Requested-With",
+            "X-XSRF-TOKEN",
+            "Accept",
+            "Origin",
+            "Cache-Control",
+            "X-Request-ID"
+        )
+        .exposedHeaders(
+            "X-RateLimit-Remaining",
+            "X-RateLimit-Limit",
+            "X-RateLimit-Retry-After",
+            "X-Request-ID"
+        )
+        .allowCredentials(true)
         .maxAge(3600);
   }
 }

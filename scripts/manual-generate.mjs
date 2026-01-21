@@ -1,0 +1,1192 @@
+#!/usr/bin/env node
+/**
+ * manual-generate.mjs
+ * 
+ * Script para gerar dados do Manual do RULEX a partir do código fonte real.
+ * 
+ * Extrai:
+ * - Operadores do backend (RuleCondition.java → ConditionOperator)
+ * - Ações do backend (RuleAction.java → ActionType)
+ * - Operadores lógicos (RuleConditionGroup.java → GroupLogicOperator)
+ * - Funções de expressão (ExpressionEvaluator.java)
+ * - Allowlist do AstValidator.java
+ * - Endpoints do OpenAPI (rulex.yaml)
+ * 
+ * Gera arquivos em: client/src/manual/generated/
+ * 
+ * @author RULEX Team
+ * @date 2026-01-16
+ */
+
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const ROOT = join(__dirname, '..');
+const GENERATED_DIR = join(ROOT, 'client', 'src', 'manual', 'generated');
+const DOCS_COPY_DIR = join(ROOT, 'client', 'src', 'manual', 'docs');
+
+// Garantir que diretórios existem
+if (!existsSync(GENERATED_DIR)) {
+  mkdirSync(GENERATED_DIR, { recursive: true });
+}
+if (!existsSync(DOCS_COPY_DIR)) {
+  mkdirSync(DOCS_COPY_DIR, { recursive: true });
+}
+
+// ============================================================================
+// UTILIDADES
+// ============================================================================
+
+function log(msg) {
+  console.log(`[manual-generate] ${msg}`);
+}
+
+function error(msg) {
+  console.error(`[manual-generate] ❌ ${msg}`);
+}
+
+function success(msg) {
+  console.log(`[manual-generate] ✅ ${msg}`);
+}
+
+function readFile(path) {
+  try {
+    return readFileSync(path, 'utf-8');
+  } catch (e) {
+    error(`Não foi possível ler ${path}: ${e.message}`);
+    return null;
+  }
+}
+
+function writeGenerated(filename, content) {
+  const path = join(GENERATED_DIR, filename);
+  writeFileSync(path, content, 'utf-8');
+  success(`Gerado ${filename}`);
+}
+
+function safeJsonParse(value, label) {
+  try {
+    return JSON.parse(value);
+  } catch (e) {
+    error(`Falha ao fazer JSON.parse (${label}): ${e.message}`);
+    return null;
+  }
+}
+
+function ensureArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+// ============================================================================
+// EXTRAÇÃO: PAYLOAD EXAMPLE (Insomnia) + FIELD DICTIONARY
+// ============================================================================
+
+function extractInsomniaAnalyzeExamplePayload() {
+  const filePath = join(ROOT, 'Insomnia', 'RULEX_Insomnia_Collection.json');
+  const raw = readFile(filePath);
+  if (!raw) return null;
+
+  const insomnia = safeJsonParse(raw, 'Insomnia Collection');
+  if (!insomnia) return null;
+
+  const resources = ensureArray(insomnia.resources);
+  const preferredName = 'POST /transactions/analyze (FULL PAYLOAD - 118 campos)';
+
+  const candidates = resources
+    .filter((r) => r && r._type === 'request' && String(r.method || '').toUpperCase() === 'POST')
+    .filter((r) => typeof r.url === 'string' && r.url.includes('/transactions/analyze'))
+    .filter((r) => r.body && typeof r.body.text === 'string' && r.body.text.trim().startsWith('{'));
+
+  if (!candidates.length) {
+    error('Não encontrou request POST /transactions/analyze com body.text no Insomnia');
+    return null;
+  }
+
+  // Prioriza o request FULL PAYLOAD; se não existir, pega o maior payload válido.
+  const ordered = [
+    ...candidates.filter((c) => c.name === preferredName),
+    ...candidates.filter((c) => c.name !== preferredName),
+  ];
+
+  let best = null;
+  for (const req of ordered) {
+    const parsed = safeJsonParse(req.body.text, `Insomnia body (${req.name})`);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) continue;
+    const keyCount = Object.keys(parsed).length;
+    if (!best || keyCount > best.keyCount) {
+      best = {
+        name: req.name,
+        payload: parsed,
+        keyCount,
+      };
+    }
+    // Se achou o preferred e é razoável, pode parar.
+    if (req.name === preferredName) break;
+  }
+
+  if (!best) {
+    error('Não conseguiu parsear nenhum payload JSON válido do Insomnia');
+    return null;
+  }
+
+  return best;
+}
+
+function loadExistingFieldDictionaryItems() {
+  const filePath = join(GENERATED_DIR, 'fieldDictionary.generated.ts');
+  if (!existsSync(filePath)) return [];
+
+  const content = readFile(filePath);
+  if (!content) return [];
+
+  const marker = 'export const FIELD_DICTIONARY';
+  const idx = content.indexOf(marker);
+  if (idx === -1) return [];
+
+  // Importante: o primeiro '[' após o marker pode ser o '[]' do type annotation.
+  // Precisamos do '[' do array literal, que vem após o '='.
+  const eqIdx = content.indexOf('=', idx);
+  if (eqIdx === -1) return [];
+
+  const startArr = content.indexOf('[', eqIdx);
+  const endArr = content.indexOf('];', startArr);
+  if (startArr === -1 || endArr === -1) return [];
+
+  const arrayText = content.slice(startArr, endArr + 1);
+  const parsed = safeJsonParse(arrayText, 'fieldDictionary.generated.ts FIELD_DICTIONARY array');
+  return Array.isArray(parsed) ? parsed : [];
+}
+
+function inferTypeFromExample(name, value) {
+  if (value === null || value === undefined) return { type: 'string' };
+
+  const t = typeof value;
+  if (t === 'boolean') return { type: 'boolean' };
+  if (t === 'number') {
+    if (Number.isInteger(value)) {
+      const format = Math.abs(value) > 2147483647 ? 'int64' : undefined;
+      return { type: 'integer', format };
+    }
+    return { type: 'number' };
+  }
+  if (t === 'string') return { type: 'string' };
+  if (Array.isArray(value)) return { type: 'array' };
+  if (t === 'object') return { type: 'object' };
+  return { type: 'string' };
+}
+
+function generateFieldDictionaryFile() {
+  const existingItems = loadExistingFieldDictionaryItems();
+  const existingByName = new Map(existingItems.map((i) => [i?.name, i]).filter(([k]) => typeof k === 'string'));
+
+  const insomnia = extractInsomniaAnalyzeExamplePayload();
+  const examplePayload = insomnia?.payload ?? {};
+  const exampleSource = insomnia?.name ?? 'POST /transactions/analyze (example payload)';
+
+  const names = new Set([
+    ...Object.keys(examplePayload),
+    ...Array.from(existingByName.keys()).filter(Boolean),
+  ]);
+
+  const items = Array.from(names)
+    .filter((n) => typeof n === 'string' && n.length > 0)
+    .sort((a, b) => a.localeCompare(b))
+    .map((name) => {
+      const existing = existingByName.get(name);
+      const exampleValue = Object.prototype.hasOwnProperty.call(examplePayload, name)
+        ? examplePayload[name]
+        : undefined;
+
+      const inferred = inferTypeFromExample(name, exampleValue);
+
+      const constraints = ensureArray(existing?.constraints);
+      if ((exampleValue === null || exampleValue === undefined) && !constraints.includes('Pode ser nulo')) {
+        constraints.push('Pode ser nulo');
+      }
+
+      return {
+        name,
+        label: existing?.label,
+        description: existing?.description,
+        required: Boolean(existing?.required ?? false),
+        type: existing?.type ?? inferred.type,
+        format: existing?.format ?? inferred.format,
+        constraints,
+        possibleValues: ensureArray(existing?.possibleValues),
+        example: existing?.example ?? (exampleValue !== undefined ? JSON.stringify(exampleValue) : undefined),
+      };
+    });
+
+  const content = `// Auto-generated by scripts/manual-generate.mjs\n// Sources:\n// - Insomnia/RULEX_Insomnia_Collection.json (${exampleSource})\n// - (optional) existing generated file for richer metadata\n\nexport interface FieldDictionaryItem {\n  name: string;\n  label?: string;\n  description?: string;\n  required: boolean;\n  type: string;\n  format?: string;\n  constraints: string[];\n  possibleValues: string[];\n  example?: string;\n}\n\nexport const FIELD_DICTIONARY: FieldDictionaryItem[] = ${JSON.stringify(items, null, 2)};\n\nexport const FIELD_DICTIONARY_BY_NAME: Record<string, FieldDictionaryItem> = Object.fromEntries(\n  FIELD_DICTIONARY.map((f) => [f.name, f])\n);\n\nexport const FIELD_DICTIONARY_COUNT = FIELD_DICTIONARY.length;\n\nexport const FIELD_DICTIONARY_EXAMPLE_SOURCE = ${JSON.stringify(exampleSource)};\n`;
+
+  writeGenerated('fieldDictionary.generated.ts', content);
+  return items.length;
+}
+
+// ============================================================================
+// EXTRAÇÃO: TEMPLATES DO BACKEND (migrações Flyway)
+// ============================================================================
+
+function extractBackendTemplatesFromV8Migration() {
+  const filePath = join(
+    ROOT,
+    'backend',
+    'src',
+    'main',
+    'resources',
+    'db',
+    'migration',
+    'V8__complex_rules_support.sql'
+  );
+  const content = readFile(filePath);
+  if (!content) return [];
+
+  const insertStart = content.indexOf('INSERT INTO rule_templates');
+  if (insertStart === -1) {
+    error('Não encontrou INSERT INTO rule_templates em V8__complex_rules_support.sql');
+    return [];
+  }
+  const insertEnd = content.indexOf('ON CONFLICT', insertStart);
+  const block = content.substring(insertStart, insertEnd !== -1 ? insertEnd : content.length);
+
+  // Captura tuples do INSERT INTO rule_templates (name, category, description, template_config, is_system)
+  // Importante: o JSON está entre aspas simples e não contém aspas simples.
+  const tupleRegex = /\(\s*'([^']+)'\s*,\s*'([^']+)'\s*,\s*'([^']*)'\s*,\s*'([\s\S]*?)'\s*::jsonb\s*,\s*(TRUE|FALSE)\s*\)/g;
+  const templates = [];
+
+  let m;
+  while ((m = tupleRegex.exec(block)) != null) {
+    const name = m[1].trim();
+    const category = m[2].trim();
+    const description = (m[3] ?? '').trim();
+    const jsonRaw = (m[4] ?? '').trim();
+    const isSystem = (m[5] ?? 'FALSE').trim().toUpperCase() === 'TRUE';
+
+    let templateConfig;
+    try {
+      templateConfig = JSON.parse(jsonRaw);
+    } catch (e) {
+      error(`Falha ao fazer JSON.parse do template ${name} (V8 migration): ${e.message}`);
+      continue;
+    }
+
+    templates.push({ name, category, description, templateConfig, isSystem });
+  }
+
+  return templates;
+}
+
+// ============================================================================
+// EXTRAÇÃO: OPERADORES DO BACKEND (RuleCondition.java)
+// ============================================================================
+
+function extractBackendOperators() {
+  const filePath = join(ROOT, 'backend', 'src', 'main', 'java', 'com', 'rulex', 'entity', 'complex', 'RuleCondition.java');
+  const content = readFile(filePath);
+  if (!content) return [];
+
+  const operators = [];
+  
+  // Encontrar enum ConditionOperator
+  const enumStart = content.indexOf('enum ConditionOperator {');
+  if (enumStart === -1) {
+    error('Não encontrou enum ConditionOperator em RuleCondition.java');
+    return [];
+  }
+  
+  // O próximo enum (ConditionValueType) marca o fim do ConditionOperator
+  const nextEnumIndex = content.indexOf('enum ConditionValueType', enumStart);
+  const enumEnd = nextEnumIndex !== -1 ? nextEnumIndex : content.length;
+  
+  const enumBody = content.substring(enumStart, enumEnd);
+  const lines = enumBody.split('\n');
+  
+  let currentCategory = 'Comparação Básica';
+  
+  for (const line of lines) {
+    // Detectar categoria por comentário de seção (=== NOME ===)
+    const categoryMatch = line.match(/\/\/\s*=+\s*(.+?)\s*=+/);
+    if (categoryMatch) {
+      let cat = categoryMatch[1].trim()
+        .replace(/OPERADORES\s*/i, '')
+        .replace(/\(.*?\)/g, '')
+        .trim();
+      if (cat) currentCategory = cat;
+      continue;
+    }
+    
+    // Detectar categoria por comentário simples (CATEGORIA X: Nome)
+    const simpleCategoryMatch = line.match(/\/\/\s*CATEGORIA\s*\w+:\s*(.+)/i);
+    if (simpleCategoryMatch) {
+      currentCategory = simpleCategoryMatch[1].trim();
+      continue;
+    }
+    
+    // Extrair operador (aceita vírgula, ponto-e-vírgula ou nada no final)
+    // Importante: o último enum constant pode NÃO terminar com vírgula.
+    const opMatch = line.match(/^\s*([A-Z][A-Z0-9_]+)\s*(?:,|;)?\s*(?:\/\/\s*(.*))?\s*$/);
+    if (opMatch) {
+      const name = opMatch[1].trim();
+      const comment = opMatch[2]?.trim() || '';
+      operators.push({ name, comment, category: currentCategory });
+      continue;
+    }
+
+    // Detectar comentário de categoria standalone (// Comparação básica)
+    const inlineCategory = line.match(/^\s*\/\/\s*([A-Za-zÀ-ú][A-Za-zÀ-ú\s\/\-&]+)$/);
+    if (inlineCategory) {
+      const cat = inlineCategory[1].trim();
+      if (cat.length >= 4 && cat.length < 60) {
+        currentCategory = cat;
+      }
+    }
+  }
+
+  return operators;
+}
+
+function extractFrontendOperatorValues() {
+  try {
+    const feOpsPath = join(ROOT, 'client', 'src', 'lib', 'operators.ts');
+    const feContent = readFile(feOpsPath);
+    if (!feContent) return [];
+
+    // Capturar value: 'EQ' / value: "EQ" dentro do array OPERATORS
+    const values = [];
+    const valueRegex = /\bvalue\s*:\s*['"]([A-Z][A-Z0-9_]+)['"]/g;
+    let m;
+    while ((m = valueRegex.exec(feContent)) != null) {
+      values.push(m[1]);
+    }
+    return values;
+  } catch {
+    return [];
+  }
+}
+
+// ============================================================================
+// EXTRAÇÃO: AÇÕES DO BACKEND (RuleAction.java)
+// ============================================================================
+
+function extractBackendActions() {
+  const filePath = join(ROOT, 'backend', 'src', 'main', 'java', 'com', 'rulex', 'entity', 'complex', 'RuleAction.java');
+  const content = readFile(filePath);
+  if (!content) return [];
+
+  const actions = [];
+  
+  // Encontrar enum ActionType
+  const enumMatch = content.match(/enum\s+ActionType\s*\{([\s\S]*?)\n\s*\}/);
+  if (!enumMatch) {
+    error('Não encontrou enum ActionType em RuleAction.java');
+    return [];
+  }
+
+  const enumBody = enumMatch[1];
+  const lines = enumBody.split('\n');
+  
+  for (const line of lines) {
+    const opMatch = line.match(/^\s*([A-Z][A-Z0-9_]+),?\s*(?:\/\/\s*(.*))?$/);
+    if (opMatch) {
+      const name = opMatch[1].trim();
+      const comment = opMatch[2]?.trim() || '';
+      actions.push({ name, comment });
+    }
+  }
+
+  return actions;
+}
+
+// ============================================================================
+// EXTRAÇÃO: OPERADORES LÓGICOS (RuleConditionGroup.java)
+// ============================================================================
+
+function extractLogicOperators() {
+  const filePath = join(ROOT, 'backend', 'src', 'main', 'java', 'com', 'rulex', 'entity', 'complex', 'RuleConditionGroup.java');
+  const content = readFile(filePath);
+  if (!content) return [];
+
+  const operators = [];
+  
+  // Encontrar enum GroupLogicOperator com índices
+  const enumStart = content.indexOf('enum GroupLogicOperator {');
+  if (enumStart === -1) {
+    error('Não encontrou enum GroupLogicOperator em RuleConditionGroup.java');
+    return [];
+  }
+  
+  // Encontrar o fim do enum - procurar por próxima chave fechando
+  const enumBodyStart = content.indexOf('{', enumStart);
+  let braceCount = 1;
+  let enumEnd = enumBodyStart + 1;
+  
+  for (let i = enumBodyStart + 1; i < content.length && braceCount > 0; i++) {
+    if (content[i] === '{') braceCount++;
+    else if (content[i] === '}') {
+      braceCount--;
+      if (braceCount === 0) enumEnd = i;
+    }
+  }
+  
+  const enumBody = content.substring(enumBodyStart + 1, enumEnd);
+  const lines = enumBody.split('\n');
+  
+  for (const line of lines) {
+    const opMatch = line.match(/^\s*([A-Z][A-Z0-9_]+)\s*,?\s*(?:\/\/\s*(.*))?/);
+    if (opMatch) {
+      const name = opMatch[1].trim();
+      const comment = opMatch[2]?.trim() || '';
+      operators.push({ name, comment });
+    }
+  }
+
+  return operators;
+}
+
+// ============================================================================
+// EXTRAÇÃO: FUNÇÕES DO ExpressionEvaluator.java
+// ============================================================================
+
+function extractExpressionFunctions() {
+  const filePath = join(ROOT, 'backend', 'src', 'main', 'java', 'com', 'rulex', 'service', 'complex', 'ExpressionEvaluator.java');
+  const content = readFile(filePath);
+  if (!content) return [];
+
+  const functions = [];
+  
+  // Encontrar switch case de funções
+  const switchMatch = content.match(/return\s+switch\s*\(funcName\)\s*\{([\s\S]*?)\n\s*default\s*->/);
+  if (!switchMatch) {
+    // Tentar encontrar lista de funções conhecidas
+    const listMatch = content.match(/List\.of\(\s*([\s\S]*?)\)/g);
+    if (listMatch && listMatch.length > 0) {
+      // Pegar última lista (funções conhecidas)
+      const lastList = listMatch[listMatch.length - 1];
+      const funcs = lastList.match(/"([A-Z_]+)"/g);
+      if (funcs) {
+        funcs.forEach(f => {
+          const name = f.replace(/"/g, '');
+          functions.push({ name, category: 'Geral', description: '' });
+        });
+      }
+    }
+    return functions;
+  }
+
+  const switchBody = switchMatch[1];
+  const lines = switchBody.split('\n');
+  let currentCategory = 'Geral';
+  
+  for (const line of lines) {
+    // Detectar categoria
+    const categoryMatch = line.match(/\/\/\s*Funções?\s+(?:de\s+)?(\w+)/i);
+    if (categoryMatch) {
+      currentCategory = categoryMatch[1].trim();
+      continue;
+    }
+    
+    // Extrair case
+    const caseMatch = line.match(/case\s+"([A-Z_]+)"(?:,\s*"([A-Z_]+)")?/);
+    if (caseMatch) {
+      const name = caseMatch[1];
+      const alias = caseMatch[2] || null;
+      functions.push({ 
+        name, 
+        alias,
+        category: currentCategory,
+        description: '' 
+      });
+    }
+  }
+
+  return functions;
+}
+
+// ============================================================================
+// EXTRAÇÃO: ALLOWLIST DO AstValidator.java
+// ============================================================================
+
+function extractAstAllowlist() {
+  const filePath = join(ROOT, 'backend', 'src', 'main', 'java', 'com', 'rulex', 'v31', 'ast', 'AstValidator.java');
+  const content = readFile(filePath);
+  if (!content) return { functions: [], operators: [], aliases: {} };
+
+  const result = { functions: [], operators: [], aliases: {} };
+  
+  // Extrair FUNC_ALLOWLIST
+  const funcMatch = content.match(/FUNC_ALLOWLIST\s*=\s*Set\.of\(\s*([\s\S]*?)\);/);
+  if (funcMatch) {
+    const funcs = funcMatch[1].match(/"([A-Z_]+)"/g);
+    if (funcs) {
+      result.functions = funcs.map(f => f.replace(/"/g, ''));
+    }
+  }
+
+  // Extrair OPERATORS
+  const opsMatch = content.match(/private\s+static\s+final\s+Set<String>\s+OPERATORS\s*=\s*Set\.of\(\s*([\s\S]*?)\);/);
+  if (opsMatch) {
+    const ops = opsMatch[1].match(/"([A-Z_]+)"/g);
+    if (ops) {
+      result.operators = ops.map(o => o.replace(/"/g, ''));
+    }
+  }
+
+  // Extrair OPERATOR_ALIASES
+  const aliasMatch = content.match(/OPERATOR_ALIASES\s*=\s*Map\.of\(\s*([\s\S]*?)\);/);
+  if (aliasMatch) {
+    const aliasBody = aliasMatch[1];
+    const pairs = aliasBody.match(/"([A-Z_]+)",\s*"([A-Z_]+)"/g);
+    if (pairs) {
+      pairs.forEach(p => {
+        const [, from, to] = p.match(/"([A-Z_]+)",\s*"([A-Z_]+)"/) || [];
+        if (from && to) {
+          result.aliases[from] = to;
+        }
+      });
+    }
+  }
+
+  return result;
+}
+
+// ============================================================================
+// EXTRAÇÃO: ENDPOINTS DO OPENAPI
+// ============================================================================
+
+function extractOpenapiEndpoints() {
+  const filePath = join(ROOT, 'openapi', 'rulex.yaml');
+  const content = readFile(filePath);
+  if (!content) return [];
+
+  const endpoints = [];
+  const lines = content.split('\n');
+  
+  let currentPath = null;
+  let inPaths = false;
+  let pathIndent = 0;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    
+    // Detectar início da seção paths
+    if (/^paths:\s*$/.test(line)) {
+      inPaths = true;
+      pathIndent = 2; // Paths estão com 2 espaços
+      continue;
+    }
+    
+    // Detectar fim da seção paths (próxima seção de nível superior sem indentação)
+    if (inPaths && /^[a-z]+:/i.test(line) && !line.startsWith(' ')) {
+      inPaths = false;
+      continue;
+    }
+    
+    if (!inPaths) continue;
+    
+    // Detectar path (começa com / e termina com :)
+    const pathMatch = line.match(/^(\s+)(\/[^\s:]+):\s*$/);
+    if (pathMatch) {
+      const indent = pathMatch[1].length;
+      if (indent === 2) { // Path de primeiro nível
+        currentPath = pathMatch[2];
+      }
+      continue;
+    }
+    
+    // Detectar método HTTP (get, post, put, delete, patch)
+    const methodMatch = line.match(/^\s{4}(get|post|put|delete|patch):\s*$/);
+    if (methodMatch && currentPath) {
+      const method = methodMatch[1].toUpperCase();
+      
+      // Tentar pegar summary e operationId nas próximas linhas
+      let summary = '';
+      let operationId = '';
+      for (let j = i + 1; j < Math.min(i + 15, lines.length); j++) {
+        const nextLine = lines[j];
+        // Parar se encontrar outro método ou path
+        if (/^\s{4}(get|post|put|delete|patch):/.test(nextLine)) break;
+        if (/^\s{2}\//.test(nextLine)) break;
+        
+        const summaryMatch = nextLine.match(/^\s+summary:\s*['"]?(.+?)['"]?\s*$/);
+        if (summaryMatch) {
+          summary = summaryMatch[1].trim();
+        }
+        const opIdMatch = nextLine.match(/^\s+operationId:\s*['"]?(\w+)['"]?\s*$/);
+        if (opIdMatch) {
+          operationId = opIdMatch[1].trim();
+        }
+      }
+      
+      endpoints.push({
+        path: currentPath,
+        method,
+        summary,
+        operationId
+      });
+    }
+  }
+
+  return endpoints;
+}
+
+// ============================================================================
+// EXTRAÇÃO: ÍNDICE DE DOCUMENTOS
+// ============================================================================
+
+function extractDocsIndex() {
+  const docsDir = join(ROOT, 'docs');
+  if (!existsSync(docsDir)) return [];
+
+  const docs = [];
+  const files = readdirSync(docsDir).filter(f => f.endsWith('.md'));
+  
+  // Documentos essenciais para o Manual
+  const essential = [
+    'DB_SCHEMA_RULES.md',
+    'PAYLOAD_DICTIONARY.md',
+    'RULES_SCHEMA_AND_FIELDS.md',
+    'RULE_ENGINE_CAPABILITIES.md',
+    'FRAUD_DETECTION_ANALYST_GUIDE.md',
+    'ARCHITECTURE_MAP.md'
+  ];
+
+  for (const file of files) {
+    const isEssential = essential.includes(file);
+    const filePath = join(docsDir, file);
+    const content = readFile(filePath);
+    
+    let title = file.replace('.md', '').replace(/_/g, ' ');
+    
+    // Tentar extrair título do H1
+    if (content) {
+      const h1Match = content.match(/^#\s+(.+)/m);
+      if (h1Match) {
+        title = h1Match[1].trim();
+      }
+    }
+    
+    // Determinar categoria
+    let category = 'Outros';
+    if (file.includes('SCHEMA') || file.includes('DB_')) category = 'Banco de Dados';
+    else if (file.includes('PAYLOAD') || file.includes('FIELD')) category = 'Payload';
+    else if (file.includes('RULE') || file.includes('OPERATOR')) category = 'Regras';
+    else if (file.includes('ARCHITECTURE') || file.includes('MAP')) category = 'Arquitetura';
+    else if (file.includes('FRAUD') || file.includes('ANALYST')) category = 'Fraude';
+    else if (file.includes('QA') || file.includes('TEST')) category = 'QA/Testes';
+    
+    docs.push({
+      id: file.replace('.md', ''),
+      filename: file,
+      title,
+      category,
+      isEssential
+    });
+  }
+
+  return docs;
+}
+
+// ============================================================================
+// GERAÇÃO DE ARQUIVOS
+// ============================================================================
+
+function generateBackendOperatorsFile(operators) {
+  const content = `// Auto-generated by scripts/manual-generate.mjs
+// DO NOT EDIT MANUALLY
+// Source: backend/src/main/java/com/rulex/entity/complex/RuleCondition.java
+
+export interface BackendOperator {
+  name: string;
+  comment: string;
+  category: string;
+}
+
+export const BACKEND_OPERATORS: BackendOperator[] = ${JSON.stringify(operators, null, 2)};
+
+export const BACKEND_OPERATOR_COUNT = ${operators.length};
+
+export const BACKEND_OPERATOR_CATEGORIES = [...new Set(BACKEND_OPERATORS.map(o => o.category))];
+`;
+  writeGenerated('backendOperators.generated.ts', content);
+  return operators.length;
+}
+
+function generateBackendActionsFile(actions) {
+  // Descrições detalhadas para cada ação
+  const descriptions = {
+    SET_DECISION: 'Define a decisão final da transação (APROVADO, SUSPEITA_DE_FRAUDE, FRAUDE)',
+    SET_SCORE: 'Define ou incrementa o score de risco da transação',
+    ADD_TAG: 'Adiciona uma tag/label à transação para categorização',
+    REMOVE_TAG: 'Remove uma tag/label da transação',
+    SET_VARIABLE: 'Define uma variável que pode ser usada por outras regras',
+    CALL_WEBHOOK: 'Chama um webhook externo com dados da transação',
+    SEND_NOTIFICATION: 'Envia notificação (email, SMS, push) sobre a transação',
+    BLOCK_TRANSACTION: 'Bloqueia imediatamente a transação',
+    FLAG_FOR_REVIEW: 'Marca a transação para revisão manual',
+    ESCALATE: 'Escala o caso para um nível superior de análise'
+  };
+
+  const actionsWithDesc = actions.map(a => ({
+    ...a,
+    description: descriptions[a.name] || a.comment || ''
+  }));
+
+  const content = `// Auto-generated by scripts/manual-generate.mjs
+// DO NOT EDIT MANUALLY
+// Source: backend/src/main/java/com/rulex/entity/complex/RuleAction.java
+
+export interface BackendAction {
+  name: string;
+  comment: string;
+  description: string;
+}
+
+export const BACKEND_ACTIONS: BackendAction[] = ${JSON.stringify(actionsWithDesc, null, 2)};
+
+export const BACKEND_ACTION_COUNT = ${actions.length};
+`;
+  writeGenerated('backendActions.generated.ts', content);
+  return actions.length;
+}
+
+function generateLogicOperatorsFile(operators) {
+  // Descrições detalhadas
+  const descriptions = {
+    AND: 'Todas as condições do grupo devem ser verdadeiras',
+    OR: 'Pelo menos uma condição do grupo deve ser verdadeira',
+    NOT: 'Inverte o resultado do grupo (verdadeiro vira falso)',
+    XOR: 'Exatamente uma condição deve ser verdadeira (ou exclusivo)',
+    NAND: 'NOT AND - pelo menos uma condição deve ser falsa',
+    NOR: 'NOT OR - todas as condições devem ser falsas'
+  };
+
+  const opsWithDesc = operators.map(o => ({
+    ...o,
+    description: descriptions[o.name] || o.comment || ''
+  }));
+
+  const content = `// Auto-generated by scripts/manual-generate.mjs
+// DO NOT EDIT MANUALLY
+// Source: backend/src/main/java/com/rulex/entity/complex/RuleConditionGroup.java
+
+export interface LogicOperator {
+  name: string;
+  comment: string;
+  description: string;
+}
+
+export const LOGIC_OPERATORS: LogicOperator[] = ${JSON.stringify(opsWithDesc, null, 2)};
+`;
+  writeGenerated('logicOperators.generated.ts', content);
+  return operators.length;
+}
+
+function generateExpressionFunctionsFile(functions) {
+  // Descrições e exemplos para cada função
+  const details = {
+    ABS: { desc: 'Retorna o valor absoluto', example: 'ABS(-10) → 10', returnType: 'NUMBER' },
+    ROUND: { desc: 'Arredonda para N casas decimais', example: 'ROUND(3.456, 2) → 3.46', returnType: 'NUMBER' },
+    FLOOR: { desc: 'Arredonda para baixo', example: 'FLOOR(3.9) → 3', returnType: 'NUMBER' },
+    CEIL: { desc: 'Arredonda para cima', example: 'CEIL(3.1) → 4', returnType: 'NUMBER' },
+    CEILING: { desc: 'Alias de CEIL', example: 'CEILING(3.1) → 4', returnType: 'NUMBER' },
+    MIN: { desc: 'Retorna o menor valor', example: 'MIN(5, 3, 8) → 3', returnType: 'NUMBER' },
+    MAX: { desc: 'Retorna o maior valor', example: 'MAX(5, 3, 8) → 8', returnType: 'NUMBER' },
+    SQRT: { desc: 'Raiz quadrada', example: 'SQRT(16) → 4', returnType: 'NUMBER' },
+    POW: { desc: 'Potenciação', example: 'POW(2, 3) → 8', returnType: 'NUMBER' },
+    POWER: { desc: 'Alias de POW', example: 'POWER(2, 3) → 8', returnType: 'NUMBER' },
+    MOD: { desc: 'Resto da divisão', example: 'MOD(10, 3) → 1', returnType: 'NUMBER' },
+    LEN: { desc: 'Tamanho da string', example: 'LEN("hello") → 5', returnType: 'NUMBER' },
+    LENGTH: { desc: 'Alias de LEN', example: 'LENGTH("hello") → 5', returnType: 'NUMBER' },
+    UPPER: { desc: 'Converte para maiúsculas', example: 'UPPER("hello") → "HELLO"', returnType: 'STRING' },
+    LOWER: { desc: 'Converte para minúsculas', example: 'LOWER("HELLO") → "hello"', returnType: 'STRING' },
+    TRIM: { desc: 'Remove espaços', example: 'TRIM(" hi ") → "hi"', returnType: 'STRING' },
+    SUBSTRING: { desc: 'Extrai parte da string', example: 'SUBSTRING("hello", 0, 2) → "he"', returnType: 'STRING' },
+    SUBSTR: { desc: 'Alias de SUBSTRING', example: 'SUBSTR("hello", 0, 2) → "he"', returnType: 'STRING' },
+    NOW: { desc: 'Data/hora atual', example: 'NOW() → "2026-01-16T10:30:00"', returnType: 'DATETIME' },
+    TODAY: { desc: 'Data atual', example: 'TODAY() → "2026-01-16"', returnType: 'DATE' },
+    DAYS_BETWEEN: { desc: 'Dias entre duas datas', example: 'DAYS_BETWEEN("2026-01-01", "2026-01-16") → 15', returnType: 'NUMBER' },
+    HOURS_BETWEEN: { desc: 'Horas entre dois instantes', example: 'HOURS_BETWEEN(dt1, dt2) → 48', returnType: 'NUMBER' },
+    IF: { desc: 'Condicional', example: 'IF(x > 0, "positivo", "negativo")', returnType: 'ANY' },
+    COALESCE: { desc: 'Primeiro valor não-nulo', example: 'COALESCE(null, "default") → "default"', returnType: 'ANY' },
+    IFNULL: { desc: 'Alias de COALESCE', example: 'IFNULL(null, 0) → 0', returnType: 'ANY' },
+    SUM: { desc: 'Soma de lista', example: 'SUM(items.amount) → 150.00', returnType: 'NUMBER' },
+    COUNT: { desc: 'Contagem de lista', example: 'COUNT(items) → 3', returnType: 'NUMBER' },
+    AVG: { desc: 'Média de lista', example: 'AVG(items.amount) → 50.00', returnType: 'NUMBER' }
+  };
+
+  // Categorizar funções
+  const categorized = functions.map(f => {
+    const detail = details[f.name] || { desc: '', example: '', returnType: 'ANY' };
+    let category = 'Geral';
+    if (['ABS', 'ROUND', 'FLOOR', 'CEIL', 'CEILING', 'MIN', 'MAX', 'SQRT', 'POW', 'POWER', 'MOD'].includes(f.name)) {
+      category = 'Matemáticas';
+    } else if (['LEN', 'LENGTH', 'UPPER', 'LOWER', 'TRIM', 'SUBSTRING', 'SUBSTR'].includes(f.name)) {
+      category = 'Strings';
+    } else if (['NOW', 'TODAY', 'DAYS_BETWEEN', 'HOURS_BETWEEN'].includes(f.name)) {
+      category = 'Data/Hora';
+    } else if (['IF', 'COALESCE', 'IFNULL'].includes(f.name)) {
+      category = 'Condicionais';
+    } else if (['SUM', 'COUNT', 'AVG'].includes(f.name)) {
+      category = 'Agregação';
+    }
+    return {
+      name: f.name,
+      alias: f.alias || null,
+      category,
+      description: detail.desc,
+      example: detail.example,
+      returnType: detail.returnType
+    };
+  });
+
+  const content = `// Auto-generated by scripts/manual-generate.mjs
+// DO NOT EDIT MANUALLY
+// Source: backend/src/main/java/com/rulex/service/complex/ExpressionEvaluator.java
+
+export interface ExpressionFunction {
+  name: string;
+  alias: string | null;
+  category: string;
+  description: string;
+  example: string;
+  returnType: string;
+}
+
+export const EXPRESSION_FUNCTIONS: ExpressionFunction[] = ${JSON.stringify(categorized, null, 2)};
+
+export const EXPRESSION_FUNCTION_COUNT = ${categorized.length};
+
+export const EXPRESSION_FUNCTION_CATEGORIES = [...new Set(EXPRESSION_FUNCTIONS.map(f => f.category))];
+`;
+  writeGenerated('expressionFunctions.generated.ts', content);
+  return categorized.length;
+}
+
+function generateAstAllowlistFile(allowlist) {
+  const content = `// Auto-generated by scripts/manual-generate.mjs
+// DO NOT EDIT MANUALLY
+// Source: backend/src/main/java/com/rulex/v31/ast/AstValidator.java
+
+/** Funções permitidas no validador AST V31 */
+export const AST_FUNC_ALLOWLIST: string[] = ${JSON.stringify(allowlist.functions, null, 2)};
+
+/** Operadores permitidos no validador AST V31 */
+export const AST_OPERATORS: string[] = ${JSON.stringify(allowlist.operators, null, 2)};
+
+/** Aliases de operadores (nome alternativo → nome canônico) */
+export const AST_OPERATOR_ALIASES: Record<string, string> = ${JSON.stringify(allowlist.aliases, null, 2)};
+`;
+  writeGenerated('astAllowlist.generated.ts', content);
+  return { 
+    functions: allowlist.functions.length, 
+    operators: allowlist.operators.length,
+    aliases: Object.keys(allowlist.aliases).length
+  };
+}
+
+function generateOpenapiSummaryFile(endpoints) {
+  // Agrupar por path base
+  const grouped = {};
+  endpoints.forEach(ep => {
+    const base = ep.path.split('/').slice(0, 3).join('/');
+    if (!grouped[base]) grouped[base] = [];
+    grouped[base].push(ep);
+  });
+
+  const content = `// Auto-generated by scripts/manual-generate.mjs
+// DO NOT EDIT MANUALLY
+// Source: openapi/rulex.yaml
+
+export interface ApiEndpoint {
+  path: string;
+  method: string;
+  summary: string;
+  operationId: string;
+}
+
+export const API_ENDPOINTS: ApiEndpoint[] = ${JSON.stringify(endpoints, null, 2)};
+
+export const API_ENDPOINT_COUNT = ${endpoints.length};
+
+/** Endpoints agrupados por base path */
+export const API_ENDPOINTS_GROUPED: Record<string, ApiEndpoint[]> = ${JSON.stringify(grouped, null, 2)};
+`;
+  writeGenerated('openapiSummary.generated.ts', content);
+  return endpoints.length;
+}
+
+function generateDocsIndexFile(docs) {
+  const content = `// Auto-generated by scripts/manual-generate.mjs
+// DO NOT EDIT MANUALLY
+// Source: docs/*.md
+
+export interface DocEntry {
+  id: string;
+  filename: string;
+  title: string;
+  category: string;
+  isEssential: boolean;
+}
+export const DOCS_INDEX: DocEntry[] = ${JSON.stringify(docs, null, 2)};
+
+export const DOCS_COUNT = ${docs.length};
+
+export const ESSENTIAL_DOCS = DOCS_INDEX.filter(d => d.isEssential);
+
+export const DOCS_CATEGORIES = [...new Set(DOCS_INDEX.map(d => d.category))];
+`;
+  writeGenerated('docsIndex.generated.ts', content);
+  return docs.length;
+}
+
+function generateBackendTemplatesFile(templates) {
+  const content = `// Auto-generated by scripts/manual-generate.mjs
+// Source: backend/src/main/resources/db/migration/V8__complex_rules_support.sql
+
+export interface BackendTemplate {
+  name: string;
+  category: string;
+  description: string;
+  templateConfig: unknown;
+  isSystem: boolean;
+}
+
+export const BACKEND_TEMPLATES: BackendTemplate[] = ${JSON.stringify(templates, null, 2)};
+
+export const BACKEND_TEMPLATE_COUNT = ${templates.length};
+
+export const BACKEND_TEMPLATE_CATEGORIES = [...new Set(BACKEND_TEMPLATES.map(t => t.category))];
+`;
+  writeGenerated('backendTemplates.generated.ts', content);
+  return templates.length;
+}
+
+function generateIndexFile() {
+  const content = `// Auto-generated by scripts/manual-generate.mjs
+// Central export for all generated manual data
+
+export * from './backendOperators.generated';
+export * from './backendActions.generated';
+export * from './backendTemplates.generated';
+export * from './logicOperators.generated';
+export * from './expressionFunctions.generated';
+export * from './astAllowlist.generated';
+export * from './openapiSummary.generated';
+export * from './docsIndex.generated';
+export * from './fieldDictionary.generated';
+`;
+  writeGenerated('index.ts', content);
+}
+
+// ============================================================================
+// VALIDAÇÃO: TRIPLE CHECK (FE vs BE)
+// ============================================================================
+
+function runTripleCheck({
+  beOperators,
+  feOperatorValues,
+  exprFunctions,
+  astAllowlist,
+  beActions,
+  beTemplates,
+}) {
+  log('='.repeat(60));
+  log('TRIPLE CHECK: Validando consistência FE vs BE');
+  log('='.repeat(60));
+
+  const issues = [];
+  const warnings = [];
+
+  const beOperatorNames = beOperators.map((o) => o.name);
+  const beOperatorSet = new Set(beOperatorNames);
+  const feOperatorSet = new Set(feOperatorValues);
+
+  // Check 1: Operadores (BE enum vs FE catálogo)
+  log(`\nOperadores Backend (enum): ${beOperatorSet.size}`);
+  log(`Operadores Frontend (client/src/lib/operators.ts): ${feOperatorSet.size}`);
+
+  const missingInFe = [...beOperatorSet].filter((op) => !feOperatorSet.has(op));
+  const extraInFe = [...feOperatorSet].filter((op) => !beOperatorSet.has(op));
+
+  if (missingInFe.length || extraInFe.length) {
+    if (missingInFe.length) {
+      issues.push(`⚠️ DIVERGÊNCIA: Operadores que existem no BACKEND e faltam no FRONTEND: ${missingInFe.join(', ')}`);
+    }
+    if (extraInFe.length) {
+      issues.push(`⚠️ DIVERGÊNCIA: Operadores que existem no FRONTEND e faltam no BACKEND: ${extraInFe.join(', ')}`);
+    }
+  } else {
+    success('Operadores OK: conjuntos idênticos (BE == FE)');
+  }
+
+  // Check 2: Allowlist AST (aliases) - consistência interna
+  // IMPORTANTE: a allowlist AST pode usar tokens diferentes do enum ConditionOperator.
+  // Aqui validamos apenas que os aliases apontam para operadores presentes na própria allowlist.
+  const allowOps = new Set(astAllowlist.operators ?? []);
+  const aliasPairs = Object.entries(astAllowlist.aliases ?? {});
+  const invalidAliasTargets = aliasPairs
+    .filter(([, to]) => !allowOps.has(to))
+    .map(([from, to]) => `${from} -> ${to}`);
+
+  if (invalidAliasTargets.length) {
+    warnings.push(
+      `⚠️ WARN: OPERATOR_ALIASES contém targets fora de OPERATORS (AstValidator): ${invalidAliasTargets.join(
+        ', '
+      )}`
+    );
+  } else {
+    success('Allowlist AST (OPERATOR_ALIASES) OK');
+  }
+
+  // Check 3: Allowlist AST (FUNCS) deve referenciar funções existentes no ExpressionEvaluator
+  const allowFuncs = new Set(astAllowlist.functions ?? []);
+  const exprFuncNames = new Set(
+    (exprFunctions ?? []).flatMap((f) => [f.name, f.alias].filter(Boolean))
+  );
+  const allowMissingInExpr = [...allowFuncs].filter((fn) => !exprFuncNames.has(fn));
+
+  log(`\nFunções ExpressionEvaluator: ${(exprFunctions ?? []).length}`);
+  log(`Allowlist AST (FUNCS): ${allowFuncs.size}`);
+
+  if (allowMissingInExpr.length) {
+    warnings.push(
+      `⚠️ WARN: FUNC_ALLOWLIST (AstValidator) referencia funções não encontradas no ExpressionEvaluator: ${allowMissingInExpr.join(
+        ', '
+      )}`
+    );
+  } else {
+    success('Allowlist AST (FUNCS) OK: todas existem no ExpressionEvaluator');
+  }
+
+  // Check 5: Ações (sanidade)
+  const beActionNames = (beActions ?? []).map((a) => a.name);
+  const beActionSet = new Set(beActionNames);
+  if (!beActionSet.size) {
+    issues.push('⚠️ DIVERGÊNCIA: Nenhuma ação encontrada no backend (ActionType)');
+  }
+
+  // Check 6: Templates (sanidade)
+  const beTemplateNames = (beTemplates ?? []).map((t) => t.name).filter(Boolean);
+  const beTemplateSet = new Set(beTemplateNames);
+  if (!beTemplateSet.size) {
+    issues.push(
+      '⚠️ DIVERGÊNCIA: Nenhum template encontrado no backend (V8__complex_rules_support.sql -> INSERT rule_templates)'
+    );
+  }
+
+  // Resultado final
+  log('\n' + '='.repeat(60));
+
+  if (warnings.length) {
+    log('TRIPLE CHECK: Avisos (não bloqueantes):');
+    warnings.forEach((w) => console.log(`  ${w}`));
+  }
+
+  if (issues.length > 0) {
+    error('TRIPLE CHECK: Encontradas divergências:');
+    issues.forEach(i => console.log(`  ${i}`));
+    log('='.repeat(60));
+    return { passed: false, issues, warnings };
+  } else {
+    success('TRIPLE CHECK: Todas validações OK!');
+    log('='.repeat(60));
+    return { passed: true, issues: [], warnings };
+  }
+}
+
+// ============================================================================
+// MAIN
+// ============================================================================
+
+function main() {
+  console.log('\n' + '='.repeat(60));
+  console.log('MANUAL-GENERATE: Gerando dados do Manual do RULEX');
+  console.log('='.repeat(60) + '\n');
+
+  // Extrair dados
+  log('Extraindo operadores do backend...');
+  const beOperators = extractBackendOperators();
+  
+  log('Extraindo ações do backend...');
+  const beActions = extractBackendActions();
+  
+  log('Extraindo operadores lógicos...');
+  const logicOps = extractLogicOperators();
+  
+  log('Extraindo funções de expressão...');
+  const exprFuncs = extractExpressionFunctions();
+  
+  log('Extraindo allowlist do AstValidator...');
+  const allowlist = extractAstAllowlist();
+  
+  log('Extraindo endpoints do OpenAPI...');
+  const endpoints = extractOpenapiEndpoints();
+
+  log('Extraindo templates do backend (migrações)...');
+  const templates = extractBackendTemplatesFromV8Migration();
+  
+  log('Extraindo índice de documentos...');
+  const docs = extractDocsIndex();
+
+  log('Gerando dicionário de campos do payload (Insomnia)...');
+
+  console.log('\n' + '-'.repeat(60) + '\n');
+
+  // Gerar arquivos
+  const beOpCount = generateBackendOperatorsFile(beOperators);
+  const beActCount = generateBackendActionsFile(beActions);
+  const beTplCount = generateBackendTemplatesFile(templates);
+  generateLogicOperatorsFile(logicOps);
+  generateExpressionFunctionsFile(exprFuncs);
+  const astCounts = generateAstAllowlistFile(allowlist);
+  const apiCount = generateOpenapiSummaryFile(endpoints);
+  const docsCount = generateDocsIndexFile(docs);
+  const fieldDictCount = generateFieldDictionaryFile();
+  generateIndexFile();
+
+  // Ler operadores do FE para comparação
+  const feOperatorValues = extractFrontendOperatorValues();
+
+  console.log('\n' + '-'.repeat(60) + '\n');
+
+  // Resumo
+  log('RESUMO DA GERAÇÃO:');
+  log(`  - Operadores backend: ${beOpCount}`);
+  log(`  - Ações backend: ${beActCount}`);
+  log(`  - Templates backend: ${beTplCount}`);
+  log(`  - Operadores lógicos: ${logicOps.length}`);
+  log(`  - Funções de expressão: ${exprFuncs.length}`);
+  log(`  - Funções allowlist AST: ${astCounts.functions}`);
+  log(`  - Operadores allowlist AST: ${astCounts.operators}`);
+  log(`  - Aliases de operadores: ${astCounts.aliases}`);
+  log(`  - Endpoints API: ${apiCount}`);
+  log(`  - Documentos: ${docsCount}`);
+  log(`  - Campos do payload (dicionário): ${fieldDictCount}`);
+
+  console.log('\n');
+
+  // Triple Check
+  const checkResult = runTripleCheck({
+    beOperators,
+    feOperatorValues,
+    exprFunctions: exprFuncs,
+    astAllowlist: allowlist,
+    beActions,
+    beTemplates: templates,
+  });
+
+  console.log('\n' + '='.repeat(60));
+  if (checkResult.passed) {
+    success('MANUAL-GENERATE: Concluído com sucesso!');
+  } else {
+    error('MANUAL-GENERATE: FALHOU (ver divergências acima)');
+    process.exitCode = 1;
+  }
+  console.log('='.repeat(60) + '\n');
+}
+
+main();
