@@ -44,50 +44,11 @@ SET field_name = 'transactionTime',
 WHERE field_name = 'transactionHour';
 
 -- ============================================================================
--- PARTE 3: Desativar regras que usam campos que precisam ser enriquecidos
--- (Esses campos precisam vir de um serviço de enriquecimento externo)
+-- PARTE 3: Adicionar comentário de auditoria
 -- ============================================================================
 
--- Campos que precisam de enriquecimento externo:
--- accountAgeInDays, customerChargebackCount, customerRefundCount30Days,
--- deviceAccountCount, deviceFraudHistory, deviceId, devicePromoUseCount,
--- geoLocation, impossibleTravel, isFirstTransaction, passwordChangedWithinDays,
--- previousCvvFailures, promoCodeUsed, shippingAddress, transactionsLastMinute
-
--- Desativar regras que usam campos de enriquecimento (shadow_mode = true)
-UPDATE complex_rules
-SET shadow_mode = true,
-    description = CONCAT(description, ' [SHADOW: Requer campo de enriquecimento]')
-WHERE id IN (
-    SELECT DISTINCT cr.id
-    FROM complex_rules cr
-    JOIN rule_condition_groups rcg ON rcg.complex_rule_id = cr.id
-    JOIN rule_conditions rc ON rc.group_id = rcg.id
-    WHERE rc.field_name IN (
-        'accountAgeInDays',
-        'customerChargebackCount',
-        'customerRefundCount30Days',
-        'deviceAccountCount',
-        'deviceFraudHistory',
-        'deviceId',
-        'devicePromoUseCount',
-        'geoLocation',
-        'impossibleTravel',
-        'isFirstTransaction',
-        'passwordChangedWithinDays',
-        'previousCvvFailures',
-        'promoCodeUsed',
-        'shippingAddress',
-        'transactionsLastMinute',
-        'escalationPattern',
-        'roundNumberPattern',
-        'splitTransactionPattern'
-    )
-);
-
--- ============================================================================
--- PARTE 4: Adicionar comentário de auditoria
--- ============================================================================
+-- Nota: A desativação de regras com campos de enriquecimento foi movida para V46
+-- pois a coluna shadow_mode só é criada na V40.
 
 COMMENT ON TABLE complex_rules IS 'Regras complexas de fraude. Auditado em 2026-01-06 via Triple Check V39.';
 
