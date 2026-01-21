@@ -197,7 +197,7 @@ JOIN complex_rules cr ON rcg.complex_rule_id = cr.id
 WHERE cr.key = 'C021_BUSTOUT_CLASSIC';
 
 INSERT INTO rule_conditions (group_id, field_name, operator, value_single, position)
-SELECT rcg.id, 'mcc', 'IN_LIST', '6051,7995,5944,5815', 1
+SELECT rcg.id, 'mcc', 'IN', '6051,7995,5944,5815', 1
 FROM rule_condition_groups rcg
 JOIN complex_rules cr ON rcg.complex_rule_id = cr.id
 WHERE cr.key = 'C021_BUSTOUT_CLASSIC';
@@ -335,7 +335,7 @@ INSERT INTO rule_condition_groups (complex_rule_id, position, logic_operator)
 SELECT id, 0, 'AND' FROM complex_rules WHERE key = 'C061_TRIANGULATION_CLASSIC';
 
 INSERT INTO rule_conditions (group_id, field_name, operator, value_single, position)
-SELECT rcg.id, 'shippingAddress', 'NEQ_FIELD', 'billingAddress', 0
+SELECT rcg.id, 'shippingAddress', 'FIELD_NEQ', 'billingAddress', 0
 FROM rule_condition_groups rcg
 JOIN complex_rules cr ON rcg.complex_rule_id = cr.id
 WHERE cr.key = 'C061_TRIANGULATION_CLASSIC';

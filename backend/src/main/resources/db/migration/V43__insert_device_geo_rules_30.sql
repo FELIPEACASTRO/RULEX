@@ -95,7 +95,7 @@ INSERT INTO rule_condition_groups (complex_rule_id, position, logic_operator)
 SELECT id, 0, 'AND' FROM complex_rules WHERE key = 'G002_HIGH_RISK_COUNTRY';
 
 INSERT INTO rule_conditions (group_id, field_name, operator, value_single, position)
-SELECT rcg.id, 'merchantCountry', 'IN_LIST', 'NG,RU,UA,BY,IR,KP,SY,VE,MM,AF', 0
+SELECT rcg.id, 'merchantCountry', 'IN', 'NG,RU,UA,BY,IR,KP,SY,VE,MM,AF', 0
 FROM rule_condition_groups rcg
 JOIN complex_rules cr ON rcg.complex_rule_id = cr.id
 WHERE cr.key = 'G002_HIGH_RISK_COUNTRY';

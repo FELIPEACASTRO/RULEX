@@ -65,11 +65,11 @@ VALUES ('S010_PSYCHOLOGICAL_PRICING', 'Transação terminando em .99 (preço psi
 
 -- S011: Valor acima do crédito disponível
 INSERT INTO rule_configurations (rule_name, description, field_name, operator, comparison_value, decision_outcome, score_impact, priority, status, shadow_mode, created_by)
-VALUES ('S011_OVER_AVAILABLE_CREDIT', 'Transação acima do crédito disponível', 'transactionAmount', 'GT_FIELD', 'availableCredit', 'BLOCK', 80, 85, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
+VALUES ('S011_OVER_AVAILABLE_CREDIT', 'Transação acima do crédito disponível', 'transactionAmount', 'FIELD_GT', 'availableCredit', 'BLOCK', 80, 85, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
 
 -- S012: Valor igual ao crédito disponível (bust-out)
 INSERT INTO rule_configurations (rule_name, description, field_name, operator, comparison_value, decision_outcome, score_impact, priority, status, shadow_mode, created_by)
-VALUES ('S012_EXACT_AVAILABLE_CREDIT', 'Transação igual ao crédito disponível', 'transactionAmount', 'EQ_FIELD', 'availableCredit', 'REVIEW', 70, 75, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
+VALUES ('S012_EXACT_AVAILABLE_CREDIT', 'Transação igual ao crédito disponível', 'transactionAmount', 'FIELD_EQ', 'availableCredit', 'REVIEW', 70, 75, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
 
 -- S013: Valor entre 90-99% do crédito disponível
 INSERT INTO rule_configurations (rule_name, description, field_name, operator, comparison_value, decision_outcome, score_impact, priority, status, shadow_mode, created_by)
@@ -85,11 +85,11 @@ VALUES ('S015_HIGH_FOREIGN_CURRENCY', 'Transação em moeda estrangeira acima de
 
 -- S016: Valor típico de gift card (50, 100, 200, 500)
 INSERT INTO rule_configurations (rule_name, description, field_name, operator, comparison_value, decision_outcome, score_impact, priority, status, shadow_mode, created_by)
-VALUES ('S016_GIFT_CARD_AMOUNT', 'Transação com valor típico de gift card', 'transactionAmount', 'IN_LIST', '50,100,200,500', 'REVIEW', 40, 45, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
+VALUES ('S016_GIFT_CARD_AMOUNT', 'Transação com valor típico de gift card', 'transactionAmount', 'IN', '50,100,200,500', 'REVIEW', 40, 45, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
 
 -- S017: Valor típico de ransomware (BTC equivalente)
 INSERT INTO rule_configurations (rule_name, description, field_name, operator, comparison_value, decision_outcome, score_impact, priority, status, shadow_mode, created_by)
-VALUES ('S017_RANSOM_AMOUNT', 'Transação com valor típico de resgate', 'transactionAmount', 'IN_LIST', '500,1000,2000,5000,10000', 'REVIEW', 55, 60, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
+VALUES ('S017_RANSOM_AMOUNT', 'Transação com valor típico de resgate', 'transactionAmount', 'IN', '500,1000,2000,5000,10000', 'REVIEW', 55, 60, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
 
 -- S018: Valor abaixo do ticket médio (possível teste)
 INSERT INTO rule_configurations (rule_name, description, field_name, operator, comparison_value, decision_outcome, score_impact, priority, status, shadow_mode, created_by)
@@ -305,7 +305,7 @@ VALUES ('S067_CRYPTOGRAM_INVALID', 'Criptograma inválido', 'cryptogramValid', '
 
 -- S068: ATC do cartão divergente do host
 INSERT INTO rule_configurations (rule_name, description, field_name, operator, comparison_value, decision_outcome, score_impact, priority, status, shadow_mode, created_by)
-VALUES ('S068_ATC_MISMATCH', 'ATC do cartão divergente do host', 'atcCard', 'NEQ_FIELD', 'atcHost', 'REVIEW', 60, 65, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
+VALUES ('S068_ATC_MISMATCH', 'ATC do cartão divergente do host', 'atcCard', 'FIELD_NEQ', 'atcHost', 'REVIEW', 60, 65, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
 
 -- S069: CAVV resultado falhou
 INSERT INTO rule_configurations (rule_name, description, field_name, operator, comparison_value, decision_outcome, score_impact, priority, status, shadow_mode, created_by)
@@ -393,7 +393,7 @@ VALUES ('S088_STANDIN_ACTIVE', 'Transação processada em standin', 'standinAdvi
 
 -- S089: Network ID desconhecido
 INSERT INTO rule_configurations (rule_name, description, field_name, operator, comparison_value, decision_outcome, score_impact, priority, status, shadow_mode, created_by)
-VALUES ('S089_UNKNOWN_NETWORK', 'Network ID desconhecido', 'networkId', 'NOT_IN_LIST', 'VISA,MASTERCARD,ELO,AMEX,HIPERCARD', 'REVIEW', 55, 60, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
+VALUES ('S089_UNKNOWN_NETWORK', 'Network ID desconhecido', 'networkId', 'NOT_IN', 'VISA,MASTERCARD,ELO,AMEX,HIPERCARD', 'REVIEW', 55, 60, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
 
 -- S090: ATM owner diferente do emissor
 INSERT INTO rule_configurations (rule_name, description, field_name, operator, comparison_value, decision_outcome, score_impact, priority, status, shadow_mode, created_by)
@@ -425,7 +425,7 @@ VALUES ('S095_NON_TOKENIZED_ECOM', 'Cartão não tokenizado em e-commerce', 'tok
 
 -- S096: BIN expandido de alto risco
 INSERT INTO rule_configurations (rule_name, description, field_name, operator, comparison_value, decision_outcome, score_impact, priority, status, shadow_mode, created_by)
-VALUES ('S096_HIGH_RISK_BIN', 'BIN de alto risco', 'expandedBIN', 'IN_LIST', '400000,411111,422222', 'REVIEW', 50, 55, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
+VALUES ('S096_HIGH_RISK_BIN', 'BIN de alto risco', 'expandedBIN', 'IN', '400000,411111,422222', 'REVIEW', 50, 55, 'ACTIVE', false, 'SYSTEM_MIGRATION_V31');
 
 -- S097: Sequência de cartão alta (muitas reemissões)
 INSERT INTO rule_configurations (rule_name, description, field_name, operator, comparison_value, decision_outcome, score_impact, priority, status, shadow_mode, created_by)
