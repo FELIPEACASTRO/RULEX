@@ -50,18 +50,21 @@ jobs:
       if: matrix.language == 'javascript'
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
 
-    - name: Install pnpm
+    - name: Enable Corepack (pnpm from packageManager)
       if: matrix.language == 'javascript'
-      uses: pnpm/action-setup@v2
-      with:
-        version: 8
+      run: |
+        corepack enable
+        PM="$(node -p "require('./package.json').packageManager")"
+        VER="${PM#pnpm@}"
+        VER="${VER%%+*}"
+        corepack prepare "pnpm@${VER}" --activate
+        pnpm --version
 
     - name: Build JavaScript/TypeScript
       if: matrix.language == 'javascript'
       run: |
-        cd client
         pnpm install --frozen-lockfile
         pnpm build
 
