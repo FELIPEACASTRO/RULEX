@@ -128,7 +128,7 @@ export default function Rules() {
     type: 'simple' | 'complex';
     ruleType?: string;
     classification?: string;
-    decision?: string;
+    decision?: ComplexRuleDTO['decision'];
     enabled: boolean;
     weight?: number;
     priority?: number;
@@ -231,7 +231,7 @@ export default function Rules() {
   const [isSimulating, setIsSimulating] = useState(false);
 
   const [isBacktestOpen, setIsBacktestOpen] = useState(false);
-  const [backtestRule, setBacktestRule] = useState<RuleConfiguration | null>(null);
+  const [selectedBacktestRule, setSelectedBacktestRule] = useState<RuleConfiguration | null>(null);
   const [backtestStart, setBacktestStart] = useState(() => {
     const date = new Date();
     date.setDate(date.getDate() - 7);
@@ -456,20 +456,20 @@ export default function Rules() {
   };
 
   const openBacktest = (rule: RuleConfiguration) => {
-    setBacktestRule(rule);
+    setSelectedBacktestRule(rule);
     setBacktestResult(null);
     setBacktestError(null);
     setIsBacktestOpen(true);
   };
 
   const runBacktest = async () => {
-    if (!backtestRule) return;
+    if (!selectedBacktestRule) return;
     setIsBacktesting(true);
     setBacktestError(null);
     setBacktestResult(null);
     try {
       const result = await backtestRule(
-        backtestRule.id,
+        selectedBacktestRule.id,
         normalizeDateTime(backtestStart),
         normalizeDateTime(backtestEnd),
         backtestSampleSize,
@@ -1506,7 +1506,7 @@ export default function Rules() {
 
           <div className="space-y-4">
             <div className="rounded-lg border border-border p-3 text-sm text-muted-foreground">
-              Regra: <span className="font-medium text-foreground">{backtestRule?.ruleName ?? '-'}</span>
+              Regra: <span className="font-medium text-foreground">{selectedBacktestRule?.ruleName ?? '-'}</span>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -1540,7 +1540,7 @@ export default function Rules() {
             <div className="flex items-center justify-end gap-2">
               <Button
                 onClick={runBacktest}
-                disabled={isBacktesting || !backtestRule}
+                disabled={isBacktesting || !selectedBacktestRule}
               >
                 {isBacktesting ? (
                   <>
