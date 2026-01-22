@@ -40,12 +40,17 @@ public class TransactionPatternOperatorEvaluator implements OperatorEvaluator {
 
           // Circular e layering
           ConditionOperator.CIRCULAR_TRANSFER_DETECTION,
+          ConditionOperator.LAYERED_TRANSFER_PATTERN,
 
           // Outros padrões
           ConditionOperator.RAPID_MOVEMENT,
           ConditionOperator.RAPID_MULTI_HOP,
           ConditionOperator.SEQUENTIAL_AMOUNT_PATTERN,
-          ConditionOperator.MICRO_TRANSACTION_TEST);
+          ConditionOperator.MICRO_TRANSACTION_TEST,
+
+          // Novos operadores de padrão
+          ConditionOperator.SPLIT_TRANSACTION_DETECTION,
+          ConditionOperator.MICRO_DEPOSIT_VELOCITY);
 
   @Override
   public Set<ConditionOperator> getSupportedOperators() {
@@ -79,10 +84,13 @@ public class TransactionPatternOperatorEvaluator implements OperatorEvaluator {
       case SPLIT_PAYMENT_PATTERN -> evaluateBoolean(context, "splitPaymentPattern");
       case STRUCTURING_DETECTION -> evaluateBoolean(context, "structuringDetected");
       case CIRCULAR_TRANSFER_DETECTION -> evaluateBoolean(context, "circularTransferDetected");
+      case LAYERED_TRANSFER_PATTERN -> evaluateBoolean(context, "layeredTransferPattern");
       case RAPID_MOVEMENT -> evaluateBoolean(context, "rapidMovementDetected");
       case RAPID_MULTI_HOP -> evaluateBoolean(context, "rapidMultiHopDetected");
       case SEQUENTIAL_AMOUNT_PATTERN -> evaluateBoolean(context, "sequentialAmountPattern");
       case MICRO_TRANSACTION_TEST -> evaluateBoolean(context, "microTransactionTest");
+      case SPLIT_TRANSACTION_DETECTION -> evaluateBoolean(context, "splitTransactionDetected");
+      case MICRO_DEPOSIT_VELOCITY -> evaluateCount(context, "microDepositVelocity", condition, 5);
       default -> false;
     };
   }

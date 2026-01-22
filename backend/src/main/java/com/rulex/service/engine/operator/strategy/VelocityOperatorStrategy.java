@@ -4,6 +4,10 @@ import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleCondition;
 import com.rulex.service.VelocityService;
+import com.rulex.service.VelocityService.AggregationType;
+import com.rulex.service.VelocityService.KeyType;
+import com.rulex.service.VelocityService.TimeWindow;
+import com.rulex.service.VelocityService.VelocityStats;
 import com.rulex.service.complex.ComplexRuleEvaluator.EvaluationContext;
 import java.math.BigDecimal;
 import java.util.Set;
@@ -79,15 +83,27 @@ public class VelocityOperatorStrategy implements OperatorStrategy {
         }
 
         try {
+            // Determinar KeyType e TimeWindow
+            KeyType keyType = determineKeyType(condition);
+            TimeWindow timeWindow = determineTimeWindow(condition);
+            long threshold = parseThreshold(condition);
+
+            // Obter stats usando a API do VelocityService
+            VelocityStats stats = velocityService.getStats(request, keyType, timeWindow);
+            if (stats == null || !stats.isFound()) {
+                log.debug("No velocity stats found for request");
+                return false;
+            }
+
             return switch (operator) {
-                case VELOCITY_COUNT_GT -> evaluateVelocityCount(request, condition, true);
-                case VELOCITY_COUNT_LT -> evaluateVelocityCount(request, condition, false);
-                case VELOCITY_SUM_GT -> evaluateVelocitySum(request, condition, true);
-                case VELOCITY_SUM_LT -> evaluateVelocitySum(request, condition, false);
-                case VELOCITY_AVG_GT -> evaluateVelocityAvg(request, condition, true);
-                case VELOCITY_AVG_LT -> evaluateVelocityAvg(request, condition, false);
-                case VELOCITY_DISTINCT_GT -> evaluateVelocityDistinct(request, condition, true);
-                case VELOCITY_DISTINCT_LT -> evaluateVelocityDistinct(request, condition, false);
+                case VELOCITY_COUNT_GT -> stats.getTransactionCount() > threshold;
+                case VELOCITY_COUNT_LT -> stats.getTransactionCount() < threshold;
+                case VELOCITY_SUM_GT -> stats.getTotalAmount().compareTo(BigDecimal.valueOf(threshold)) > 0;
+                case VELOCITY_SUM_LT -> stats.getTotalAmount().compareTo(BigDecimal.valueOf(threshold)) < 0;
+                case VELOCITY_AVG_GT -> stats.getAvgAmount().compareTo(BigDecimal.valueOf(threshold)) > 0;
+                case VELOCITY_AVG_LT -> stats.getAvgAmount().compareTo(BigDecimal.valueOf(threshold)) < 0;
+                case VELOCITY_DISTINCT_GT -> evaluateDistinctGt(stats, condition, threshold);
+                case VELOCITY_DISTINCT_LT -> evaluateDistinctLt(stats, condition, threshold);
                 default -> {
                     log.warn("Unexpected operator in VelocityOperatorStrategy: {}", operator);
                     yield false;
@@ -99,242 +115,124 @@ public class VelocityOperatorStrategy implements OperatorStrategy {
         }
     }
 
-    private boolean evaluateVelocityCount(String identifier, RuleCondition condition,
-                                          EvaluationContext context, boolean greaterThan) {
-        VelocityParams params = parseVelocityParams(condition);
-        if (params == null) {
-            return false;
-        }
-
-        long count = velocityService.getTransactionCount(
-            identifier,
-            params.timeWindow()
-        );
-
-        return greaterThan ? count > params.threshold() : count < params.threshold();
-    }
-
-    private boolean evaluateVelocitySum(String identifier, RuleCondition condition,
-                                        EvaluationContext context, boolean greaterThan) {
-        VelocityParams params = parseVelocityParams(condition);
-        if (params == null) {
-            return false;
-        }
-
-        BigDecimal sum = velocityService.getTransactionSum(
-            identifier,
-            params.timeWindow()
-        );
-
-        BigDecimal threshold = new BigDecimal(String.valueOf(params.threshold()));
-        int comparison = sum.compareTo(threshold);
-        return greaterThan ? comparison > 0 : comparison < 0;
-    }
-
-    private boolean evaluateVelocityAvg(String identifier, RuleCondition condition,
-                                        EvaluationContext context, boolean greaterThan) {
-        VelocityParams params = parseVelocityParams(condition);
-        if (params == null) {
-            return false;
-        }
-
-        BigDecimal avg = velocityService.getTransactionAverage(
-            identifier,
-            params.timeWindow()
-        );
-
-        BigDecimal threshold = new BigDecimal(String.valueOf(params.threshold()));
-        int comparison = avg.compareTo(threshold);
-        return greaterThan ? comparison > 0 : comparison < 0;
-    }
-
-    private boolean evaluateVelocityDistinct(String identifier, RuleCondition condition,
-                                             EvaluationContext context, boolean greaterThan) {
-        VelocityParams params = parseVelocityParams(condition);
-        if (params == null) {
-            return false;
-        }
-
-        // O campo distinct é especificado no fieldPath ou valueSingle
+    /**
+     * Avalia VELOCITY_DISTINCT_GT baseado no campo especificado.
+     */
+    private boolean evaluateDistinctGt(VelocityStats stats, RuleCondition condition, long threshold) {
         String distinctField = condition.getFieldPath();
         if (distinctField == null || distinctField.isBlank()) {
-            distinctField = "merchantId"; // default
+            distinctField = "merchant"; // default
         }
 
-        long count = velocityService.getDistinctCount(
-            identifier,
-            distinctField,
-            params.timeWindow()
-        );
-
-        return greaterThan ? count > params.threshold() : count < params.threshold();
-    }
-
-    private boolean evaluateSumLastNDays(String identifier, RuleCondition condition, EvaluationContext context) {
-        int days = parseIntParam(condition.getValueMin(), 7);
-        BigDecimal threshold = parseBigDecimalParam(condition.getValueSingle(), BigDecimal.ZERO);
-
-        BigDecimal sum = velocityService.getTransactionSum(
-            identifier,
-            VelocityService.TimeWindow.fromDays(days)
-        );
-
-        return sum.compareTo(threshold) > 0;
-    }
-
-    private boolean evaluateCountLastNHours(String identifier, RuleCondition condition, EvaluationContext context) {
-        int hours = parseIntParam(condition.getValueMin(), 24);
-        long threshold = parseLongParam(condition.getValueSingle(), 0L);
-
-        long count = velocityService.getTransactionCount(
-            identifier,
-            VelocityService.TimeWindow.fromHours(hours)
-        );
-
-        return count > threshold;
-    }
-
-    private boolean evaluateAvgLastNDays(String identifier, RuleCondition condition, EvaluationContext context) {
-        int days = parseIntParam(condition.getValueMin(), 30);
-        BigDecimal threshold = parseBigDecimalParam(condition.getValueSingle(), BigDecimal.ZERO);
-
-        BigDecimal avg = velocityService.getTransactionAverage(
-            identifier,
-            VelocityService.TimeWindow.fromDays(days)
-        );
-
-        return avg.compareTo(threshold) > 0;
-    }
-
-    private boolean evaluateCountDistinctMerchants(String identifier, RuleCondition condition, EvaluationContext context) {
-        int days = parseIntParam(condition.getValueMin(), 7);
-        long threshold = parseLongParam(condition.getValueSingle(), 0L);
-
-        long count = velocityService.getDistinctCount(
-            identifier,
-            "merchantId",
-            VelocityService.TimeWindow.fromDays(days)
-        );
-
-        return count > threshold;
-    }
-
-    private boolean evaluateCountDistinctCountries(String identifier, RuleCondition condition, EvaluationContext context) {
-        int hours = parseIntParam(condition.getValueMin(), 24);
-        long threshold = parseLongParam(condition.getValueSingle(), 0L);
-
-        long count = velocityService.getDistinctCount(
-            identifier,
-            "merchantCountryCode",
-            VelocityService.TimeWindow.fromHours(hours)
-        );
-
-        return count > threshold;
-    }
-
-    private boolean evaluateMaxAmountLastNDays(String identifier, RuleCondition condition, EvaluationContext context) {
-        int days = parseIntParam(condition.getValueMin(), 30);
-        BigDecimal threshold = parseBigDecimalParam(condition.getValueSingle(), BigDecimal.ZERO);
-
-        BigDecimal max = velocityService.getMaxAmount(
-            identifier,
-            VelocityService.TimeWindow.fromDays(days)
-        );
-
-        return max.compareTo(threshold) > 0;
-    }
-
-    private boolean evaluateMinAmountLastNDays(String identifier, RuleCondition condition, EvaluationContext context) {
-        int days = parseIntParam(condition.getValueMin(), 30);
-        BigDecimal threshold = parseBigDecimalParam(condition.getValueSingle(), BigDecimal.ZERO);
-
-        BigDecimal min = velocityService.getMinAmount(
-            identifier,
-            VelocityService.TimeWindow.fromDays(days)
-        );
-
-        return min.compareTo(threshold) < 0;
+        long distinctCount = getDistinctCount(stats, distinctField);
+        return distinctCount > threshold;
     }
 
     /**
-     * Parse parâmetros de velocity do condition.
+     * Avalia VELOCITY_DISTINCT_LT baseado no campo especificado.
      */
-    private VelocityParams parseVelocityParams(RuleCondition condition) {
-        // Formato esperado em valueSingle: "timeWindowMinutes,threshold"
-        // ou usar valueMin para timeWindow e valueSingle para threshold
-
-        String valueSingle = condition.getValueSingle();
-        String valueMin = condition.getValueMin();
-
-        int timeWindowMinutes = 60; // default 1 hora
-        long threshold = 0;
-
-        if (valueMin != null && !valueMin.isBlank()) {
-            try {
-                timeWindowMinutes = Integer.parseInt(valueMin.trim());
-            } catch (NumberFormatException e) {
-                log.warn("Invalid timeWindow: {}", valueMin);
-            }
+    private boolean evaluateDistinctLt(VelocityStats stats, RuleCondition condition, long threshold) {
+        String distinctField = condition.getFieldPath();
+        if (distinctField == null || distinctField.isBlank()) {
+            distinctField = "merchant"; // default
         }
 
-        if (valueSingle != null && !valueSingle.isBlank()) {
+        long distinctCount = getDistinctCount(stats, distinctField);
+        return distinctCount < threshold;
+    }
+
+    /**
+     * Obtém contagem de distintos do stats baseado no campo.
+     */
+    private long getDistinctCount(VelocityStats stats, String field) {
+        return switch (field.toLowerCase()) {
+            case "merchant", "merchantid", "merchant_id" -> stats.getDistinctMerchants();
+            case "mcc" -> stats.getDistinctMccs();
+            case "country", "merchantcountrycode", "merchant_country_code" -> stats.getDistinctCountries();
+            case "pan" -> stats.getDistinctPans();
+            default -> stats.getDistinctMerchants(); // fallback
+        };
+    }
+
+    /**
+     * Determina o KeyType baseado na condição.
+     */
+    private KeyType determineKeyType(RuleCondition condition) {
+        String fieldName = condition.getFieldName();
+        if (fieldName == null || fieldName.isBlank()) {
+            return KeyType.PAN; // default
+        }
+
+        return switch (fieldName.toLowerCase()) {
+            case "pan", "cardnumber", "card_number" -> KeyType.PAN;
+            case "customerid", "customer_id", "customeridfromheader" -> KeyType.CUSTOMER_ID;
+            case "merchantid", "merchant_id" -> KeyType.MERCHANT_ID;
+            case "ipaddress", "ip_address", "ip" -> KeyType.IP_ADDRESS;
+            case "deviceid", "device_id" -> KeyType.DEVICE_ID;
+            default -> KeyType.PAN;
+        };
+    }
+
+    /**
+     * Determina o TimeWindow baseado na condição.
+     * Formato esperado em valueMin: minutos (5, 15, 30, 60, 360, 720, 1440, 10080, 43200)
+     */
+    private TimeWindow determineTimeWindow(RuleCondition condition) {
+        String valueMin = condition.getValueMin();
+        if (valueMin == null || valueMin.isBlank()) {
+            return TimeWindow.HOUR_1; // default 1 hora
+        }
+
+        try {
+            int minutes = Integer.parseInt(valueMin.trim());
+            return switch (minutes) {
+                case 5 -> TimeWindow.MINUTE_5;
+                case 15 -> TimeWindow.MINUTE_15;
+                case 30 -> TimeWindow.MINUTE_30;
+                case 60 -> TimeWindow.HOUR_1;
+                case 360 -> TimeWindow.HOUR_6;
+                case 720 -> TimeWindow.HOUR_12;
+                case 1440 -> TimeWindow.HOUR_24;
+                case 10080 -> TimeWindow.DAY_7;
+                case 43200 -> TimeWindow.DAY_30;
+                default -> {
+                    // Encontrar o mais próximo
+                    if (minutes <= 5) yield TimeWindow.MINUTE_5;
+                    else if (minutes <= 15) yield TimeWindow.MINUTE_15;
+                    else if (minutes <= 30) yield TimeWindow.MINUTE_30;
+                    else if (minutes <= 60) yield TimeWindow.HOUR_1;
+                    else if (minutes <= 360) yield TimeWindow.HOUR_6;
+                    else if (minutes <= 720) yield TimeWindow.HOUR_12;
+                    else if (minutes <= 1440) yield TimeWindow.HOUR_24;
+                    else if (minutes <= 10080) yield TimeWindow.DAY_7;
+                    else yield TimeWindow.DAY_30;
+                }
+            };
+        } catch (NumberFormatException e) {
+            log.warn("Invalid timeWindow value: {}, using default HOUR_1", valueMin);
+            return TimeWindow.HOUR_1;
+        }
+    }
+
+    /**
+     * Parse do threshold da condição.
+     */
+    private long parseThreshold(RuleCondition condition) {
+        String valueSingle = condition.getValueSingle();
+        if (valueSingle == null || valueSingle.isBlank()) {
+            return 0;
+        }
+
+        try {
+            // Se contém vírgula, o threshold é o segundo valor
             if (valueSingle.contains(",")) {
                 String[] parts = valueSingle.split(",");
-                try {
-                    timeWindowMinutes = Integer.parseInt(parts[0].trim());
-                    threshold = Long.parseLong(parts[1].trim());
-                } catch (NumberFormatException e) {
-                    log.warn("Invalid velocity params: {}", valueSingle);
-                    return null;
-                }
-            } else {
-                try {
-                    threshold = Long.parseLong(valueSingle.trim());
-                } catch (NumberFormatException e) {
-                    log.warn("Invalid threshold: {}", valueSingle);
-                    return null;
-                }
+                return Long.parseLong(parts[parts.length - 1].trim());
             }
-        }
-
-        return new VelocityParams(VelocityService.TimeWindow.fromMinutes(timeWindowMinutes), threshold);
-    }
-
-    private int parseIntParam(String value, int defaultValue) {
-        if (value == null || value.isBlank()) {
-            return defaultValue;
-        }
-        try {
-            return Integer.parseInt(value.trim());
+            return Long.parseLong(valueSingle.trim());
         } catch (NumberFormatException e) {
-            return defaultValue;
+            log.warn("Invalid threshold value: {}", valueSingle);
+            return 0;
         }
     }
-
-    private long parseLongParam(String value, long defaultValue) {
-        if (value == null || value.isBlank()) {
-            return defaultValue;
-        }
-        try {
-            return Long.parseLong(value.trim());
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
-
-    private BigDecimal parseBigDecimalParam(String value, BigDecimal defaultValue) {
-        if (value == null || value.isBlank()) {
-            return defaultValue;
-        }
-        try {
-            return new BigDecimal(value.trim());
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
-
-    /**
-     * Parâmetros de velocity.
-     */
-    private record VelocityParams(VelocityService.TimeWindow timeWindow, long threshold) {}
 }

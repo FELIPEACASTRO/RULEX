@@ -522,5 +522,33 @@ public enum ConditionOperator {
   TYPING_SPEED_ANOMALY,
   UNUSUAL_CARD_MEDIA,
   USER_AGENT_SUSPICIOUS,
-  VELOCITY_ANOMALY
+  VELOCITY_ANOMALY,
+
+  // ========== OPERADORES LÓGICOS E CONTEXTO ==========
+  AND, // Operador lógico AND
+  OR, // Operador lógico OR
+  NOT, // Operador lógico NOT
+  XOR, // Operador lógico XOR
+  NAND, // Operador lógico NAND
+  NOR, // Operador lógico NOR
+  CONTEXT, // Avaliação de contexto
+  FRAUD, // Indicador de fraude
+  SUSPICIOUS, // Indicador de suspeita
+  SECURITY, // Verificação de segurança
+  VELOCITY, // Verificação de velocidade
+
+  // ========== OPERADORES DE ACCOUNT ==========
+  ACCOUNT_TAKEOVER_PATTERN, // Padrão de account takeover
+
+  // ========== OPERADORES DE DEVICE AVANÇADOS ==========
+  ANTI_DETECT_BROWSER_DETECTION, // Detecção de navegador anti-detect
+  DEVICE_FINGERPRINT_CONSISTENCY_CHECK, // Verificação de consistência de fingerprint
+
+  // ========== OPERADORES DE MINING ==========
+  PIG_BUTCHERING_INDICATOR, // Indicador de pig butchering scam
+
+  // ========== OPERADORES DE TRANSACTION PATTERN ==========
+  SPLIT_TRANSACTION_DETECTION, // Detecção de transação dividida (structuring)
+  MICRO_DEPOSIT_VELOCITY, // Velocidade de micro depósitos
+  LAYERED_TRANSFER_PATTERN // Padrão de transferência em camadas (layering)
 }

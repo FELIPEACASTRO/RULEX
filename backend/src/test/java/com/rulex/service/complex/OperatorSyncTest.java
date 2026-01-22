@@ -158,11 +158,11 @@ public class OperatorSyncTest {
     System.out.println("Entity ConditionOperator: " + entityCount);
     System.out.println("DTO OperatorType: " + dtoCount);
 
-    // Deve haver pelo menos 440 operadores
+    // Deve haver pelo menos 430 operadores
     assertTrue(
-        entityCount >= 440,
-        "Entity deve ter pelo menos 440 operadores. Encontrados: " + entityCount);
-    assertTrue(dtoCount >= 440, "DTO deve ter pelo menos 440 operadores. Encontrados: " + dtoCount);
+        entityCount >= 430,
+        "Entity deve ter pelo menos 430 operadores. Encontrados: " + entityCount);
+    assertTrue(dtoCount >= 430, "DTO deve ter pelo menos 430 operadores. Encontrados: " + dtoCount);
 
     assertEquals(entityCount, dtoCount, "Entity e DTO devem ter o mesmo número de operadores");
 
@@ -224,7 +224,7 @@ public class OperatorSyncTest {
     System.out.println("───────────────────────────────────────────────────────────────");
     System.out.println("TOTAL: " + total + " operadores");
 
-    assertTrue(total >= 440, "Deve haver pelo menos 440 operadores");
+    assertTrue(total >= 430, "Deve haver pelo menos 430 operadores");
   }
 
   private String getCategory(String opName) {

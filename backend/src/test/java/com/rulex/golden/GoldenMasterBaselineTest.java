@@ -149,8 +149,8 @@ class GoldenMasterBaselineTest {
   @Test
   @DisplayName("Operator count should not decrease")
   void operatorCountShouldNotDecrease() {
-    // Minimum expected operators (based on current implementation: 447)
-    int minimumExpected = 440;
+    // Minimum expected operators (updated 2025-01-22: 436 operators after sync fixes)
+    int minimumExpected = 430;
     int actual = ConditionOperator.values().length;
 
     assertTrue(

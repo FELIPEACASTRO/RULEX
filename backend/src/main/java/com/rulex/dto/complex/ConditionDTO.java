@@ -508,7 +508,22 @@ public class ConditionDTO {
     ROUND_AMOUNT("Round Amount"),
     IMPOSSIBLE_TRAVEL("Impossible Travel"),
     NOT_IN_LIST("Not In List"),
-    CAPTCHA_FAILED("Captcha Failed");
+    CAPTCHA_FAILED("Captcha Failed"),
+
+    // Operadores de account
+    ACCOUNT_TAKEOVER_PATTERN("Account Takeover Pattern"),
+
+    // Operadores de device avançados
+    ANTI_DETECT_BROWSER_DETECTION("Anti Detect Browser Detection"),
+    DEVICE_FINGERPRINT_CONSISTENCY_CHECK("Device Fingerprint Consistency Check"),
+
+    // Operadores de mining/emerging fraud
+    PIG_BUTCHERING_INDICATOR("Pig Butchering Indicator"),
+
+    // Operadores de transaction pattern
+    SPLIT_TRANSACTION_DETECTION("Split Transaction Detection"),
+    MICRO_DEPOSIT_VELOCITY("Micro Deposit Velocity"),
+    LAYERED_TRANSFER_PATTERN("Layered Transfer Pattern");
 
     private final String description;
 

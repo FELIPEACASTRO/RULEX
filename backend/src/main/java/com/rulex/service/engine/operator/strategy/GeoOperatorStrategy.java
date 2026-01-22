@@ -159,7 +159,7 @@ public class GeoOperatorStrategy implements OperatorStrategy {
             var request = context.getTransactionRequest();
             if (request != null) {
                 var result = geoService.evaluateInPolygon(request, polygonName);
-                return result != null && result.isInPolygon();
+                return result != null && result.isSuccess() && result.isResult();
             }
             return false;
         } catch (Exception e) {
