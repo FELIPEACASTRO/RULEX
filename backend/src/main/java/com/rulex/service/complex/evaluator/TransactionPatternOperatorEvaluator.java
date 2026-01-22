@@ -36,23 +36,16 @@ public class TransactionPatternOperatorEvaluator implements OperatorEvaluator {
 
           // Splitting e structuring
           ConditionOperator.SPLIT_PAYMENT_PATTERN,
-          ConditionOperator.SPLIT_TRANSACTION_DETECTION,
           ConditionOperator.STRUCTURING_DETECTION,
 
           // Circular e layering
-          ConditionOperator.CIRCULAR_PAYMENT_DETECTION,
           ConditionOperator.CIRCULAR_TRANSFER_DETECTION,
-          ConditionOperator.LAYERED_TRANSFER_PATTERN,
 
           // Outros padrões
-          ConditionOperator.BUST_OUT_PATTERN_DETECTION,
-          ConditionOperator.CARD_TESTING_RING_DETECTION,
           ConditionOperator.RAPID_MOVEMENT,
           ConditionOperator.RAPID_MULTI_HOP,
-          ConditionOperator.RAPID_SUCCESSION_PATTERN,
           ConditionOperator.SEQUENTIAL_AMOUNT_PATTERN,
-          ConditionOperator.MICRO_TRANSACTION_TEST,
-          ConditionOperator.MICRO_DEPOSIT_VELOCITY);
+          ConditionOperator.MICRO_TRANSACTION_TEST);
 
   @Override
   public Set<ConditionOperator> getSupportedOperators() {
@@ -84,19 +77,12 @@ public class TransactionPatternOperatorEvaluator implements OperatorEvaluator {
       case PATTERN_ROUND_NUMBERS -> evaluateBoolean(context, "patternRoundNumbers");
       case PATTERN_SPLIT_TRANSACTION -> evaluateBoolean(context, "patternSplitTransaction");
       case SPLIT_PAYMENT_PATTERN -> evaluateBoolean(context, "splitPaymentPattern");
-      case SPLIT_TRANSACTION_DETECTION -> evaluateBoolean(context, "splitTransactionDetected");
       case STRUCTURING_DETECTION -> evaluateBoolean(context, "structuringDetected");
-      case CIRCULAR_PAYMENT_DETECTION -> evaluateBoolean(context, "circularPaymentDetected");
       case CIRCULAR_TRANSFER_DETECTION -> evaluateBoolean(context, "circularTransferDetected");
-      case LAYERED_TRANSFER_PATTERN -> evaluateBoolean(context, "layeredTransferPattern");
-      case BUST_OUT_PATTERN_DETECTION -> evaluateBoolean(context, "bustOutPatternDetected");
-      case CARD_TESTING_RING_DETECTION -> evaluateBoolean(context, "cardTestingRingDetected");
       case RAPID_MOVEMENT -> evaluateBoolean(context, "rapidMovementDetected");
       case RAPID_MULTI_HOP -> evaluateBoolean(context, "rapidMultiHopDetected");
-      case RAPID_SUCCESSION_PATTERN -> evaluateBoolean(context, "rapidSuccessionPattern");
       case SEQUENTIAL_AMOUNT_PATTERN -> evaluateBoolean(context, "sequentialAmountPattern");
       case MICRO_TRANSACTION_TEST -> evaluateBoolean(context, "microTransactionTest");
-      case MICRO_DEPOSIT_VELOCITY -> evaluateCount(context, "microDepositVelocity", condition, 5);
       default -> false;
     };
   }

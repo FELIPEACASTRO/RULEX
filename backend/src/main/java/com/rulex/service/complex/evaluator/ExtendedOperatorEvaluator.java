@@ -25,7 +25,6 @@ public class ExtendedOperatorEvaluator implements OperatorEvaluator {
           ConditionOperator.ADDRESS_CHANGE_VELOCITY,
           ConditionOperator.BENEFICIARY_ADD_VELOCITY,
           ConditionOperator.CARD_ADD_VELOCITY,
-          ConditionOperator.CROSS_BORDER_VELOCITY,
           ConditionOperator.CVV_FAILURE_VELOCITY,
           ConditionOperator.DORMANCY_ALERT_VELOCITY,
           ConditionOperator.MCC_CATEGORY_VELOCITY,
@@ -87,7 +86,6 @@ public class ExtendedOperatorEvaluator implements OperatorEvaluator {
 
           // Outros
           ConditionOperator.AVG_TRANSACTION_SPIKE,
-          ConditionOperator.CRYPTO_PUMP_DUMP_DETECTION,
           ConditionOperator.DISTANCE_FROM_LAST_GT,
           ConditionOperator.DORMANCY_REVIVAL,
           ConditionOperator.EMAIL_DOMAIN_AGE,
@@ -95,7 +93,6 @@ public class ExtendedOperatorEvaluator implements OperatorEvaluator {
           ConditionOperator.ENTROPY_SCORE_ANOMALY,
           ConditionOperator.FAN_IN_COUNT,
           ConditionOperator.FAN_OUT_COUNT,
-          ConditionOperator.INJECTION_ATTACK_DETECTION,
           ConditionOperator.INTEGRATION_PATTERN,
           ConditionOperator.IN_CUSTOMER_CHARGEBACK_MERCHANTS,
           ConditionOperator.IN_CUSTOMER_HISTORY,
@@ -105,12 +102,7 @@ public class ExtendedOperatorEvaluator implements OperatorEvaluator {
           ConditionOperator.MERCHANT_CATEGORY_CHANGE,
           ConditionOperator.MERCHANT_COUNTRY_MISMATCH,
           ConditionOperator.PAYMENT_METHOD_SWITCH,
-          ConditionOperator.PEER_GROUP_DEVIATION_SCORE,
           ConditionOperator.PHONE_CARRIER_CHECK,
-          ConditionOperator.RAPID_SUCCESSION_PATTERN,
-          ConditionOperator.REAL_TIME_RISK_SCORING,
-          ConditionOperator.ROUND_TRIP_DETECTION,
-          ConditionOperator.SEGMENT_OF_ONE_PROFILING,
           ConditionOperator.SHARED_IP_COUNT,
           ConditionOperator.UNIQUE_CARD_COUNT_PER_IP_HOUR,
           ConditionOperator.UNIQUE_MERCHANT_COUNT_PER_CARD_DAY);
@@ -316,7 +308,6 @@ public class ExtendedOperatorEvaluator implements OperatorEvaluator {
       case MCC_HIGH_RISK -> evaluateBoolean(payload, "mccHighRisk");
       case MCC_CROSS_CATEGORY_PATTERN -> evaluateBoolean(payload, "mccCrossCategoryPattern");
       case MCC_SPENDING_LIMIT_CHECK -> evaluateBoolean(payload, "mccSpendingLimitExceeded");
-      case CRYPTO_PUMP_DUMP_DETECTION -> evaluateBoolean(payload, "cryptoPumpDumpDetected");
       case DISTANCE_FROM_LAST_GT -> evaluateThreshold(payload, "distanceFromLast", condition, 100);
       case DORMANCY_REVIVAL -> evaluateBoolean(payload, "dormancyRevival");
       case EMAIL_DOMAIN_AGE -> evaluateThresholdLessThan(payload, "emailDomainAge", condition, 30);
@@ -324,7 +315,6 @@ public class ExtendedOperatorEvaluator implements OperatorEvaluator {
       case ENTROPY_SCORE_ANOMALY -> evaluateBoolean(payload, "entropyScoreAnomaly");
       case FAN_IN_COUNT -> evaluateCountThreshold(payload, "fanInCount", condition, 10);
       case FAN_OUT_COUNT -> evaluateCountThreshold(payload, "fanOutCount", condition, 10);
-      case INJECTION_ATTACK_DETECTION -> evaluateBoolean(payload, "injectionAttackDetected");
       case INTEGRATION_PATTERN -> evaluateBoolean(payload, "integrationPatternDetected");
       case IN_CUSTOMER_CHARGEBACK_MERCHANTS ->
           evaluateBoolean(payload, "inCustomerChargebackMerchants");
@@ -335,13 +325,7 @@ public class ExtendedOperatorEvaluator implements OperatorEvaluator {
       case MERCHANT_CATEGORY_CHANGE -> evaluateBoolean(payload, "merchantCategoryChange");
       case MERCHANT_COUNTRY_MISMATCH -> evaluateBoolean(payload, "merchantCountryMismatch");
       case PAYMENT_METHOD_SWITCH -> evaluateBoolean(payload, "paymentMethodSwitch");
-      case PEER_GROUP_DEVIATION_SCORE ->
-          evaluateThreshold(payload, "peerGroupDeviationScore", condition, 2);
       case PHONE_CARRIER_CHECK -> evaluateBoolean(payload, "phoneCarrierSuspicious");
-      case RAPID_SUCCESSION_PATTERN -> evaluateBoolean(payload, "rapidSuccessionPattern");
-      case REAL_TIME_RISK_SCORING -> evaluateThreshold(payload, "realTimeRiskScore", condition, 70);
-      case ROUND_TRIP_DETECTION -> evaluateBoolean(payload, "roundTripDetected");
-      case SEGMENT_OF_ONE_PROFILING -> evaluateBoolean(payload, "segmentOfOneAnomaly");
       case SHARED_IP_COUNT -> evaluateCountThreshold(payload, "sharedIpCount", condition, 5);
       case UNIQUE_CARD_COUNT_PER_IP_HOUR ->
           evaluateCountThreshold(payload, "uniqueCardCountPerIpHour", condition, 10);

@@ -55,9 +55,7 @@ public class OperatorNullEdgeCaseTest {
             || opName.startsWith("FATF_")
             || opName.startsWith("PLT_")
             || opName.startsWith("BSL_")
-            || opName.startsWith("LLM_")
-            || opName.startsWith("STAT_")
-            || opName.startsWith("BIOMETRIC_");
+            || opName.startsWith("STAT_");
 
     // Operadores especiais têm comportamento próprio
     if (isSpecialOperator) {

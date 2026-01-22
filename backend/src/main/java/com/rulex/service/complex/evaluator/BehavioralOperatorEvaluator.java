@@ -17,8 +17,6 @@ public class BehavioralOperatorEvaluator implements OperatorEvaluator {
   private static final Set<ConditionOperator> SUPPORTED =
       Set.of(
           // Comportamentais
-          ConditionOperator.ADAPTIVE_BEHAVIORAL_ANALYTICS,
-          ConditionOperator.ADAPTIVE_PARAMETRIC_THRESHOLD,
           ConditionOperator.BEHAVIORAL_BASELINE_DEVIATION,
           ConditionOperator.BUSINESS_HOURS_DEVIATION,
           ConditionOperator.CHANNEL_SWITCH_PATTERN,
@@ -33,12 +31,6 @@ public class BehavioralOperatorEvaluator implements OperatorEvaluator {
           ConditionOperator.UNUSUAL_BUSINESS_PATTERN,
 
           // Biométricos
-          ConditionOperator.BIOMETRIC_KEYSTROKE_DYNAMICS,
-          ConditionOperator.BIOMETRIC_MOUSE_MOVEMENT,
-          ConditionOperator.BIOMETRIC_SCROLL_VELOCITY,
-          ConditionOperator.FACE_TO_ID_PHOTO_MATCHING,
-          ConditionOperator.LIVENESS_DETECTION_FACIAL,
-          ConditionOperator.LIVENESS_DETECTION_VOICE,
 
           // Fingerprint
           ConditionOperator.AUDIO_FINGERPRINT_NEW,
@@ -63,9 +55,6 @@ public class BehavioralOperatorEvaluator implements OperatorEvaluator {
     log.debug("BehavioralOperatorEvaluator: op={}", op);
 
     return switch (op) {
-      case ADAPTIVE_BEHAVIORAL_ANALYTICS ->
-          evaluateScore(context, "adaptiveBehavioralScore", condition, 0.7);
-      case ADAPTIVE_PARAMETRIC_THRESHOLD -> evaluateBoolean(context, "adaptiveThresholdExceeded");
       case BEHAVIORAL_BASELINE_DEVIATION ->
           evaluateScore(context, "behavioralBaselineDeviation", condition, 2.0);
       case BUSINESS_HOURS_DEVIATION -> evaluateBoolean(context, "businessHoursDeviation");
@@ -79,13 +68,6 @@ public class BehavioralOperatorEvaluator implements OperatorEvaluator {
       case SPENDING_CATEGORY_SHIFT -> evaluateBoolean(context, "spendingCategoryShift");
       case TIME_PREFERENCE_SHIFT -> evaluateBoolean(context, "timePreferenceShift");
       case UNUSUAL_BUSINESS_PATTERN -> evaluateBoolean(context, "unusualBusinessPattern");
-      case BIOMETRIC_KEYSTROKE_DYNAMICS -> evaluateBoolean(context, "biometricKeystrokeMismatch");
-      case BIOMETRIC_MOUSE_MOVEMENT -> evaluateBoolean(context, "biometricMouseMismatch");
-      case BIOMETRIC_SCROLL_VELOCITY -> evaluateBoolean(context, "biometricScrollMismatch");
-      case FACE_TO_ID_PHOTO_MATCHING ->
-          evaluateScoreLessThan(context, "faceToIdPhotoMatch", condition, 0.8);
-      case LIVENESS_DETECTION_FACIAL -> evaluateBoolean(context, "livenessFacialFailed");
-      case LIVENESS_DETECTION_VOICE -> evaluateBoolean(context, "livenessVoiceFailed");
       case AUDIO_FINGERPRINT_NEW -> evaluateBoolean(context, "audioFingerprintNew");
       case CANVAS_FINGERPRINT_MISMATCH -> evaluateBoolean(context, "canvasFingerprintMismatch");
       case FONTS_FINGERPRINT_ANOMALY -> evaluateBoolean(context, "fontsFingerprintAnomaly");

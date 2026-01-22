@@ -38,9 +38,7 @@ class ComplianceOperatorEvaluatorTest {
     assertThat(evaluator.getSupportedOperators())
         .contains(
             ConditionOperator.ADDRESS_VERIFICATION,
-            ConditionOperator.PEP_LIST_CHECK,
-            ConditionOperator.SYNTHETIC_FRAUD_SCORE,
-            ConditionOperator.ROMANCE_SCAM_INDICATOR);
+            ConditionOperator.PEP_LIST_CHECK);
   }
 
   @Test
@@ -149,19 +147,6 @@ class ComplianceOperatorEvaluatorTest {
   }
 
   @Nested
-  @DisplayName("SYNTHETIC_FRAUD_SCORE")
-  class SyntheticFraudScoreTests {
-
-    @Test
-    void shouldReturnTrueWhenScoreAboveThreshold() {
-      RuleCondition condition = condition(ConditionOperator.SYNTHETIC_FRAUD_SCORE, "0.7");
-      EvaluationContext context = context(Map.of("syntheticFraudScore", 0.9));
-
-      assertThat(evaluator.evaluate(condition, context)).isTrue();
-    }
-  }
-
-  @Nested
   @DisplayName("CREDIT_FILE_THIN")
   class CreditFileThinTests {
 
@@ -169,32 +154,6 @@ class ComplianceOperatorEvaluatorTest {
     void shouldReturnTrueWhenThinCreditFile() {
       RuleCondition condition = condition(ConditionOperator.CREDIT_FILE_THIN, null);
       EvaluationContext context = context(Map.of("thinCreditFile", true));
-
-      assertThat(evaluator.evaluate(condition, context)).isTrue();
-    }
-  }
-
-  @Nested
-  @DisplayName("ROMANCE_SCAM_INDICATOR")
-  class RomanceScamTests {
-
-    @Test
-    void shouldReturnTrueWhenIndicatorPresent() {
-      RuleCondition condition = condition(ConditionOperator.ROMANCE_SCAM_INDICATOR, null);
-      EvaluationContext context = context(Map.of("romanceScamIndicator", true));
-
-      assertThat(evaluator.evaluate(condition, context)).isTrue();
-    }
-  }
-
-  @Nested
-  @DisplayName("APP_FRAUD_DETECTION")
-  class AppFraudTests {
-
-    @Test
-    void shouldReturnTrueWhenAppFraudDetected() {
-      RuleCondition condition = condition(ConditionOperator.APP_FRAUD_DETECTION, null);
-      EvaluationContext context = context(Map.of("appFraudDetected", true));
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
     }

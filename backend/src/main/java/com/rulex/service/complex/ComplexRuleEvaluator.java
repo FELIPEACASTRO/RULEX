@@ -26,13 +26,11 @@ import com.rulex.service.complex.evaluation.DeviceRiskEvaluator;
 import com.rulex.service.complex.evaluation.ExpectedValueFormatter;
 import com.rulex.service.complex.evaluation.FatfPlannedEvaluator;
 import com.rulex.service.complex.evaluation.FirstOccurrenceEvaluator;
-import com.rulex.service.complex.evaluation.FraudPatternPlannedEvaluator;
 import com.rulex.service.complex.evaluation.FuzzyPlannedEvaluator;
 import com.rulex.service.complex.evaluation.GraphNetworkEvaluator;
 import com.rulex.service.complex.evaluation.HistoricalEvaluator;
 import com.rulex.service.complex.evaluation.IdentityRiskEvaluator;
 import com.rulex.service.complex.evaluation.Iso20022Evaluator;
-import com.rulex.service.complex.evaluation.LlmPlannedEvaluator;
 import com.rulex.service.complex.evaluation.MerchantAdvancedEvaluator;
 import com.rulex.service.complex.evaluation.MerchantMccEvaluator;
 import com.rulex.service.complex.evaluation.NameSimilarityEvaluator;
@@ -44,10 +42,8 @@ import com.rulex.service.complex.evaluation.SanctionsNameMatchingEvaluator;
 import com.rulex.service.complex.evaluation.ScaPlannedEvaluator;
 import com.rulex.service.complex.evaluation.SimpleStatsEvaluator;
 import com.rulex.service.complex.evaluation.StatisticalBehavioralEvaluator;
-import com.rulex.service.complex.evaluation.StatisticalPlannedEvaluator;
 import com.rulex.service.complex.evaluation.StatisticalRiskEvaluator;
 import com.rulex.service.complex.evaluation.SuspiciousKeywordEvaluator;
-import com.rulex.service.complex.evaluation.SyntheticPlannedEvaluator;
 import com.rulex.service.complex.evaluation.TemporalVelocityEvaluator;
 import com.rulex.service.complex.evaluation.TimeDateEvaluator;
 import com.rulex.service.complex.evaluation.V28V30Evaluator;
@@ -1007,30 +1003,6 @@ public class ComplexRuleEvaluator {
           FuzzyPlannedEvaluator.evaluateFuzzyAdaptiveThreshold(condition, context);
 
         // ========== LLM & Generative AI Fraud Detection (LLM001-LLM012) ==========
-      case LLM_TRANSACTION_DESCRIPTION_ANALYSIS ->
-          LlmPlannedEvaluator.evaluateLlmTransactionDescriptionAnalysis(condition, context);
-      case LLM_GENERATIVE_RULE_SYNTHESIS ->
-          LlmPlannedEvaluator.evaluateLlmGenerativeRuleSynthesis(condition, context);
-      case LLM_ANOMALY_EXPLANATION_GENERATION ->
-          LlmPlannedEvaluator.evaluateLlmAnomalyExplanationGeneration(condition, context);
-      case LLM_CHATBOT_FRAUD_DETECTION ->
-          LlmPlannedEvaluator.evaluateLlmChatbotFraudDetection(condition, context);
-      case LLM_DEEPFAKE_VOICE_DETECTION ->
-          LlmPlannedEvaluator.evaluateLlmDeepfakeVoiceDetection(condition, context);
-      case LLM_SYNTHETIC_IMAGE_DETECTION ->
-          LlmPlannedEvaluator.evaluateLlmSyntheticImageDetection(condition, context);
-      case LLM_EMAIL_PHISHING_ANALYSIS ->
-          LlmPlannedEvaluator.evaluateLlmEmailPhishingAnalysis(condition, context);
-      case LLM_SOCIAL_ENGINEERING_CLASSIFICATION ->
-          LlmPlannedEvaluator.evaluateLlmSocialEngineeringClassification(condition, context);
-      case LLM_FRAUD_ALERT_PRIORITIZATION ->
-          LlmPlannedEvaluator.evaluateLlmFraudAlertPrioritization(condition, context);
-      case LLM_MULTI_MODAL_FRAUD_DETECTION ->
-          LlmPlannedEvaluator.evaluateLlmMultiModalFraudDetection(condition, context);
-      case LLM_ADVERSARIAL_ATTACK_RESISTANCE ->
-          LlmPlannedEvaluator.evaluateLlmAdversarialAttackResistance(condition, context);
-      case LLM_FRAUD_PATTERN_AUTODISCOVERY ->
-          LlmPlannedEvaluator.evaluateLlmFraudPatternAutodiscovery(condition, context);
 
         // ========== Neo4j Graph Fraud Detection (NEO001-NEO018) ==========
       case NEO4J_WEAKLY_CONNECTED_COMPONENTS ->
@@ -1088,120 +1060,10 @@ public class ComplexRuleEvaluator {
               condition, context, neo4jGraphService);
 
         // ========== Synthetic Identity Detection (SYN001-SYN015) ==========
-      case BIOMETRIC_KEYSTROKE_DYNAMICS ->
-          SyntheticPlannedEvaluator.evaluateBiometricKeystrokeDynamics(condition, context);
-      case BIOMETRIC_MOUSE_MOVEMENT ->
-          SyntheticPlannedEvaluator.evaluateBiometricMouseMovement(condition, context);
-      case BIOMETRIC_SCROLL_VELOCITY ->
-          SyntheticPlannedEvaluator.evaluateBiometricScrollVelocity(condition, context);
-      case DEVICE_FINGERPRINT_CONSISTENCY_CHECK ->
-          SyntheticPlannedEvaluator.evaluateDeviceFingerprintConsistencyCheck(condition, context);
-      case ECBSV_SSN_VALIDATION ->
-          SyntheticPlannedEvaluator.evaluateEcbsvSsnValidation(condition, context);
-      case SYNTHETIC_FRAUD_SCORE ->
-          SyntheticPlannedEvaluator.evaluateSyntheticFraudScore(condition, context);
-      case INJECTION_ATTACK_DETECTION ->
-          SyntheticPlannedEvaluator.evaluateInjectionAttackDetection(condition, context);
-      case LIVENESS_DETECTION_FACIAL ->
-          SyntheticPlannedEvaluator.evaluateLivenessDetectionFacial(condition, context);
-      case LIVENESS_DETECTION_VOICE ->
-          SyntheticPlannedEvaluator.evaluateLivenessDetectionVoice(condition, context);
-      case ANTI_DETECT_BROWSER_DETECTION ->
-          SyntheticPlannedEvaluator.evaluateAntiDetectBrowserDetection(condition, context);
-      case DOCUMENT_FORGERY_DETECTION ->
-          SyntheticPlannedEvaluator.evaluateDocumentForgeryDetection(condition, context);
-      case FACE_TO_ID_PHOTO_MATCHING ->
-          SyntheticPlannedEvaluator.evaluateFaceToIdPhotoMatching(condition, context);
-      case ADAPTIVE_BEHAVIORAL_ANALYTICS ->
-          SyntheticPlannedEvaluator.evaluateAdaptiveBehavioralAnalytics(condition, context);
-      case SYNTHETIC_ID_LABEL_CORRECTION ->
-          SyntheticPlannedEvaluator.evaluateSyntheticIdLabelCorrection(condition, context);
-      case MULTI_LAYERED_SYNTHETIC_ID_CONTROLS ->
-          SyntheticPlannedEvaluator.evaluateMultiLayeredSyntheticIdControls(condition, context);
 
         // ========== Estatísticos Avançados Pure Rules (STAT001-STAT015) ==========
-      case STAT_KRUSKAL_WALLIS_TEST ->
-          StatisticalPlannedEvaluator.evaluateStatKruskalWallisTest(condition, context);
-      case STAT_ANOVA_F_TEST ->
-          StatisticalPlannedEvaluator.evaluateStatAnovaFTest(condition, context);
-      case STAT_ISOLATION_FOREST_SCORE ->
-          StatisticalPlannedEvaluator.evaluateStatIsolationForestScore(condition, context);
-      case STAT_LOCAL_OUTLIER_FACTOR ->
-          StatisticalPlannedEvaluator.evaluateStatLocalOutlierFactor(condition, context);
-      case STAT_ONE_CLASS_SVM_BOUNDARY ->
-          StatisticalPlannedEvaluator.evaluateStatOneClassSvmBoundary(condition, context);
-      case STAT_KMEANS_CLUSTER_DISTANCE ->
-          StatisticalPlannedEvaluator.evaluateStatKmeansClusterDistance(condition, context);
-      case STAT_DBSCAN_NOISE_DETECTION ->
-          StatisticalPlannedEvaluator.evaluateStatDbscanNoiseDetection(condition, context);
-      case STAT_GMM_PROBABILITY ->
-          StatisticalPlannedEvaluator.evaluateStatGmmProbability(condition, context);
-      case STAT_MAHALANOBIS_DISTANCE ->
-          StatisticalPlannedEvaluator.evaluateStatMahalanobisDistance(condition, context);
-      case STAT_GRUBBS_TEST ->
-          StatisticalPlannedEvaluator.evaluateStatGrubbsTest(condition, context);
-      case STAT_DIXON_Q_TEST ->
-          StatisticalPlannedEvaluator.evaluateStatDixonQTest(condition, context);
-      case STAT_SHAPIRO_WILK_TEST ->
-          StatisticalPlannedEvaluator.evaluateStatShapiroWilkTest(condition, context);
-      case STAT_LEVENE_TEST ->
-          StatisticalPlannedEvaluator.evaluateStatLeveneTest(condition, context);
-      case STAT_WELCH_T_TEST ->
-          StatisticalPlannedEvaluator.evaluateStatWelchTTest(condition, context);
-      case STAT_BOOTSTRAP_CONFIDENCE_INTERVAL ->
-          StatisticalPlannedEvaluator.evaluateStatBootstrapConfidenceInterval(condition, context);
 
         // ========== Fraud Patterns & Market Operators (Phase 7) ==========
-      case CARD_TESTING_RING_DETECTION ->
-          FraudPatternPlannedEvaluator.evaluateCardTestingRingDetection(condition, context);
-      case BUST_OUT_PATTERN_DETECTION ->
-          FraudPatternPlannedEvaluator.evaluateBustOutPatternDetection(condition, context);
-      case CIRCULAR_PAYMENT_DETECTION ->
-          FraudPatternPlannedEvaluator.evaluateCircularPaymentDetection(condition, context);
-      case ACCOUNT_TAKEOVER_PATTERN ->
-          FraudPatternPlannedEvaluator.evaluateAccountTakeoverPattern(condition, context);
-      case SYNTHETIC_IDENTITY_RING ->
-          FraudPatternPlannedEvaluator.evaluateSyntheticIdentityRing(condition, context);
-      case CROSS_BORDER_VELOCITY ->
-          FraudPatternPlannedEvaluator.evaluateCrossBorderVelocity(condition, context);
-      case CORRESPONDENT_ANOMALY ->
-          FraudPatternPlannedEvaluator.evaluateCorrespondentAnomaly(condition, context);
-      case NESTED_CORRESPONDENT_CHECK ->
-          FraudPatternPlannedEvaluator.evaluateNestedCorrespondentCheck(condition, context);
-      case SHELL_BANK_INDICATOR ->
-          FraudPatternPlannedEvaluator.evaluateShellBankIndicator(condition, context);
-      case HIGH_RISK_CORRIDOR_CHECK ->
-          FraudPatternPlannedEvaluator.evaluateHighRiskCorridorCheck(condition, context);
-      case SEGMENT_OF_ONE_PROFILING ->
-          FraudPatternPlannedEvaluator.evaluateSegmentOfOneProfiling(condition, context);
-      case ADAPTIVE_PARAMETRIC_THRESHOLD ->
-          FraudPatternPlannedEvaluator.evaluateAdaptiveParametricThreshold(condition, context);
-      case REAL_TIME_RISK_SCORING ->
-          FraudPatternPlannedEvaluator.evaluateRealTimeRiskScoring(condition, context);
-      case CONSORTIUM_NEGATIVE_FILE_CHECK ->
-          FraudPatternPlannedEvaluator.evaluateConsortiumNegativeFileCheck(condition, context);
-      case PEER_GROUP_DEVIATION_SCORE ->
-          FraudPatternPlannedEvaluator.evaluatePeerGroupDeviationScore(condition, context);
-      case MICRO_DEPOSIT_VELOCITY ->
-          FraudPatternPlannedEvaluator.evaluateMicroDepositVelocity(condition, context);
-      case RAPID_SUCCESSION_PATTERN ->
-          FraudPatternPlannedEvaluator.evaluateRapidSuccessionPattern(condition, context);
-      case SPLIT_TRANSACTION_DETECTION ->
-          FraudPatternPlannedEvaluator.evaluateSplitTransactionDetection(condition, context);
-      case ROUND_TRIP_DETECTION ->
-          FraudPatternPlannedEvaluator.evaluateRoundTripDetection(condition, context);
-      case LAYERED_TRANSFER_PATTERN ->
-          FraudPatternPlannedEvaluator.evaluateLayeredTransferPattern(condition, context);
-      case APP_FRAUD_DETECTION ->
-          FraudPatternPlannedEvaluator.evaluateAppFraudDetection(condition, context);
-      case ROMANCE_SCAM_INDICATOR ->
-          FraudPatternPlannedEvaluator.evaluateRomanceScamIndicator(condition, context);
-      case INVESTMENT_SCAM_PATTERN ->
-          FraudPatternPlannedEvaluator.evaluateInvestmentScamPattern(condition, context);
-      case CRYPTO_PUMP_DUMP_DETECTION ->
-          FraudPatternPlannedEvaluator.evaluateCryptoPumpDumpDetection(condition, context);
-      case PIG_BUTCHERING_INDICATOR ->
-          FraudPatternPlannedEvaluator.evaluatePigButcheringIndicator(condition, context);
 
         // ========== OPERADORES SINCRONIZADOS V49 ==========
         // Operadores lógicos (delegados para grupos)

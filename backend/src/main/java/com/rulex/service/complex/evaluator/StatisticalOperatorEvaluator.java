@@ -19,21 +19,6 @@ public class StatisticalOperatorEvaluator implements OperatorEvaluator {
 
   private static final Set<ConditionOperator> SUPPORTED =
       Set.of(
-          ConditionOperator.STAT_ANOVA_F_TEST,
-          ConditionOperator.STAT_BOOTSTRAP_CONFIDENCE_INTERVAL,
-          ConditionOperator.STAT_DBSCAN_NOISE_DETECTION,
-          ConditionOperator.STAT_DIXON_Q_TEST,
-          ConditionOperator.STAT_GMM_PROBABILITY,
-          ConditionOperator.STAT_GRUBBS_TEST,
-          ConditionOperator.STAT_ISOLATION_FOREST_SCORE,
-          ConditionOperator.STAT_KMEANS_CLUSTER_DISTANCE,
-          ConditionOperator.STAT_KRUSKAL_WALLIS_TEST,
-          ConditionOperator.STAT_LEVENE_TEST,
-          ConditionOperator.STAT_LOCAL_OUTLIER_FACTOR,
-          ConditionOperator.STAT_MAHALANOBIS_DISTANCE,
-          ConditionOperator.STAT_ONE_CLASS_SVM_BOUNDARY,
-          ConditionOperator.STAT_SHAPIRO_WILK_TEST,
-          ConditionOperator.STAT_WELCH_T_TEST,
           ConditionOperator.ANDERSON_DARLING_TEST,
           ConditionOperator.BENFORD_LAW_DEVIATION,
           ConditionOperator.CHI_SQUARE_DISTRIBUTION_TEST,
@@ -60,21 +45,6 @@ public class StatisticalOperatorEvaluator implements OperatorEvaluator {
     log.debug("StatisticalOperatorEvaluator: op={}", op);
 
     return switch (op) {
-      case STAT_ANOVA_F_TEST -> evaluateAnovaFTest(condition, context);
-      case STAT_BOOTSTRAP_CONFIDENCE_INTERVAL -> evaluateBootstrapCI(condition, context);
-      case STAT_DBSCAN_NOISE_DETECTION -> evaluateDbscanNoise(condition, context);
-      case STAT_DIXON_Q_TEST -> evaluateDixonQTest(condition, context);
-      case STAT_GMM_PROBABILITY -> evaluateGmmProbability(condition, context);
-      case STAT_GRUBBS_TEST -> evaluateGrubbsTest(condition, context);
-      case STAT_ISOLATION_FOREST_SCORE -> evaluateIsolationForest(condition, context);
-      case STAT_KMEANS_CLUSTER_DISTANCE -> evaluateKmeansDistance(condition, context);
-      case STAT_KRUSKAL_WALLIS_TEST -> evaluateKruskalWallis(condition, context);
-      case STAT_LEVENE_TEST -> evaluateLeveneTest(condition, context);
-      case STAT_LOCAL_OUTLIER_FACTOR -> evaluateLof(condition, context);
-      case STAT_MAHALANOBIS_DISTANCE -> evaluateMahalanobis(condition, context);
-      case STAT_ONE_CLASS_SVM_BOUNDARY -> evaluateOneClassSvm(condition, context);
-      case STAT_SHAPIRO_WILK_TEST -> evaluateShapiroWilk(condition, context);
-      case STAT_WELCH_T_TEST -> evaluateWelchTTest(condition, context);
       case ANDERSON_DARLING_TEST -> evaluateAndersonDarling(condition, context);
       case BENFORD_LAW_DEVIATION -> evaluateBenfordLaw(condition, context);
       case CHI_SQUARE_DISTRIBUTION_TEST -> evaluateChiSquare(condition, context);

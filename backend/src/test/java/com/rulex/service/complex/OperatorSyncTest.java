@@ -253,7 +253,6 @@ public class OperatorSyncTest {
     if (opName.startsWith("BEHAVIORAL_")) return "BEHAVIORAL";
     if (opName.startsWith("NETWORK_")) return "NETWORK";
     if (opName.startsWith("CRYPTO_")) return "CRYPTO";
-    if (opName.startsWith("BIOMETRIC_")) return "BIOMETRIC";
     return "OUTROS";
   }
 }
