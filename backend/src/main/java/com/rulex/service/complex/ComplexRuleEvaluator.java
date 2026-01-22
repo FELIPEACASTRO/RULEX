@@ -29,7 +29,12 @@ import com.rulex.service.complex.evaluation.FirstOccurrenceEvaluator;
 import com.rulex.service.complex.evaluation.GraphNetworkEvaluator;
 import com.rulex.service.complex.evaluation.IdentityRiskEvaluator;
 import com.rulex.service.complex.evaluation.Iso20022Evaluator;
+import com.rulex.service.complex.evaluation.ExpectedValueFormatter;
+import com.rulex.service.complex.evaluation.MerchantMccEvaluator;
+import com.rulex.service.complex.evaluation.SimpleStatsEvaluator;
 import com.rulex.service.complex.evaluation.LlmPlannedEvaluator;
+import com.rulex.service.complex.context.GroupByExtractor;
+import com.rulex.service.complex.parsing.TimeWindowParser;
 import com.rulex.service.complex.evaluation.MerchantAdvancedEvaluator;
 import com.rulex.service.complex.evaluation.NameSimilarityEvaluator;
 import com.rulex.service.complex.evaluation.Neo4jGraphEvaluator;
@@ -572,13 +577,13 @@ public class ComplexRuleEvaluator {
         case LANGUAGE_MISMATCH -> DeviceRiskEvaluator.evaluateLanguageMismatch(condition, context);
 
         // CATEGORIA I: Merchant & MCC (7)
-      case MCC_HIGH_RISK -> evaluateMccHighRisk(fieldValue, condition);
-      case MCC_GAMBLING -> evaluateMccGambling(fieldValue, condition);
-      case MCC_CRYPTO -> evaluateMccCrypto(fieldValue, condition);
-      case MERCHANT_FIRST_SEEN -> evaluateMerchantFirstSeen(condition, context);
-      case MERCHANT_COUNTRY_MISMATCH -> evaluateMerchantCountryMismatch(condition, context);
-      case MERCHANT_CATEGORY_CHANGE -> evaluateMerchantCategoryChange(condition, context);
-      case MERCHANT_VELOCITY_SPIKE -> evaluateMerchantVelocitySpike(condition, context);
+      case MCC_HIGH_RISK -> MerchantMccEvaluator.evaluateMccHighRisk(fieldValue, condition);
+      case MCC_GAMBLING -> MerchantMccEvaluator.evaluateMccGambling(fieldValue, condition);
+      case MCC_CRYPTO -> MerchantMccEvaluator.evaluateMccCrypto(fieldValue, condition);
+      case MERCHANT_FIRST_SEEN -> MerchantMccEvaluator.evaluateMerchantFirstSeen(condition, context);
+      case MERCHANT_COUNTRY_MISMATCH -> MerchantMccEvaluator.evaluateMerchantCountryMismatch(condition, context);
+      case MERCHANT_CATEGORY_CHANGE -> MerchantMccEvaluator.evaluateMerchantCategoryChange(condition, context);
+      case MERCHANT_VELOCITY_SPIKE -> MerchantMccEvaluator.evaluateMerchantVelocitySpike(condition, context, velocityServiceFacade);
 
         // CATEGORIA J: ISO 20022 (6)
       case PACS008_FIELD_VALIDATION -> Iso20022Evaluator.evaluatePacs008FieldValidation(condition, context);
@@ -589,7 +594,7 @@ public class ComplexRuleEvaluator {
       case STRUCTURED_ADDRESS_CHECK -> Iso20022Evaluator.evaluateStructuredAddressCheck(condition, context);
 
         // CATEGORIA K: Estatísticos Simples (5)
-      case BENFORD_LAW_DEVIATION -> evaluateBenfordLawDeviation(condition, context);
+      case BENFORD_LAW_DEVIATION -> SimpleStatsEvaluator.evaluateBenfordLawDeviation(condition, context);
         case Z_SCORE_GT ->
           StatisticalRiskEvaluator.evaluateZScoreGt(condition, context, velocityServiceFacade);
         case STANDARD_DEVIATION_GT ->
@@ -641,7 +646,7 @@ public class ComplexRuleEvaluator {
           VelocityAdvancedEvaluator.evaluateAmountSumPerCustomerDay(
             condition, context, velocityServiceFacade);
         case AVG_TRANSACTION_SPIKE ->
-          VelocityAdvancedEvaluator.evaluateAvgTransactionSpike(condition, context);
+          VelocityAdvancedEvaluator.evaluateAvgTransactionSpike(condition, context, velocityServiceFacade);
         case LARGE_AMOUNT_FREQUENCY ->
           VelocityAdvancedEvaluator.evaluateLargeAmountFrequency(condition, context);
         case SMALL_AMOUNT_VELOCITY -> VelocityAdvancedEvaluator.evaluateSmallAmountVelocity(condition, context);
@@ -650,7 +655,7 @@ public class ComplexRuleEvaluator {
         case SEQUENTIAL_AMOUNT_PATTERN ->
           VelocityAdvancedEvaluator.evaluateSequentialAmountPattern(condition, context);
         case AMOUNT_VARIANCE_ANOMALY ->
-          VelocityAdvancedEvaluator.evaluateAmountVarianceAnomaly(condition, context);
+          VelocityAdvancedEvaluator.evaluateAmountVarianceAnomaly(condition, context, velocityServiceFacade);
         case DAILY_LIMIT_PROXIMITY ->
           VelocityAdvancedEvaluator.evaluateDailyLimitProximity(condition, context);
         case WEEKLY_LIMIT_PROXIMITY ->
@@ -748,7 +753,7 @@ public class ComplexRuleEvaluator {
         case ENTROPY_SCORE_ANOMALY ->
           StatisticalBehavioralEvaluator.evaluateEntropyScoreAnomaly(condition, context);
         case SKEWNESS_KURTOSIS_ANOMALY ->
-          StatisticalBehavioralEvaluator.evaluateSkewnessKurtosisAnomaly(condition, context);
+          SimpleStatsEvaluator.evaluateSkewnessKurtosisAnomaly(condition, context);
 
         // ========== OPERADORES V4.0 PHASE 1C (18 novos) - MCC & Merchant ==========
         // CATEGORIA R: MCC & Merchant Advanced (18)
@@ -1213,7 +1218,7 @@ public class ComplexRuleEvaluator {
       case ADDRESS_MISMATCH -> evaluateAddressMismatchOp(fieldValue);
       case PHONE_COUNTRY_MISMATCH -> evaluatePhoneCountryMismatchOp(fieldValue);
       case EMAIL_DOMAIN_AGE_LT_DAYS -> evaluateEmailDomainAgeLtDaysOp(fieldValue, condition);
-      case NAME_SIMILARITY_GT -> evaluateNameSimilarityGtOp(fieldValue, condition);
+      case NAME_SIMILARITY_GT -> NameSimilarityEvaluator.evaluateNameSimilarityGt(fieldValue, condition);
       case ACCOUNT_AGE_LT_DAYS -> evaluateAccountAgeLtDaysOp(fieldValue, condition);
 
         // Operadores de contexto/classificação
@@ -1254,6 +1259,17 @@ public class ComplexRuleEvaluator {
   }
 
   // ========== Métodos auxiliares de avaliação ==========
+
+  private Boolean toBoolean(Object value) {
+    if (value == null) return null;
+    if (value instanceof Boolean) return (Boolean) value;
+    String str = String.valueOf(value).toLowerCase();
+    return "true".equals(str) || "1".equals(str) || "yes".equals(str);
+  }
+
+  private String getExpectedValueString(RuleCondition condition) {
+    return ExpectedValueFormatter.format(condition);
+  }
 
   private boolean evaluateEquals(Object fieldValue, String expected, Boolean caseSensitive) {
     return BasicOperatorEvaluator.evaluateEquals(fieldValue, expected, caseSensitive);

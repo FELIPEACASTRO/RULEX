@@ -169,4 +169,39 @@ public final class FatfPlannedEvaluator {
         ConditionOperator.FATF_TBML_UNDER_INVOICING,
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
+
+  public static boolean evaluateFatfPlacementCurrencyExchange(
+      RuleCondition condition, EvaluationContext context) {
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_PLACEMENT_CURRENCY_EXCHANGE,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
+  }
+
+  public static boolean evaluateFatfPlacementCasinoGambling(
+      RuleCondition condition, EvaluationContext context) {
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_PLACEMENT_CASINO_GAMBLING,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
+  }
+
+  public static boolean evaluateFatfLayeringConvertibleInstruments(
+      RuleCondition condition, EvaluationContext context) {
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_LAYERING_CONVERTIBLE_INSTRUMENTS,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
+  }
+
+  public static boolean evaluateFatfIntegrationBusinessInvestment(
+      RuleCondition condition, EvaluationContext context) {
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_INTEGRATION_BUSINESS_INVESTMENT,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
+  }
+
+  public static boolean evaluateFatfIntegrationLoanRepayment(
+      RuleCondition condition, EvaluationContext context) {
+    throw new UnsupportedOperatorException(
+        ConditionOperator.FATF_INTEGRATION_LOAN_REPAYMENT,
+        "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
+  }
 }
