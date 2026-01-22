@@ -49,8 +49,6 @@ class ComplexRuleEvaluatorAggregationTest {
     operatorEvaluatorRegistry = new OperatorEvaluatorRegistry(Collections.emptyList());
     evaluator =
         new ComplexRuleEvaluator(
-            geoService,
-            velocityService,
             velocityServiceFacade,
             operatorDataService,
             neo4jGraphService,
