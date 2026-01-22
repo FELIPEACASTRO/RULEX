@@ -168,12 +168,12 @@ public class ComplexRuleEvaluator {
     if (results.isEmpty()) return true;
 
     return switch (operator) {
-      case AND -> results.stream().allMatch(r -> r);
-      case OR -> results.stream().anyMatch(r -> r);
+      case AND -> results.stream().allMatch(Boolean::booleanValue);
+      case OR -> results.stream().anyMatch(Boolean::booleanValue);
       case NOT -> !results.get(0); // NOT aplica ao primeiro resultado
-      case XOR -> results.stream().filter(r -> r).count() == 1;
-      case NAND -> !results.stream().allMatch(r -> r);
-      case NOR -> !results.stream().anyMatch(r -> r);
+      case XOR -> results.stream().filter(Boolean::booleanValue).count() == 1;
+      case NAND -> !results.stream().allMatch(Boolean::booleanValue);
+      case NOR -> !results.stream().anyMatch(Boolean::booleanValue);
     };
   }
 
@@ -1067,69 +1067,18 @@ public class ComplexRuleEvaluator {
 
         // ========== OPERADORES SINCRONIZADOS V49 ==========
         // Operadores lógicos (delegados para grupos)
-      case AND -> evaluateLogicalAnd(condition, context);
-      case OR -> evaluateLogicalOr(condition, context);
-      case NOT -> evaluateLogicalNot(condition, context);
-      case XOR -> evaluateLogicalXor(condition, context);
-      case NAND -> evaluateLogicalNand(condition, context);
-      case NOR -> evaluateLogicalNor(condition, context);
 
         // Operadores de anomalia
-      case AMOUNT_ANOMALY -> evaluateAmountAnomalyOp(condition, context);
-      case TIME_ANOMALY -> evaluateTimeAnomalyOp(condition, context);
-      case VELOCITY_ANOMALY -> evaluateVelocityAnomalyOp(condition, context);
-      case MCC_ANOMALY -> evaluateMccAnomalyOp(condition, context);
-      case MERCHANT_ANOMALY -> evaluateMerchantAnomalyOp(condition, context);
 
         // Operadores de dispositivo/sessão
-      case IS_NEW_DEVICE -> evaluateIsNewDeviceOp(fieldValue);
-      case IS_NEW_LOCATION -> evaluateIsNewLocationOp(fieldValue);
-      case DEVICE_FINGERPRINT_MISMATCH -> evaluateDeviceFingerprintMismatchOp(fieldValue);
-      case SESSION_DURATION_LT -> evaluateSessionDurationLtOp(fieldValue, condition);
-      case CLICK_VELOCITY_GT -> evaluateClickVelocityGtOp(fieldValue, condition);
-      case MOUSE_MOVEMENT_ANOMALY -> evaluateMouseMovementAnomalyOp(fieldValue);
-      case TYPING_SPEED_ANOMALY -> evaluateTypingSpeedAnomalyOp(fieldValue);
-      case USER_AGENT_SUSPICIOUS -> evaluateUserAgentSuspiciousOp(fieldValue);
 
         // Operadores de fraude de cartão
-      case EXPIRED_CARD -> evaluateExpiredCardOp(fieldValue);
-      case CARD_CAPTURE_FRAUD -> evaluateCardCaptureFraudOp(fieldValue);
-      case PIN_CVV_LIMIT_EXCEEDED -> evaluatePinCvvLimitExceededOp(fieldValue);
-      case OFFLINE_PIN_FAILED -> evaluateOfflinePinFailedOp(fieldValue);
-      case EMV_SECURITY_CHECK -> evaluateEmvSecurityCheckOp(fieldValue);
-      case ECOMMERCE_NO_AVS -> evaluateEcommerceNoAvsOp(fieldValue);
-      case POS_SECURITY_MISSING -> evaluatePosSecurityMissingOp(fieldValue);
-      case TERMINAL_VERIFICATION_FAILED -> evaluateTerminalVerificationFailedOp(fieldValue);
-      case SUSPICIOUS_TERMINAL -> evaluateSuspiciousTerminalOp(fieldValue);
-      case UNUSUAL_CARD_MEDIA -> evaluateUnusualCardMediaOp(fieldValue);
 
         // Operadores de transferência
-      case TRANSFER_AMOUNT_GT -> evaluateTransferAmountGtOp(fieldValue, condition);
-      case TRANSFER_VELOCITY_GT -> evaluateTransferVelocityGtOp(fieldValue, condition);
-      case RECIPIENT_IN_WATCHLIST -> evaluateRecipientInWatchlistOp(fieldValue);
-      case RECIPIENT_IS_NEW -> evaluateRecipientIsNewOp(fieldValue);
 
         // Operadores de validação
-      case ADDRESS_MISMATCH -> evaluateAddressMismatchOp(fieldValue);
-      case PHONE_COUNTRY_MISMATCH -> evaluatePhoneCountryMismatchOp(fieldValue);
-      case EMAIL_DOMAIN_AGE_LT_DAYS -> evaluateEmailDomainAgeLtDaysOp(fieldValue, condition);
-      case NAME_SIMILARITY_GT ->
-          NameSimilarityEvaluator.evaluateNameSimilarityGt(fieldValue, condition);
-      case ACCOUNT_AGE_LT_DAYS -> evaluateAccountAgeLtDaysOp(fieldValue, condition);
 
         // Operadores de contexto/classificação
-      case CONTEXT -> evaluateContextOp(fieldValue, condition, context);
-      case FRAUD -> evaluateFraudOp(fieldValue);
-      case SECURITY -> evaluateSecurityOp(fieldValue);
-      case SUSPICIOUS -> evaluateSuspiciousOp(fieldValue);
-      case SUSPICIOUS_TRANSACTION_TYPE -> evaluateSuspiciousTransactionTypeOp(fieldValue);
-      case VELOCITY -> evaluateVelocityOp(fieldValue, condition);
-      case ROUND_AMOUNT -> evaluateRoundAmountOp(fieldValue);
-      case IMPOSSIBLE_TRAVEL -> evaluateImpossibleTravelOp(fieldValue);
-      case NOT_IN_LIST -> evaluateNotInListOp(fieldValue, condition);
-      case CAPTCHA_FAILED -> evaluateCaptchaFailedOp(fieldValue);
-      case COUNT_DISTINCT_COUNTRIES_LAST_N_DAYS ->
-          evaluateCountDistinctCountriesLastNDaysOp(condition, context);
 
       default -> delegateToRegistry(operator, condition, context);
     };

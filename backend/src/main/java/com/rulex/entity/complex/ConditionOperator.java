@@ -482,5 +482,4 @@ public enum ConditionOperator {
   NEO4J_NODE_SIMILARITY_SYNTHETIC_ID, // NEO016: Similaridade de nó para ID sintético
   NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION, // NEO017: Predição de fraude via embedding de grafo
   NEO4J_TEMPORAL_MOTIF_PATTERN, // NEO018: Padrão de motif temporal
-
 }

@@ -36,9 +36,7 @@ class ComplianceOperatorEvaluatorTest {
   @DisplayName("deve suportar operadores de compliance")
   void shouldSupportOperators() {
     assertThat(evaluator.getSupportedOperators())
-        .contains(
-            ConditionOperator.ADDRESS_VERIFICATION,
-            ConditionOperator.PEP_LIST_CHECK);
+        .contains(ConditionOperator.ADDRESS_VERIFICATION, ConditionOperator.PEP_LIST_CHECK);
   }
 
   @Test
