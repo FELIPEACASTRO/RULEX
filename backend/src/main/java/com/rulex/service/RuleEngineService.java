@@ -925,18 +925,6 @@ public class RuleEngineService {
     return request.getMerchantCountryCode() != null
         && !request.getMerchantCountryCode().equals("076");
   }
-
-  /** Classifica o risco baseado no score. */
-  private TransactionDecision.TransactionClassification classifyRiskByScore(int riskScore) {
-    if (riskScore < 30) {
-      return TransactionDecision.TransactionClassification.APPROVED;
-    }
-    if (riskScore < 70) {
-      return TransactionDecision.TransactionClassification.SUSPICIOUS;
-    }
-    return TransactionDecision.TransactionClassification.FRAUD;
-  }
-
   /** Gera uma descrição do motivo da decisão. */
   private String generateReason(
       TransactionDecision.TransactionClassification classification,

@@ -13,7 +13,6 @@ import com.rulex.service.StatisticalAnalysisService;
 import com.rulex.service.StringSimilarityService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
-import com.rulex.service.complex.context.GroupByExtractor;
 import com.rulex.service.complex.evaluation.AmlTypologyEvaluator;
 import com.rulex.service.complex.evaluation.BasicOperatorEvaluator;
 import com.rulex.service.complex.evaluation.BehavioralPatternEvaluator;
@@ -1072,12 +1071,6 @@ public class ComplexRuleEvaluator {
   private VelocityService.TimeWindow parseTimeWindowFromHours(int hours) {
     return TimeWindowParser.fromHours(hours);
   }
-
-  /** Extrai o campo de agrupamento do contexto (ex: cardNumber, accountId) */
-  private String extractGroupByFromContext(EvaluationContext context) {
-    return GroupByExtractor.extractGroupBy(context);
-  }
-
   // ========== Operadores Críticos para Regras de Fraude Avançadas ==========
 
   /**
