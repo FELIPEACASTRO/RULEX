@@ -7,6 +7,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -68,18 +69,59 @@ public class DateTimeOperatorEvaluator implements OperatorEvaluator {
     return switch (op) {
       case DATE_BEFORE -> evaluateDateBefore(fieldValue, condition.getValueSingle());
       case DATE_AFTER -> evaluateDateAfter(fieldValue, condition.getValueSingle());
-      case DATE_BETWEEN ->
-          evaluateDateBetween(fieldValue, condition.getValueMin(), condition.getValueMax());
+      case DATE_BETWEEN -> {
+        String[] range = parseRange(condition);
+        yield evaluateDateBetween(fieldValue, range[0], range[1]);
+      }
       case TIME_BEFORE -> evaluateTimeBefore(fieldValue, condition.getValueSingle());
       case TIME_AFTER -> evaluateTimeAfter(fieldValue, condition.getValueSingle());
-      case TIME_BETWEEN ->
-          evaluateTimeBetween(fieldValue, condition.getValueMin(), condition.getValueMax());
-      case HOUR_BETWEEN ->
-          evaluateHourBetween(fieldValue, condition.getValueMin(), condition.getValueMax());
-      case DAY_OF_WEEK_IN -> evaluateDayOfWeekIn(fieldValue, condition.getValueArray());
+      case TIME_BETWEEN -> {
+        String[] range = parseRange(condition);
+        yield evaluateTimeBetween(fieldValue, range[0], range[1]);
+      }
+      case HOUR_BETWEEN -> {
+        String[] range = parseRange(condition);
+        yield evaluateHourBetween(fieldValue, range[0], range[1]);
+      }
+      case DAY_OF_WEEK_IN -> evaluateDayOfWeekIn(fieldValue, parseValueArray(condition));
       case IS_WEEKEND -> evaluateIsWeekend(fieldValue);
       default -> false;
     };
+  }
+
+  /** Parse range from valueMin/valueMax or from valueSingle with ":" separator */
+  private String[] parseRange(RuleCondition condition) {
+    if (condition.getValueMin() != null && condition.getValueMax() != null) {
+      return new String[] {condition.getValueMin(), condition.getValueMax()};
+    }
+    String single = condition.getValueSingle();
+    if (single == null || single.isBlank()) {
+      return new String[] {null, null};
+    }
+    // Format: "HH:MM:HH:MM" for time ranges (4 parts)
+    if (single.matches("\\d{2}:\\d{2}:\\d{2}:\\d{2}")) {
+      return new String[] {single.substring(0, 5), single.substring(6)};
+    }
+    // Format: "value:value" for simple ranges (dates, hours)
+    if (single.contains(":")) {
+      String[] parts = single.split(":");
+      if (parts.length == 2) {
+        return new String[] {parts[0], parts[1]};
+      }
+    }
+    return new String[] {null, null};
+  }
+
+  /** Parse value array from valueArray or from valueSingle with "," separator */
+  private List<String> parseValueArray(RuleCondition condition) {
+    if (condition.getValueArray() != null && !condition.getValueArray().isEmpty()) {
+      return condition.getValueArray();
+    }
+    String single = condition.getValueSingle();
+    if (single != null && !single.isBlank()) {
+      return java.util.Arrays.asList(single.split(","));
+    }
+    return List.of();
   }
 
   private boolean evaluateTimeBefore(Object fieldValue, String expected) {
@@ -239,6 +281,8 @@ public class DateTimeOperatorEvaluator implements OperatorEvaluator {
 
     if (value instanceof LocalDate ld) return ld;
     if (value instanceof LocalDateTime ldt) return ldt.toLocalDate();
+    if (value instanceof OffsetDateTime odt) return odt.toLocalDate();
+    if (value instanceof java.time.ZonedDateTime zdt) return zdt.toLocalDate();
 
     String str = String.valueOf(value);
 
@@ -272,6 +316,8 @@ public class DateTimeOperatorEvaluator implements OperatorEvaluator {
 
     if (value instanceof LocalTime lt) return lt;
     if (value instanceof LocalDateTime ldt) return ldt.toLocalTime();
+    if (value instanceof OffsetDateTime odt) return odt.toLocalTime();
+    if (value instanceof java.time.ZonedDateTime zdt) return zdt.toLocalTime();
 
     String str = String.valueOf(value);
 
