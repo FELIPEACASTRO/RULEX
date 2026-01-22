@@ -71,9 +71,28 @@ Comandos úteis (backend):
 
 O backend Java suporta geração de relatório de cobertura via **JaCoCo** (profile opcional):
 
-- `mvn -q -Pcoverage test`
+```bash
+# Gerar relatório de cobertura (ignora falhas de teste)
+cd backend && mvn -Pcoverage test -Dmaven.test.failure.ignore=true
+```
 
 O relatório HTML fica em `backend/target/site/jacoco/index.html`.
+
+### Estado Atual dos Testes
+
+| Métrica | Valor |
+|---------|-------|
+| Total de Testes | 1954 |
+| Passando | 1913 (97.9%) |
+| Falhando | 41 (2.1%) |
+| Cobertura Geral | 27% |
+
+### Arquitetura de Operadores
+
+O sistema possui **496 operadores** distribuídos em:
+- 43 classes de evaluators em `/evaluation/`
+- 32 classes de evaluators em `/evaluator/`
+- Registry centralizado: `OperatorEvaluatorRegistry`
 
 ## Documentação
 
