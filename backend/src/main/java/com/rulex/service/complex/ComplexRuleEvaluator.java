@@ -15,18 +15,14 @@ import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
 import com.rulex.service.complex.context.GroupByExtractor;
 import com.rulex.service.complex.evaluation.AmlTypologyEvaluator;
-import com.rulex.service.complex.evaluation.AssociationPlannedEvaluator;
 import com.rulex.service.complex.evaluation.BasicOperatorEvaluator;
 import com.rulex.service.complex.evaluation.BehavioralPatternEvaluator;
-import com.rulex.service.complex.evaluation.BslPlannedEvaluator;
 import com.rulex.service.complex.evaluation.CriticalOperatorEvaluator;
 import com.rulex.service.complex.evaluation.CustomerHistoryEvaluator;
 import com.rulex.service.complex.evaluation.DeviceFingerprintEvaluator;
 import com.rulex.service.complex.evaluation.DeviceRiskEvaluator;
 import com.rulex.service.complex.evaluation.ExpectedValueFormatter;
-import com.rulex.service.complex.evaluation.FatfPlannedEvaluator;
 import com.rulex.service.complex.evaluation.FirstOccurrenceEvaluator;
-import com.rulex.service.complex.evaluation.FuzzyPlannedEvaluator;
 import com.rulex.service.complex.evaluation.GraphNetworkEvaluator;
 import com.rulex.service.complex.evaluation.HistoricalEvaluator;
 import com.rulex.service.complex.evaluation.IdentityRiskEvaluator;
@@ -36,10 +32,8 @@ import com.rulex.service.complex.evaluation.MerchantMccEvaluator;
 import com.rulex.service.complex.evaluation.NameSimilarityEvaluator;
 import com.rulex.service.complex.evaluation.Neo4jGraphEvaluator;
 import com.rulex.service.complex.evaluation.PatternEvaluator;
-import com.rulex.service.complex.evaluation.PlatformPlannedEvaluator;
 import com.rulex.service.complex.evaluation.RegulatoryComplianceEvaluator;
 import com.rulex.service.complex.evaluation.SanctionsNameMatchingEvaluator;
-import com.rulex.service.complex.evaluation.ScaPlannedEvaluator;
 import com.rulex.service.complex.evaluation.SimpleStatsEvaluator;
 import com.rulex.service.complex.evaluation.StatisticalBehavioralEvaluator;
 import com.rulex.service.complex.evaluation.StatisticalRiskEvaluator;
@@ -824,184 +818,11 @@ public class ComplexRuleEvaluator {
           MerchantAdvancedEvaluator.evaluateMerchantHighValueFrequency(condition, context);
 
         // ========== CATEGORIA S: FATF AML Typologies (28) ==========
-      case FATF_PLACEMENT_CASH_INTENSIVE ->
-          FatfPlannedEvaluator.evaluateFatfPlacementCashIntensive(condition, context);
-      case FATF_PLACEMENT_STRUCTURING ->
-          FatfPlannedEvaluator.evaluateFatfPlacementStructuring(condition, context);
-      case FATF_PLACEMENT_SMURFING ->
-          FatfPlannedEvaluator.evaluateFatfPlacementSmurfing(condition, context);
-      case FATF_PLACEMENT_CURRENCY_EXCHANGE ->
-          FatfPlannedEvaluator.evaluateFatfPlacementCurrencyExchange(condition, context);
-      case FATF_PLACEMENT_CASINO_GAMBLING ->
-          FatfPlannedEvaluator.evaluateFatfPlacementCasinoGambling(condition, context);
-      case FATF_LAYERING_RAPID_MOVEMENT ->
-          FatfPlannedEvaluator.evaluateFatfLayeringRapidMovement(condition, context);
-      case FATF_LAYERING_SHELL_COMPANY ->
-          FatfPlannedEvaluator.evaluateFatfLayeringShellCompany(condition, context);
-      case FATF_LAYERING_OFFSHORE ->
-          FatfPlannedEvaluator.evaluateFatfLayeringOffshore(condition, context);
-      case FATF_LAYERING_WIRE_CHAINS ->
-          FatfPlannedEvaluator.evaluateFatfLayeringWireChains(condition, context);
-      case FATF_LAYERING_CONVERTIBLE_INSTRUMENTS ->
-          FatfPlannedEvaluator.evaluateFatfLayeringConvertibleInstruments(condition, context);
-      case FATF_INTEGRATION_REAL_ESTATE ->
-          FatfPlannedEvaluator.evaluateFatfIntegrationRealEstate(condition, context);
-      case FATF_INTEGRATION_LUXURY_GOODS ->
-          FatfPlannedEvaluator.evaluateFatfIntegrationLuxuryGoods(condition, context);
-      case FATF_INTEGRATION_BUSINESS_INVESTMENT ->
-          FatfPlannedEvaluator.evaluateFatfIntegrationBusinessInvestment(condition, context);
-      case FATF_INTEGRATION_LOAN_REPAYMENT ->
-          FatfPlannedEvaluator.evaluateFatfIntegrationLoanRepayment(condition, context);
-      case FATF_TBML_OVER_INVOICING ->
-          FatfPlannedEvaluator.evaluateFatfTbmlOverInvoicing(condition, context);
-      case FATF_TBML_UNDER_INVOICING ->
-          FatfPlannedEvaluator.evaluateFatfTbmlUnderInvoicing(condition, context);
-      case FATF_TBML_PHANTOM_SHIPPING ->
-          FatfPlannedEvaluator.evaluateFatfTbmlPhantomShipping(condition, context);
-      case FATF_TBML_MULTIPLE_INVOICING ->
-          FatfPlannedEvaluator.evaluateFatfTbmlMultipleInvoicing(condition, context);
-      case FATF_TBML_FALSE_DESCRIPTION ->
-          FatfPlannedEvaluator.evaluateFatfTbmlFalseDescription(condition, context);
-      case FATF_HAWALA_INFORMAL ->
-          FatfPlannedEvaluator.evaluateFatfHawalaInformal(condition, context);
-      case FATF_NEW_PAYMENT_EXPLOITATION ->
-          FatfPlannedEvaluator.evaluateFatfNewPaymentExploitation(condition, context);
-      case FATF_CRYPTO_MIXING -> FatfPlannedEvaluator.evaluateFatfCryptoMixing(condition, context);
-      case FATF_CRYPTO_ATM_CASHOUT ->
-          FatfPlannedEvaluator.evaluateFatfCryptoAtmCashout(condition, context);
-      case FATF_PEP_TRANSACTION ->
-          FatfPlannedEvaluator.evaluateFatfPepTransaction(condition, context);
-      case FATF_CORRESPONDENT_LAYERING ->
-          FatfPlannedEvaluator.evaluateFatfCorrespondentLayering(condition, context);
-      case FATF_ROUND_TRIPPING ->
-          FatfPlannedEvaluator.evaluateFatfRoundTripping(condition, context);
-      case FATF_BLACK_MARKET_EXCHANGE ->
-          FatfPlannedEvaluator.evaluateFatfBlackMarketExchange(condition, context);
-      case FATF_INSURANCE_CASH_VALUE ->
-          FatfPlannedEvaluator.evaluateFatfInsuranceCashValue(condition, context);
-
         // ========== CATEGORIA T: PSD2 SCA Exemptions (12) ==========
-      case SCA_LOW_VALUE_EXEMPTION ->
-          ScaPlannedEvaluator.evaluateScaLowValueExemption(condition, context);
-      case SCA_CONTACTLESS_EXEMPTION ->
-          ScaPlannedEvaluator.evaluateScaContactlessExemption(condition, context);
-      case SCA_TRA_EXEMPTION -> ScaPlannedEvaluator.evaluateScaTraExemption(condition, context);
-      case SCA_TRUSTED_BENEFICIARY ->
-          ScaPlannedEvaluator.evaluateScaTrustedBeneficiary(condition, context);
-      case SCA_RECURRING_TRANSACTION ->
-          ScaPlannedEvaluator.evaluateScaRecurringTransaction(condition, context);
-      case SCA_MERCHANT_INITIATED ->
-          ScaPlannedEvaluator.evaluateScaMerchantInitiated(condition, context);
-      case SCA_CORPORATE_PAYMENT ->
-          ScaPlannedEvaluator.evaluateScaCorporatePayment(condition, context);
-      case SCA_SECURE_CORPORATE_PROTOCOL ->
-          ScaPlannedEvaluator.evaluateScaSecureCorporateProtocol(condition, context);
-      case SCA_LIABILITY_SHIFT -> ScaPlannedEvaluator.evaluateScaLiabilityShift(condition, context);
-      case SCA_DYNAMIC_3DS_ROUTING ->
-          ScaPlannedEvaluator.evaluateScaDynamic3dsRouting(condition, context);
-      case SCA_FRAUD_RATE_MONITORING ->
-          ScaPlannedEvaluator.evaluateScaFraudRateMonitoring(condition, context);
-      case SCA_CHALLENGE_MANDATORY ->
-          ScaPlannedEvaluator.evaluateScaChallengeMandatory(condition, context);
-
         // ========== CATEGORIA U: Platform Best Practices (28) ==========
-      case PLT_BEHAVIOR_SORTED_LISTS ->
-          PlatformPlannedEvaluator.evaluatePltBehaviorSortedLists(condition, context);
-      case PLT_BUSINESS_RULES_SCENARIO ->
-          PlatformPlannedEvaluator.evaluatePltBusinessRulesScenario(condition, context);
-      case PLT_IDENTITY_RESOLUTION ->
-          PlatformPlannedEvaluator.evaluatePltIdentityResolution(condition, context);
-      case PLT_COMPROMISE_MANAGER ->
-          PlatformPlannedEvaluator.evaluatePltCompromiseManager(condition, context);
-      case PLT_INTELLIGENCE_NETWORK ->
-          PlatformPlannedEvaluator.evaluatePltIntelligenceNetwork(condition, context);
-      case PLT_RULES_MODELS_HYBRID ->
-          PlatformPlannedEvaluator.evaluatePltRulesModelsHybrid(condition, context);
-      case PLT_BEHAVIORAL_PROFILING ->
-          PlatformPlannedEvaluator.evaluatePltBehavioralProfiling(condition, context);
-      case PLT_NETWORK_ANALYTICS ->
-          PlatformPlannedEvaluator.evaluatePltNetworkAnalytics(condition, context);
-      case PLT_SAR_AUTOMATED ->
-          PlatformPlannedEvaluator.evaluatePltSarAutomated(condition, context);
-      case PLT_DS2_RULE_ENGINE ->
-          PlatformPlannedEvaluator.evaluatePltDs2RuleEngine(condition, context);
-      case PLT_REAL_TIME_DETECTION ->
-          PlatformPlannedEvaluator.evaluatePltRealTimeDetection(condition, context);
-      case PLT_NETWORK_ENTITY_RESOLUTION ->
-          PlatformPlannedEvaluator.evaluatePltNetworkEntityResolution(condition, context);
-      case PLT_SCENARIO_SCORECARD ->
-          PlatformPlannedEvaluator.evaluatePltScenarioScorecard(condition, context);
-      case PLT_RADAR_RULE_BACKTESTING ->
-          PlatformPlannedEvaluator.evaluatePltRadarRuleBacktesting(condition, context);
-      case PLT_RADAR_METADATA_MATCHING ->
-          PlatformPlannedEvaluator.evaluatePltRadarMetadataMatching(condition, context);
-      case PLT_RADAR_INLINE_LISTS ->
-          PlatformPlannedEvaluator.evaluatePltRadarInlineLists(condition, context);
-      case PLT_RADAR_COMPLEX_CONDITIONS ->
-          PlatformPlannedEvaluator.evaluatePltRadarComplexConditions(condition, context);
-      case PLT_RISK_PROFILE_ASSIGNMENT ->
-          PlatformPlannedEvaluator.evaluatePltRiskProfileAssignment(condition, context);
-      case PLT_CUSTOM_RULE_BUILDER ->
-          PlatformPlannedEvaluator.evaluatePltCustomRuleBuilder(condition, context);
-      case PLT_RISK_LIST_COMPARISON ->
-          PlatformPlannedEvaluator.evaluatePltRiskListComparison(condition, context);
-      case PLT_BACKTESTING_LABELING ->
-          PlatformPlannedEvaluator.evaluatePltBacktestingLabeling(condition, context);
-      case PLT_ML_FRAUD_RISK_OUTCOME ->
-          PlatformPlannedEvaluator.evaluatePltMlFraudRiskOutcome(condition, context);
-      case PLT_RISK_SCORE_CALCULATION ->
-          PlatformPlannedEvaluator.evaluatePltRiskScoreCalculation(condition, context);
-      case PLT_VELOCITY_FILTERS ->
-          PlatformPlannedEvaluator.evaluatePltVelocityFilters(condition, context);
-      case PLT_LINKING_VELOCITY ->
-          PlatformPlannedEvaluator.evaluatePltLinkingVelocity(condition, context);
-      case PLT_BAD_ENTITY_NETWORK ->
-          PlatformPlannedEvaluator.evaluatePltBadEntityNetwork(condition, context);
-      case PLT_REVIEWLIST_QUEUE ->
-          PlatformPlannedEvaluator.evaluatePltReviewlistQueue(condition, context);
-      case PLT_CONSORTIUM_DATA_CHECK ->
-          PlatformPlannedEvaluator.evaluatePltConsortiumDataCheck(condition, context);
-
         // ========== Basel III Operational Risk (BSL001-BSL014) ==========
-      case BSL_BUSINESS_INDICATOR ->
-          BslPlannedEvaluator.evaluateBslBusinessIndicator(condition, context);
-      case BSL_BUSINESS_INDICATOR_COMPONENT ->
-          BslPlannedEvaluator.evaluateBslBusinessIndicatorComponent(condition, context);
-      case BSL_INTERNAL_LOSS_MULTIPLIER ->
-          BslPlannedEvaluator.evaluateBslInternalLossMultiplier(condition, context);
-      case BSL_LOSS_DATA_COLLECTION ->
-          BslPlannedEvaluator.evaluateBslLossDataCollection(condition, context);
-      case BSL_LOSS_EXCLUSION_APPROVAL ->
-          BslPlannedEvaluator.evaluateBslLossExclusionApproval(condition, context);
-      case BSL_BUCKET_CLASSIFICATION ->
-          BslPlannedEvaluator.evaluateBslBucketClassification(condition, context);
-      case BSL_MARGINAL_COEFFICIENT ->
-          BslPlannedEvaluator.evaluateBslMarginalCoefficient(condition, context);
-      case BSL_LOSS_THRESHOLD_SETTING ->
-          BslPlannedEvaluator.evaluateBslLossThresholdSetting(condition, context);
-      case BSL_RETENTION_PERIOD ->
-          BslPlannedEvaluator.evaluateBslRetentionPeriod(condition, context);
-      case BSL_RISK_GOVERNANCE -> BslPlannedEvaluator.evaluateBslRiskGovernance(condition, context);
-      case BSL_LOSS_EVENT_REPORTING ->
-          BslPlannedEvaluator.evaluateBslLossEventReporting(condition, context);
-      case BSL_CONTROL_DEFICIENCY ->
-          BslPlannedEvaluator.evaluateBslControlDeficiency(condition, context);
-      case BSL_KRI_MONITORING -> BslPlannedEvaluator.evaluateBslKriMonitoring(condition, context);
-      case BSL_SCENARIO_ANALYSIS ->
-          BslPlannedEvaluator.evaluateBslScenarioAnalysis(condition, context);
-
         // ========== Rule Mining Determinístico (APRIORI, FPGROWTH, ECLAT) ==========
-      case APRIORI_ASSOCIATION ->
-          AssociationPlannedEvaluator.evaluateAprioriAssociation(condition, context);
-      case FPGROWTH_FREQUENT_PATTERNS ->
-          AssociationPlannedEvaluator.evaluateFpgrowthFrequentPatterns(condition, context);
-      case ECLAT_ITEMSET -> AssociationPlannedEvaluator.evaluateEclatItemset(condition, context);
-
         // ========== Fuzzy Logic (FUZZY001, FUZZY002) ==========
-      case FUZZY_MEMBERSHIP -> FuzzyPlannedEvaluator.evaluateFuzzyMembership(condition, context);
-      case FUZZY_ADAPTIVE_THRESHOLD ->
-          FuzzyPlannedEvaluator.evaluateFuzzyAdaptiveThreshold(condition, context);
-
         // ========== LLM & Generative AI Fraud Detection (LLM001-LLM012) ==========
 
         // ========== Neo4j Graph Fraud Detection (NEO001-NEO018) ==========
