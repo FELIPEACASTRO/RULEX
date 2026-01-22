@@ -15,6 +15,7 @@ import com.rulex.entity.TransactionRawStore;
 import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
+import com.rulex.service.engine.ConditionMatcher;
 import com.rulex.service.enrichment.TransactionEnrichmentFacade;
 import com.rulex.util.PanHashUtil;
 import com.rulex.util.PanMaskingUtil;
@@ -67,6 +68,9 @@ public class RuleEngineService {
   private final ImpossibleTravelService impossibleTravelService;
   private final GeoService geoService;
   private final RedisVelocityService redisVelocityService;
+
+  // ARCH-003: Extracted helper classes
+  private final ConditionMatcher conditionMatcher;
 
   /**
    * When enabled, rules are evaluated in an optimized (cheap-first / hit-rate) order.
@@ -1583,7 +1587,7 @@ public class RuleEngineService {
 
       for (RuleConditionDTO c : conditions) {
         if (c == null) continue;
-        String operator = normalizeOperator(c.getOperator());
+        String operator = conditionMatcher.normalizeOperator(c.getOperator());
         if ("IS_NULL".equals(operator)) {
           hasIsNull = true;
           continue;
@@ -1684,7 +1688,7 @@ public class RuleEngineService {
 
   private boolean evaluateCondition(TransactionRequest request, RuleConditionDTO condition) {
     String operatorRaw = condition.getOperator() == null ? "" : condition.getOperator().trim();
-    String operator = normalizeOperator(operatorRaw);
+    String operator = conditionMatcher.normalizeOperator(operatorRaw);
     String rawValue = condition.getValue() == null ? "" : condition.getValue();
 
     Object leftValue = readComputedLeftValue(request, condition.getField());
@@ -1696,9 +1700,9 @@ public class RuleEngineService {
       case "IS_NOT_NULL":
         return leftValue != null;
       case "IS_TRUE":
-        return truthy(leftValue);
+        return conditionMatcher.truthy(leftValue);
       case "IS_FALSE":
-        return leftValue != null && !truthy(leftValue);
+        return leftValue != null && !conditionMatcher.truthy(leftValue);
       default:
         // seguir
     }
@@ -2246,31 +2250,11 @@ public class RuleEngineService {
   }
 
   private boolean compareLong(long actual, String operator, long threshold) {
-    String op = normalizeOperator(operator == null ? "" : operator);
-    return switch (op) {
-      case "EQ" -> actual == threshold;
-      case "NE" -> actual != threshold;
-      case "GT" -> actual > threshold;
-      case "LT" -> actual < threshold;
-      case "GTE" -> actual >= threshold;
-      case "LTE" -> actual <= threshold;
-      default -> false;
-    };
+    return conditionMatcher.compareLong(actual, operator, threshold);
   }
 
   private boolean compareBigDecimal(BigDecimal actual, String operator, BigDecimal threshold) {
-    if (actual == null || threshold == null) return false;
-    String op = normalizeOperator(operator == null ? "" : operator);
-    int cmp = actual.compareTo(threshold);
-    return switch (op) {
-      case "EQ" -> cmp == 0;
-      case "NE" -> cmp != 0;
-      case "GT" -> cmp > 0;
-      case "LT" -> cmp < 0;
-      case "GTE" -> cmp >= 0;
-      case "LTE" -> cmp <= 0;
-      default -> false;
-    };
+    return conditionMatcher.compareBigDecimal(actual, operator, threshold);
   }
 
   private static final class VelocitySpec {

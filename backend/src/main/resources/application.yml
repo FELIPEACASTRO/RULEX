@@ -215,3 +215,53 @@ springdoc:
     operations-sorter: alpha
   packages-to-scan: com.rulex.controller
   paths-to-match: /**
+
+# Resilience4j Configuration - Circuit Breaker, Retry, Time Limiter
+# REFACTOR-001: Adicionado para resiliência do Neo4j e outros serviços externos
+resilience4j:
+  circuitbreaker:
+    instances:
+      neo4j:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        recordExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.neo4j.driver.exceptions.ServiceUnavailableException
+        ignoreExceptions:
+          - java.lang.IllegalArgumentException
+      redis:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 20s
+        permittedNumberOfCallsInHalfOpenState: 3
+  retry:
+    instances:
+      neo4j:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+        ignoreExceptions:
+          - java.lang.IllegalArgumentException
+      redis:
+        maxAttempts: 2
+        waitDuration: 200ms
+  timelimiter:
+    instances:
+      neo4j:
+        timeoutDuration: 2s
+        cancelRunningFuture: true
+      redis:
+        timeoutDuration: 1s
+        cancelRunningFuture: true
