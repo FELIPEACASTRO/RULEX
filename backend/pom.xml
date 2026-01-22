@@ -26,6 +26,8 @@
         <lombok.version>1.18.36</lombok.version>
         <!-- Override: Flyway must support postgres:16-alpine (currently 16.11 in CI) -->
         <flyway.version>11.20.0</flyway.version>
+        <!-- Default argLine for surefire (overridden by JaCoCo when coverage profile is active) -->
+        <argLine></argLine>
     </properties>
 
     <dependencies>
