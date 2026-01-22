@@ -261,6 +261,66 @@ public final class VelocityAggregationEvaluator {
     }
   }
 
+  public static boolean evaluateCountDistinctPansLastNHours(
+      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+    try {
+      String[] parts = condition.getValueSingle().split(":");
+      if (parts.length < 2) {
+        log.warn(
+            "Formato inválido para COUNT_DISTINCT_PANS_LAST_N_HOURS. Esperado: threshold:hours");
+        return false;
+      }
+
+      int threshold = Integer.parseInt(parts[0].trim());
+      int hours = Integer.parseInt(parts[1].trim());
+
+      Object keyValue = FieldValueExtractor.getFieldValue(condition.getFieldName(), null, context);
+      if (keyValue == null) {
+        return false;
+      }
+
+      VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
+
+      if (context.getTransactionRequest() != null) {
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
+        return stats.getDistinctMerchants() > threshold;
+      }
+
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_DISTINCT_PANS_LAST_N_HOURS: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  public static boolean evaluateCountDistinctAccounts(
+      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+    try {
+      int threshold = Integer.parseInt(condition.getValueSingle().trim());
+
+      Object keyValue = FieldValueExtractor.getFieldValue(condition.getFieldName(), null, context);
+      if (keyValue == null) {
+        return false;
+      }
+
+      if (context.getTransactionRequest() != null) {
+        VelocityService.VelocityStats stats =
+            velocityServiceFacade.getStats(
+                context.getTransactionRequest(),
+                VelocityService.KeyType.PAN,
+                VelocityService.TimeWindow.DAY_30);
+        return stats.getDistinctCountries() > threshold;
+      }
+
+      return false;
+    } catch (Exception e) {
+      log.error("Erro ao avaliar COUNT_DISTINCT_ACCOUNTS: {}", e.getMessage());
+      return false;
+    }
+  }
+
   public static boolean evaluateSumLastNHours(
       RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
     try {

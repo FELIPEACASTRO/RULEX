@@ -7,7 +7,6 @@ import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleExecutionDetail;
 import com.rulex.exception.UnsupportedOperatorException;
 import com.rulex.service.FuzzyLogicService;
-import com.rulex.service.GeoService;
 import com.rulex.service.Neo4jGraphService;
 import com.rulex.service.OperatorDataService;
 import com.rulex.service.StatisticalAnalysisService;
@@ -18,11 +17,15 @@ import com.rulex.service.complex.evaluation.AmlTypologyEvaluator;
 import com.rulex.service.complex.evaluation.AssociationPlannedEvaluator;
 import com.rulex.service.complex.evaluation.BslPlannedEvaluator;
 import com.rulex.service.complex.evaluation.BehavioralPatternEvaluator;
+import com.rulex.service.complex.evaluation.BasicOperatorEvaluator;
+import com.rulex.service.complex.evaluation.CriticalOperatorEvaluator;
+import com.rulex.service.complex.evaluation.CustomerHistoryEvaluator;
 import com.rulex.service.complex.evaluation.DeviceFingerprintEvaluator;
 import com.rulex.service.complex.evaluation.DeviceRiskEvaluator;
 import com.rulex.service.complex.evaluation.FatfPlannedEvaluator;
 import com.rulex.service.complex.evaluation.FraudPatternPlannedEvaluator;
 import com.rulex.service.complex.evaluation.FuzzyPlannedEvaluator;
+import com.rulex.service.complex.evaluation.FirstOccurrenceEvaluator;
 import com.rulex.service.complex.evaluation.GraphNetworkEvaluator;
 import com.rulex.service.complex.evaluation.IdentityRiskEvaluator;
 import com.rulex.service.complex.evaluation.Iso20022Evaluator;
@@ -30,6 +33,7 @@ import com.rulex.service.complex.evaluation.LlmPlannedEvaluator;
 import com.rulex.service.complex.evaluation.MerchantAdvancedEvaluator;
 import com.rulex.service.complex.evaluation.NameSimilarityEvaluator;
 import com.rulex.service.complex.evaluation.Neo4jGraphEvaluator;
+import com.rulex.service.complex.evaluation.PatternEvaluator;
 import com.rulex.service.complex.evaluation.ScaPlannedEvaluator;
 import com.rulex.service.complex.evaluation.RegulatoryComplianceEvaluator;
 import com.rulex.service.complex.evaluation.SanctionsNameMatchingEvaluator;
@@ -38,23 +42,18 @@ import com.rulex.service.complex.evaluation.StatisticalRiskEvaluator;
 import com.rulex.service.complex.evaluation.StatisticalPlannedEvaluator;
 import com.rulex.service.complex.evaluation.SyntheticPlannedEvaluator;
 import com.rulex.service.complex.evaluation.SuspiciousKeywordEvaluator;
+import com.rulex.service.complex.evaluation.TimeDateEvaluator;
 import com.rulex.service.complex.evaluation.HistoricalEvaluator;
 import com.rulex.service.complex.evaluation.VelocityAggregationEvaluator;
 import com.rulex.service.complex.evaluation.VelocityAdvancedEvaluator;
+import com.rulex.service.complex.evaluation.V28V30Evaluator;
+import com.rulex.service.complex.evaluation.V31BehavioralEvaluator;
+import com.rulex.service.complex.evaluation.V49OperatorsEvaluator;
 import com.rulex.service.complex.evaluator.OperatorEvaluator;
 import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
 import com.rulex.service.complex.evaluation.PlatformPlannedEvaluator;
 import com.rulex.service.complex.evaluation.TemporalVelocityEvaluator;
-import com.rulex.util.RegexValidator;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.Normalizer;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.regex.Pattern;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -70,8 +69,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class ComplexRuleEvaluator {
 
-  private final GeoService geoService;
-  private final VelocityService velocityService;
   private final VelocityServiceFacade velocityServiceFacade;
   private final OperatorDataService operatorDataService;
   private final Neo4jGraphService neo4jGraphService;
@@ -343,19 +340,19 @@ public class ComplexRuleEvaluator {
 
         // Geolocalização - Implementado via GeoService
         // Coordenadas são derivadas de merchantCity/State/CountryCode
-      case GEO_DISTANCE_LT -> evaluateGeoDistanceLt(condition, context);
-      case GEO_DISTANCE_GT -> evaluateGeoDistanceGt(condition, context);
-      case GEO_IN_POLYGON -> evaluateGeoInPolygon(condition, context);
+      case GEO_DISTANCE_LT -> delegateToRegistry(operator, condition, context);
+      case GEO_DISTANCE_GT -> delegateToRegistry(operator, condition, context);
+      case GEO_IN_POLYGON -> delegateToRegistry(operator, condition, context);
 
         // Velocity (agregações temporais)
-      case VELOCITY_COUNT_GT -> evaluateVelocityCount(condition, context, true);
-      case VELOCITY_COUNT_LT -> evaluateVelocityCount(condition, context, false);
-      case VELOCITY_SUM_GT -> evaluateVelocitySum(condition, context, true);
-      case VELOCITY_SUM_LT -> evaluateVelocitySum(condition, context, false);
-      case VELOCITY_AVG_GT -> evaluateVelocityAvg(condition, context, true);
-      case VELOCITY_AVG_LT -> evaluateVelocityAvg(condition, context, false);
-      case VELOCITY_DISTINCT_GT -> evaluateVelocityDistinct(condition, context, true);
-      case VELOCITY_DISTINCT_LT -> evaluateVelocityDistinct(condition, context, false);
+      case VELOCITY_COUNT_GT -> delegateToRegistry(operator, condition, context);
+      case VELOCITY_COUNT_LT -> delegateToRegistry(operator, condition, context);
+      case VELOCITY_SUM_GT -> delegateToRegistry(operator, condition, context);
+      case VELOCITY_SUM_LT -> delegateToRegistry(operator, condition, context);
+      case VELOCITY_AVG_GT -> delegateToRegistry(operator, condition, context);
+      case VELOCITY_AVG_LT -> delegateToRegistry(operator, condition, context);
+      case VELOCITY_DISTINCT_GT -> delegateToRegistry(operator, condition, context);
+      case VELOCITY_DISTINCT_LT -> delegateToRegistry(operator, condition, context);
 
         // Agregações temporais avançadas (DSL expandida)
       case SUM_LAST_N_DAYS -> evaluateSumLastNDays(condition, context);
@@ -1259,265 +1256,89 @@ public class ComplexRuleEvaluator {
   // ========== Métodos auxiliares de avaliação ==========
 
   private boolean evaluateEquals(Object fieldValue, String expected, Boolean caseSensitive) {
-    if (fieldValue == null && expected == null) return true;
-    if (fieldValue == null || expected == null) return false;
-
-    String fieldStr = String.valueOf(fieldValue);
-    if (Boolean.FALSE.equals(caseSensitive)) {
-      return fieldStr.equalsIgnoreCase(expected);
-    }
-    return fieldStr.equals(expected);
+    return BasicOperatorEvaluator.evaluateEquals(fieldValue, expected, caseSensitive);
   }
 
   private int compareValues(Object fieldValue, String expected) {
-    if (fieldValue == null || expected == null) return 0;
-
-    try {
-      BigDecimal fieldNum = new BigDecimal(String.valueOf(fieldValue));
-      BigDecimal expectedNum = new BigDecimal(expected);
-      return fieldNum.compareTo(expectedNum);
-    } catch (NumberFormatException e) {
-      return String.valueOf(fieldValue).compareTo(expected);
-    }
+    return BasicOperatorEvaluator.compareValues(fieldValue, expected);
   }
 
   private boolean evaluateIn(Object fieldValue, List<String> values, Boolean caseSensitive) {
-    if (fieldValue == null || values == null) return false;
-
-    String fieldStr = String.valueOf(fieldValue);
-    for (String value : values) {
-      if (Boolean.FALSE.equals(caseSensitive)) {
-        if (fieldStr.equalsIgnoreCase(value)) return true;
-      } else {
-        if (fieldStr.equals(value)) return true;
-      }
-    }
-    return false;
+    return BasicOperatorEvaluator.evaluateIn(fieldValue, values, caseSensitive);
   }
 
   /** Avalia IN_LIST com suporte a valueArray ou valueSingle com delimitador pipe. */
   private boolean evaluateInList(Object fieldValue, RuleCondition condition) {
-    if (fieldValue == null) return false;
-
-    List<String> values;
-    if (condition.getValueArray() != null && !condition.getValueArray().isEmpty()) {
-      values = condition.getValueArray();
-    } else if (condition.getValueSingle() != null && !condition.getValueSingle().isEmpty()) {
-      // Suporte a valueSingle com delimitador pipe
-      values = java.util.Arrays.asList(condition.getValueSingle().split("\\|"));
-    } else {
-      return false;
-    }
-
-    String fieldStr = String.valueOf(fieldValue);
-    Boolean caseSensitive = condition.getCaseSensitive();
-
-    for (String value : values) {
-      String trimmedValue = value.trim();
-      if (Boolean.FALSE.equals(caseSensitive)) {
-        if (fieldStr.equalsIgnoreCase(trimmedValue)) return true;
-      } else {
-        // Default: case-insensitive for IN_LIST
-        if (fieldStr.equalsIgnoreCase(trimmedValue)) return true;
-      }
-    }
-    return false;
+    return BasicOperatorEvaluator.evaluateInList(fieldValue, condition);
   }
 
   private boolean evaluateContains(Object fieldValue, String substring, Boolean caseSensitive) {
-    if (fieldValue == null || substring == null) return false;
-
-    String fieldStr = String.valueOf(fieldValue);
-    if (Boolean.FALSE.equals(caseSensitive)) {
-      return fieldStr.toLowerCase().contains(substring.toLowerCase());
-    }
-    return fieldStr.contains(substring);
+    return BasicOperatorEvaluator.evaluateContains(fieldValue, substring, caseSensitive);
   }
 
   private boolean evaluateStartsWith(Object fieldValue, String prefix, Boolean caseSensitive) {
-    if (fieldValue == null || prefix == null) return false;
-
-    String fieldStr = String.valueOf(fieldValue);
-    if (Boolean.FALSE.equals(caseSensitive)) {
-      return fieldStr.toLowerCase().startsWith(prefix.toLowerCase());
-    }
-    return fieldStr.startsWith(prefix);
+    return BasicOperatorEvaluator.evaluateStartsWith(fieldValue, prefix, caseSensitive);
   }
 
   private boolean evaluateEndsWith(Object fieldValue, String suffix, Boolean caseSensitive) {
-    if (fieldValue == null || suffix == null) return false;
-
-    String fieldStr = String.valueOf(fieldValue);
-    if (Boolean.FALSE.equals(caseSensitive)) {
-      return fieldStr.toLowerCase().endsWith(suffix.toLowerCase());
-    }
-    return fieldStr.endsWith(suffix);
+    return BasicOperatorEvaluator.evaluateEndsWith(fieldValue, suffix, caseSensitive);
   }
 
   private boolean evaluateRegex(Object fieldValue, String pattern) {
-    if (fieldValue == null || pattern == null) return false;
-
-    // Validar pattern contra ReDoS antes de executar
-    RegexValidator.ValidationResult validation = RegexValidator.validate(pattern);
-    if (!validation.valid()) {
-      log.warn("Regex rejeitada por segurança: {} - {}", pattern, validation.errorMessage());
-      return false;
-    }
-
-    try {
-      // GAP-C FIX: Usar safeMatches que valida pattern + aplica timeout
-      return RegexValidator.safeMatches(pattern, String.valueOf(fieldValue));
-    } catch (Exception e) {
-      log.warn("Erro ao avaliar regex '{}': {}", pattern, e.getMessage());
-      return false;
-    }
+    return BasicOperatorEvaluator.evaluateRegex(fieldValue, pattern);
   }
 
   private boolean evaluateBetween(Object fieldValue, String min, String max) {
-    if (fieldValue == null || min == null || max == null) return false;
-
-    try {
-      BigDecimal value = new BigDecimal(String.valueOf(fieldValue));
-      BigDecimal minVal = new BigDecimal(min);
-      BigDecimal maxVal = new BigDecimal(max);
-      return value.compareTo(minVal) >= 0 && value.compareTo(maxVal) <= 0;
-    } catch (NumberFormatException e) {
-      return false;
-    }
+    return BasicOperatorEvaluator.evaluateBetween(fieldValue, min, max);
   }
 
   private boolean evaluateFieldComparison(
       Object fieldValue, String otherFieldName, EvaluationContext context, int comparison) {
-    Object otherValue = getFieldValue(otherFieldName, null, context);
-    int result = compareValues(fieldValue, String.valueOf(otherValue));
-
-    return switch (comparison) {
-      case 0 -> result == 0; // EQ
-      case 1 -> result > 0; // GT
-      case 2 -> result >= 0; // GTE
-      case -1 -> result < 0; // LT
-      case -2 -> result <= 0; // LTE
-      default -> false;
-    };
+    return BasicOperatorEvaluator.evaluateFieldComparison(
+        fieldValue, otherFieldName, context, comparison);
   }
 
   private boolean evaluateDateBefore(Object fieldValue, String dateStr) {
-    try {
-      LocalDate fieldDate = parseDate(fieldValue);
-      LocalDate compareDate = LocalDate.parse(dateStr);
-      return fieldDate != null && fieldDate.isBefore(compareDate);
-    } catch (Exception e) {
-      return false;
-    }
+    return BasicOperatorEvaluator.evaluateDateBefore(fieldValue, dateStr);
   }
 
   private boolean evaluateDateAfter(Object fieldValue, String dateStr) {
-    try {
-      LocalDate fieldDate = parseDate(fieldValue);
-      LocalDate compareDate = LocalDate.parse(dateStr);
-      return fieldDate != null && fieldDate.isAfter(compareDate);
-    } catch (Exception e) {
-      return false;
-    }
+    return BasicOperatorEvaluator.evaluateDateAfter(fieldValue, dateStr);
   }
 
   private boolean evaluateDateBetween(Object fieldValue, String minDate, String maxDate) {
-    try {
-      LocalDate fieldDate = parseDate(fieldValue);
-      LocalDate min = LocalDate.parse(minDate);
-      LocalDate max = LocalDate.parse(maxDate);
-      return fieldDate != null && !fieldDate.isBefore(min) && !fieldDate.isAfter(max);
-    } catch (Exception e) {
-      return false;
-    }
+    return BasicOperatorEvaluator.evaluateDateBetween(fieldValue, minDate, maxDate);
   }
 
   private boolean evaluateTimeBefore(Object fieldValue, String timeStr) {
-    try {
-      LocalTime fieldTime = parseTime(fieldValue);
-      LocalTime compareTime = LocalTime.parse(timeStr);
-      return fieldTime != null && fieldTime.isBefore(compareTime);
-    } catch (Exception e) {
-      return false;
-    }
+    return BasicOperatorEvaluator.evaluateTimeBefore(fieldValue, timeStr);
   }
 
   private boolean evaluateTimeAfter(Object fieldValue, String timeStr) {
-    try {
-      LocalTime fieldTime = parseTime(fieldValue);
-      LocalTime compareTime = LocalTime.parse(timeStr);
-      return fieldTime != null && fieldTime.isAfter(compareTime);
-    } catch (Exception e) {
-      return false;
-    }
+    return BasicOperatorEvaluator.evaluateTimeAfter(fieldValue, timeStr);
   }
 
   private boolean evaluateTimeBetween(Object fieldValue, String minTime, String maxTime) {
-    try {
-      LocalTime fieldTime = parseTime(fieldValue);
-      LocalTime min = LocalTime.parse(minTime);
-      LocalTime max = LocalTime.parse(maxTime);
-      return fieldTime != null && !fieldTime.isBefore(min) && !fieldTime.isAfter(max);
-    } catch (Exception e) {
-      return false;
-    }
+    return BasicOperatorEvaluator.evaluateTimeBetween(fieldValue, minTime, maxTime);
   }
 
   @SuppressWarnings("unchecked")
   private boolean evaluateArrayContains(Object fieldValue, String element) {
-    if (fieldValue == null) return false;
-
-    if (fieldValue instanceof List) {
-      return ((List<Object>) fieldValue)
-          .stream().anyMatch(item -> String.valueOf(item).equals(element));
-    }
-    return false;
+    return BasicOperatorEvaluator.evaluateArrayContains(fieldValue, element);
   }
 
   @SuppressWarnings("unchecked")
   private boolean evaluateArraySize(Object fieldValue, String expectedSize, int comparison) {
-    if (fieldValue == null || expectedSize == null) return false;
-
-    int size = 0;
-    if (fieldValue instanceof List) {
-      size = ((List<Object>) fieldValue).size();
-    } else if (fieldValue.getClass().isArray()) {
-      size = java.lang.reflect.Array.getLength(fieldValue);
-    } else {
-      return false;
-    }
-
-    int expected = Integer.parseInt(expectedSize);
-    return switch (comparison) {
-      case 0 -> size == expected;
-      case 1 -> size > expected;
-      case -1 -> size < expected;
-      default -> false;
-    };
+    return BasicOperatorEvaluator.evaluateArraySize(fieldValue, expectedSize, comparison);
   }
 
   private boolean evaluateModulo(
       Object fieldValue, String divisor, String remainder, boolean equals) {
-    try {
-      long value = Long.parseLong(String.valueOf(fieldValue));
-      long div = Long.parseLong(divisor);
-      long rem = Long.parseLong(remainder);
-      boolean result = (value % div) == rem;
-      return equals ? result : !result;
-    } catch (Exception e) {
-      return false;
-    }
+    return BasicOperatorEvaluator.evaluateModulo(fieldValue, divisor, remainder, equals);
   }
 
   // ========== Métodos utilitários ==========
 
-  private LocalDate parseDate(Object value) {
-    return DateTimeParser.parseDate(value);
-  }
-
-  private LocalTime parseTime(Object value) {
-    return DateTimeParser.parseTime(value);
-  }
 
   // ========== Agregações Temporais Avançadas (DSL Expandida) ==========
 
@@ -1595,51 +1416,8 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateGtePercentOfLastIncoming(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      int percentage = Integer.parseInt(condition.getValueSingle().trim());
-      Object fieldValue = getFieldValue(condition.getFieldName(), null, context);
-
-      if (fieldValue == null) {
-        return false;
-      }
-
-      BigDecimal currentAmount = new BigDecimal(String.valueOf(fieldValue));
-
-      // Obter ID do cliente
-      Object customerIdObj = getFieldValue("customerIdFromHeader", null, context);
-      if (customerIdObj == null) {
-        customerIdObj = getFieldValue("customerId", null, context);
-      }
-
-      BigDecimal lastIncoming = BigDecimal.valueOf(1000); // Default fallback
-
-      if (customerIdObj != null) {
-        String customerId = customerIdObj.toString();
-        Optional<BigDecimal> lastIncomingOpt =
-            operatorDataService.getLastIncomingAmount(customerId);
-        if (lastIncomingOpt.isPresent()) {
-          lastIncoming = lastIncomingOpt.get();
-        }
-      }
-
-      if (lastIncoming.compareTo(BigDecimal.ZERO) == 0) {
-        return false; // Evitar divisão por zero
-      }
-
-      BigDecimal threshold =
-          lastIncoming
-              .multiply(BigDecimal.valueOf(percentage))
-              .divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP);
-      boolean result = currentAmount.compareTo(threshold) >= 0;
-
-      log.debug(
-          "GTE_PERCENT_OF_LAST_INCOMING: current={}, lastIncoming={}, percentage={}%, threshold={}, result={}",
-          currentAmount, lastIncoming, percentage, threshold, result);
-      return result;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar GTE_PERCENT_OF_LAST_INCOMING: {}", e.getMessage());
-      return false;
-    }
+    return CriticalOperatorEvaluator.evaluateGtePercentOfLastIncoming(
+        condition, context, operatorDataService);
   }
 
   /**
@@ -1647,25 +1425,7 @@ public class ComplexRuleEvaluator {
    * "domain1,domain2,domain3" (ex: "guerrillamail.com,10minutemail.com")
    */
   private boolean evaluateDomainInList(Object fieldValue, RuleCondition condition) {
-    if (fieldValue == null || condition.getValueSingle() == null) {
-      return false;
-    }
-
-    String email = String.valueOf(fieldValue).toLowerCase().trim();
-    int atIndex = email.indexOf('@');
-    if (atIndex < 0 || atIndex >= email.length() - 1) {
-      return false;
-    }
-
-    String domain = email.substring(atIndex + 1);
-    String[] blockedDomains = condition.getValueSingle().toLowerCase().split(",");
-
-    for (String blocked : blockedDomains) {
-      if (domain.equals(blocked.trim())) {
-        return true;
-      }
-    }
-    return false;
+    return CriticalOperatorEvaluator.evaluateDomainInList(fieldValue, condition);
   }
 
   /**
@@ -1673,34 +1433,8 @@ public class ComplexRuleEvaluator {
    * Formato: "rate:days" (ex: "2:7" = taxa > 2% nos últimos 7 dias)
    */
   private boolean evaluateChargebackRateGt(RuleCondition condition, EvaluationContext context) {
-    try {
-      String[] parts = condition.getValueSingle().split(":");
-      if (parts.length < 2) {
-        log.warn("Formato inválido para CHARGEBACK_RATE_GT. Esperado: rate:days");
-        return false;
-      }
-
-      double rateThreshold = Double.parseDouble(parts[0].trim());
-      int days = Integer.parseInt(parts[1].trim());
-
-      Object merchantIdObj = getFieldValue(condition.getFieldName(), null, context);
-      if (merchantIdObj == null) {
-        return false;
-      }
-      String merchantId = merchantIdObj.toString();
-
-      // Consulta real à taxa de chargeback do merchant
-      BigDecimal threshold = BigDecimal.valueOf(rateThreshold / 100.0); // Converter % para decimal
-      boolean result = operatorDataService.hasHighChargebackRate(merchantId, threshold);
-
-      log.debug(
-          "CHARGEBACK_RATE_GT: merchantId={}, threshold={}%, days={}, result={}",
-          merchantId, rateThreshold, days, result);
-      return result;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar CHARGEBACK_RATE_GT: {}", e.getMessage());
-      return false;
-    }
+    return CriticalOperatorEvaluator.evaluateChargebackRateGt(
+        condition, context, operatorDataService);
   }
 
   /**
@@ -1708,64 +1442,8 @@ public class ComplexRuleEvaluator {
    * (ex: "10")
    */
   private boolean evaluateAccountAgeLtMinutes(RuleCondition condition, EvaluationContext context) {
-    try {
-      int thresholdMinutes = Integer.parseInt(condition.getValueSingle().trim());
-
-      // Obter ID do cliente
-      Object customerIdObj = getFieldValue("customerIdFromHeader", null, context);
-      if (customerIdObj == null) {
-        customerIdObj = getFieldValue("customerId", null, context);
-      }
-
-      if (customerIdObj != null) {
-        String customerId = customerIdObj.toString();
-        long accountAgeMinutes = operatorDataService.getAccountAgeInMinutes(customerId);
-
-        if (accountAgeMinutes >= 0) {
-          boolean result = accountAgeMinutes < thresholdMinutes;
-          log.debug(
-              "ACCOUNT_AGE_LT_MINUTES: customerId={}, age={}min, threshold={}min, result={}",
-              customerId,
-              accountAgeMinutes,
-              thresholdMinutes,
-              result);
-          return result;
-        }
-      }
-
-      // Fallback: verificar campo de data de criação no payload
-      Object createdAt = getFieldValue("accountCreatedAt", null, context);
-      if (createdAt == null) {
-        createdAt = getFieldValue("customerCreatedAt", null, context);
-      }
-
-      if (createdAt != null) {
-        java.time.OffsetDateTime createdDateTime;
-        if (createdAt instanceof java.time.OffsetDateTime) {
-          createdDateTime = (java.time.OffsetDateTime) createdAt;
-        } else if (createdAt instanceof String) {
-          createdDateTime = java.time.OffsetDateTime.parse((String) createdAt);
-        } else {
-          return false;
-        }
-
-        long ageMinutes =
-            java.time.Duration.between(createdDateTime, java.time.OffsetDateTime.now()).toMinutes();
-        boolean result = ageMinutes < thresholdMinutes;
-        log.debug(
-            "ACCOUNT_AGE_LT_MINUTES: age={}min, threshold={}min, result={}",
-            ageMinutes,
-            thresholdMinutes,
-            result);
-        return result;
-      }
-
-      // Se não há informação de idade da conta, assumir conta antiga (segura)
-      return false;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar ACCOUNT_AGE_LT_MINUTES: {}", e.getMessage());
-      return false;
-    }
+    return CriticalOperatorEvaluator.evaluateAccountAgeLtMinutes(
+        condition, context, operatorDataService);
   }
 
   /**
@@ -1773,34 +1451,7 @@ public class ComplexRuleEvaluator {
    * como VoIP.
    */
   private boolean evaluateIsVoip(Object fieldValue) {
-    if (fieldValue == null) {
-      return false;
-    }
-
-    String phone = String.valueOf(fieldValue).replaceAll("[^0-9]", "");
-
-    // Verificar na tabela de ranges VoIP
-    String countryCode = "55"; // Brasil por padrão
-    if (phone.startsWith("55")) {
-      phone = phone.substring(2);
-    }
-
-    // Consultar banco de dados de VoIP
-    if (operatorDataService.isVoipNumber(phone, countryCode)) {
-      return true;
-    }
-
-    // Fallback: Lista de prefixos conhecidos de VoIP no Brasil
-    String[] voipPrefixes = {
-      "0800", "0300", "0303", "0500", "0900", "4000", "4003", "4004", "4020", "4062"
-    };
-    for (String prefix : voipPrefixes) {
-      if (phone.startsWith(prefix)) {
-        return true;
-      }
-    }
-
-    return false;
+    return CriticalOperatorEvaluator.evaluateIsVoip(fieldValue, operatorDataService);
   }
 
   /**
@@ -1809,38 +1460,8 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateCountDistinctPansLastNHours(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      String[] parts = condition.getValueSingle().split(":");
-      if (parts.length < 2) {
-        log.warn(
-            "Formato inválido para COUNT_DISTINCT_PANS_LAST_N_HOURS. Esperado: threshold:hours");
-        return false;
-      }
-
-      int threshold = Integer.parseInt(parts[0].trim());
-      int hours = Integer.parseInt(parts[1].trim());
-
-      Object keyValue = getFieldValue(condition.getFieldName(), null, context);
-      if (keyValue == null) {
-        return false;
-      }
-
-      // Usar VelocityService para obter contagem de PANs distintos
-      VelocityService.TimeWindow window = parseTimeWindowFromHours(hours);
-
-      if (context.getTransactionRequest() != null) {
-        VelocityService.VelocityStats stats =
-            velocityServiceFacade.getStats(
-                context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
-        // Usar distinctMerchants como proxy para PANs distintos (simplificação)
-        return stats.getDistinctMerchants() > threshold;
-      }
-
-      return false;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar COUNT_DISTINCT_PANS_LAST_N_HOURS: {}", e.getMessage());
-      return false;
-    }
+    return VelocityAggregationEvaluator.evaluateCountDistinctPansLastNHours(
+        condition, context, velocityServiceFacade);
   }
 
   /**
@@ -1849,270 +1470,69 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateCountDistinctAccounts(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      int threshold = Integer.parseInt(condition.getValueSingle().trim());
-
-      Object keyValue = getFieldValue(condition.getFieldName(), null, context);
-      if (keyValue == null) {
-        return false;
-      }
-
-      // Usar VelocityService para obter contagem de contas distintas
-      if (context.getTransactionRequest() != null) {
-        VelocityService.VelocityStats stats =
-            velocityServiceFacade.getStats(
-                context.getTransactionRequest(),
-                VelocityService.KeyType.PAN,
-                VelocityService.TimeWindow.DAY_30);
-        // Usar distinctCountries como proxy para contas distintas (simplificação)
-        return stats.getDistinctCountries() > threshold;
-      }
-
-      return false;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar COUNT_DISTINCT_ACCOUNTS: {}", e.getMessage());
-      return false;
-    }
+    return VelocityAggregationEvaluator.evaluateCountDistinctAccounts(
+        condition, context, velocityServiceFacade);
   }
 
   // ========== Operadores de Tempo/Data ==========
 
   /** IS_WEEKEND: Verifica se a transação é em fim de semana */
   private boolean evaluateIsWeekend(EvaluationContext context) {
-    try {
-      Object dateValue = getFieldValue("transactionDate", null, context);
-      if (dateValue == null) {
-        return false;
-      }
-      LocalDate date = parseDate(dateValue);
-      if (date == null) {
-        return false;
-      }
-      java.time.DayOfWeek dow = date.getDayOfWeek();
-      return dow == java.time.DayOfWeek.SATURDAY || dow == java.time.DayOfWeek.SUNDAY;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar IS_WEEKEND: {}", e.getMessage());
-      return false;
-    }
+    return TimeDateEvaluator.evaluateIsWeekend(context);
   }
 
   /** IS_HOLIDAY: Verifica se a transação é em feriado */
   private boolean evaluateIsHoliday(EvaluationContext context) {
-    try {
-      // Obter data da transação
-      Object dateValue = getFieldValue("transactionDate", null, context);
-      LocalDate transactionDate;
-
-      if (dateValue instanceof LocalDate) {
-        transactionDate = (LocalDate) dateValue;
-      } else if (dateValue instanceof LocalDateTime) {
-        transactionDate = ((LocalDateTime) dateValue).toLocalDate();
-      } else if (dateValue instanceof String) {
-        transactionDate = LocalDate.parse((String) dateValue);
-      } else {
-        transactionDate = LocalDate.now();
-      }
-
-      // Obter país da transação
-      Object countryValue = getFieldValue("merchantCountryCode", null, context);
-      String countryCode = countryValue != null ? countryValue.toString() : "BRA";
-
-      return operatorDataService.isHoliday(transactionDate, countryCode);
-    } catch (Exception e) {
-      log.warn("Erro ao verificar feriado: {}", e.getMessage());
-      return false;
-    }
+    return TimeDateEvaluator.evaluateIsHoliday(context, operatorDataService);
   }
 
   /** HOUR_BETWEEN: Verifica se a hora está entre dois valores. Formato: "startHour:endHour" */
   private boolean evaluateHourBetween(RuleCondition condition, EvaluationContext context) {
-    try {
-      String[] parts = condition.getValueSingle().split(":");
-      if (parts.length < 2) {
-        return false;
-      }
-      int startHour = Integer.parseInt(parts[0].trim());
-      int endHour = Integer.parseInt(parts[1].trim());
-
-      Object timeValue = getFieldValue("transactionTime", null, context);
-      if (timeValue == null) {
-        return false;
-      }
-
-      int hour;
-      if (timeValue instanceof Integer) {
-        // Formato HHMMSS
-        hour = ((Integer) timeValue) / 10000;
-      } else {
-        LocalTime time = parseTime(timeValue);
-        if (time == null) return false;
-        hour = time.getHour();
-      }
-
-      if (startHour <= endHour) {
-        return hour >= startHour && hour <= endHour;
-      } else {
-        // Atravessa meia-noite (ex: 22:00 - 06:00)
-        return hour >= startHour || hour <= endHour;
-      }
-    } catch (Exception e) {
-      log.error("Erro ao avaliar HOUR_BETWEEN: {}", e.getMessage());
-      return false;
-    }
+    return TimeDateEvaluator.evaluateHourBetween(condition, context);
   }
 
   /** DAY_OF_WEEK_IN: Verifica se o dia da semana está na lista. Formato: "1,2,3" (1=Segunda) */
   private boolean evaluateDayOfWeekIn(RuleCondition condition, EvaluationContext context) {
-    try {
-      Object dateValue = getFieldValue("transactionDate", null, context);
-      if (dateValue == null) {
-        return false;
-      }
-      LocalDate date = parseDate(dateValue);
-      if (date == null) {
-        return false;
-      }
-
-      int dayOfWeek = date.getDayOfWeek().getValue(); // 1=Monday, 7=Sunday
-      String[] days = condition.getValueSingle().split(",");
-      for (String day : days) {
-        if (Integer.parseInt(day.trim()) == dayOfWeek) {
-          return true;
-        }
-      }
-      return false;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar DAY_OF_WEEK_IN: {}", e.getMessage());
-      return false;
-    }
+    return TimeDateEvaluator.evaluateDayOfWeekIn(condition, context);
   }
 
   /** GT_CURRENT_DATE: Verifica se a data é maior que a data atual (futuro) */
   private boolean evaluateGtCurrentDate(Object fieldValue) {
-    try {
-      LocalDate date = parseDate(fieldValue);
-      return date != null && date.isAfter(LocalDate.now());
-    } catch (Exception e) {
-      return false;
-    }
+    return TimeDateEvaluator.evaluateGtCurrentDate(fieldValue);
   }
 
   /** LT_CURRENT_DATE: Verifica se a data é menor que a data atual (passado) */
   private boolean evaluateLtCurrentDate(Object fieldValue) {
-    try {
-      LocalDate date = parseDate(fieldValue);
-      return date != null && date.isBefore(LocalDate.now());
-    } catch (Exception e) {
-      return false;
-    }
+    return TimeDateEvaluator.evaluateLtCurrentDate(fieldValue);
   }
 
   /** EXPIRES_WITHIN_DAYS: Verifica se expira em N dias. Formato: "days" */
   private boolean evaluateExpiresWithinDays(Object fieldValue, RuleCondition condition) {
-    try {
-      int days = Integer.parseInt(condition.getValueSingle().trim());
-      LocalDate expiryDate = parseDate(fieldValue);
-      if (expiryDate == null) {
-        return false;
-      }
-      LocalDate threshold = LocalDate.now().plusDays(days);
-      return !expiryDate.isAfter(threshold);
-    } catch (Exception e) {
-      log.error("Erro ao avaliar EXPIRES_WITHIN_DAYS: {}", e.getMessage());
-      return false;
-    }
+    return TimeDateEvaluator.evaluateExpiresWithinDays(fieldValue, condition);
   }
 
   // ========== Operadores de Padrão ==========
 
   /** DECIMAL_PLACES_GT: Verifica se o número tem mais de N casas decimais */
   private boolean evaluateDecimalPlacesGt(Object fieldValue, RuleCondition condition) {
-    try {
-      int threshold = Integer.parseInt(condition.getValueSingle().trim());
-      String valueStr = String.valueOf(fieldValue);
-      int dotIndex = valueStr.indexOf('.');
-      if (dotIndex < 0) {
-        return 0 > threshold;
-      }
-      int decimalPlaces = valueStr.length() - dotIndex - 1;
-      return decimalPlaces > threshold;
-    } catch (Exception e) {
-      return false;
-    }
+    return PatternEvaluator.evaluateDecimalPlacesGt(fieldValue, condition);
   }
 
   /** PATTERN_ROUND_NUMBERS: Verifica se o valor é um número redondo (múltiplo de 100, 500, 1000) */
   private boolean evaluatePatternRoundNumbers(Object fieldValue) {
-    try {
-      BigDecimal value = new BigDecimal(String.valueOf(fieldValue));
-      // Verificar se é múltiplo de 100
-      return value.remainder(BigDecimal.valueOf(100)).compareTo(BigDecimal.ZERO) == 0;
-    } catch (Exception e) {
-      return false;
-    }
+    return PatternEvaluator.evaluatePatternRoundNumbers(fieldValue);
   }
 
   /** GT_FIELD_MULTIPLIER: Verifica se campo > outro * fator. Formato: "otherField:multiplier" */
   private boolean evaluateGtFieldMultiplier(RuleCondition condition, EvaluationContext context) {
-    try {
-      String[] parts = condition.getValueSingle().split(":");
-      if (parts.length < 2) {
-        return false;
-      }
-      String otherField = parts[0].trim();
-      BigDecimal multiplier = new BigDecimal(parts[1].trim());
-
-      Object fieldValue = getFieldValue(condition.getFieldName(), null, context);
-      Object otherValue = getFieldValue(otherField, null, context);
-
-      if (fieldValue == null || otherValue == null) {
-        return false;
-      }
-
-      BigDecimal value = new BigDecimal(String.valueOf(fieldValue));
-      BigDecimal other = new BigDecimal(String.valueOf(otherValue));
-      BigDecimal threshold = other.multiply(multiplier);
-
-      return value.compareTo(threshold) > 0;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar GT_FIELD_MULTIPLIER: {}", e.getMessage());
-      return false;
-    }
+    return PatternEvaluator.evaluateGtFieldMultiplier(condition, context);
   }
 
   /**
    * PERCENTAGE_OF_FIELD: Calcula se campo é X% de outro. Formato: "otherField:percentage:operator"
    */
   private boolean evaluatePercentageOfField(RuleCondition condition, EvaluationContext context) {
-    try {
-      String[] parts = condition.getValueSingle().split(":");
-      if (parts.length < 2) {
-        return false;
-      }
-      String otherField = parts[0].trim();
-      BigDecimal percentage = new BigDecimal(parts[1].trim());
-
-      Object fieldValue = getFieldValue(condition.getFieldName(), null, context);
-      Object otherValue = getFieldValue(otherField, null, context);
-
-      if (fieldValue == null || otherValue == null) {
-        return false;
-      }
-
-      BigDecimal value = new BigDecimal(String.valueOf(fieldValue));
-      BigDecimal other = new BigDecimal(String.valueOf(otherValue));
-
-      if (other.compareTo(BigDecimal.ZERO) == 0) {
-        return false;
-      }
-
-      BigDecimal actualPercentage =
-          value.multiply(BigDecimal.valueOf(100)).divide(other, 2, java.math.RoundingMode.HALF_UP);
-      return actualPercentage.compareTo(percentage) >= 0;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar PERCENTAGE_OF_FIELD: {}", e.getMessage());
-      return false;
-    }
+    return PatternEvaluator.evaluatePercentageOfField(condition, context);
   }
 
   // ========== Operadores de Velocity Adicionais ==========
@@ -2180,32 +1600,8 @@ public class ComplexRuleEvaluator {
    * "fieldToCheck:days" (ex: "merchantId:90" - merchant usado nos últimos 90 dias)
    */
   private boolean evaluateInCustomerHistory(RuleCondition condition, EvaluationContext context) {
-    try {
-      String[] parts = condition.getValueSingle().split(":");
-      String fieldToCheck = parts.length > 0 ? parts[0].trim() : condition.getFieldName();
-      int days = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 90;
-
-      Object fieldValue = getFieldValue(fieldToCheck, null, context);
-      if (fieldValue == null) {
-        return false;
-      }
-
-      // Usar VelocityService para verificar histórico
-      if (context.getTransactionRequest() != null) {
-        VelocityService.TimeWindow window = parseTimeWindowFromDays(days);
-        VelocityService.VelocityStats stats =
-            velocityServiceFacade.getStats(
-                context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
-
-        // Se há transações no período, assumir que o campo está no histórico
-        // Para uma implementação completa, seria necessário consultar o histórico real
-        return stats.getTransactionCount() > 0;
-      }
-      return false;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar IN_CUSTOMER_HISTORY: {}", e.getMessage());
-      return false;
-    }
+    return CustomerHistoryEvaluator.evaluateInCustomerHistory(
+        condition, context, velocityServiceFacade);
   }
 
   /**
@@ -2213,28 +1609,13 @@ public class ComplexRuleEvaluator {
    * padrão de horários das transações anteriores.
    */
   private boolean evaluateInCustomerUsualHours(RuleCondition condition, EvaluationContext context) {
-    try {
-      // Obter hora da transação atual
-      Object timeValue = getFieldValue("transactionTime", null, context);
-      if (timeValue == null) {
-        return true; // Se não há hora, assumir horário normal
-      }
+    return CustomerHistoryEvaluator.evaluateInCustomerUsualHours(condition, context);
+  }
 
-      int currentHour;
-      if (timeValue instanceof Integer) {
-        currentHour = ((Integer) timeValue) / 10000;
-      } else {
-        LocalTime time = parseTime(timeValue);
-        if (time == null) return true;
-        currentHour = time.getHour();
-      }
-
-      // Definir horários "normais" como 6h-23h
-      // Para uma implementação completa, seria necessário analisar o histórico do cliente
-    } catch (Exception e) {
-      log.error("Erro ao avaliar IN_CUSTOMER_CHARGEBACK_MERCHANTS: {}", e.getMessage());
-      return false;
-    }
+  private boolean evaluateInCustomerChargebackMerchants(
+      RuleCondition condition, EvaluationContext context) {
+    return CustomerHistoryEvaluator.evaluateInCustomerChargebackMerchants(
+        condition, context, operatorDataService);
   }
 
   // ========== Operadores de Primeira Ocorrência ==========
@@ -2244,33 +1625,7 @@ public class ComplexRuleEvaluator {
    * (ex: "merchantId" - primeiro uso deste merchant)
    */
   private boolean evaluateIsFirst(RuleCondition condition, EvaluationContext context) {
-    try {
-      String fieldToCheck =
-          condition.getValueSingle() != null
-              ? condition.getValueSingle().trim()
-              : condition.getFieldName();
-
-      Object fieldValue = getFieldValue(fieldToCheck, null, context);
-      if (fieldValue == null) {
-        return false;
-      }
-
-      // Usar VelocityService para verificar se há histórico
-      if (context.getTransactionRequest() != null) {
-        VelocityService.VelocityStats stats =
-            velocityServiceFacade.getStats(
-                context.getTransactionRequest(),
-                VelocityService.KeyType.PAN,
-                VelocityService.TimeWindow.DAY_30);
-
-        // Se não há transações anteriores, é a primeira
-        return stats.getTransactionCount() == 0;
-      }
-      return true; // Se não há contexto, assumir primeira
-    } catch (Exception e) {
-      log.error("Erro ao avaliar IS_FIRST: {}", e.getMessage());
-      return false;
-    }
+    return FirstOccurrenceEvaluator.evaluateIsFirst(condition, context, velocityServiceFacade);
   }
 
   /**
@@ -2278,41 +1633,7 @@ public class ComplexRuleEvaluator {
    * (ex: "7" - visto pela primeira vez nos últimos 7 dias)
    */
   private boolean evaluateIsNew(RuleCondition condition, EvaluationContext context) {
-    try {
-      int maxDays =
-          condition.getValueSingle() != null
-              ? Integer.parseInt(condition.getValueSingle().trim())
-              : 7;
-
-      Object fieldValue = getFieldValue(condition.getFieldName(), null, context);
-      if (fieldValue == null) {
-        return false;
-      }
-
-      // Verificar se há histórico além do período especificado
-      if (context.getTransactionRequest() != null) {
-        // Verificar histórico de 30 dias
-        VelocityService.VelocityStats stats30 =
-            velocityServiceFacade.getStats(
-                context.getTransactionRequest(),
-                VelocityService.KeyType.PAN,
-                VelocityService.TimeWindow.DAY_30);
-
-        // Verificar histórico do período especificado
-        VelocityService.TimeWindow window = parseTimeWindowFromDays(maxDays);
-        VelocityService.VelocityStats statsRecent =
-            velocityServiceFacade.getStats(
-                context.getTransactionRequest(), VelocityService.KeyType.PAN, window);
-
-        // É "novo" se só aparece no período recente, não no histórico mais longo
-        return statsRecent.getTransactionCount() > 0
-            && stats30.getTransactionCount() <= statsRecent.getTransactionCount();
-      }
-      return true;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar IS_NEW: {}", e.getMessage());
-      return false;
-    }
+    return FirstOccurrenceEvaluator.evaluateIsNew(condition, context, velocityServiceFacade);
   }
 
   /**
@@ -2320,78 +1641,13 @@ public class ComplexRuleEvaluator {
    * "distanceKm" (ex: "500" - mais de 500km da última transação)
    */
   private boolean evaluateDistanceFromLastGt(RuleCondition condition, EvaluationContext context) {
-    try {
-      double thresholdKm = Double.parseDouble(condition.getValueSingle().trim());
-
-      if (context.getTransactionRequest() == null) {
-        return false;
-      }
-
-      // Obter localização atual da transação
-      String currentCountry = context.getTransactionRequest().getMerchantCountryCode();
-      String currentCity = context.getTransactionRequest().getMerchantCity();
-
-      if (currentCountry == null && currentCity == null) {
-        return false;
-      }
-
-      // Para uma implementação completa, seria necessário:
-      // 1. Consultar a última transação do cliente
-      // 2. Obter as coordenadas de ambas as localizações
-      // 3. Calcular a distância usando a fórmula de Haversine
-
-      // Por enquanto, usar heurística baseada em país
-      // Se o país mudou, assumir distância > threshold
-      if (context.getTransactionRequest() != null) {
-        VelocityService.VelocityStats stats =
-            velocityServiceFacade.getStats(
-                context.getTransactionRequest(),
-                VelocityService.KeyType.PAN,
-                VelocityService.TimeWindow.HOUR_24);
-
-        // Se há transações em múltiplos países nas últimas 24h, pode indicar distância grande
-        return stats.getDistinctCountries() > 1;
-      }
-      return false;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar DISTANCE_FROM_LAST_GT: {}", e.getMessage());
-      return false;
-    }
+    return FirstOccurrenceEvaluator.evaluateDistanceFromLastGt(
+        condition, context, velocityServiceFacade);
   }
 
   // ========== OPERADORES V28-V30 (17 novos métodos) ==========
   // Implementados conforme recomendação do Triple-Check de Especialistas
 
-  /**
-   * Helper seguro para parsing de inteiros. Evita NumberFormatException retornando valor default.
-   */
-  private int parseIntSafe(String value, int defaultValue) {
-    return NumericParser.parseIntSafe(value, defaultValue);
-  }
-
-  /** Helper seguro para parsing de doubles. */
-  private double parseDoubleSafe(String value, double defaultValue) {
-    return NumericParser.parseDoubleSafe(value, defaultValue);
-  }
-
-  /** Obtém o ID da conta do contexto da transação. */
-  private String getAccountId(EvaluationContext context) {
-    if (context == null || context.getTransactionRequest() == null) {
-      return null;
-    }
-    TransactionRequest req = context.getTransactionRequest();
-    // Prioridade: customerAcctNumber > customerIdFromHeader > pan (hash)
-    if (req.getCustomerAcctNumber() != null) {
-      return String.valueOf(req.getCustomerAcctNumber());
-    }
-    if (req.getCustomerIdFromHeader() != null && !req.getCustomerIdFromHeader().isBlank()) {
-      return req.getCustomerIdFromHeader();
-    }
-    if (req.getPan() != null && !req.getPan().isBlank()) {
-      return "PAN_" + req.getPan().hashCode();
-    }
-    return null;
-  }
 
   /**
    * HAS_FAILED_3DS_LAST_N_MINUTES: Verifica se houve falha 3DS nos últimos N minutos. Formato
@@ -2399,26 +1655,7 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateHasFailed3dsLastNMinutes(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      int minutes = parseIntSafe(condition.getValueSingle(), 30);
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      // Verificar campos de AuthEnrichment
-      Boolean failed3ds = (Boolean) payload.get("auth_has_failed_3ds_recently");
-      Integer lastFailureMinutes = (Integer) payload.get("auth_last_3ds_failure_minutes_ago");
-
-      if (Boolean.TRUE.equals(failed3ds) && lastFailureMinutes != null) {
-        return lastFailureMinutes <= minutes;
-      }
-
-      // Fallback: verificar campo derivado genérico
-      Boolean hasRecentFailure = (Boolean) payload.get("has_3ds_failure_" + minutes + "min");
-      return Boolean.TRUE.equals(hasRecentFailure);
-    } catch (Exception e) {
-      log.error("Erro ao avaliar HAS_FAILED_3DS_LAST_N_MINUTES: {}", e.getMessage());
-      return false;
-    }
+    return V28V30Evaluator.evaluateHasFailed3dsLastNMinutes(condition, context);
   }
 
   /**
@@ -2426,29 +1663,7 @@ public class ComplexRuleEvaluator {
    * (ex: "3:24")
    */
   private boolean evaluateCountMfaAbandonments(RuleCondition condition, EvaluationContext context) {
-    try {
-      String valueSingle = condition.getValueSingle();
-      if (valueSingle == null || valueSingle.isBlank()) {
-        return false;
-      }
-
-      String[] parts = valueSingle.split(":");
-      int threshold = parseIntSafe(parts[0], 3);
-      int hours = parts.length > 1 ? parseIntSafe(parts[1], 24) : 24;
-
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      Integer count = (Integer) payload.get("auth_mfa_abandonment_count_" + hours + "h");
-      if (count == null) {
-        count = (Integer) payload.get("mfa_abandonment_count");
-      }
-
-      return count != null && count >= threshold;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar COUNT_MFA_ABANDONMENTS: {}", e.getMessage());
-      return false;
-    }
+    return V28V30Evaluator.evaluateCountMfaAbandonments(condition, context);
   }
 
   /**
@@ -2457,21 +1672,7 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateHasIncomingTransferLastNHours(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      int hours = parseIntSafe(condition.getValueSingle(), 24);
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      Boolean hasIncoming = (Boolean) payload.get("velocity_has_incoming_transfer_" + hours + "h");
-      if (hasIncoming == null) {
-        hasIncoming = (Boolean) payload.get("has_incoming_transfer_last_" + hours + "h");
-      }
-
-      return Boolean.TRUE.equals(hasIncoming);
-    } catch (Exception e) {
-      log.error("Erro ao avaliar HAS_INCOMING_TRANSFER_LAST_N_HOURS: {}", e.getMessage());
-      return false;
-    }
+    return V28V30Evaluator.evaluateHasIncomingTransferLastNHours(condition, context);
   }
 
   /**
@@ -2480,66 +1681,9 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateIsImpossibleCombination(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      String combinationType = condition.getValueSingle();
-      if (combinationType == null || combinationType.isBlank()) {
-        return false;
-      }
-
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      return switch (combinationType.toLowerCase().trim()) {
-        case "age_corporate" -> {
-          Object ageObj = payload.get("customer_age");
-          String accountType = (String) payload.get("account_type");
-          int age = ageObj instanceof Number ? ((Number) ageObj).intValue() : -1;
-          yield age >= 0 && age < 18 && "CORPORATE".equalsIgnoreCase(accountType);
-        }
-        case "country_currency" -> {
-          String country = (String) payload.get("merchantCountryCode");
-          String currency = (String) payload.get("transactionCurrencyCode");
-          yield !isValidCurrencyForCountry(country, currency);
-        }
-        case "deceased_active" -> {
-          Boolean isDeceased = (Boolean) payload.get("customer_is_deceased");
-          yield Boolean.TRUE.equals(isDeceased);
-        }
-        case "minor_high_value" -> {
-          Object ageObj = payload.get("customer_age");
-          Object amountObj = payload.get("transactionAmount");
-          int age = ageObj instanceof Number ? ((Number) ageObj).intValue() : 99;
-          BigDecimal amount = getBigDecimal(amountObj);
-          yield age < 18 && amount != null && amount.compareTo(new BigDecimal("5000")) > 0;
-        }
-        default -> false;
-      };
-    } catch (Exception e) {
-      log.error("Erro ao avaliar IS_IMPOSSIBLE_COMBINATION: {}", e.getMessage());
-      return false;
-    }
+    return V28V30Evaluator.evaluateIsImpossibleCombination(condition, context);
   }
 
-  /** Verifica se a moeda é válida para o país. */
-  private boolean isValidCurrencyForCountry(String country, String currency) {
-    if (country == null || currency == null) return true;
-
-    Map<String, List<String>> validCurrencies =
-        Map.of(
-            "BR", List.of("BRL"),
-            "US", List.of("USD"),
-            "GB", List.of("GBP"),
-            "DE", List.of("EUR"),
-            "FR", List.of("EUR"),
-            "IT", List.of("EUR"),
-            "ES", List.of("EUR"),
-            "PT", List.of("EUR"),
-            "JP", List.of("JPY"),
-            "CN", List.of("CNY", "CNH"));
-
-    List<String> valid = validCurrencies.get(country.toUpperCase());
-    return valid == null || valid.contains(currency.toUpperCase());
-  }
 
   /**
    * PIX_KEY_CHANGED_LAST_N_DAYS: Verifica se chave PIX foi alterada recentemente. Formato
@@ -2547,21 +1691,7 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluatePixKeyChangedLastNDays(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      int days = parseIntSafe(condition.getValueSingle(), 7);
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      Integer daysSinceChange = (Integer) payload.get("customer_pix_key_changed_days_ago");
-      if (daysSinceChange == null) {
-        daysSinceChange = (Integer) payload.get("pix_key_age_days");
-      }
-
-      return daysSinceChange != null && daysSinceChange <= days;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar PIX_KEY_CHANGED_LAST_N_DAYS: {}", e.getMessage());
-      return false;
-    }
+    return V28V30Evaluator.evaluatePixKeyChangedLastNDays(condition, context);
   }
 
   /**
@@ -2574,30 +1704,7 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateCountCryptoTxnLastNDays(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      String valueSingle = condition.getValueSingle();
-      if (valueSingle == null || valueSingle.isBlank()) {
-        return false;
-      }
-
-      String[] parts = valueSingle.split("\\|");
-      int threshold = parseIntSafe(parts[0], 5);
-      int days = parts.length > 1 ? parseIntSafe(parts[1], 30) : 30;
-
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      Object countObj = payload.get("velocity_crypto_txn_count_" + days + "d");
-      if (countObj == null) {
-        countObj = payload.get("crypto_transaction_count");
-      }
-
-      long count = countObj instanceof Number ? ((Number) countObj).longValue() : 0;
-      return count >= threshold;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar COUNT_CRYPTO_TXN_LAST_N_DAYS: {}", e.getMessage());
-      return false;
-    }
+    return V28V30Evaluator.evaluateCountCryptoTxnLastNDays(condition, context);
   }
 
   /**
@@ -2606,30 +1713,7 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateCountDistinctInstrumentsLastNDays(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      String valueSingle = condition.getValueSingle();
-      if (valueSingle == null || valueSingle.isBlank()) {
-        return false;
-      }
-
-      String[] parts = valueSingle.split("\\|");
-      int threshold = parseIntSafe(parts[0], 10);
-      int days = parts.length > 1 ? parseIntSafe(parts[1], 30) : 30;
-
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      Object countObj = payload.get("velocity_distinct_instruments_" + days + "d");
-      if (countObj == null) {
-        countObj = payload.get("distinct_payment_instruments");
-      }
-
-      long count = countObj instanceof Number ? ((Number) countObj).longValue() : 0;
-      return count >= threshold;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS: {}", e.getMessage());
-      return false;
-    }
+    return V28V30Evaluator.evaluateCountDistinctInstrumentsLastNDays(condition, context);
   }
 
   /**
@@ -2638,30 +1722,7 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateCountDistinctPayersLastNDays(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      String valueSingle = condition.getValueSingle();
-      if (valueSingle == null || valueSingle.isBlank()) {
-        return false;
-      }
-
-      String[] parts = valueSingle.split("\\|");
-      int threshold = parseIntSafe(parts[0], 5);
-      int days = parts.length > 1 ? parseIntSafe(parts[1], 7) : 7;
-
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      Object countObj = payload.get("velocity_distinct_payers_" + days + "d");
-      if (countObj == null) {
-        countObj = payload.get("distinct_payers_count");
-      }
-
-      long count = countObj instanceof Number ? ((Number) countObj).longValue() : 0;
-      return count >= threshold;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar COUNT_DISTINCT_PAYERS_LAST_N_DAYS: {}", e.getMessage());
-      return false;
-    }
+    return V28V30Evaluator.evaluateCountDistinctPayersLastNDays(condition, context);
   }
 
   /**
@@ -2670,30 +1731,7 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateCountDistinctUserAgentsLastNHours(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      String valueSingle = condition.getValueSingle();
-      if (valueSingle == null || valueSingle.isBlank()) {
-        return false;
-      }
-
-      String[] parts = valueSingle.split("\\|");
-      int threshold = parseIntSafe(parts[0], 5);
-      int hours = parts.length > 1 ? parseIntSafe(parts[1], 24) : 24;
-
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      Object countObj = payload.get("device_distinct_user_agents_" + hours + "h");
-      if (countObj == null) {
-        countObj = payload.get("distinct_user_agents");
-      }
-
-      long count = countObj instanceof Number ? ((Number) countObj).longValue() : 0;
-      return count >= threshold;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS: {}", e.getMessage());
-      return false;
-    }
+    return V28V30Evaluator.evaluateCountDistinctUserAgentsLastNHours(condition, context);
   }
 
   /**
@@ -2711,29 +1749,7 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateCountMfaDenialsLastNHours(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      String valueSingle = condition.getValueSingle();
-      if (valueSingle == null || valueSingle.isBlank()) {
-        return false;
-      }
-
-      String[] parts = valueSingle.split(":");
-      int threshold = parseIntSafe(parts[0], 3);
-      int hours = parts.length > 1 ? parseIntSafe(parts[1], 24) : 24;
-
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      Integer count = (Integer) payload.get("auth_mfa_denial_count_" + hours + "h");
-      if (count == null) {
-        count = (Integer) payload.get("mfa_denial_count");
-      }
-
-      return count != null && count >= threshold;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar COUNT_MFA_DENIALS_LAST_N_HOURS: {}", e.getMessage());
-      return false;
-    }
+    return V28V30Evaluator.evaluateCountMfaDenialsLastNHours(condition, context);
   }
 
   /**
@@ -2742,59 +1758,13 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateDaysSinceLastActivity(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      String valueSingle = condition.getValueSingle();
-      if (valueSingle == null || valueSingle.isBlank()) {
-        return false;
-      }
-
-      String[] parts = valueSingle.split("\\|");
-      int threshold = parseIntSafe(parts[0], 30);
-      String operator = parts.length > 1 ? parts[1].toUpperCase() : "GT";
-
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      Object daysObj = payload.get("customer_days_since_last_activity");
-      if (daysObj == null) {
-        daysObj = payload.get("days_since_last_transaction");
-      }
-
-      if (daysObj == null) return false;
-      int days = daysObj instanceof Number ? ((Number) daysObj).intValue() : -1;
-      if (days < 0) return false;
-
-      return switch (operator) {
-        case "GT" -> days > threshold;
-        case "GTE" -> days >= threshold;
-        case "LT" -> days < threshold;
-        case "LTE" -> days <= threshold;
-        case "EQ" -> days == threshold;
-        default -> days > threshold;
-      };
-    } catch (Exception e) {
-      log.error("Erro ao avaliar DAYS_SINCE_LAST_ACTIVITY: {}", e.getMessage());
-      return false;
-    }
+    return V28V30Evaluator.evaluateDaysSinceLastActivity(condition, context);
   }
 
   /** DEVICE_CHANGED_IN_SESSION: Verifica se device mudou durante a sessão. */
   private boolean evaluateDeviceChangedInSession(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      Boolean changed = (Boolean) payload.get("device_changed_in_session");
-      if (changed == null) {
-        changed = (Boolean) payload.get("session_device_changed");
-      }
-
-      return Boolean.TRUE.equals(changed);
-    } catch (Exception e) {
-      log.error("Erro ao avaliar DEVICE_CHANGED_IN_SESSION: {}", e.getMessage());
-      return false;
-    }
+    return V28V30Evaluator.evaluateDeviceChangedInSession(condition, context);
   }
 
   /**
@@ -2802,55 +1772,7 @@ public class ComplexRuleEvaluator {
    * próximo de quantias típicas de ransom.
    */
   private boolean evaluateIsCryptoRansomAmount(RuleCondition condition, EvaluationContext context) {
-    try {
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      Object amountObj = payload.get("transactionAmount");
-      if (amountObj == null) {
-        amountObj = payload.get("amount");
-      }
-
-      BigDecimal amount = getBigDecimal(amountObj);
-      if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) return false;
-
-      // Valores tipicos de ransom (em BRL ou USD)
-      // Convertidos de valores comuns em BTC: 0.05, 0.1, 0.25, 0.5, 1, 2, 5 BTC
-      // Considerando BTC entre R$ 300.000 - R$ 400.000
-      List<BigDecimal> typicalRansomAmounts =
-          List.of(
-              new BigDecimal("500"), // ~0.001 BTC
-              new BigDecimal("1000"), // ~0.003 BTC
-              new BigDecimal("2500"), // ~0.007 BTC
-              new BigDecimal("5000"), // ~0.015 BTC
-              new BigDecimal("10000"), // ~0.03 BTC
-              new BigDecimal("15000"), // ~0.05 BTC
-              new BigDecimal("25000"), // ~0.08 BTC
-              new BigDecimal("35000"), // ~0.1 BTC
-              new BigDecimal("50000"), // ~0.15 BTC
-              new BigDecimal("75000"), // ~0.25 BTC
-              new BigDecimal("100000"), // ~0.3 BTC
-              new BigDecimal("150000"), // ~0.5 BTC
-              new BigDecimal("175000"), // ~0.5 BTC
-              new BigDecimal("200000"), // ~0.6 BTC
-              new BigDecimal("350000"), // ~1 BTC
-              new BigDecimal("500000") // ~1.5 BTC
-              );
-
-      // Verificar se valor esta proximo (±10%) de valores tipicos
-      for (BigDecimal typical : typicalRansomAmounts) {
-        BigDecimal lower = typical.multiply(new BigDecimal("0.9"));
-        BigDecimal upper = typical.multiply(new BigDecimal("1.1"));
-        if (amount.compareTo(lower) >= 0 && amount.compareTo(upper) <= 0) {
-          return true;
-        }
-      }
-
-      return false;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar IS_CRYPTO_RANSOM_AMOUNT: {}", e.getMessage());
-      return false;
-    }
+    return V28V30Evaluator.evaluateIsCryptoRansomAmount(condition, context);
   }
 
   /**
@@ -2858,42 +1780,7 @@ public class ComplexRuleEvaluator {
    * "threshold|days" (threshold em percentual)
    */
   private boolean evaluateOutflowRateLastNDays(RuleCondition condition, EvaluationContext context) {
-    try {
-      String valueSingle = condition.getValueSingle();
-      if (valueSingle == null || valueSingle.isBlank()) {
-        return false;
-      }
-
-      String[] parts = valueSingle.split("\\|");
-      double threshold = parseDoubleSafe(parts[0], 80.0);
-      int days = parts.length > 1 ? parseIntSafe(parts[1], 30) : 30;
-
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      Object rateObj = payload.get("velocity_outflow_rate_" + days + "d");
-      if (rateObj == null) {
-        rateObj = payload.get("outflow_rate_percentage");
-      }
-
-      double rate = rateObj instanceof Number ? ((Number) rateObj).doubleValue() : 0.0;
-      return rate >= threshold;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar OUTFLOW_RATE_LAST_N_DAYS: {}", e.getMessage());
-      return false;
-    }
-  }
-
-  /** Converte objeto para BigDecimal de forma segura. */
-  private BigDecimal getBigDecimal(Object value) {
-    if (value == null) return null;
-    if (value instanceof BigDecimal) return (BigDecimal) value;
-    if (value instanceof Number) return BigDecimal.valueOf(((Number) value).doubleValue());
-    try {
-      return new BigDecimal(String.valueOf(value));
-    } catch (NumberFormatException e) {
-      return null;
-    }
+    return V28V30Evaluator.evaluateOutflowRateLastNDays(condition, context);
   }
 
   // ========== OPERADORES V31+ IMPLEMENTADOS - CATEGORIAS A-K ==========
@@ -2906,29 +1793,7 @@ public class ComplexRuleEvaluator {
    * "dormancyDays|txThreshold" (ex: "90|3")
    */
   private boolean evaluateDormancyRevival(RuleCondition condition, EvaluationContext context) {
-    try {
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      String[] parts = condition.getValueSingle().split("\\|");
-      int dormancyDays = Integer.parseInt(parts[0].trim());
-      int txThreshold = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 3;
-
-      Object lastActivityObj = payload.get("days_since_last_activity");
-      if (lastActivityObj == null) lastActivityObj = payload.get("daysSinceLastActivity");
-
-      Object recentTxObj = payload.get("recent_tx_count");
-      if (recentTxObj == null) recentTxObj = payload.get("recentTxCount");
-
-      int daysSinceActivity =
-          lastActivityObj instanceof Number ? ((Number) lastActivityObj).intValue() : 0;
-      int recentTxCount = recentTxObj instanceof Number ? ((Number) recentTxObj).intValue() : 0;
-
-      return daysSinceActivity > dormancyDays && recentTxCount >= txThreshold;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar DORMANCY_REVIVAL: {}", e.getMessage());
-      return false;
-    }
+    return V31BehavioralEvaluator.evaluateDormancyRevival(condition, context);
   }
 
   /**
@@ -2937,31 +1802,8 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateAmountDeviationFromAvg(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      if (context.getTransactionRequest() == null) return false;
-
-      double multiplier = Double.parseDouble(condition.getValueSingle().trim());
-
-      VelocityService.VelocityStats stats =
-          velocityServiceFacade.getStats(
-              context.getTransactionRequest(),
-              VelocityService.KeyType.PAN,
-              VelocityService.TimeWindow.HOUR_24);
-
-      BigDecimal avg = stats.getAvgAmount();
-      BigDecimal stdDev = stats.getStdDevAmount();
-      BigDecimal txAmount = context.getTransactionRequest().getTransactionAmount();
-
-      if (avg == null || stdDev == null || stdDev.compareTo(BigDecimal.ZERO) == 0) return false;
-
-      BigDecimal deviation = txAmount.subtract(avg).abs();
-      BigDecimal threshold = stdDev.multiply(BigDecimal.valueOf(multiplier));
-
-      return deviation.compareTo(threshold) > 0;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar AMOUNT_DEVIATION_FROM_AVG: {}", e.getMessage());
-      return false;
-    }
+    return V31BehavioralEvaluator.evaluateAmountDeviationFromAvg(
+        condition, context, velocityServiceFacade);
   }
 
   /**
@@ -2970,22 +1812,7 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateTimeDeviationFromUsual(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      int hoursThreshold = Integer.parseInt(condition.getValueSingle().trim());
-
-      Object deviationObj = payload.get("time_deviation_hours");
-      if (deviationObj == null) deviationObj = payload.get("timeDeviationHours");
-
-      double deviation =
-          deviationObj instanceof Number ? ((Number) deviationObj).doubleValue() : 0.0;
-      return Math.abs(deviation) > hoursThreshold;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar TIME_DEVIATION_FROM_USUAL: {}", e.getMessage());
-      return false;
-    }
+    return V31BehavioralEvaluator.evaluateTimeDeviationFromUsual(condition, context);
   }
 
   /**
@@ -2993,20 +1820,7 @@ public class ComplexRuleEvaluator {
    * "true" (verifica se merchant é novo/incomum)
    */
   private boolean evaluateMerchantDeviation(RuleCondition condition, EvaluationContext context) {
-    try {
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      Object deviationObj = payload.get("merchant_is_unusual");
-      if (deviationObj == null) deviationObj = payload.get("merchantIsUnusual");
-      if (deviationObj == null) deviationObj = payload.get("new_merchant");
-
-      return Boolean.TRUE.equals(deviationObj)
-          || "true".equalsIgnoreCase(String.valueOf(deviationObj));
-    } catch (Exception e) {
-      log.error("Erro ao avaliar MERCHANT_DEVIATION: {}", e.getMessage());
-      return false;
-    }
+    return V31BehavioralEvaluator.evaluateMerchantDeviation(condition, context);
   }
 
   /**
@@ -3014,28 +1828,7 @@ public class ComplexRuleEvaluator {
    * "maxAmount|count" (ex: "1.00|3")
    */
   private boolean evaluateMicroTransactionTest(RuleCondition condition, EvaluationContext context) {
-    try {
-      if (context.getTransactionRequest() == null) return false;
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      String[] parts = condition.getValueSingle().split("\\|");
-      double maxAmount = Double.parseDouble(parts[0].trim());
-      int countThreshold = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : 2;
-
-      BigDecimal txAmount = context.getTransactionRequest().getTransactionAmount();
-
-      Object microCountObj = payload.get("micro_tx_count");
-      if (microCountObj == null) microCountObj = payload.get("microTxCount");
-
-      int microCount = microCountObj instanceof Number ? ((Number) microCountObj).intValue() : 0;
-
-      boolean isMicro = txAmount.doubleValue() <= maxAmount;
-      return isMicro && microCount >= countThreshold;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar MICRO_TRANSACTION_TEST: {}", e.getMessage());
-      return false;
-    }
+    return V31BehavioralEvaluator.evaluateMicroTransactionTest(condition, context);
   }
 
   /**
@@ -3043,21 +1836,7 @@ public class ComplexRuleEvaluator {
    * "100" = 100km da localização usual)
    */
   private boolean evaluateLocationDeviation(RuleCondition condition, EvaluationContext context) {
-    try {
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      double kmThreshold = Double.parseDouble(condition.getValueSingle().trim());
-
-      Object distanceObj = payload.get("distance_from_usual_km");
-      if (distanceObj == null) distanceObj = payload.get("distanceFromUsualKm");
-
-      double distance = distanceObj instanceof Number ? ((Number) distanceObj).doubleValue() : 0.0;
-      return distance > kmThreshold;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar LOCATION_DEVIATION: {}", e.getMessage());
-      return false;
-    }
+    return V31BehavioralEvaluator.evaluateLocationDeviation(condition, context);
   }
 
   /**
@@ -3065,22 +1844,7 @@ public class ComplexRuleEvaluator {
    * "switchCount|hours" (ex: "3|1")
    */
   private boolean evaluateChannelSwitchPattern(RuleCondition condition, EvaluationContext context) {
-    try {
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      String[] parts = condition.getValueSingle().split("\\|");
-      int switchThreshold = Integer.parseInt(parts[0].trim());
-
-      Object switchCountObj = payload.get("channel_switch_count");
-      if (switchCountObj == null) switchCountObj = payload.get("channelSwitchCount");
-
-      int switchCount = switchCountObj instanceof Number ? ((Number) switchCountObj).intValue() : 0;
-      return switchCount >= switchThreshold;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar CHANNEL_SWITCH_PATTERN: {}", e.getMessage());
-      return false;
-    }
+    return V31BehavioralEvaluator.evaluateChannelSwitchPattern(condition, context);
   }
 
   /**
@@ -3089,21 +1853,7 @@ public class ComplexRuleEvaluator {
    */
   private boolean evaluateBeneficiaryReusePattern(
       RuleCondition condition, EvaluationContext context) {
-    try {
-      Map<String, Object> payload = context.getPayload();
-      if (payload == null) return false;
-
-      int reuseThreshold = Integer.parseInt(condition.getValueSingle().trim());
-
-      Object reuseCountObj = payload.get("beneficiary_reuse_count");
-      if (reuseCountObj == null) reuseCountObj = payload.get("beneficiaryReuseCount");
-
-      int reuseCount = reuseCountObj instanceof Number ? ((Number) reuseCountObj).intValue() : 0;
-      return reuseCount >= reuseThreshold;
-    } catch (Exception e) {
-      log.error("Erro ao avaliar BENEFICIARY_REUSE_PATTERN: {}", e.getMessage());
-      return false;
-    }
+    return V31BehavioralEvaluator.evaluateBeneficiaryReusePattern(condition, context);
   }
 
   // ========== OPERADORES V4.0 PHASE 1 - VELOCITY + DEVICE (40 novos) ==========
@@ -3120,334 +1870,201 @@ public class ComplexRuleEvaluator {
 
   // Operadores lógicos
   private boolean evaluateLogicalAnd(RuleCondition condition, EvaluationContext context) {
-    Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-    boolean a = Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
-    boolean b = Boolean.parseBoolean(condition.getValueSingle());
-    return a && b;
+    return V49OperatorsEvaluator.evaluateLogicalAnd(condition, context);
   }
 
   private boolean evaluateLogicalOr(RuleCondition condition, EvaluationContext context) {
-    Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-    boolean a = Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
-    boolean b = Boolean.parseBoolean(condition.getValueSingle());
-    return a || b;
+    return V49OperatorsEvaluator.evaluateLogicalOr(condition, context);
   }
 
   private boolean evaluateLogicalNot(RuleCondition condition, EvaluationContext context) {
-    Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-    return !Boolean.TRUE.equals(fieldValue) && !"true".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateLogicalNot(condition, context);
   }
 
   private boolean evaluateLogicalXor(RuleCondition condition, EvaluationContext context) {
-    Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-    boolean a = Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
-    boolean b = Boolean.parseBoolean(condition.getValueSingle());
-    return a ^ b;
+    return V49OperatorsEvaluator.evaluateLogicalXor(condition, context);
   }
 
   private boolean evaluateLogicalNand(RuleCondition condition, EvaluationContext context) {
-    return !evaluateLogicalAnd(condition, context);
+    return V49OperatorsEvaluator.evaluateLogicalNand(condition, context);
   }
 
   private boolean evaluateLogicalNor(RuleCondition condition, EvaluationContext context) {
-    return !evaluateLogicalOr(condition, context);
+    return V49OperatorsEvaluator.evaluateLogicalNor(condition, context);
   }
 
   // Operadores de anomalia
   private boolean evaluateAmountAnomalyOp(RuleCondition condition, EvaluationContext context) {
-    try {
-      Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-      double amount = Double.parseDouble(String.valueOf(fieldValue));
-      Map<String, Object> payload = context.getPayload();
-      double avgAmount = payload != null && payload.containsKey("avgAmount")
-          ? Double.parseDouble(payload.get("avgAmount").toString()) : 0;
-      double stdDev = payload != null && payload.containsKey("amountStdDev")
-          ? Double.parseDouble(payload.get("amountStdDev").toString()) : 1;
-      double threshold = condition.getValueSingle() != null
-          ? Double.parseDouble(condition.getValueSingle()) : 3.0;
-      return Math.abs(amount - avgAmount) > threshold * stdDev;
-    } catch (Exception e) {
-      return false;
-    }
+    return V49OperatorsEvaluator.evaluateAmountAnomalyOp(condition, context);
   }
 
   private boolean evaluateTimeAnomalyOp(RuleCondition condition, EvaluationContext context) {
-    try {
-      Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-      int hour = Integer.parseInt(String.valueOf(fieldValue));
-      return hour >= 2 && hour <= 5; // Horário suspeito: 2h-5h
-    } catch (Exception e) {
-      return false;
-    }
+    return V49OperatorsEvaluator.evaluateTimeAnomalyOp(condition, context);
   }
 
   private boolean evaluateVelocityAnomalyOp(RuleCondition condition, EvaluationContext context) {
-    try {
-      Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-      double velocity = Double.parseDouble(String.valueOf(fieldValue));
-      Map<String, Object> payload = context.getPayload();
-      double avgVelocity = payload != null && payload.containsKey("avgVelocity")
-          ? Double.parseDouble(payload.get("avgVelocity").toString()) : 0;
-      double stdDev = payload != null && payload.containsKey("velocityStdDev")
-          ? Double.parseDouble(payload.get("velocityStdDev").toString()) : 1;
-      double threshold = condition.getValueSingle() != null
-          ? Double.parseDouble(condition.getValueSingle()) : 2.0;
-      return Math.abs(velocity - avgVelocity) > threshold * stdDev;
-    } catch (Exception e) {
-      return false;
-    }
+    return V49OperatorsEvaluator.evaluateVelocityAnomalyOp(condition, context);
   }
 
   private boolean evaluateMccAnomalyOp(RuleCondition condition, EvaluationContext context) {
-    Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "ANOMALY".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateMccAnomalyOp(condition, context);
   }
 
   private boolean evaluateMerchantAnomalyOp(RuleCondition condition, EvaluationContext context) {
-    Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "ANOMALY".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateMerchantAnomalyOp(condition, context);
   }
 
   // Operadores de dispositivo/sessão
   private boolean evaluateIsNewDeviceOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "NEW".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateIsNewDeviceOp(fieldValue);
   }
 
   private boolean evaluateIsNewLocationOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "NEW".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateIsNewLocationOp(fieldValue);
   }
 
   private boolean evaluateDeviceFingerprintMismatchOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "MISMATCH".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateDeviceFingerprintMismatchOp(fieldValue);
   }
 
   private boolean evaluateSessionDurationLtOp(Object fieldValue, RuleCondition condition) {
-    try {
-      double duration = Double.parseDouble(String.valueOf(fieldValue));
-      double threshold = Double.parseDouble(condition.getValueSingle());
-      return duration < threshold;
-    } catch (Exception e) {
-      return false;
-    }
+    return V49OperatorsEvaluator.evaluateSessionDurationLtOp(fieldValue, condition);
   }
 
   private boolean evaluateClickVelocityGtOp(Object fieldValue, RuleCondition condition) {
-    try {
-      double velocity = Double.parseDouble(String.valueOf(fieldValue));
-      double threshold = Double.parseDouble(condition.getValueSingle());
-      return velocity > threshold;
-    } catch (Exception e) {
-      return false;
-    }
+    return V49OperatorsEvaluator.evaluateClickVelocityGtOp(fieldValue, condition);
   }
 
   private boolean evaluateMouseMovementAnomalyOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "ANOMALY".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateMouseMovementAnomalyOp(fieldValue);
   }
 
   private boolean evaluateTypingSpeedAnomalyOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "ANOMALY".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateTypingSpeedAnomalyOp(fieldValue);
   }
 
   private boolean evaluateUserAgentSuspiciousOp(Object fieldValue) {
-    if (fieldValue == null) return false;
-    String userAgent = String.valueOf(fieldValue).toLowerCase();
-    return userAgent.contains("bot") || userAgent.contains("crawler") || userAgent.contains("spider")
-        || userAgent.contains("headless") || userAgent.contains("phantom");
+    return V49OperatorsEvaluator.evaluateUserAgentSuspiciousOp(fieldValue);
   }
 
   // Operadores de fraude de cartão
   private boolean evaluateExpiredCardOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "EXPIRED".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateExpiredCardOp(fieldValue);
   }
 
   private boolean evaluateCardCaptureFraudOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateCardCaptureFraudOp(fieldValue);
   }
 
   private boolean evaluatePinCvvLimitExceededOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "EXCEEDED".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluatePinCvvLimitExceededOp(fieldValue);
   }
 
   private boolean evaluateOfflinePinFailedOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "FAILED".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateOfflinePinFailedOp(fieldValue);
   }
 
   private boolean evaluateEmvSecurityCheckOp(Object fieldValue) {
-    return Boolean.FALSE.equals(fieldValue) || "false".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "FAILED".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateEmvSecurityCheckOp(fieldValue);
   }
 
   private boolean evaluateEcommerceNoAvsOp(Object fieldValue) {
-    return fieldValue == null || Boolean.TRUE.equals(fieldValue)
-        || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "NO_AVS".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateEcommerceNoAvsOp(fieldValue);
   }
 
   private boolean evaluatePosSecurityMissingOp(Object fieldValue) {
-    return fieldValue == null || Boolean.TRUE.equals(fieldValue)
-        || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "MISSING".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluatePosSecurityMissingOp(fieldValue);
   }
 
   private boolean evaluateTerminalVerificationFailedOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "FAILED".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateTerminalVerificationFailedOp(fieldValue);
   }
 
   private boolean evaluateSuspiciousTerminalOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "SUSPICIOUS".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateSuspiciousTerminalOp(fieldValue);
   }
 
   private boolean evaluateUnusualCardMediaOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "UNUSUAL".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateUnusualCardMediaOp(fieldValue);
   }
 
   // Operadores de transferência
   private boolean evaluateTransferAmountGtOp(Object fieldValue, RuleCondition condition) {
-    try {
-      double amount = Double.parseDouble(String.valueOf(fieldValue));
-      double threshold = Double.parseDouble(condition.getValueSingle());
-      return amount > threshold;
-    } catch (Exception e) {
-      return false;
-    }
+    return V49OperatorsEvaluator.evaluateTransferAmountGtOp(fieldValue, condition);
   }
 
   private boolean evaluateTransferVelocityGtOp(Object fieldValue, RuleCondition condition) {
-    try {
-      double velocity = Double.parseDouble(String.valueOf(fieldValue));
-      double threshold = Double.parseDouble(condition.getValueSingle());
-      return velocity > threshold;
-    } catch (Exception e) {
-      return false;
-    }
+    return V49OperatorsEvaluator.evaluateTransferVelocityGtOp(fieldValue, condition);
   }
 
   private boolean evaluateRecipientInWatchlistOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "WATCHLIST".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateRecipientInWatchlistOp(fieldValue);
   }
 
   private boolean evaluateRecipientIsNewOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "NEW".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateRecipientIsNewOp(fieldValue);
   }
 
   // Operadores de validação
   private boolean evaluateAddressMismatchOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "MISMATCH".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateAddressMismatchOp(fieldValue);
   }
 
   private boolean evaluatePhoneCountryMismatchOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "MISMATCH".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluatePhoneCountryMismatchOp(fieldValue);
   }
 
   private boolean evaluateEmailDomainAgeLtDaysOp(Object fieldValue, RuleCondition condition) {
-    try {
-      double domainAgeDays = Double.parseDouble(String.valueOf(fieldValue));
-      double threshold = Double.parseDouble(condition.getValueSingle());
-      return domainAgeDays < threshold;
-    } catch (Exception e) {
-      return false;
-    }
+    return V49OperatorsEvaluator.evaluateEmailDomainAgeLtDaysOp(fieldValue, condition);
   }
 
 
   private boolean evaluateAccountAgeLtDaysOp(Object fieldValue, RuleCondition condition) {
-    try {
-      double accountAgeDays = Double.parseDouble(String.valueOf(fieldValue));
-      double threshold = Double.parseDouble(condition.getValueSingle());
-      return accountAgeDays < threshold;
-    } catch (Exception e) {
-      return false;
-    }
+    return V49OperatorsEvaluator.evaluateAccountAgeLtDaysOp(fieldValue, condition);
   }
 
   // Operadores de contexto/classificação
   private boolean evaluateContextOp(Object fieldValue, RuleCondition condition, EvaluationContext context) {
-    if (condition.getValueSingle() == null || context.getPayload() == null) return false;
-    Object contextValue = context.getPayload().get(condition.getValueSingle());
-    return fieldValue != null && fieldValue.equals(contextValue);
+    return V49OperatorsEvaluator.evaluateContextOp(fieldValue, condition, context);
   }
 
   private boolean evaluateFraudOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "FRAUD".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateFraudOp(fieldValue);
   }
 
   private boolean evaluateSecurityOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateSecurityOp(fieldValue);
   }
 
   private boolean evaluateSuspiciousOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "SUSPICIOUS".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateSuspiciousOp(fieldValue);
   }
 
   private boolean evaluateSuspiciousTransactionTypeOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "SUSPICIOUS".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateSuspiciousTransactionTypeOp(fieldValue);
   }
 
   private boolean evaluateVelocityOp(Object fieldValue, RuleCondition condition) {
-    try {
-      double velocity = Double.parseDouble(String.valueOf(fieldValue));
-      double threshold = Double.parseDouble(condition.getValueSingle());
-      return velocity > threshold;
-    } catch (Exception e) {
-      return false;
-    }
+    return V49OperatorsEvaluator.evaluateVelocityOp(fieldValue, condition);
   }
 
   private boolean evaluateRoundAmountOp(Object fieldValue) {
-    try {
-      double amount = Double.parseDouble(String.valueOf(fieldValue));
-      return amount == Math.round(amount) && amount % 100 == 0;
-    } catch (Exception e) {
-      return false;
-    }
+    return V49OperatorsEvaluator.evaluateRoundAmountOp(fieldValue);
   }
 
   private boolean evaluateImpossibleTravelOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "IMPOSSIBLE".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateImpossibleTravelOp(fieldValue);
   }
 
   private boolean evaluateNotInListOp(Object fieldValue, RuleCondition condition) {
-    if (fieldValue == null) return true;
-    if (condition.getValueArray() == null || condition.getValueArray().isEmpty()) return true;
-    String fieldStr = String.valueOf(fieldValue);
-    return !condition.getValueArray().contains(fieldStr);
+    return V49OperatorsEvaluator.evaluateNotInListOp(fieldValue, condition);
   }
 
   private boolean evaluateCaptchaFailedOp(Object fieldValue) {
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
-        || "FAILED".equalsIgnoreCase(String.valueOf(fieldValue));
+    return V49OperatorsEvaluator.evaluateCaptchaFailedOp(fieldValue);
   }
 
   private boolean evaluateCountDistinctCountriesLastNDaysOp(RuleCondition condition, EvaluationContext context) {
-    try {
-      Object fieldValue = getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-      int count = Integer.parseInt(String.valueOf(fieldValue));
-      int threshold = Integer.parseInt(condition.getValueSingle());
-      return count > threshold;
-    } catch (Exception e) {
-      return false;
-    }
+    return V49OperatorsEvaluator.evaluateCountDistinctCountriesLastNDaysOp(condition, context);
   }
 }

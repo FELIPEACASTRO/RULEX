@@ -3,8 +3,11 @@ package com.rulex.service.complex.evaluation;
 import com.rulex.entity.complex.RuleCondition;
 import com.rulex.service.complex.ComplexRuleEvaluator.EvaluationContext;
 import com.rulex.service.complex.context.FieldValueExtractor;
+import com.rulex.service.complex.parsing.DateTimeParser;
 import com.rulex.util.RegexValidator;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
@@ -149,5 +152,113 @@ public final class BasicOperatorEvaluator {
       case -2 -> result <= 0;
       default -> false;
     };
+  }
+
+  public static boolean evaluateDateBefore(Object fieldValue, String dateStr) {
+    try {
+      LocalDate fieldDate = DateTimeParser.parseDate(fieldValue);
+      LocalDate compareDate = LocalDate.parse(dateStr);
+      return fieldDate != null && fieldDate.isBefore(compareDate);
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  public static boolean evaluateDateAfter(Object fieldValue, String dateStr) {
+    try {
+      LocalDate fieldDate = DateTimeParser.parseDate(fieldValue);
+      LocalDate compareDate = LocalDate.parse(dateStr);
+      return fieldDate != null && fieldDate.isAfter(compareDate);
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  public static boolean evaluateDateBetween(Object fieldValue, String minDate, String maxDate) {
+    try {
+      LocalDate fieldDate = DateTimeParser.parseDate(fieldValue);
+      LocalDate min = LocalDate.parse(minDate);
+      LocalDate max = LocalDate.parse(maxDate);
+      return fieldDate != null && !fieldDate.isBefore(min) && !fieldDate.isAfter(max);
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  public static boolean evaluateTimeBefore(Object fieldValue, String timeStr) {
+    try {
+      LocalTime fieldTime = DateTimeParser.parseTime(fieldValue);
+      LocalTime compareTime = LocalTime.parse(timeStr);
+      return fieldTime != null && fieldTime.isBefore(compareTime);
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  public static boolean evaluateTimeAfter(Object fieldValue, String timeStr) {
+    try {
+      LocalTime fieldTime = DateTimeParser.parseTime(fieldValue);
+      LocalTime compareTime = LocalTime.parse(timeStr);
+      return fieldTime != null && fieldTime.isAfter(compareTime);
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  public static boolean evaluateTimeBetween(Object fieldValue, String minTime, String maxTime) {
+    try {
+      LocalTime fieldTime = DateTimeParser.parseTime(fieldValue);
+      LocalTime min = LocalTime.parse(minTime);
+      LocalTime max = LocalTime.parse(maxTime);
+      return fieldTime != null && !fieldTime.isBefore(min) && !fieldTime.isAfter(max);
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static boolean evaluateArrayContains(Object fieldValue, String element) {
+    if (fieldValue == null) return false;
+
+    if (fieldValue instanceof List) {
+      return ((List<Object>) fieldValue)
+          .stream().anyMatch(item -> String.valueOf(item).equals(element));
+    }
+    return false;
+  }
+
+  @SuppressWarnings("unchecked")
+  public static boolean evaluateArraySize(Object fieldValue, String expectedSize, int comparison) {
+    if (fieldValue == null || expectedSize == null) return false;
+
+    int size = 0;
+    if (fieldValue instanceof List) {
+      size = ((List<Object>) fieldValue).size();
+    } else if (fieldValue.getClass().isArray()) {
+      size = java.lang.reflect.Array.getLength(fieldValue);
+    } else {
+      return false;
+    }
+
+    int expected = Integer.parseInt(expectedSize);
+    return switch (comparison) {
+      case 0 -> size == expected;
+      case 1 -> size > expected;
+      case -1 -> size < expected;
+      default -> false;
+    };
+  }
+
+  public static boolean evaluateModulo(
+      Object fieldValue, String divisor, String remainder, boolean equals) {
+    try {
+      long value = Long.parseLong(String.valueOf(fieldValue));
+      long div = Long.parseLong(divisor);
+      long rem = Long.parseLong(remainder);
+      boolean result = (value % div) == rem;
+      return equals ? result : !result;
+    } catch (Exception e) {
+      return false;
+    }
   }
 }
