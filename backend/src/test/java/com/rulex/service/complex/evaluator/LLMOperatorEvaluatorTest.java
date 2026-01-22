@@ -88,7 +88,8 @@ class LLMOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenAnomalyDetected() {
-      RuleCondition condition = condition(ConditionOperator.LLM_ANOMALY_EXPLANATION_GENERATION, null);
+      RuleCondition condition =
+          condition(ConditionOperator.LLM_ANOMALY_EXPLANATION_GENERATION, null);
       EvaluationContext context = context(Map.of("llmAnomalyDetected", true));
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
@@ -114,7 +115,8 @@ class LLMOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenScoreAboveThreshold() {
-      RuleCondition condition = condition(ConditionOperator.LLM_TRANSACTION_DESCRIPTION_ANALYSIS, "0.6");
+      RuleCondition condition =
+          condition(ConditionOperator.LLM_TRANSACTION_DESCRIPTION_ANALYSIS, "0.6");
       EvaluationContext context = context(Map.of("llmTransactionDescriptionScore", 0.9));
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
@@ -122,7 +124,8 @@ class LLMOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenBooleanFlagTrue() {
-      RuleCondition condition = condition(ConditionOperator.LLM_TRANSACTION_DESCRIPTION_ANALYSIS, "0.6");
+      RuleCondition condition =
+          condition(ConditionOperator.LLM_TRANSACTION_DESCRIPTION_ANALYSIS, "0.6");
       EvaluationContext context = context(Map.of("llmTransactionDescriptionScore", true));
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();

@@ -13,30 +13,37 @@ public final class V49OperatorsEvaluator {
 
   public static boolean evaluateLogicalAnd(RuleCondition condition, EvaluationContext context) {
     Object fieldValue =
-        FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-    boolean a = Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
+        FieldValueExtractor.getFieldValue(
+            condition.getFieldName(), condition.getFieldPath(), context);
+    boolean a =
+        Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
     boolean b = Boolean.parseBoolean(condition.getValueSingle());
     return a && b;
   }
 
   public static boolean evaluateLogicalOr(RuleCondition condition, EvaluationContext context) {
     Object fieldValue =
-        FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-    boolean a = Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
+        FieldValueExtractor.getFieldValue(
+            condition.getFieldName(), condition.getFieldPath(), context);
+    boolean a =
+        Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
     boolean b = Boolean.parseBoolean(condition.getValueSingle());
     return a || b;
   }
 
   public static boolean evaluateLogicalNot(RuleCondition condition, EvaluationContext context) {
     Object fieldValue =
-        FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+        FieldValueExtractor.getFieldValue(
+            condition.getFieldName(), condition.getFieldPath(), context);
     return !Boolean.TRUE.equals(fieldValue) && !"true".equalsIgnoreCase(String.valueOf(fieldValue));
   }
 
   public static boolean evaluateLogicalXor(RuleCondition condition, EvaluationContext context) {
     Object fieldValue =
-        FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-    boolean a = Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
+        FieldValueExtractor.getFieldValue(
+            condition.getFieldName(), condition.getFieldPath(), context);
+    boolean a =
+        Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
     boolean b = Boolean.parseBoolean(condition.getValueSingle());
     return a ^ b;
   }
@@ -49,10 +56,12 @@ public final class V49OperatorsEvaluator {
     return !evaluateLogicalOr(condition, context);
   }
 
-  public static boolean evaluateAmountAnomalyOp(RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateAmountAnomalyOp(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Object fieldValue =
-          FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+          FieldValueExtractor.getFieldValue(
+              condition.getFieldName(), condition.getFieldPath(), context);
       double amount = Double.parseDouble(String.valueOf(fieldValue));
       Map<String, Object> payload = context.getPayload();
       double avgAmount =
@@ -64,9 +73,7 @@ public final class V49OperatorsEvaluator {
               ? Double.parseDouble(payload.get("amountStdDev").toString())
               : 1;
       double threshold =
-          condition.getValueSingle() != null
-              ? Double.parseDouble(condition.getValueSingle())
-              : 3.0;
+          condition.getValueSingle() != null ? Double.parseDouble(condition.getValueSingle()) : 3.0;
       return Math.abs(amount - avgAmount) > threshold * stdDev;
     } catch (Exception e) {
       return false;
@@ -76,7 +83,8 @@ public final class V49OperatorsEvaluator {
   public static boolean evaluateTimeAnomalyOp(RuleCondition condition, EvaluationContext context) {
     try {
       Object fieldValue =
-          FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+          FieldValueExtractor.getFieldValue(
+              condition.getFieldName(), condition.getFieldPath(), context);
       int hour = Integer.parseInt(String.valueOf(fieldValue));
       return hour >= 2 && hour <= 5;
     } catch (Exception e) {
@@ -84,10 +92,12 @@ public final class V49OperatorsEvaluator {
     }
   }
 
-  public static boolean evaluateVelocityAnomalyOp(RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateVelocityAnomalyOp(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Object fieldValue =
-          FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+          FieldValueExtractor.getFieldValue(
+              condition.getFieldName(), condition.getFieldPath(), context);
       double velocity = Double.parseDouble(String.valueOf(fieldValue));
       Map<String, Object> payload = context.getPayload();
       double avgVelocity =
@@ -99,9 +109,7 @@ public final class V49OperatorsEvaluator {
               ? Double.parseDouble(payload.get("velocityStdDev").toString())
               : 1;
       double threshold =
-          condition.getValueSingle() != null
-              ? Double.parseDouble(condition.getValueSingle())
-              : 2.0;
+          condition.getValueSingle() != null ? Double.parseDouble(condition.getValueSingle()) : 2.0;
       return Math.abs(velocity - avgVelocity) > threshold * stdDev;
     } catch (Exception e) {
       return false;
@@ -110,15 +118,18 @@ public final class V49OperatorsEvaluator {
 
   public static boolean evaluateMccAnomalyOp(RuleCondition condition, EvaluationContext context) {
     Object fieldValue =
-        FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+        FieldValueExtractor.getFieldValue(
+            condition.getFieldName(), condition.getFieldPath(), context);
     return Boolean.TRUE.equals(fieldValue)
         || "true".equalsIgnoreCase(String.valueOf(fieldValue))
         || "ANOMALY".equalsIgnoreCase(String.valueOf(fieldValue));
   }
 
-  public static boolean evaluateMerchantAnomalyOp(RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateMerchantAnomalyOp(
+      RuleCondition condition, EvaluationContext context) {
     Object fieldValue =
-        FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+        FieldValueExtractor.getFieldValue(
+            condition.getFieldName(), condition.getFieldPath(), context);
     return Boolean.TRUE.equals(fieldValue)
         || "true".equalsIgnoreCase(String.valueOf(fieldValue))
         || "ANOMALY".equalsIgnoreCase(String.valueOf(fieldValue));
@@ -379,7 +390,8 @@ public final class V49OperatorsEvaluator {
       RuleCondition condition, EvaluationContext context) {
     try {
       Object fieldValue =
-          FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+          FieldValueExtractor.getFieldValue(
+              condition.getFieldName(), condition.getFieldPath(), context);
       int count = Integer.parseInt(String.valueOf(fieldValue));
       int threshold = Integer.parseInt(condition.getValueSingle());
       return count > threshold;

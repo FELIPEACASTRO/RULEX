@@ -26,7 +26,8 @@ public final class ConditionEvaluationService {
 
     try {
       Object fieldValue =
-          FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+          FieldValueExtractor.getFieldValue(
+              condition.getFieldName(), condition.getFieldPath(), context);
 
       result = operatorEvaluator.apply(condition, fieldValue);
 

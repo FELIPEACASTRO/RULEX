@@ -309,8 +309,10 @@ public class CustomerEnrichment {
       if (lastActivityOpt.isPresent()) {
         OffsetDateTime lastActivity = lastActivityOpt.get();
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
-        history.daysSinceLastTransaction = (int) java.time.temporal.ChronoUnit.DAYS.between(lastActivity, now);
-        history.hoursSinceLastTransaction = (int) java.time.temporal.ChronoUnit.HOURS.between(lastActivity, now);
+        history.daysSinceLastTransaction =
+            (int) java.time.temporal.ChronoUnit.DAYS.between(lastActivity, now);
+        history.hoursSinceLastTransaction =
+            (int) java.time.temporal.ChronoUnit.HOURS.between(lastActivity, now);
       }
 
     } catch (Exception e) {

@@ -17,7 +17,9 @@ public final class CustomerHistoryEvaluator {
   private CustomerHistoryEvaluator() {}
 
   public static boolean evaluateInCustomerHistory(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String[] parts = condition.getValueSingle().split(":");
       String fieldToCheck = parts.length > 0 ? parts[0].trim() : condition.getFieldName();
@@ -68,9 +70,7 @@ public final class CustomerHistoryEvaluator {
   }
 
   public static boolean evaluateInCustomerChargebackMerchants(
-      RuleCondition condition,
-      EvaluationContext context,
-      OperatorDataService operatorDataService) {
+      RuleCondition condition, EvaluationContext context, OperatorDataService operatorDataService) {
     try {
       Object merchantIdObj = FieldValueExtractor.getFieldValue("merchantId", null, context);
       if (merchantIdObj == null) {
@@ -78,7 +78,8 @@ public final class CustomerHistoryEvaluator {
       }
       String merchantId = merchantIdObj.toString();
 
-      Object customerIdObj = FieldValueExtractor.getFieldValue("customerIdFromHeader", null, context);
+      Object customerIdObj =
+          FieldValueExtractor.getFieldValue("customerIdFromHeader", null, context);
       if (customerIdObj == null) {
         customerIdObj = FieldValueExtractor.getFieldValue("customerId", null, context);
       }

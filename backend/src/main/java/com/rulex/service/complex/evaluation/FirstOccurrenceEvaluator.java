@@ -14,7 +14,9 @@ public final class FirstOccurrenceEvaluator {
   private FirstOccurrenceEvaluator() {}
 
   public static boolean evaluateIsFirst(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String fieldToCheck =
           condition.getValueSingle() != null
@@ -42,14 +44,17 @@ public final class FirstOccurrenceEvaluator {
   }
 
   public static boolean evaluateIsNew(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       int maxDays =
           condition.getValueSingle() != null
               ? Integer.parseInt(condition.getValueSingle().trim())
               : 7;
 
-      Object fieldValue = FieldValueExtractor.getFieldValue(condition.getFieldName(), null, context);
+      Object fieldValue =
+          FieldValueExtractor.getFieldValue(condition.getFieldName(), null, context);
       if (fieldValue == null) {
         return false;
       }
@@ -77,7 +82,9 @@ public final class FirstOccurrenceEvaluator {
   }
 
   public static boolean evaluateDistanceFromLastGt(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       double thresholdKm = Double.parseDouble(condition.getValueSingle().trim());
 

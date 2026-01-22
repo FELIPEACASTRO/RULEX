@@ -220,16 +220,18 @@ public class RuleSimulationService {
     String expectedValue = condition.getValue();
 
     Object actualValue = getFieldValue(payload, field);
-    boolean met = switch (operator) {
-      case "GT_FIELD", "EQ_FIELD", "NE_FIELD", "GTE_FIELD", "LT_FIELD", "LTE_FIELD" -> {
-        Object otherValue = getFieldValue(payload, expectedValue);
-        yield compareFieldValues(actualValue, otherValue, operator);
-      }
-      case "PERCENTAGE_OF_FIELD" -> evaluatePercentageOfField(actualValue, payload, expectedValue);
-      case "MODULO_ZERO" -> evaluateModuloZero(actualValue, expectedValue);
-      case "DECIMAL_PLACES_GT" -> evaluateDecimalPlacesGt(actualValue, expectedValue);
-      default -> evaluateOperator(actualValue, operator, expectedValue);
-    };
+    boolean met =
+        switch (operator) {
+          case "GT_FIELD", "EQ_FIELD", "NE_FIELD", "GTE_FIELD", "LT_FIELD", "LTE_FIELD" -> {
+            Object otherValue = getFieldValue(payload, expectedValue);
+            yield compareFieldValues(actualValue, otherValue, operator);
+          }
+          case "PERCENTAGE_OF_FIELD" ->
+              evaluatePercentageOfField(actualValue, payload, expectedValue);
+          case "MODULO_ZERO" -> evaluateModuloZero(actualValue, expectedValue);
+          case "DECIMAL_PLACES_GT" -> evaluateDecimalPlacesGt(actualValue, expectedValue);
+          default -> evaluateOperator(actualValue, operator, expectedValue);
+        };
 
     return ConditionResult.builder()
         .field(field)

@@ -63,8 +63,7 @@ class ComplexRuleEvaluatorAggregationTest {
     // Arrange
     RuleConditionGroup group =
         createGroupWithCondition(
-            ConditionOperator.SUM_LAST_N_DAYS,
-            "amount|7|5000|GT" // Soma nos últimos 7 dias > 5000
+            ConditionOperator.SUM_LAST_N_DAYS, "amount|7|5000|GT" // Soma nos últimos 7 dias > 5000
             );
 
     Map<String, Object> payload =

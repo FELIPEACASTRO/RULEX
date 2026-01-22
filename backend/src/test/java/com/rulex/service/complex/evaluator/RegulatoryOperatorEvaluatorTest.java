@@ -117,7 +117,8 @@ class RegulatoryOperatorEvaluatorTest {
     @Test
     void shouldReturnTrueWhenNamesMatch() {
       RuleCondition condition = createCondition(ConditionOperator.PSD3_COP_NAME_MATCH, null);
-      EvaluationContext context = createContext(Map.of("payeeName", "Alice", "accountHolderName", "alice"), null);
+      EvaluationContext context =
+          createContext(Map.of("payeeName", "Alice", "accountHolderName", "alice"), null);
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
     }
@@ -138,7 +139,8 @@ class RegulatoryOperatorEvaluatorTest {
     @Test
     void shouldReturnTrueWhenWithinRetention() {
       RuleCondition condition = createCondition(ConditionOperator.GDPR_DATA_RETENTION_CHECK, "30");
-      EvaluationContext context = createContext(Map.of("dataAgeDays", 20, "retentionPeriodDays", 30), null);
+      EvaluationContext context =
+          createContext(Map.of("dataAgeDays", 20, "retentionPeriodDays", 30), null);
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
     }
@@ -146,7 +148,8 @@ class RegulatoryOperatorEvaluatorTest {
     @Test
     void shouldReturnFalseWhenExceededRetention() {
       RuleCondition condition = createCondition(ConditionOperator.GDPR_DATA_RETENTION_CHECK, "30");
-      EvaluationContext context = createContext(Map.of("dataAgeDays", 40, "retentionPeriodDays", 30), null);
+      EvaluationContext context =
+          createContext(Map.of("dataAgeDays", 40, "retentionPeriodDays", 30), null);
 
       assertThat(evaluator.evaluate(condition, context)).isFalse();
     }

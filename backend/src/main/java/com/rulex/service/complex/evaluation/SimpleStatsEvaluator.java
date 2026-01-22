@@ -37,8 +37,7 @@ public final class SimpleStatsEvaluator {
       Object kurtosisObj = payload.get("kurtosis");
 
       double skewness = skewnessObj instanceof Number ? ((Number) skewnessObj).doubleValue() : 0.0;
-      double kurtosis =
-          kurtosisObj instanceof Number ? ((Number) kurtosisObj).doubleValue() : 0.0;
+      double kurtosis = kurtosisObj instanceof Number ? ((Number) kurtosisObj).doubleValue() : 0.0;
 
       // Anomaly if either is beyond threshold
       return Math.abs(skewness) > threshold || Math.abs(kurtosis - 3) > threshold;

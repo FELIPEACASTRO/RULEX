@@ -159,8 +159,11 @@ public final class SanctionsNameMatchingEvaluator {
         if (parts.length >= 2 && !parts[1].isBlank()) threshold = Integer.parseInt(parts[1].trim());
       }
 
-      Object v1 = FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
-      Object v2 = otherField != null ? FieldValueExtractor.getFieldValue(otherField, null, context) : null;
+      Object v1 =
+          FieldValueExtractor.getFieldValue(
+              condition.getFieldName(), condition.getFieldPath(), context);
+      Object v2 =
+          otherField != null ? FieldValueExtractor.getFieldValue(otherField, null, context) : null;
       if (v2 == null) {
         v2 = context.getPayload().get("transliterated_name");
         if (v2 == null) v2 = context.getPayload().get("transliteratedName");
@@ -189,7 +192,8 @@ public final class SanctionsNameMatchingEvaluator {
       }
 
       Object fieldValue =
-          FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+          FieldValueExtractor.getFieldValue(
+              condition.getFieldName(), condition.getFieldPath(), context);
       if (fieldValue == null) return false;
       String name = StringNormalizer.normalizeForMatch(String.valueOf(fieldValue));
       if (name.isBlank()) return false;
@@ -198,7 +202,8 @@ public final class SanctionsNameMatchingEvaluator {
       if (aliases == null || aliases.isEmpty()) {
         String csv = condition.getValueSingle();
         if (csv == null || csv.isBlank()) return false;
-        aliases = Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
+        aliases =
+            Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
       }
 
       for (String alias : aliases) {

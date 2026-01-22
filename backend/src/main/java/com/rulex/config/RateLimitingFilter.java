@@ -105,9 +105,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
   }
 
   /**
-   * SEC-005 FIX: Gera chave de rate limiting combinando múltiplos fatores.
-   * Prioridade: 1) Usuário autenticado, 2) IP + User-Agent hash
-   * Isso previne bypass via proxies/VPNs e permite rate limiting por usuário.
+   * SEC-005 FIX: Gera chave de rate limiting combinando múltiplos fatores. Prioridade: 1) Usuário
+   * autenticado, 2) IP + User-Agent hash Isso previne bypass via proxies/VPNs e permite rate
+   * limiting por usuário.
    */
   private String getRateLimitKey(HttpServletRequest request) {
     // Tentar extrair usuário do header Authorization (Basic Auth)
@@ -115,7 +115,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     if (authHeader != null && authHeader.startsWith("Basic ")) {
       try {
         String base64Credentials = authHeader.substring("Basic ".length());
-        String credentials = new String(Base64.getDecoder().decode(base64Credentials), StandardCharsets.UTF_8);
+        String credentials =
+            new String(Base64.getDecoder().decode(base64Credentials), StandardCharsets.UTF_8);
         String username = credentials.split(":")[0];
         if (username != null && !username.isBlank()) {
           return "user:" + username;
@@ -133,9 +134,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     return "ip:" + clientIp + ":ua:" + userAgentHash;
   }
 
-  /**
-   * Gera hash curto do User-Agent para identificação.
-   */
+  /** Gera hash curto do User-Agent para identificação. */
   private String hashUserAgent(String userAgent) {
     if (userAgent == null || userAgent.isBlank()) {
       return "unknown";

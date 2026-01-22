@@ -15,10 +15,10 @@ import com.rulex.entity.TransactionRawStore;
 import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
+import com.rulex.service.enrichment.TransactionEnrichmentFacade;
 import com.rulex.util.PanHashUtil;
 import com.rulex.util.PanMaskingUtil;
 import com.rulex.util.RegexValidator;
-import com.rulex.service.enrichment.TransactionEnrichmentFacade;
 import com.rulex.v31.execlog.ExecutionEventType;
 import com.rulex.v31.execlog.RuleExecutionLogService;
 import java.beans.PropertyDescriptor;
@@ -1810,8 +1810,10 @@ public class RuleEngineService {
       return false;
     }
 
-    if (leftValue instanceof Number || leftValue instanceof BigDecimal
-        || rightValue instanceof Number || rightValue instanceof BigDecimal) {
+    if (leftValue instanceof Number
+        || leftValue instanceof BigDecimal
+        || rightValue instanceof Number
+        || rightValue instanceof BigDecimal) {
       BigDecimal left = toBigDecimal(leftValue);
       BigDecimal right = toBigDecimal(rightValue);
       if (left == null || right == null) {
@@ -1875,7 +1877,8 @@ public class RuleEngineService {
       return false;
     }
 
-    BigDecimal pct = left.multiply(BigDecimal.valueOf(100)).divide(right, 6, java.math.RoundingMode.HALF_UP);
+    BigDecimal pct =
+        left.multiply(BigDecimal.valueOf(100)).divide(right, 6, java.math.RoundingMode.HALF_UP);
     if (max == null) {
       return pct.compareTo(min) >= 0;
     }

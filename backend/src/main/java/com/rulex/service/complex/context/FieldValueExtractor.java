@@ -8,7 +8,8 @@ public final class FieldValueExtractor {
   private FieldValueExtractor() {}
 
   @SuppressWarnings("unchecked")
-  public static Object getFieldValue(String fieldName, String fieldPath, EvaluationContext context) {
+  public static Object getFieldValue(
+      String fieldName, String fieldPath, EvaluationContext context) {
     if (context == null) {
       return null;
     }

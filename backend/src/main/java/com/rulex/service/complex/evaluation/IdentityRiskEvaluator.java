@@ -171,8 +171,7 @@ public final class IdentityRiskEvaluator {
     }
   }
 
-  public static boolean evaluateCreditFileThin(
-      RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateCreditFileThin(RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       int minMonths = Integer.parseInt(condition.getValueSingle().trim());

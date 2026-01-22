@@ -10,8 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
 /**
  * Testes unitários para MerchantOperatorEvaluator.
@@ -23,343 +21,365 @@ import org.junit.jupiter.params.provider.CsvSource;
 @DisplayName("MerchantOperatorEvaluator Tests")
 class MerchantOperatorEvaluatorTest {
 
-    private MerchantOperatorEvaluator evaluator;
+  private MerchantOperatorEvaluator evaluator;
 
-    @BeforeEach
-    void setUp() {
-        evaluator = new MerchantOperatorEvaluator();
-    }
+  @BeforeEach
+  void setUp() {
+    evaluator = new MerchantOperatorEvaluator();
+  }
 
-    // ========== HELPER METHODS ==========
+  // ========== HELPER METHODS ==========
 
-    private RuleCondition createCondition(String fieldName, ConditionOperator operator, String value) {
-        RuleCondition condition = new RuleCondition();
-        condition.setFieldName(fieldName);
-        condition.setOperator(operator);
-        condition.setValueSingle(value);
-        return condition;
-    }
+  private RuleCondition createCondition(
+      String fieldName, ConditionOperator operator, String value) {
+    RuleCondition condition = new RuleCondition();
+    condition.setFieldName(fieldName);
+    condition.setOperator(operator);
+    condition.setValueSingle(value);
+    return condition;
+  }
 
-    private EvaluationContext createContext(Map<String, Object> payload) {
-        return EvaluationContext.builder()
-            .payload(payload)
-            .build();
-    }
+  private EvaluationContext createContext(Map<String, Object> payload) {
+    return EvaluationContext.builder().payload(payload).build();
+  }
 
-    // ========== SUPPORTED OPERATORS ==========
+  // ========== SUPPORTED OPERATORS ==========
 
-    @Test
-    @DisplayName("Deve suportar operadores de merchant")
-    void shouldSupportMerchantOperators() {
-        var supported = evaluator.getSupportedOperators();
+  @Test
+  @DisplayName("Deve suportar operadores de merchant")
+  void shouldSupportMerchantOperators() {
+    var supported = evaluator.getSupportedOperators();
 
-        assertThat(supported).contains(
+    assertThat(supported)
+        .contains(
             ConditionOperator.MERCHANT_AGE_CHECK,
             ConditionOperator.MERCHANT_CHARGEBACK_HISTORY,
             ConditionOperator.MERCHANT_FRAUD_RATE_CHECK,
             ConditionOperator.MERCHANT_REPUTATION_SCORE,
             ConditionOperator.MERCHANT_FIRST_SEEN,
             ConditionOperator.MERCHANT_COUNTRY_MISMATCH,
-            ConditionOperator.MERCHANT_VELOCITY_SPIKE
-        );
+            ConditionOperator.MERCHANT_VELOCITY_SPIKE);
+  }
+
+  @Test
+  @DisplayName("Deve retornar categoria correta")
+  void shouldReturnCorrectCategory() {
+    assertThat(evaluator.getCategory()).isEqualTo("MERCHANT");
+  }
+
+  // ========== MERCHANT_AGE_CHECK ==========
+
+  @Nested
+  @DisplayName("Operador MERCHANT_AGE_CHECK")
+  class MerchantAgeCheckTests {
+
+    @Test
+    @DisplayName("Deve retornar true quando merchant é muito novo")
+    void shouldReturnTrueWhenMerchantTooNew() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_AGE_CHECK, "30");
+      EvaluationContext context = createContext(Map.of("merchantAgeDays", 15));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isTrue();
     }
 
     @Test
-    @DisplayName("Deve retornar categoria correta")
-    void shouldReturnCorrectCategory() {
-        assertThat(evaluator.getCategory()).isEqualTo("MERCHANT");
+    @DisplayName("Deve retornar false quando merchant é antigo")
+    void shouldReturnFalseWhenMerchantOld() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_AGE_CHECK, "30");
+      EvaluationContext context = createContext(Map.of("merchantAgeDays", 90));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isFalse();
+    }
+  }
+
+  // ========== MERCHANT_CHARGEBACK_HISTORY ==========
+
+  @Nested
+  @DisplayName("Operador MERCHANT_CHARGEBACK_HISTORY")
+  class MerchantChargebackHistoryTests {
+
+    @Test
+    @DisplayName("Deve detectar histórico de chargeback alto")
+    void shouldDetectHighChargebackHistory() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_CHARGEBACK_HISTORY, "0.01");
+      EvaluationContext context = createContext(Map.of("merchantChargebackRate", 0.05));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isTrue();
     }
 
-    // ========== MERCHANT_AGE_CHECK ==========
+    @Test
+    @DisplayName("Deve retornar false para histórico de chargeback baixo")
+    void shouldReturnFalseForLowChargebackHistory() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_CHARGEBACK_HISTORY, "0.01");
+      EvaluationContext context = createContext(Map.of("merchantChargebackRate", 0.005));
 
-    @Nested
-    @DisplayName("Operador MERCHANT_AGE_CHECK")
-    class MerchantAgeCheckTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve retornar true quando merchant é muito novo")
-        void shouldReturnTrueWhenMerchantTooNew() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_AGE_CHECK, "30");
-            EvaluationContext context = createContext(Map.of("merchantAgeDays", 15));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== MERCHANT_FRAUD_RATE_CHECK ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador MERCHANT_FRAUD_RATE_CHECK")
+  class MerchantFraudRateCheckTests {
 
-        @Test
-        @DisplayName("Deve retornar false quando merchant é antigo")
-        void shouldReturnFalseWhenMerchantOld() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_AGE_CHECK, "30");
-            EvaluationContext context = createContext(Map.of("merchantAgeDays", 90));
+    @Test
+    @DisplayName("Deve detectar taxa de fraude alta")
+    void shouldDetectHighFraudRate() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_FRAUD_RATE_CHECK, "0.02");
+      EvaluationContext context = createContext(Map.of("merchantFraudRate", 0.05));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== MERCHANT_CHARGEBACK_HISTORY ==========
+    @Test
+    @DisplayName("Deve retornar false para taxa de fraude baixa")
+    void shouldReturnFalseForLowFraudRate() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_FRAUD_RATE_CHECK, "0.02");
+      EvaluationContext context = createContext(Map.of("merchantFraudRate", 0.01));
 
-    @Nested
-    @DisplayName("Operador MERCHANT_CHARGEBACK_HISTORY")
-    class MerchantChargebackHistoryTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar histórico de chargeback alto")
-        void shouldDetectHighChargebackHistory() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_CHARGEBACK_HISTORY, "0.01");
-            EvaluationContext context = createContext(Map.of("merchantChargebackRate", 0.05));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== MERCHANT_REPUTATION_SCORE ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador MERCHANT_REPUTATION_SCORE")
+  class MerchantReputationScoreTests {
 
-        @Test
-        @DisplayName("Deve retornar false para histórico de chargeback baixo")
-        void shouldReturnFalseForLowChargebackHistory() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_CHARGEBACK_HISTORY, "0.01");
-            EvaluationContext context = createContext(Map.of("merchantChargebackRate", 0.005));
+    @Test
+    @DisplayName("Deve detectar score de reputação baixo")
+    void shouldDetectLowReputationScore() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_REPUTATION_SCORE, "50");
+      EvaluationContext context = createContext(Map.of("merchantReputationScore", 30));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== MERCHANT_FRAUD_RATE_CHECK ==========
+    @Test
+    @DisplayName("Deve retornar false para score de reputação alto")
+    void shouldReturnFalseForHighReputationScore() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_REPUTATION_SCORE, "50");
+      EvaluationContext context = createContext(Map.of("merchantReputationScore", 80));
 
-    @Nested
-    @DisplayName("Operador MERCHANT_FRAUD_RATE_CHECK")
-    class MerchantFraudRateCheckTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar taxa de fraude alta")
-        void shouldDetectHighFraudRate() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_FRAUD_RATE_CHECK, "0.02");
-            EvaluationContext context = createContext(Map.of("merchantFraudRate", 0.05));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== MERCHANT_FIRST_SEEN ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador MERCHANT_FIRST_SEEN")
+  class MerchantFirstSeenTests {
 
-        @Test
-        @DisplayName("Deve retornar false para taxa de fraude baixa")
-        void shouldReturnFalseForLowFraudRate() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_FRAUD_RATE_CHECK, "0.02");
-            EvaluationContext context = createContext(Map.of("merchantFraudRate", 0.01));
+    @Test
+    @DisplayName("Deve detectar primeira transação com merchant")
+    void shouldDetectFirstTransactionWithMerchant() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_FIRST_SEEN, null);
+      EvaluationContext context = createContext(Map.of("isFirstMerchantTransaction", true));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== MERCHANT_REPUTATION_SCORE ==========
+    @Test
+    @DisplayName("Deve retornar false para merchant conhecido")
+    void shouldReturnFalseForKnownMerchant() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_FIRST_SEEN, null);
+      EvaluationContext context = createContext(Map.of("isFirstMerchantTransaction", false));
 
-    @Nested
-    @DisplayName("Operador MERCHANT_REPUTATION_SCORE")
-    class MerchantReputationScoreTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar score de reputação baixo")
-        void shouldDetectLowReputationScore() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_REPUTATION_SCORE, "50");
-            EvaluationContext context = createContext(Map.of("merchantReputationScore", 30));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== MERCHANT_COUNTRY_MISMATCH ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador MERCHANT_COUNTRY_MISMATCH")
+  class MerchantCountryMismatchTests {
 
-        @Test
-        @DisplayName("Deve retornar false para score de reputação alto")
-        void shouldReturnFalseForHighReputationScore() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_REPUTATION_SCORE, "50");
-            EvaluationContext context = createContext(Map.of("merchantReputationScore", 80));
+    @Test
+    @DisplayName("Deve detectar mismatch de país do merchant")
+    void shouldDetectMerchantCountryMismatch() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_COUNTRY_MISMATCH, null);
+      EvaluationContext context =
+          createContext(
+              Map.of(
+                  "merchantCountry", "US",
+                  "cardCountry", "BR",
+                  "merchantCountryMismatch", true));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== MERCHANT_FIRST_SEEN ==========
+    @Test
+    @DisplayName("Deve retornar false quando países correspondem")
+    void shouldReturnFalseWhenCountriesMatch() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_COUNTRY_MISMATCH, null);
+      EvaluationContext context =
+          createContext(
+              Map.of(
+                  "merchantCountry", "BR",
+                  "cardCountry", "BR",
+                  "merchantCountryMismatch", false));
 
-    @Nested
-    @DisplayName("Operador MERCHANT_FIRST_SEEN")
-    class MerchantFirstSeenTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar primeira transação com merchant")
-        void shouldDetectFirstTransactionWithMerchant() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_FIRST_SEEN, null);
-            EvaluationContext context = createContext(Map.of("isFirstMerchantTransaction", true));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== MERCHANT_VELOCITY_SPIKE ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador MERCHANT_VELOCITY_SPIKE")
+  class MerchantVelocitySpikeTests {
 
-        @Test
-        @DisplayName("Deve retornar false para merchant conhecido")
-        void shouldReturnFalseForKnownMerchant() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_FIRST_SEEN, null);
-            EvaluationContext context = createContext(Map.of("isFirstMerchantTransaction", false));
+    @Test
+    @DisplayName("Deve detectar spike de velocidade do merchant")
+    void shouldDetectMerchantVelocitySpike() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_VELOCITY_SPIKE, "3");
+      EvaluationContext context =
+          createContext(
+              Map.of(
+                  "merchantCurrentVelocity", 100,
+                  "merchantAverageVelocity", 20,
+                  "merchantVelocityStdDev", 10));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      // (100 - 20) / 10 = 8 > 3 = true
+      assertThat(result).isTrue();
     }
 
-    // ========== MERCHANT_COUNTRY_MISMATCH ==========
+    @Test
+    @DisplayName("Deve retornar false quando não há spike")
+    void shouldReturnFalseWhenNoSpike() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_VELOCITY_SPIKE, "3");
+      EvaluationContext context =
+          createContext(
+              Map.of(
+                  "merchantCurrentVelocity", 25,
+                  "merchantAverageVelocity", 20,
+                  "merchantVelocityStdDev", 10));
 
-    @Nested
-    @DisplayName("Operador MERCHANT_COUNTRY_MISMATCH")
-    class MerchantCountryMismatchTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar mismatch de país do merchant")
-        void shouldDetectMerchantCountryMismatch() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_COUNTRY_MISMATCH, null);
-            EvaluationContext context = createContext(Map.of(
-                "merchantCountry", "US",
-                "cardCountry", "BR",
-                "merchantCountryMismatch", true
-            ));
+      // (25 - 20) / 10 = 0.5 > 3 = false
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== MERCHANT_CROSS_BORDER_RATIO ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador MERCHANT_CROSS_BORDER_RATIO")
+  class MerchantCrossBorderRatioTests {
 
-        @Test
-        @DisplayName("Deve retornar false quando países correspondem")
-        void shouldReturnFalseWhenCountriesMatch() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_COUNTRY_MISMATCH, null);
-            EvaluationContext context = createContext(Map.of(
-                "merchantCountry", "BR",
-                "cardCountry", "BR",
-                "merchantCountryMismatch", false
-            ));
+    @Test
+    @DisplayName("Deve detectar ratio alto de transações cross-border")
+    void shouldDetectHighCrossBorderRatio() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_CROSS_BORDER_RATIO, "0.3");
+      EvaluationContext context = createContext(Map.of("merchantCrossBorderRatio", 0.6));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
+    }
+  }
+
+  // ========== EDGE CASES ==========
+
+  @Nested
+  @DisplayName("Casos de Borda")
+  class EdgeCaseTests {
+
+    @Test
+    @DisplayName("Deve tratar campo ausente graciosamente")
+    void shouldHandleMissingFieldGracefully() {
+      RuleCondition condition =
+          createCondition("nonExistent", ConditionOperator.MERCHANT_FIRST_SEEN, null);
+      EvaluationContext context = createContext(Map.of());
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isFalse();
     }
 
-    // ========== MERCHANT_VELOCITY_SPIKE ==========
+    @Test
+    @DisplayName("Deve tratar valor nulo graciosamente")
+    void shouldHandleNullValueGracefully() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_FIRST_SEEN, null);
+      java.util.HashMap<String, Object> payload = new java.util.HashMap<>();
+      payload.put("isFirstMerchantTransaction", null);
+      EvaluationContext context = createContext(payload);
 
-    @Nested
-    @DisplayName("Operador MERCHANT_VELOCITY_SPIKE")
-    class MerchantVelocitySpikeTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar spike de velocidade do merchant")
-        void shouldDetectMerchantVelocitySpike() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_VELOCITY_SPIKE, "3");
-            EvaluationContext context = createContext(Map.of(
-                "merchantCurrentVelocity", 100,
-                "merchantAverageVelocity", 20,
-                "merchantVelocityStdDev", 10
-            ));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            // (100 - 20) / 10 = 8 > 3 = true
-            assertThat(result).isTrue();
-        }
-
-        @Test
-        @DisplayName("Deve retornar false quando não há spike")
-        void shouldReturnFalseWhenNoSpike() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_VELOCITY_SPIKE, "3");
-            EvaluationContext context = createContext(Map.of(
-                "merchantCurrentVelocity", 25,
-                "merchantAverageVelocity", 20,
-                "merchantVelocityStdDev", 10
-            ));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            // (25 - 20) / 10 = 0.5 > 3 = false
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isFalse();
     }
 
-    // ========== MERCHANT_CROSS_BORDER_RATIO ==========
+    @Test
+    @DisplayName("Deve funcionar com valores como strings")
+    void shouldWorkWithValuesAsStrings() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_FIRST_SEEN, null);
+      EvaluationContext context = createContext(Map.of("isFirstMerchantTransaction", "true"));
 
-    @Nested
-    @DisplayName("Operador MERCHANT_CROSS_BORDER_RATIO")
-    class MerchantCrossBorderRatioTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar ratio alto de transações cross-border")
-        void shouldDetectHighCrossBorderRatio() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_CROSS_BORDER_RATIO, "0.3");
-            EvaluationContext context = createContext(Map.of("merchantCrossBorderRatio", 0.6));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isTrue();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== EDGE CASES ==========
+    @Test
+    @DisplayName("Deve tratar threshold inválido graciosamente")
+    void shouldHandleInvalidThresholdGracefully() {
+      RuleCondition condition =
+          createCondition("merchant", ConditionOperator.MERCHANT_AGE_CHECK, "invalid");
+      EvaluationContext context = createContext(Map.of("merchantAgeDays", 15));
 
-    @Nested
-    @DisplayName("Casos de Borda")
-    class EdgeCaseTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve tratar campo ausente graciosamente")
-        void shouldHandleMissingFieldGracefully() {
-            RuleCondition condition = createCondition("nonExistent", ConditionOperator.MERCHANT_FIRST_SEEN, null);
-            EvaluationContext context = createContext(Map.of());
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isFalse();
-        }
-
-        @Test
-        @DisplayName("Deve tratar valor nulo graciosamente")
-        void shouldHandleNullValueGracefully() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_FIRST_SEEN, null);
-            java.util.HashMap<String, Object> payload = new java.util.HashMap<>();
-            payload.put("isFirstMerchantTransaction", null);
-            EvaluationContext context = createContext(payload);
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isFalse();
-        }
-
-        @Test
-        @DisplayName("Deve funcionar com valores como strings")
-        void shouldWorkWithValuesAsStrings() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_FIRST_SEEN, null);
-            EvaluationContext context = createContext(Map.of("isFirstMerchantTransaction", "true"));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isTrue();
-        }
-
-        @Test
-        @DisplayName("Deve tratar threshold inválido graciosamente")
-        void shouldHandleInvalidThresholdGracefully() {
-            RuleCondition condition = createCondition("merchant", ConditionOperator.MERCHANT_AGE_CHECK, "invalid");
-            EvaluationContext context = createContext(Map.of("merchantAgeDays", 15));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            // Com threshold inválido (0), 15 < 0 = false
-            assertThat(result).isFalse();
-        }
+      // Com threshold inválido (0), 15 < 0 = false
+      assertThat(result).isFalse();
     }
+  }
 }

@@ -63,7 +63,8 @@ class MiningOperatorEvaluatorTest {
       "FUZZY_MEMBERSHIP,0.7,0.5,true",
       "FUZZY_MEMBERSHIP,0.3,0.5,false"
     })
-    void shouldEvaluateNumericOperators(ConditionOperator operator, String value, String threshold, boolean expected) {
+    void shouldEvaluateNumericOperators(
+        ConditionOperator operator, String value, String threshold, boolean expected) {
       RuleCondition condition = createCondition(operator, threshold);
       EvaluationContext context = createContext(Map.of("field", value));
 
@@ -104,8 +105,15 @@ class MiningOperatorEvaluatorTest {
     @Test
     void shouldReturnTrueWhenRomanceAndInvestmentSignals() {
       RuleCondition condition = createCondition(ConditionOperator.PIG_BUTCHERING_INDICATOR, null);
-      EvaluationContext context = createContext(
-          Map.of("romanceScamIndicator", true, "investmentScamIndicator", true, "cryptoTransaction", true));
+      EvaluationContext context =
+          createContext(
+              Map.of(
+                  "romanceScamIndicator",
+                  true,
+                  "investmentScamIndicator",
+                  true,
+                  "cryptoTransaction",
+                  true));
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
     }

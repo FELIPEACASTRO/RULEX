@@ -28,37 +28,37 @@ import org.junit.jupiter.params.provider.CsvSource;
 @DisplayName("DateTimeOperatorEvaluator Tests")
 class DateTimeOperatorEvaluatorTest {
 
-    private DateTimeOperatorEvaluator evaluator;
+  private DateTimeOperatorEvaluator evaluator;
 
-    @BeforeEach
-    void setUp() {
-        evaluator = new DateTimeOperatorEvaluator();
-    }
+  @BeforeEach
+  void setUp() {
+    evaluator = new DateTimeOperatorEvaluator();
+  }
 
-    // ========== HELPER METHODS ==========
+  // ========== HELPER METHODS ==========
 
-    private RuleCondition createCondition(String fieldName, ConditionOperator operator, String value) {
-        RuleCondition condition = new RuleCondition();
-        condition.setFieldName(fieldName);
-        condition.setOperator(operator);
-        condition.setValueSingle(value);
-        return condition;
-    }
+  private RuleCondition createCondition(
+      String fieldName, ConditionOperator operator, String value) {
+    RuleCondition condition = new RuleCondition();
+    condition.setFieldName(fieldName);
+    condition.setOperator(operator);
+    condition.setValueSingle(value);
+    return condition;
+  }
 
-    private EvaluationContext createContext(Map<String, Object> payload) {
-        return EvaluationContext.builder()
-            .payload(payload)
-            .build();
-    }
+  private EvaluationContext createContext(Map<String, Object> payload) {
+    return EvaluationContext.builder().payload(payload).build();
+  }
 
-    // ========== SUPPORTED OPERATORS ==========
+  // ========== SUPPORTED OPERATORS ==========
 
-    @Test
-    @DisplayName("Deve suportar operadores de data/hora")
-    void shouldSupportDateTimeOperators() {
-        var supported = evaluator.getSupportedOperators();
+  @Test
+  @DisplayName("Deve suportar operadores de data/hora")
+  void shouldSupportDateTimeOperators() {
+    var supported = evaluator.getSupportedOperators();
 
-        assertThat(supported).contains(
+    assertThat(supported)
+        .contains(
             ConditionOperator.DATE_BEFORE,
             ConditionOperator.DATE_AFTER,
             ConditionOperator.DATE_BETWEEN,
@@ -67,384 +67,427 @@ class DateTimeOperatorEvaluatorTest {
             ConditionOperator.TIME_BETWEEN,
             ConditionOperator.DAY_OF_WEEK_IN,
             ConditionOperator.HOUR_BETWEEN,
-            ConditionOperator.IS_WEEKEND
-        );
+            ConditionOperator.IS_WEEKEND);
+  }
+
+  @Test
+  @DisplayName("Deve retornar categoria correta")
+  void shouldReturnCorrectCategory() {
+    assertThat(evaluator.getCategory()).isEqualTo("DATETIME");
+  }
+
+  // ========== DATE_BEFORE ==========
+
+  @Nested
+  @DisplayName("Operador DATE_BEFORE")
+  class DateBeforeTests {
+
+    @Test
+    @DisplayName("Deve retornar true quando data é anterior")
+    void shouldReturnTrueWhenDateIsBefore() {
+      RuleCondition condition =
+          createCondition("transactionDate", ConditionOperator.DATE_BEFORE, "2024-12-31");
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isTrue();
     }
 
     @Test
-    @DisplayName("Deve retornar categoria correta")
-    void shouldReturnCorrectCategory() {
-        assertThat(evaluator.getCategory()).isEqualTo("DATETIME");
+    @DisplayName("Deve retornar false quando data é posterior")
+    void shouldReturnFalseWhenDateIsAfter() {
+      RuleCondition condition =
+          createCondition("transactionDate", ConditionOperator.DATE_BEFORE, "2024-01-01");
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isFalse();
     }
 
-    // ========== DATE_BEFORE ==========
+    @Test
+    @DisplayName("Deve funcionar com string de data")
+    void shouldWorkWithDateString() {
+      RuleCondition condition =
+          createCondition("transactionDate", ConditionOperator.DATE_BEFORE, "2024-12-31");
+      EvaluationContext context = createContext(Map.of("transactionDate", "2024-06-15"));
 
-    @Nested
-    @DisplayName("Operador DATE_BEFORE")
-    class DateBeforeTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve retornar true quando data é anterior")
-        void shouldReturnTrueWhenDateIsBefore() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.DATE_BEFORE, "2024-12-31");
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
+      assertThat(result).isTrue();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== DATE_AFTER ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador DATE_AFTER")
+  class DateAfterTests {
 
-        @Test
-        @DisplayName("Deve retornar false quando data é posterior")
-        void shouldReturnFalseWhenDateIsAfter() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.DATE_BEFORE, "2024-01-01");
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
+    @Test
+    @DisplayName("Deve retornar true quando data é posterior")
+    void shouldReturnTrueWhenDateIsAfter() {
+      RuleCondition condition =
+          createCondition("transactionDate", ConditionOperator.DATE_AFTER, "2024-01-01");
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
-
-        @Test
-        @DisplayName("Deve funcionar com string de data")
-        void shouldWorkWithDateString() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.DATE_BEFORE, "2024-12-31");
-            EvaluationContext context = createContext(Map.of("transactionDate", "2024-06-15"));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isTrue();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== DATE_AFTER ==========
+    @Test
+    @DisplayName("Deve retornar false quando data é anterior")
+    void shouldReturnFalseWhenDateIsBefore() {
+      RuleCondition condition =
+          createCondition("transactionDate", ConditionOperator.DATE_AFTER, "2024-12-31");
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
 
-    @Nested
-    @DisplayName("Operador DATE_AFTER")
-    class DateAfterTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve retornar true quando data é posterior")
-        void shouldReturnTrueWhenDateIsAfter() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.DATE_AFTER, "2024-01-01");
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== DATE_BETWEEN ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador DATE_BETWEEN")
+  class DateBetweenTests {
 
-        @Test
-        @DisplayName("Deve retornar false quando data é anterior")
-        void shouldReturnFalseWhenDateIsBefore() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.DATE_AFTER, "2024-12-31");
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
+    @Test
+    @DisplayName("Deve retornar true quando data está no intervalo")
+    void shouldReturnTrueWhenDateInRange() {
+      RuleCondition condition =
+          createCondition(
+              "transactionDate", ConditionOperator.DATE_BETWEEN, "2024-01-01:2024-12-31");
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== DATE_BETWEEN ==========
+    @Test
+    @DisplayName("Deve retornar false quando data está fora do intervalo")
+    void shouldReturnFalseWhenDateOutOfRange() {
+      RuleCondition condition =
+          createCondition(
+              "transactionDate", ConditionOperator.DATE_BETWEEN, "2024-01-01:2024-05-31");
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
 
-    @Nested
-    @DisplayName("Operador DATE_BETWEEN")
-    class DateBetweenTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve retornar true quando data está no intervalo")
-        void shouldReturnTrueWhenDateInRange() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.DATE_BETWEEN, "2024-01-01:2024-12-31");
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isTrue();
-        }
-
-        @Test
-        @DisplayName("Deve retornar false quando data está fora do intervalo")
-        void shouldReturnFalseWhenDateOutOfRange() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.DATE_BETWEEN, "2024-01-01:2024-05-31");
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isFalse();
-        }
-
-        @Test
-        @DisplayName("Deve incluir limites do intervalo")
-        void shouldIncludeBoundaries() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.DATE_BETWEEN, "2024-06-15:2024-06-15");
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isTrue();
-        }
+      assertThat(result).isFalse();
     }
 
-    // ========== TIME_BEFORE ==========
+    @Test
+    @DisplayName("Deve incluir limites do intervalo")
+    void shouldIncludeBoundaries() {
+      RuleCondition condition =
+          createCondition(
+              "transactionDate", ConditionOperator.DATE_BETWEEN, "2024-06-15:2024-06-15");
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
 
-    @Nested
-    @DisplayName("Operador TIME_BEFORE")
-    class TimeBeforeTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve retornar true quando hora é anterior")
-        void shouldReturnTrueWhenTimeIsBefore() {
-            RuleCondition condition = createCondition("transactionTime", ConditionOperator.TIME_BEFORE, "18:00");
-            EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(10, 30)));
+      assertThat(result).isTrue();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== TIME_BEFORE ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador TIME_BEFORE")
+  class TimeBeforeTests {
 
-        @Test
-        @DisplayName("Deve retornar false quando hora é posterior")
-        void shouldReturnFalseWhenTimeIsAfter() {
-            RuleCondition condition = createCondition("transactionTime", ConditionOperator.TIME_BEFORE, "08:00");
-            EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(10, 30)));
+    @Test
+    @DisplayName("Deve retornar true quando hora é anterior")
+    void shouldReturnTrueWhenTimeIsBefore() {
+      RuleCondition condition =
+          createCondition("transactionTime", ConditionOperator.TIME_BEFORE, "18:00");
+      EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(10, 30)));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== TIME_AFTER ==========
+    @Test
+    @DisplayName("Deve retornar false quando hora é posterior")
+    void shouldReturnFalseWhenTimeIsAfter() {
+      RuleCondition condition =
+          createCondition("transactionTime", ConditionOperator.TIME_BEFORE, "08:00");
+      EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(10, 30)));
 
-    @Nested
-    @DisplayName("Operador TIME_AFTER")
-    class TimeAfterTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve retornar true quando hora é posterior")
-        void shouldReturnTrueWhenTimeIsAfter() {
-            RuleCondition condition = createCondition("transactionTime", ConditionOperator.TIME_AFTER, "08:00");
-            EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(10, 30)));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== TIME_AFTER ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador TIME_AFTER")
+  class TimeAfterTests {
 
-        @Test
-        @DisplayName("Deve retornar false quando hora é anterior")
-        void shouldReturnFalseWhenTimeIsBefore() {
-            RuleCondition condition = createCondition("transactionTime", ConditionOperator.TIME_AFTER, "18:00");
-            EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(10, 30)));
+    @Test
+    @DisplayName("Deve retornar true quando hora é posterior")
+    void shouldReturnTrueWhenTimeIsAfter() {
+      RuleCondition condition =
+          createCondition("transactionTime", ConditionOperator.TIME_AFTER, "08:00");
+      EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(10, 30)));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== TIME_BETWEEN ==========
+    @Test
+    @DisplayName("Deve retornar false quando hora é anterior")
+    void shouldReturnFalseWhenTimeIsBefore() {
+      RuleCondition condition =
+          createCondition("transactionTime", ConditionOperator.TIME_AFTER, "18:00");
+      EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(10, 30)));
 
-    @Nested
-    @DisplayName("Operador TIME_BETWEEN")
-    class TimeBetweenTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve retornar true quando hora está no intervalo")
-        void shouldReturnTrueWhenTimeInRange() {
-            RuleCondition condition = createCondition("transactionTime", ConditionOperator.TIME_BETWEEN, "08:00:18:00");
-            EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(10, 30)));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== TIME_BETWEEN ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador TIME_BETWEEN")
+  class TimeBetweenTests {
 
-        @Test
-        @DisplayName("Deve retornar false quando hora está fora do intervalo")
-        void shouldReturnFalseWhenTimeOutOfRange() {
-            RuleCondition condition = createCondition("transactionTime", ConditionOperator.TIME_BETWEEN, "08:00:12:00");
-            EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(15, 30)));
+    @Test
+    @DisplayName("Deve retornar true quando hora está no intervalo")
+    void shouldReturnTrueWhenTimeInRange() {
+      RuleCondition condition =
+          createCondition("transactionTime", ConditionOperator.TIME_BETWEEN, "08:00:18:00");
+      EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(10, 30)));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== HOUR_BETWEEN ==========
+    @Test
+    @DisplayName("Deve retornar false quando hora está fora do intervalo")
+    void shouldReturnFalseWhenTimeOutOfRange() {
+      RuleCondition condition =
+          createCondition("transactionTime", ConditionOperator.TIME_BETWEEN, "08:00:12:00");
+      EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(15, 30)));
 
-    @Nested
-    @DisplayName("Operador HOUR_BETWEEN")
-    class HourBetweenTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @ParameterizedTest
-        @CsvSource({
-            "10, 8:18, true",   // 10 entre 8 e 18
-            "20, 8:18, false",  // 20 fora de 8-18
-            "8, 8:18, true",    // limite inferior
-            "18, 8:18, true"    // limite superior
-        })
-        @DisplayName("HOUR_BETWEEN deve comparar corretamente")
-        void hourBetweenShouldCompareCorrectly(int hour, String range, boolean expected) {
-            RuleCondition condition = createCondition("transactionTime", ConditionOperator.HOUR_BETWEEN, range);
-            EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(hour, 0)));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== HOUR_BETWEEN ==========
 
-            assertThat(result).isEqualTo(expected);
-        }
+  @Nested
+  @DisplayName("Operador HOUR_BETWEEN")
+  class HourBetweenTests {
 
-        @Test
-        @DisplayName("Deve funcionar com OffsetDateTime")
-        void shouldWorkWithOffsetDateTime() {
-            RuleCondition condition = createCondition("timestamp", ConditionOperator.HOUR_BETWEEN, "8:18");
-            OffsetDateTime timestamp = OffsetDateTime.of(2024, 6, 15, 10, 30, 0, 0, ZoneOffset.UTC);
-            EvaluationContext context = createContext(Map.of("timestamp", timestamp));
+    @ParameterizedTest
+    @CsvSource({
+      "10, 8:18, true", // 10 entre 8 e 18
+      "20, 8:18, false", // 20 fora de 8-18
+      "8, 8:18, true", // limite inferior
+      "18, 8:18, true" // limite superior
+    })
+    @DisplayName("HOUR_BETWEEN deve comparar corretamente")
+    void hourBetweenShouldCompareCorrectly(int hour, String range, boolean expected) {
+      RuleCondition condition =
+          createCondition("transactionTime", ConditionOperator.HOUR_BETWEEN, range);
+      EvaluationContext context = createContext(Map.of("transactionTime", LocalTime.of(hour, 0)));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isTrue();
-        }
+      assertThat(result).isEqualTo(expected);
     }
 
-    // ========== DAY_OF_WEEK_IN ==========
+    @Test
+    @DisplayName("Deve funcionar com OffsetDateTime")
+    void shouldWorkWithOffsetDateTime() {
+      RuleCondition condition =
+          createCondition("timestamp", ConditionOperator.HOUR_BETWEEN, "8:18");
+      OffsetDateTime timestamp = OffsetDateTime.of(2024, 6, 15, 10, 30, 0, 0, ZoneOffset.UTC);
+      EvaluationContext context = createContext(Map.of("timestamp", timestamp));
 
-    @Nested
-    @DisplayName("Operador DAY_OF_WEEK_IN")
-    class DayOfWeekInTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve retornar true quando dia da semana está na lista")
-        void shouldReturnTrueWhenDayInList() {
-            // 1=Segunda, 2=Terça, ..., 7=Domingo
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.DAY_OF_WEEK_IN, "1,2,3,4,5");
-            // 2024-06-17 é uma Segunda-feira (1)
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 17)));
+      assertThat(result).isTrue();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== DAY_OF_WEEK_IN ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador DAY_OF_WEEK_IN")
+  class DayOfWeekInTests {
 
-        @Test
-        @DisplayName("Deve retornar false quando dia da semana não está na lista")
-        void shouldReturnFalseWhenDayNotInList() {
-            // Apenas dias úteis
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.DAY_OF_WEEK_IN, "1,2,3,4,5");
-            // 2024-06-15 é um Sábado (6)
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
+    @Test
+    @DisplayName("Deve retornar true quando dia da semana está na lista")
+    void shouldReturnTrueWhenDayInList() {
+      // 1=Segunda, 2=Terça, ..., 7=Domingo
+      RuleCondition condition =
+          createCondition("transactionDate", ConditionOperator.DAY_OF_WEEK_IN, "1,2,3,4,5");
+      // 2024-06-17 é uma Segunda-feira (1)
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 17)));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== IS_WEEKEND ==========
+    @Test
+    @DisplayName("Deve retornar false quando dia da semana não está na lista")
+    void shouldReturnFalseWhenDayNotInList() {
+      // Apenas dias úteis
+      RuleCondition condition =
+          createCondition("transactionDate", ConditionOperator.DAY_OF_WEEK_IN, "1,2,3,4,5");
+      // 2024-06-15 é um Sábado (6)
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
 
-    @Nested
-    @DisplayName("Operador IS_WEEKEND")
-    class IsWeekendTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve retornar true para sábado")
-        void shouldReturnTrueForSaturday() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.IS_WEEKEND, null);
-            // 2024-06-15 é um Sábado
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== IS_WEEKEND ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador IS_WEEKEND")
+  class IsWeekendTests {
 
-        @Test
-        @DisplayName("Deve retornar true para domingo")
-        void shouldReturnTrueForSunday() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.IS_WEEKEND, null);
-            // 2024-06-16 é um Domingo
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 16)));
+    @Test
+    @DisplayName("Deve retornar true para sábado")
+    void shouldReturnTrueForSaturday() {
+      RuleCondition condition =
+          createCondition("transactionDate", ConditionOperator.IS_WEEKEND, null);
+      // 2024-06-15 é um Sábado
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isTrue();
-        }
-
-        @Test
-        @DisplayName("Deve retornar false para dia útil")
-        void shouldReturnFalseForWeekday() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.IS_WEEKEND, null);
-            // 2024-06-17 é uma Segunda-feira
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 17)));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== EDGE CASES ==========
+    @Test
+    @DisplayName("Deve retornar true para domingo")
+    void shouldReturnTrueForSunday() {
+      RuleCondition condition =
+          createCondition("transactionDate", ConditionOperator.IS_WEEKEND, null);
+      // 2024-06-16 é um Domingo
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 16)));
 
-    @Nested
-    @DisplayName("Casos de Borda")
-    class EdgeCaseTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve tratar data nula graciosamente")
-        void shouldHandleNullDateGracefully() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.DATE_BEFORE, "2024-12-31");
-            EvaluationContext context = createContext(Map.of());
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isFalse();
-        }
-
-        @Test
-        @DisplayName("Deve tratar formato de data inválido graciosamente")
-        void shouldHandleInvalidDateFormatGracefully() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.DATE_BEFORE, "invalid-date");
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isFalse();
-        }
-
-        @Test
-        @DisplayName("Deve funcionar com LocalDateTime")
-        void shouldWorkWithLocalDateTime() {
-            RuleCondition condition = createCondition("timestamp", ConditionOperator.DATE_BEFORE, "2024-12-31");
-            EvaluationContext context = createContext(Map.of("timestamp", LocalDateTime.of(2024, 6, 15, 10, 30)));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isTrue();
-        }
-
-        @Test
-        @DisplayName("Deve funcionar com OffsetDateTime")
-        void shouldWorkWithOffsetDateTime() {
-            RuleCondition condition = createCondition("timestamp", ConditionOperator.DATE_BEFORE, "2024-12-31");
-            OffsetDateTime timestamp = OffsetDateTime.of(2024, 6, 15, 10, 30, 0, 0, ZoneOffset.UTC);
-            EvaluationContext context = createContext(Map.of("timestamp", timestamp));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isTrue();
-        }
-
-        @Test
-        @DisplayName("Deve tratar intervalo mal formatado graciosamente")
-        void shouldHandleMalformedRangeGracefully() {
-            RuleCondition condition = createCondition("transactionDate", ConditionOperator.DATE_BETWEEN, "invalid");
-            EvaluationContext context = createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
+
+    @Test
+    @DisplayName("Deve retornar false para dia útil")
+    void shouldReturnFalseForWeekday() {
+      RuleCondition condition =
+          createCondition("transactionDate", ConditionOperator.IS_WEEKEND, null);
+      // 2024-06-17 é uma Segunda-feira
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 17)));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isFalse();
+    }
+  }
+
+  // ========== EDGE CASES ==========
+
+  @Nested
+  @DisplayName("Casos de Borda")
+  class EdgeCaseTests {
+
+    @Test
+    @DisplayName("Deve tratar data nula graciosamente")
+    void shouldHandleNullDateGracefully() {
+      RuleCondition condition =
+          createCondition("transactionDate", ConditionOperator.DATE_BEFORE, "2024-12-31");
+      EvaluationContext context = createContext(Map.of());
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Deve tratar formato de data inválido graciosamente")
+    void shouldHandleInvalidDateFormatGracefully() {
+      RuleCondition condition =
+          createCondition("transactionDate", ConditionOperator.DATE_BEFORE, "invalid-date");
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Deve funcionar com LocalDateTime")
+    void shouldWorkWithLocalDateTime() {
+      RuleCondition condition =
+          createCondition("timestamp", ConditionOperator.DATE_BEFORE, "2024-12-31");
+      EvaluationContext context =
+          createContext(Map.of("timestamp", LocalDateTime.of(2024, 6, 15, 10, 30)));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("Deve funcionar com OffsetDateTime")
+    void shouldWorkWithOffsetDateTime() {
+      RuleCondition condition =
+          createCondition("timestamp", ConditionOperator.DATE_BEFORE, "2024-12-31");
+      OffsetDateTime timestamp = OffsetDateTime.of(2024, 6, 15, 10, 30, 0, 0, ZoneOffset.UTC);
+      EvaluationContext context = createContext(Map.of("timestamp", timestamp));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("Deve tratar intervalo mal formatado graciosamente")
+    void shouldHandleMalformedRangeGracefully() {
+      RuleCondition condition =
+          createCondition("transactionDate", ConditionOperator.DATE_BETWEEN, "invalid");
+      EvaluationContext context =
+          createContext(Map.of("transactionDate", LocalDate.of(2024, 6, 15)));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isFalse();
+    }
+  }
 }

@@ -26,11 +26,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class GeoOperatorEvaluatorTest {
 
-  @Mock
-  private GeoService geoService;
+  @Mock private GeoService geoService;
 
-  @Mock
-  private ImpossibleTravelService impossibleTravelService;
+  @Mock private ImpossibleTravelService impossibleTravelService;
 
   private GeoOperatorEvaluator evaluator;
 
@@ -56,7 +54,10 @@ class GeoOperatorEvaluatorTest {
   @DisplayName("deve suportar operadores GEO")
   void shouldSupportOperators() {
     assertThat(evaluator.getSupportedOperators())
-        .contains(ConditionOperator.GEO_DISTANCE_LT, ConditionOperator.GEO_DISTANCE_GT, ConditionOperator.GEO_IN_POLYGON);
+        .contains(
+            ConditionOperator.GEO_DISTANCE_LT,
+            ConditionOperator.GEO_DISTANCE_GT,
+            ConditionOperator.GEO_IN_POLYGON);
   }
 
   @Test

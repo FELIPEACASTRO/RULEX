@@ -156,8 +156,7 @@ public final class StatisticalBehavioralEvaluator {
       }
 
       if (residualObj == null) return false;
-      double residual =
-          residualObj instanceof Number ? ((Number) residualObj).doubleValue() : 0.0;
+      double residual = residualObj instanceof Number ? ((Number) residualObj).doubleValue() : 0.0;
       return Math.abs(residual) > threshold;
     } catch (Exception e) {
       log.error("Erro ao avaliar REGRESSION_RESIDUAL_OUTLIER: {}", e.getMessage());

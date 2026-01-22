@@ -23,8 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CountOperatorEvaluatorTest {
 
-  @Mock
-  private VelocityService velocityService;
+  @Mock private VelocityService velocityService;
 
   private CountOperatorEvaluator evaluator;
 
@@ -81,7 +80,8 @@ class CountOperatorEvaluatorTest {
 
     @Test
     void shouldUsePayloadWhenRequestMissing() {
-      RuleCondition condition = condition(ConditionOperator.COUNT_LAST_N_DAYS, "5", "transactionCountLastNDays");
+      RuleCondition condition =
+          condition(ConditionOperator.COUNT_LAST_N_DAYS, "5", "transactionCountLastNDays");
       EvaluationContext context = context(Map.of("transactionCountLastNDays", 8), null);
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
@@ -94,7 +94,11 @@ class CountOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenPayloadAboveThreshold() {
-      RuleCondition condition = condition(ConditionOperator.COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS, "3", "distinctUserAgentCount");
+      RuleCondition condition =
+          condition(
+              ConditionOperator.COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS,
+              "3",
+              "distinctUserAgentCount");
       EvaluationContext context = context(Map.of("distinctUserAgentCount", 5), null);
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
@@ -107,7 +111,8 @@ class CountOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenPayloadAboveThreshold() {
-      RuleCondition condition = condition(ConditionOperator.COUNT_DISTINCT_PANS_LAST_N_HOURS, "2", "distinctPanCount");
+      RuleCondition condition =
+          condition(ConditionOperator.COUNT_DISTINCT_PANS_LAST_N_HOURS, "2", "distinctPanCount");
       EvaluationContext context = context(Map.of("distinctPanCount", 4), null);
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
@@ -120,7 +125,8 @@ class CountOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenPayloadAboveThreshold() {
-      RuleCondition condition = condition(ConditionOperator.COUNT_MFA_DENIALS_LAST_N_HOURS, "1", "mfaDenialCount");
+      RuleCondition condition =
+          condition(ConditionOperator.COUNT_MFA_DENIALS_LAST_N_HOURS, "1", "mfaDenialCount");
       EvaluationContext context = context(Map.of("mfaDenialCount", 2), null);
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
@@ -133,7 +139,8 @@ class CountOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenPayloadAboveThreshold() {
-      RuleCondition condition = condition(ConditionOperator.COUNT_FAILURES_LAST_N_HOURS, "2", "failureCount");
+      RuleCondition condition =
+          condition(ConditionOperator.COUNT_FAILURES_LAST_N_HOURS, "2", "failureCount");
       EvaluationContext context = context(Map.of("failureCount", 5), null);
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();

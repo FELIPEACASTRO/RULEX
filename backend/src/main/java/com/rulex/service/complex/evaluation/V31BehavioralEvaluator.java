@@ -13,7 +13,8 @@ public final class V31BehavioralEvaluator {
 
   private V31BehavioralEvaluator() {}
 
-  public static boolean evaluateDormancyRevival(RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateDormancyRevival(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;

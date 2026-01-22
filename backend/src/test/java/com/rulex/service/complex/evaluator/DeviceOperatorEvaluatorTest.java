@@ -10,8 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
 /**
  * Testes unitários para DeviceOperatorEvaluator.
@@ -23,37 +21,37 @@ import org.junit.jupiter.params.provider.CsvSource;
 @DisplayName("DeviceOperatorEvaluator Tests")
 class DeviceOperatorEvaluatorTest {
 
-    private DeviceOperatorEvaluator evaluator;
+  private DeviceOperatorEvaluator evaluator;
 
-    @BeforeEach
-    void setUp() {
-        evaluator = new DeviceOperatorEvaluator();
-    }
+  @BeforeEach
+  void setUp() {
+    evaluator = new DeviceOperatorEvaluator();
+  }
 
-    // ========== HELPER METHODS ==========
+  // ========== HELPER METHODS ==========
 
-    private RuleCondition createCondition(String fieldName, ConditionOperator operator, String value) {
-        RuleCondition condition = new RuleCondition();
-        condition.setFieldName(fieldName);
-        condition.setOperator(operator);
-        condition.setValueSingle(value);
-        return condition;
-    }
+  private RuleCondition createCondition(
+      String fieldName, ConditionOperator operator, String value) {
+    RuleCondition condition = new RuleCondition();
+    condition.setFieldName(fieldName);
+    condition.setOperator(operator);
+    condition.setValueSingle(value);
+    return condition;
+  }
 
-    private EvaluationContext createContext(Map<String, Object> payload) {
-        return EvaluationContext.builder()
-            .payload(payload)
-            .build();
-    }
+  private EvaluationContext createContext(Map<String, Object> payload) {
+    return EvaluationContext.builder().payload(payload).build();
+  }
 
-    // ========== SUPPORTED OPERATORS ==========
+  // ========== SUPPORTED OPERATORS ==========
 
-    @Test
-    @DisplayName("Deve suportar operadores de device")
-    void shouldSupportDeviceOperators() {
-        var supported = evaluator.getSupportedOperators();
+  @Test
+  @DisplayName("Deve suportar operadores de device")
+  void shouldSupportDeviceOperators() {
+    var supported = evaluator.getSupportedOperators();
 
-        assertThat(supported).contains(
+    assertThat(supported)
+        .contains(
             ConditionOperator.DEVICE_CHANGED_IN_SESSION,
             ConditionOperator.DEVICE_JAILBREAK_ROOTED,
             ConditionOperator.EMULATOR_DETECTION,
@@ -65,345 +63,368 @@ class DeviceOperatorEvaluatorTest {
             ConditionOperator.SHARED_DEVICE_COUNT,
             ConditionOperator.DEVICE_ACCOUNT_RATIO,
             ConditionOperator.DEVICE_FINGERPRINT_CONSISTENCY_CHECK,
-            ConditionOperator.ANTI_DETECT_BROWSER_DETECTION
-        );
+            ConditionOperator.ANTI_DETECT_BROWSER_DETECTION);
+  }
+
+  @Test
+  @DisplayName("Deve retornar categoria correta")
+  void shouldReturnCorrectCategory() {
+    assertThat(evaluator.getCategory()).isEqualTo("DEVICE");
+  }
+
+  // ========== DEVICE_CHANGED_IN_SESSION ==========
+
+  @Nested
+  @DisplayName("Operador DEVICE_CHANGED_IN_SESSION")
+  class DeviceChangedInSessionTests {
+
+    @Test
+    @DisplayName("Deve detectar mudança de device na sessão")
+    void shouldDetectDeviceChangeInSession() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.DEVICE_CHANGED_IN_SESSION, null);
+      EvaluationContext context = createContext(Map.of("deviceChangedInSession", true));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isTrue();
     }
 
     @Test
-    @DisplayName("Deve retornar categoria correta")
-    void shouldReturnCorrectCategory() {
-        assertThat(evaluator.getCategory()).isEqualTo("DEVICE");
+    @DisplayName("Deve retornar false quando device não mudou")
+    void shouldReturnFalseWhenDeviceNotChanged() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.DEVICE_CHANGED_IN_SESSION, null);
+      EvaluationContext context = createContext(Map.of("deviceChangedInSession", false));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isFalse();
+    }
+  }
+
+  // ========== DEVICE_JAILBREAK_ROOTED ==========
+
+  @Nested
+  @DisplayName("Operador DEVICE_JAILBREAK_ROOTED")
+  class DeviceJailbreakRootedTests {
+
+    @Test
+    @DisplayName("Deve detectar device rooted/jailbroken")
+    void shouldDetectRootedDevice() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.DEVICE_JAILBREAK_ROOTED, null);
+      EvaluationContext context = createContext(Map.of("isRooted", true));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isTrue();
     }
 
-    // ========== DEVICE_CHANGED_IN_SESSION ==========
+    @Test
+    @DisplayName("Deve retornar false para device não rooted")
+    void shouldReturnFalseForNonRootedDevice() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.DEVICE_JAILBREAK_ROOTED, null);
+      EvaluationContext context = createContext(Map.of("isRooted", false));
 
-    @Nested
-    @DisplayName("Operador DEVICE_CHANGED_IN_SESSION")
-    class DeviceChangedInSessionTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar mudança de device na sessão")
-        void shouldDetectDeviceChangeInSession() {
-            RuleCondition condition = createCondition("device", ConditionOperator.DEVICE_CHANGED_IN_SESSION, null);
-            EvaluationContext context = createContext(Map.of("deviceChangedInSession", true));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== EMULATOR_DETECTION ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador EMULATOR_DETECTION")
+  class EmulatorDetectionTests {
 
-        @Test
-        @DisplayName("Deve retornar false quando device não mudou")
-        void shouldReturnFalseWhenDeviceNotChanged() {
-            RuleCondition condition = createCondition("device", ConditionOperator.DEVICE_CHANGED_IN_SESSION, null);
-            EvaluationContext context = createContext(Map.of("deviceChangedInSession", false));
+    @Test
+    @DisplayName("Deve detectar emulador")
+    void shouldDetectEmulator() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.EMULATOR_DETECTION, null);
+      EvaluationContext context = createContext(Map.of("isEmulator", true));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== DEVICE_JAILBREAK_ROOTED ==========
+    @Test
+    @DisplayName("Deve retornar false para device real")
+    void shouldReturnFalseForRealDevice() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.EMULATOR_DETECTION, null);
+      EvaluationContext context = createContext(Map.of("isEmulator", false));
 
-    @Nested
-    @DisplayName("Operador DEVICE_JAILBREAK_ROOTED")
-    class DeviceJailbreakRootedTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar device rooted/jailbroken")
-        void shouldDetectRootedDevice() {
-            RuleCondition condition = createCondition("device", ConditionOperator.DEVICE_JAILBREAK_ROOTED, null);
-            EvaluationContext context = createContext(Map.of("isRooted", true));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== VPN_PROXY_DETECTION ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador VPN_PROXY_DETECTION")
+  class VpnProxyDetectionTests {
 
-        @Test
-        @DisplayName("Deve retornar false para device não rooted")
-        void shouldReturnFalseForNonRootedDevice() {
-            RuleCondition condition = createCondition("device", ConditionOperator.DEVICE_JAILBREAK_ROOTED, null);
-            EvaluationContext context = createContext(Map.of("isRooted", false));
+    @Test
+    @DisplayName("Deve detectar uso de VPN")
+    void shouldDetectVpnUsage() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.VPN_PROXY_DETECTION, null);
+      EvaluationContext context = createContext(Map.of("isVpn", true));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== EMULATOR_DETECTION ==========
+    @Test
+    @DisplayName("Deve detectar uso de proxy")
+    void shouldDetectProxyUsage() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.VPN_PROXY_DETECTION, null);
+      EvaluationContext context = createContext(Map.of("isProxy", true));
 
-    @Nested
-    @DisplayName("Operador EMULATOR_DETECTION")
-    class EmulatorDetectionTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar emulador")
-        void shouldDetectEmulator() {
-            RuleCondition condition = createCondition("device", ConditionOperator.EMULATOR_DETECTION, null);
-            EvaluationContext context = createContext(Map.of("isEmulator", true));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isTrue();
-        }
-
-        @Test
-        @DisplayName("Deve retornar false para device real")
-        void shouldReturnFalseForRealDevice() {
-            RuleCondition condition = createCondition("device", ConditionOperator.EMULATOR_DETECTION, null);
-            EvaluationContext context = createContext(Map.of("isEmulator", false));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== VPN_PROXY_DETECTION ==========
+    @Test
+    @DisplayName("Deve retornar false quando não usa VPN/proxy")
+    void shouldReturnFalseWhenNotUsingVpnProxy() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.VPN_PROXY_DETECTION, null);
+      EvaluationContext context = createContext(Map.of("isVpn", false, "isProxy", false));
 
-    @Nested
-    @DisplayName("Operador VPN_PROXY_DETECTION")
-    class VpnProxyDetectionTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar uso de VPN")
-        void shouldDetectVpnUsage() {
-            RuleCondition condition = createCondition("device", ConditionOperator.VPN_PROXY_DETECTION, null);
-            EvaluationContext context = createContext(Map.of("isVpn", true));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== TOR_EXIT_NODE ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador TOR_EXIT_NODE")
+  class TorExitNodeTests {
 
-        @Test
-        @DisplayName("Deve detectar uso de proxy")
-        void shouldDetectProxyUsage() {
-            RuleCondition condition = createCondition("device", ConditionOperator.VPN_PROXY_DETECTION, null);
-            EvaluationContext context = createContext(Map.of("isProxy", true));
+    @Test
+    @DisplayName("Deve detectar uso de Tor")
+    void shouldDetectTorUsage() {
+      RuleCondition condition = createCondition("device", ConditionOperator.TOR_EXIT_NODE, null);
+      EvaluationContext context = createContext(Map.of("isTor", true));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isTrue();
-        }
-
-        @Test
-        @DisplayName("Deve retornar false quando não usa VPN/proxy")
-        void shouldReturnFalseWhenNotUsingVpnProxy() {
-            RuleCondition condition = createCondition("device", ConditionOperator.VPN_PROXY_DETECTION, null);
-            EvaluationContext context = createContext(Map.of("isVpn", false, "isProxy", false));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== TOR_EXIT_NODE ==========
+    @Test
+    @DisplayName("Deve retornar false quando não usa Tor")
+    void shouldReturnFalseWhenNotUsingTor() {
+      RuleCondition condition = createCondition("device", ConditionOperator.TOR_EXIT_NODE, null);
+      EvaluationContext context = createContext(Map.of("isTor", false));
 
-    @Nested
-    @DisplayName("Operador TOR_EXIT_NODE")
-    class TorExitNodeTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar uso de Tor")
-        void shouldDetectTorUsage() {
-            RuleCondition condition = createCondition("device", ConditionOperator.TOR_EXIT_NODE, null);
-            EvaluationContext context = createContext(Map.of("isTor", true));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== DEVICE_TRUST_SCORE ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador DEVICE_TRUST_SCORE")
+  class DeviceTrustScoreTests {
 
-        @Test
-        @DisplayName("Deve retornar false quando não usa Tor")
-        void shouldReturnFalseWhenNotUsingTor() {
-            RuleCondition condition = createCondition("device", ConditionOperator.TOR_EXIT_NODE, null);
-            EvaluationContext context = createContext(Map.of("isTor", false));
+    @Test
+    @DisplayName("Deve retornar true quando trust score é baixo")
+    void shouldReturnTrueWhenTrustScoreLow() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.DEVICE_TRUST_SCORE, "50");
+      EvaluationContext context = createContext(Map.of("deviceTrustScore", 30));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== DEVICE_TRUST_SCORE ==========
+    @Test
+    @DisplayName("Deve retornar false quando trust score é alto")
+    void shouldReturnFalseWhenTrustScoreHigh() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.DEVICE_TRUST_SCORE, "50");
+      EvaluationContext context = createContext(Map.of("deviceTrustScore", 80));
 
-    @Nested
-    @DisplayName("Operador DEVICE_TRUST_SCORE")
-    class DeviceTrustScoreTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve retornar true quando trust score é baixo")
-        void shouldReturnTrueWhenTrustScoreLow() {
-            RuleCondition condition = createCondition("device", ConditionOperator.DEVICE_TRUST_SCORE, "50");
-            EvaluationContext context = createContext(Map.of("deviceTrustScore", 30));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== SHARED_DEVICE_COUNT ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador SHARED_DEVICE_COUNT")
+  class SharedDeviceCountTests {
 
-        @Test
-        @DisplayName("Deve retornar false quando trust score é alto")
-        void shouldReturnFalseWhenTrustScoreHigh() {
-            RuleCondition condition = createCondition("device", ConditionOperator.DEVICE_TRUST_SCORE, "50");
-            EvaluationContext context = createContext(Map.of("deviceTrustScore", 80));
+    @Test
+    @DisplayName("Deve detectar device compartilhado por múltiplas contas")
+    void shouldDetectSharedDevice() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.SHARED_DEVICE_COUNT, "3");
+      EvaluationContext context = createContext(Map.of("sharedDeviceCount", 5));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== SHARED_DEVICE_COUNT ==========
+    @Test
+    @DisplayName("Deve retornar false quando device não é compartilhado")
+    void shouldReturnFalseWhenDeviceNotShared() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.SHARED_DEVICE_COUNT, "3");
+      EvaluationContext context = createContext(Map.of("sharedDeviceCount", 1));
 
-    @Nested
-    @DisplayName("Operador SHARED_DEVICE_COUNT")
-    class SharedDeviceCountTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar device compartilhado por múltiplas contas")
-        void shouldDetectSharedDevice() {
-            RuleCondition condition = createCondition("device", ConditionOperator.SHARED_DEVICE_COUNT, "3");
-            EvaluationContext context = createContext(Map.of("sharedDeviceCount", 5));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== DEVICE_ACCOUNT_RATIO ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador DEVICE_ACCOUNT_RATIO")
+  class DeviceAccountRatioTests {
 
-        @Test
-        @DisplayName("Deve retornar false quando device não é compartilhado")
-        void shouldReturnFalseWhenDeviceNotShared() {
-            RuleCondition condition = createCondition("device", ConditionOperator.SHARED_DEVICE_COUNT, "3");
-            EvaluationContext context = createContext(Map.of("sharedDeviceCount", 1));
+    @Test
+    @DisplayName("Deve detectar ratio alto de contas por device")
+    void shouldDetectHighAccountRatio() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.DEVICE_ACCOUNT_RATIO, "2");
+      EvaluationContext context = createContext(Map.of("deviceAccountRatio", 5.0));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== DEVICE_ACCOUNT_RATIO ==========
+    @Test
+    @DisplayName("Deve retornar false para ratio normal")
+    void shouldReturnFalseForNormalRatio() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.DEVICE_ACCOUNT_RATIO, "2");
+      EvaluationContext context = createContext(Map.of("deviceAccountRatio", 1.0));
 
-    @Nested
-    @DisplayName("Operador DEVICE_ACCOUNT_RATIO")
-    class DeviceAccountRatioTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar ratio alto de contas por device")
-        void shouldDetectHighAccountRatio() {
-            RuleCondition condition = createCondition("device", ConditionOperator.DEVICE_ACCOUNT_RATIO, "2");
-            EvaluationContext context = createContext(Map.of("deviceAccountRatio", 5.0));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== ANTI_DETECT_BROWSER_DETECTION ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Operador ANTI_DETECT_BROWSER_DETECTION")
+  class AntiDetectBrowserDetectionTests {
 
-        @Test
-        @DisplayName("Deve retornar false para ratio normal")
-        void shouldReturnFalseForNormalRatio() {
-            RuleCondition condition = createCondition("device", ConditionOperator.DEVICE_ACCOUNT_RATIO, "2");
-            EvaluationContext context = createContext(Map.of("deviceAccountRatio", 1.0));
+    @Test
+    @DisplayName("Deve detectar anti-detect browser")
+    void shouldDetectAntiDetectBrowser() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.ANTI_DETECT_BROWSER_DETECTION, null);
+      EvaluationContext context = createContext(Map.of("antiDetectBrowser", true));
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isTrue();
     }
 
-    // ========== ANTI_DETECT_BROWSER_DETECTION ==========
+    @Test
+    @DisplayName("Deve retornar false para browser normal")
+    void shouldReturnFalseForNormalBrowser() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.ANTI_DETECT_BROWSER_DETECTION, null);
+      EvaluationContext context = createContext(Map.of("antiDetectBrowser", false));
 
-    @Nested
-    @DisplayName("Operador ANTI_DETECT_BROWSER_DETECTION")
-    class AntiDetectBrowserDetectionTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve detectar anti-detect browser")
-        void shouldDetectAntiDetectBrowser() {
-            RuleCondition condition = createCondition("device", ConditionOperator.ANTI_DETECT_BROWSER_DETECTION, null);
-            EvaluationContext context = createContext(Map.of("antiDetectBrowser", true));
+      assertThat(result).isFalse();
+    }
+  }
 
-            boolean result = evaluator.evaluate(condition, context);
+  // ========== EDGE CASES ==========
 
-            assertThat(result).isTrue();
-        }
+  @Nested
+  @DisplayName("Casos de Borda")
+  class EdgeCaseTests {
 
-        @Test
-        @DisplayName("Deve retornar false para browser normal")
-        void shouldReturnFalseForNormalBrowser() {
-            RuleCondition condition = createCondition("device", ConditionOperator.ANTI_DETECT_BROWSER_DETECTION, null);
-            EvaluationContext context = createContext(Map.of("antiDetectBrowser", false));
+    @Test
+    @DisplayName("Deve tratar campo ausente graciosamente")
+    void shouldHandleMissingFieldGracefully() {
+      RuleCondition condition =
+          createCondition("nonExistent", ConditionOperator.EMULATOR_DETECTION, null);
+      EvaluationContext context = createContext(Map.of());
 
-            boolean result = evaluator.evaluate(condition, context);
+      boolean result = evaluator.evaluate(condition, context);
 
-            assertThat(result).isFalse();
-        }
+      assertThat(result).isFalse();
     }
 
-    // ========== EDGE CASES ==========
+    @Test
+    @DisplayName("Deve tratar valor nulo graciosamente")
+    void shouldHandleNullValueGracefully() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.EMULATOR_DETECTION, null);
+      java.util.HashMap<String, Object> payload = new java.util.HashMap<>();
+      payload.put("isEmulator", null);
+      EvaluationContext context = createContext(payload);
 
-    @Nested
-    @DisplayName("Casos de Borda")
-    class EdgeCaseTests {
+      boolean result = evaluator.evaluate(condition, context);
 
-        @Test
-        @DisplayName("Deve tratar campo ausente graciosamente")
-        void shouldHandleMissingFieldGracefully() {
-            RuleCondition condition = createCondition("nonExistent", ConditionOperator.EMULATOR_DETECTION, null);
-            EvaluationContext context = createContext(Map.of());
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isFalse();
-        }
-
-        @Test
-        @DisplayName("Deve tratar valor nulo graciosamente")
-        void shouldHandleNullValueGracefully() {
-            RuleCondition condition = createCondition("device", ConditionOperator.EMULATOR_DETECTION, null);
-            java.util.HashMap<String, Object> payload = new java.util.HashMap<>();
-            payload.put("isEmulator", null);
-            EvaluationContext context = createContext(payload);
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isFalse();
-        }
-
-        @Test
-        @DisplayName("Deve funcionar com valores como strings")
-        void shouldWorkWithValuesAsStrings() {
-            RuleCondition condition = createCondition("device", ConditionOperator.EMULATOR_DETECTION, null);
-            EvaluationContext context = createContext(Map.of("isEmulator", "true"));
-
-            boolean result = evaluator.evaluate(condition, context);
-
-            assertThat(result).isTrue();
-        }
-
-        @Test
-        @DisplayName("Deve detectar múltiplos indicadores de risco")
-        void shouldDetectMultipleRiskIndicators() {
-            EvaluationContext context = createContext(Map.of(
-                "isVpn", true,
-                "isEmulator", true,
-                "isRooted", true
-            ));
-
-            RuleCondition vpnCondition = createCondition("device", ConditionOperator.VPN_PROXY_DETECTION, null);
-            RuleCondition emulatorCondition = createCondition("device", ConditionOperator.EMULATOR_DETECTION, null);
-            RuleCondition rootedCondition = createCondition("device", ConditionOperator.DEVICE_JAILBREAK_ROOTED, null);
-
-            assertThat(evaluator.evaluate(vpnCondition, context)).isTrue();
-            assertThat(evaluator.evaluate(emulatorCondition, context)).isTrue();
-            assertThat(evaluator.evaluate(rootedCondition, context)).isTrue();
-        }
+      assertThat(result).isFalse();
     }
+
+    @Test
+    @DisplayName("Deve funcionar com valores como strings")
+    void shouldWorkWithValuesAsStrings() {
+      RuleCondition condition =
+          createCondition("device", ConditionOperator.EMULATOR_DETECTION, null);
+      EvaluationContext context = createContext(Map.of("isEmulator", "true"));
+
+      boolean result = evaluator.evaluate(condition, context);
+
+      assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("Deve detectar múltiplos indicadores de risco")
+    void shouldDetectMultipleRiskIndicators() {
+      EvaluationContext context =
+          createContext(
+              Map.of(
+                  "isVpn", true,
+                  "isEmulator", true,
+                  "isRooted", true));
+
+      RuleCondition vpnCondition =
+          createCondition("device", ConditionOperator.VPN_PROXY_DETECTION, null);
+      RuleCondition emulatorCondition =
+          createCondition("device", ConditionOperator.EMULATOR_DETECTION, null);
+      RuleCondition rootedCondition =
+          createCondition("device", ConditionOperator.DEVICE_JAILBREAK_ROOTED, null);
+
+      assertThat(evaluator.evaluate(vpnCondition, context)).isTrue();
+      assertThat(evaluator.evaluate(emulatorCondition, context)).isTrue();
+      assertThat(evaluator.evaluate(rootedCondition, context)).isTrue();
+    }
+  }
 }

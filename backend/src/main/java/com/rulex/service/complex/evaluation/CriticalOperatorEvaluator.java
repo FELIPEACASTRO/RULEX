@@ -16,12 +16,11 @@ public final class CriticalOperatorEvaluator {
   private CriticalOperatorEvaluator() {}
 
   public static boolean evaluateGtePercentOfLastIncoming(
-      RuleCondition condition,
-      EvaluationContext context,
-      OperatorDataService operatorDataService) {
+      RuleCondition condition, EvaluationContext context, OperatorDataService operatorDataService) {
     try {
       int percentage = Integer.parseInt(condition.getValueSingle().trim());
-      Object fieldValue = FieldValueExtractor.getFieldValue(condition.getFieldName(), null, context);
+      Object fieldValue =
+          FieldValueExtractor.getFieldValue(condition.getFieldName(), null, context);
 
       if (fieldValue == null) {
         return false;
@@ -29,7 +28,8 @@ public final class CriticalOperatorEvaluator {
 
       BigDecimal currentAmount = new BigDecimal(String.valueOf(fieldValue));
 
-      Object customerIdObj = FieldValueExtractor.getFieldValue("customerIdFromHeader", null, context);
+      Object customerIdObj =
+          FieldValueExtractor.getFieldValue("customerIdFromHeader", null, context);
       if (customerIdObj == null) {
         customerIdObj = FieldValueExtractor.getFieldValue("customerId", null, context);
       }
@@ -38,7 +38,8 @@ public final class CriticalOperatorEvaluator {
 
       if (customerIdObj != null) {
         String customerId = customerIdObj.toString();
-        Optional<BigDecimal> lastIncomingOpt = operatorDataService.getLastIncomingAmount(customerId);
+        Optional<BigDecimal> lastIncomingOpt =
+            operatorDataService.getLastIncomingAmount(customerId);
         if (lastIncomingOpt.isPresent()) {
           lastIncoming = lastIncomingOpt.get();
         }
@@ -56,11 +57,7 @@ public final class CriticalOperatorEvaluator {
 
       log.debug(
           "GTE_PERCENT_OF_LAST_INCOMING: current={}, lastIncoming={}, percentage={}%, threshold={}, result={}",
-          currentAmount,
-          lastIncoming,
-          percentage,
-          threshold,
-          result);
+          currentAmount, lastIncoming, percentage, threshold, result);
       return result;
     } catch (Exception e) {
       log.error("Erro ao avaliar GTE_PERCENT_OF_LAST_INCOMING: {}", e.getMessage());
@@ -91,9 +88,7 @@ public final class CriticalOperatorEvaluator {
   }
 
   public static boolean evaluateChargebackRateGt(
-      RuleCondition condition,
-      EvaluationContext context,
-      OperatorDataService operatorDataService) {
+      RuleCondition condition, EvaluationContext context, OperatorDataService operatorDataService) {
     try {
       String[] parts = condition.getValueSingle().split(":");
       if (parts.length < 2) {
@@ -104,7 +99,8 @@ public final class CriticalOperatorEvaluator {
       double rateThreshold = Double.parseDouble(parts[0].trim());
       int days = Integer.parseInt(parts[1].trim());
 
-      Object merchantIdObj = FieldValueExtractor.getFieldValue(condition.getFieldName(), null, context);
+      Object merchantIdObj =
+          FieldValueExtractor.getFieldValue(condition.getFieldName(), null, context);
       if (merchantIdObj == null) {
         return false;
       }
@@ -115,10 +111,7 @@ public final class CriticalOperatorEvaluator {
 
       log.debug(
           "CHARGEBACK_RATE_GT: merchantId={}, threshold={}%, days={}, result={}",
-          merchantId,
-          rateThreshold,
-          days,
-          result);
+          merchantId, rateThreshold, days, result);
       return result;
     } catch (Exception e) {
       log.error("Erro ao avaliar CHARGEBACK_RATE_GT: {}", e.getMessage());
@@ -127,13 +120,12 @@ public final class CriticalOperatorEvaluator {
   }
 
   public static boolean evaluateAccountAgeLtMinutes(
-      RuleCondition condition,
-      EvaluationContext context,
-      OperatorDataService operatorDataService) {
+      RuleCondition condition, EvaluationContext context, OperatorDataService operatorDataService) {
     try {
       int thresholdMinutes = Integer.parseInt(condition.getValueSingle().trim());
 
-      Object customerIdObj = FieldValueExtractor.getFieldValue("customerIdFromHeader", null, context);
+      Object customerIdObj =
+          FieldValueExtractor.getFieldValue("customerIdFromHeader", null, context);
       if (customerIdObj == null) {
         customerIdObj = FieldValueExtractor.getFieldValue("customerId", null, context);
       }

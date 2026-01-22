@@ -10,11 +10,11 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -29,7 +29,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE - 10)
 @Slf4j
-@ConditionalOnProperty(name = "rulex.access-log.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+    name = "rulex.access-log.enabled",
+    havingValue = "true",
+    matchIfMissing = true)
 public class AccessLogFilter extends OncePerRequestFilter {
 
   private final AccessLogService accessLogService;
@@ -40,7 +43,8 @@ public class AccessLogFilter extends OncePerRequestFilter {
       @Value("${rulex.access-log.success-sampling-rate:0.1}") double successSamplingRate) {
     this.accessLogService = accessLogService;
     this.successSamplingRate = Math.max(0.0, Math.min(1.0, successSamplingRate));
-    log.info("AccessLogFilter initialized with success sampling rate: {}", this.successSamplingRate);
+    log.info(
+        "AccessLogFilter initialized with success sampling rate: {}", this.successSamplingRate);
   }
 
   /** Paths to exclude from access logging (without context-path prefix) */

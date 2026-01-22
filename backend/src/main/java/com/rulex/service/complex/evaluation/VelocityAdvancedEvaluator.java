@@ -17,7 +17,9 @@ public final class VelocityAdvancedEvaluator {
   // --- CATEGORIA L: Transaction Count Velocity Avançado (12) ---
 
   public static boolean evaluateTransactionCountPerCardHour(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     return evaluateVelocityOperator(
         condition,
         context,
@@ -28,7 +30,9 @@ public final class VelocityAdvancedEvaluator {
   }
 
   public static boolean evaluateTransactionCountPerIpHour(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     return evaluateVelocityOperator(
         condition,
         context,
@@ -39,7 +43,9 @@ public final class VelocityAdvancedEvaluator {
   }
 
   public static boolean evaluateTransactionCountPerDeviceDay(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     return evaluateVelocityOperator(
         condition,
         context,
@@ -50,7 +56,9 @@ public final class VelocityAdvancedEvaluator {
   }
 
   public static boolean evaluateTransactionCountPerMerchantHour(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     return evaluateVelocityOperator(
         condition,
         context,
@@ -61,7 +69,9 @@ public final class VelocityAdvancedEvaluator {
   }
 
   public static boolean evaluateTransactionCountPerCustomerHour(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     return evaluateVelocityOperator(
         condition,
         context,
@@ -72,7 +82,9 @@ public final class VelocityAdvancedEvaluator {
   }
 
   public static boolean evaluateUniqueCardCountPerIpHour(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       if (context.getTransactionRequest() == null) return false;
       long threshold = Long.parseLong(condition.getValueSingle().trim());
@@ -91,7 +103,9 @@ public final class VelocityAdvancedEvaluator {
   }
 
   public static boolean evaluateUniqueMerchantCountPerCardDay(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       if (context.getTransactionRequest() == null) return false;
       long threshold = Long.parseLong(condition.getValueSingle().trim());
@@ -110,7 +124,9 @@ public final class VelocityAdvancedEvaluator {
   }
 
   public static boolean evaluateTransactionAttemptCountPerCard(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       if (context.getTransactionRequest() == null) return false;
 
@@ -132,7 +148,9 @@ public final class VelocityAdvancedEvaluator {
   }
 
   public static boolean evaluateCvvFailureVelocity(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       if (context.getTransactionRequest() == null) return false;
 
@@ -152,7 +170,8 @@ public final class VelocityAdvancedEvaluator {
     }
   }
 
-  public static boolean evaluateAddressChangeVelocity(RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateAddressChangeVelocity(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
@@ -197,7 +216,8 @@ public final class VelocityAdvancedEvaluator {
     }
   }
 
-  public static boolean evaluateCardAddVelocity(RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateCardAddVelocity(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
@@ -251,7 +271,9 @@ public final class VelocityAdvancedEvaluator {
    * "threshold|minutes" (ex: "10|30")
    */
   public static boolean evaluateVelocityRollingWindow(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       if (context.getTransactionRequest() == null) return false;
 
@@ -276,7 +298,9 @@ public final class VelocityAdvancedEvaluator {
    * valueSingle: "percentile" (ex: "95" = acima do P95)
    */
   public static boolean evaluateVelocityPercentile(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       if (context.getTransactionRequest() == null) return false;
 
@@ -310,7 +334,9 @@ public final class VelocityAdvancedEvaluator {
    * "2.0" = 2x a velocidade normal)
    */
   public static boolean evaluateVelocityRatioGt(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       if (context.getTransactionRequest() == null) return false;
 
@@ -474,7 +500,8 @@ public final class VelocityAdvancedEvaluator {
    * VELOCITY_ACCELERATION: Detecta aceleração na frequência de transações. Formato valueSingle:
    * "accelerationThreshold" (ex: "2.0" = aceleração 2x)
    */
-  public static boolean evaluateVelocityAcceleration(RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateVelocityAcceleration(
+      RuleCondition condition, EvaluationContext context) {
     try {
       Map<String, Object> payload = context.getPayload();
       if (payload == null) return false;
@@ -495,7 +522,9 @@ public final class VelocityAdvancedEvaluator {
   // --- CATEGORIA M: Amount Velocity Avançado (10) ---
 
   public static boolean evaluateAmountSumPerCardHour(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     return evaluateVelocityOperator(
         condition,
         context,
@@ -506,7 +535,9 @@ public final class VelocityAdvancedEvaluator {
   }
 
   public static boolean evaluateAmountSumPerCustomerDay(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     return evaluateVelocityOperator(
         condition,
         context,
@@ -517,7 +548,9 @@ public final class VelocityAdvancedEvaluator {
   }
 
   public static boolean evaluateAvgTransactionSpike(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       if (context.getTransactionRequest() == null) return false;
 
@@ -641,7 +674,9 @@ public final class VelocityAdvancedEvaluator {
   }
 
   public static boolean evaluateAmountVarianceAnomaly(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       if (context.getTransactionRequest() == null) return false;
 

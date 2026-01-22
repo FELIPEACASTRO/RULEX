@@ -3,24 +3,24 @@ package com.rulex.entity.complex;
 /**
  * ARCH-002: Enum de operadores extraído de RuleCondition.java.
  *
- * <p>Este enum define todos os operadores suportados pelo motor de regras RULEX.
- * Foi extraído para facilitar manutenção e evitar que mudanças no enum
- * afetem a entity JPA RuleCondition.
+ * <p>Este enum define todos os operadores suportados pelo motor de regras RULEX. Foi extraído para
+ * facilitar manutenção e evitar que mudanças no enum afetem a entity JPA RuleCondition.
  *
  * <p>Categorias de operadores:
+ *
  * <ul>
- *   <li>Comparação básica (EQ, NEQ, GT, GTE, LT, LTE)</li>
- *   <li>Listas (IN, NOT_IN)</li>
- *   <li>Strings (CONTAINS, STARTS_WITH, REGEX, etc.)</li>
- *   <li>Nulos e Booleanos</li>
- *   <li>Range (BETWEEN)</li>
- *   <li>Data/Tempo</li>
- *   <li>Velocity</li>
- *   <li>Geo/Localização</li>
- *   <li>Graph/Neo4j</li>
- *   <li>Estatísticos</li>
- *   <li>AML/Regulatory</li>
- *   <li>Behavioral</li>
+ *   <li>Comparação básica (EQ, NEQ, GT, GTE, LT, LTE)
+ *   <li>Listas (IN, NOT_IN)
+ *   <li>Strings (CONTAINS, STARTS_WITH, REGEX, etc.)
+ *   <li>Nulos e Booleanos
+ *   <li>Range (BETWEEN)
+ *   <li>Data/Tempo
+ *   <li>Velocity
+ *   <li>Geo/Localização
+ *   <li>Graph/Neo4j
+ *   <li>Estatísticos
+ *   <li>AML/Regulatory
+ *   <li>Behavioral
  * </ul>
  */
 public enum ConditionOperator {
@@ -574,42 +574,42 @@ public enum ConditionOperator {
   XOR, // Operador lógico XOR
   NAND, // Operador lógico NAND
   NOR, // Operador lógico NOR
-  
+
   // Operadores de contexto e lista
   CONTEXT, // Operador de contexto
   NOT_IN_LIST, // Não está na lista
-  
+
   // Operadores de conta e idade
   ACCOUNT_AGE_LT_DAYS, // Idade da conta menor que N dias
   EMAIL_DOMAIN_AGE_LT_DAYS, // Idade do domínio do email menor que N dias
-  
+
   // Operadores de fraude e segurança
   FRAUD, // Indicador de fraude
   SUSPICIOUS, // Indicador de suspeita
   SECURITY, // Verificação de segurança
   VELOCITY, // Verificação de velocidade
   VELOCITY_ANOMALY, // Anomalia de velocidade
-  
+
   // Operadores de transação
   TRANSFER_AMOUNT_GT, // Valor de transferência maior que
   TRANSFER_VELOCITY_GT, // Velocidade de transferência maior que
   ROUND_AMOUNT, // Valor redondo
   TIME_ANOMALY, // Anomalia de tempo
   AMOUNT_ANOMALY, // Anomalia de valor
-  
+
   // Operadores de device e sessão
   IS_NEW_DEVICE, // É novo dispositivo
   IS_NEW_LOCATION, // É nova localização
   DEVICE_FINGERPRINT_MISMATCH, // Incompatibilidade de fingerprint
   SESSION_DURATION_LT, // Duração da sessão menor que
-  
+
   // Operadores de comportamento
   CLICK_VELOCITY_GT, // Velocidade de clique maior que
   MOUSE_MOVEMENT_ANOMALY, // Anomalia de movimento do mouse
   TYPING_SPEED_ANOMALY, // Anomalia de velocidade de digitação
   USER_AGENT_SUSPICIOUS, // User agent suspeito
   CAPTCHA_FAILED, // Falha no captcha
-  
+
   // Operadores de cartão e terminal
   EXPIRED_CARD, // Cartão expirado
   CARD_CAPTURE_FRAUD, // Fraude de captura de cartão
@@ -621,24 +621,23 @@ public enum ConditionOperator {
   PIN_CVV_LIMIT_EXCEEDED, // Limite de PIN/CVV excedido
   EMV_SECURITY_CHECK, // Verificação de segurança EMV
   ECOMMERCE_NO_AVS, // E-commerce sem AVS
-  
+
   // Operadores de viagem e localização
   IMPOSSIBLE_TRAVEL, // Viagem impossível
   PHONE_COUNTRY_MISMATCH, // Incompatibilidade de país do telefone
   ADDRESS_MISMATCH, // Incompatibilidade de endereço
-  
+
   // Operadores de merchant e MCC
   MERCHANT_ANOMALY, // Anomalia de merchant
   MCC_ANOMALY, // Anomalia de MCC
   SUSPICIOUS_TRANSACTION_TYPE, // Tipo de transação suspeito
-  
+
   // Operadores de beneficiário e destinatário
   RECIPIENT_IN_WATCHLIST, // Destinatário na watchlist
   RECIPIENT_IS_NEW, // Destinatário é novo
   NAME_SIMILARITY_GT, // Similaridade de nome maior que
-  
+
   // Operadores de contagem
   COUNT_DISTINCT_COUNTRIES_LAST_N_DAYS, // Países distintos nos últimos N dias
   ; // GAP-J FIX: Vírgula final para facilitar parsing por scripts
 }
-

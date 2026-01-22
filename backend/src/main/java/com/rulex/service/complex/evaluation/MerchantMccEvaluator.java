@@ -4,7 +4,6 @@ import com.rulex.entity.complex.RuleCondition;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
 import com.rulex.service.complex.ComplexRuleEvaluator.EvaluationContext;
-import com.rulex.service.complex.context.FieldValueExtractor;
 import com.rulex.service.complex.parsing.BooleanParser;
 import com.rulex.service.complex.parsing.TimeWindowParser;
 import java.util.Arrays;

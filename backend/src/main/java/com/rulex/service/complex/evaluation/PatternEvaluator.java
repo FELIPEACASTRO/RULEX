@@ -35,7 +35,8 @@ public final class PatternEvaluator {
     }
   }
 
-  public static boolean evaluateGtFieldMultiplier(RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateGtFieldMultiplier(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String[] parts = condition.getValueSingle().split(":");
       if (parts.length < 2) {

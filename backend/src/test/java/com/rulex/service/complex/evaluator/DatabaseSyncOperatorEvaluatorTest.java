@@ -104,7 +104,8 @@ class DatabaseSyncOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenAgeBelowThreshold() {
-      RuleCondition condition = condition(ConditionOperator.ACCOUNT_AGE_LT_DAYS, "30", "accountAgeDays");
+      RuleCondition condition =
+          condition(ConditionOperator.ACCOUNT_AGE_LT_DAYS, "30", "accountAgeDays");
       EvaluationContext context = context(Map.of("accountAgeDays", 10));
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
@@ -131,8 +132,8 @@ class DatabaseSyncOperatorEvaluatorTest {
     @Test
     void shouldReturnTrueWhenDeviationAboveThreshold() {
       RuleCondition condition = condition(ConditionOperator.VELOCITY_ANOMALY, "2", "velocity");
-      EvaluationContext context = context(
-          Map.of("velocity", 10, "avgVelocity", 2, "velocityStdDev", 1));
+      EvaluationContext context =
+          context(Map.of("velocity", 10, "avgVelocity", 2, "velocityStdDev", 1));
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
     }
@@ -158,8 +159,8 @@ class DatabaseSyncOperatorEvaluatorTest {
     @Test
     void shouldReturnTrueWhenDeviationAboveThreshold() {
       RuleCondition condition = condition(ConditionOperator.AMOUNT_ANOMALY, "2", "amount");
-      EvaluationContext context = context(
-          Map.of("amount", 100, "avgAmount", 20, "amountStdDev", 10));
+      EvaluationContext context =
+          context(Map.of("amount", 100, "avgAmount", 20, "amountStdDev", 10));
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
     }
@@ -171,7 +172,8 @@ class DatabaseSyncOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenSimilarityAboveThreshold() {
-      RuleCondition condition = condition(ConditionOperator.NAME_SIMILARITY_GT, "0.8", "similarity");
+      RuleCondition condition =
+          condition(ConditionOperator.NAME_SIMILARITY_GT, "0.8", "similarity");
       EvaluationContext context = context(Map.of("similarity", 0.9));
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();

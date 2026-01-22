@@ -40,7 +40,7 @@ public class Neo4jGraphService {
     if (enabled && (password == null || password.isBlank())) {
       resolvedEnabled = false;
       log.warn(
-        "Neo4j integration disabled: missing rulex.neo4j.password. Provide RULEX_NEO4J_PASSWORD to enable.");
+          "Neo4j integration disabled: missing rulex.neo4j.password. Provide RULEX_NEO4J_PASSWORD to enable.");
     }
     this.enabled = resolvedEnabled;
     this.uri = uri;
@@ -56,9 +56,11 @@ public class Neo4jGraphService {
         log.info("Neo4j driver initialized and connected: {}", uri);
       } catch (Exception e) {
         // DEGRADAÇÃO GRACIOSA: não quebrar startup, apenas marcar como indisponível
-        log.warn("⚠️ Neo4j não disponível na inicialização: {}. " +
-                 "Operadores de grafo retornarão valores conservadores. " +
-                 "Reconexão será tentada automaticamente.", e.getMessage());
+        log.warn(
+            "⚠️ Neo4j não disponível na inicialização: {}. "
+                + "Operadores de grafo retornarão valores conservadores. "
+                + "Reconexão será tentada automaticamente.",
+            e.getMessage());
         tempAvailable = false;
         // Manter o driver para tentativas futuras (se foi criado)
       }
@@ -527,10 +529,7 @@ public class Neo4jGraphService {
     }
   }
 
-  /**
-   * Verifica se o serviço está habilitado e conectado.
-   * Tenta reconectar se estava indisponível.
-   */
+  /** Verifica se o serviço está habilitado e conectado. Tenta reconectar se estava indisponível. */
   public boolean isAvailable() {
     if (!enabled || driver == null) return false;
 
@@ -558,16 +557,12 @@ public class Neo4jGraphService {
     }
   }
 
-  /**
-   * Retorna se o serviço está habilitado na configuração.
-   */
+  /** Retorna se o serviço está habilitado na configuração. */
   public boolean isEnabled() {
     return enabled;
   }
 
-  /**
-   * Retorna o status atual de disponibilidade (sem verificar conexão).
-   */
+  /** Retorna o status atual de disponibilidade (sem verificar conexão). */
   public boolean isCurrentlyAvailable() {
     return enabled && available;
   }

@@ -24,8 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class GraphOperatorEvaluatorTest {
 
-  @Mock
-  private Neo4jGraphService neo4jService;
+  @Mock private Neo4jGraphService neo4jService;
 
   private GraphOperatorEvaluator evaluator;
 
@@ -109,7 +108,8 @@ class GraphOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenCentralityAboveThreshold() {
-      RuleCondition condition = condition(ConditionOperator.NEO4J_BETWEENNESS_CENTRALITY_MULE, "0.3");
+      RuleCondition condition =
+          condition(ConditionOperator.NEO4J_BETWEENNESS_CENTRALITY_MULE, "0.3");
       when(neo4jService.getBetweennessCentrality(anyString())).thenReturn(0.8);
 
       assertThat(evaluator.evaluate(condition, context(new TransactionRequest()))).isTrue();
@@ -148,7 +148,8 @@ class GraphOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenLabelMatches() {
-      RuleCondition condition = condition(ConditionOperator.NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD, "FRAUD");
+      RuleCondition condition =
+          condition(ConditionOperator.NEO4J_LABEL_PROPAGATION_FRAUD_SPREAD, "FRAUD");
       when(neo4jService.getFraudLabel(anyString())).thenReturn("FRAUD");
 
       assertThat(evaluator.evaluate(condition, context(new TransactionRequest()))).isTrue();
@@ -161,7 +162,8 @@ class GraphOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenSharedPiiCountAboveThreshold() {
-      RuleCondition condition = condition(ConditionOperator.NEO4J_ENTITY_RESOLUTION_SHARED_PII, "2");
+      RuleCondition condition =
+          condition(ConditionOperator.NEO4J_ENTITY_RESOLUTION_SHARED_PII, "2");
       when(neo4jService.findAccountsWithSharedPii(anyString()))
           .thenReturn(List.of("acct-2", "acct-3"));
 
@@ -175,7 +177,8 @@ class GraphOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenSimilarityAboveThreshold() {
-      RuleCondition condition = condition(ConditionOperator.NEO4J_NODE_SIMILARITY_SYNTHETIC_ID, "0.7");
+      RuleCondition condition =
+          condition(ConditionOperator.NEO4J_NODE_SIMILARITY_SYNTHETIC_ID, "0.7");
       condition.setValueFieldRef("acct-2");
       when(neo4jService.getNodeSimilarity(anyString(), anyString())).thenReturn(0.9);
 

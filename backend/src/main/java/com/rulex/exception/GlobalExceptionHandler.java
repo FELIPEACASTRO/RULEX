@@ -258,7 +258,8 @@ public class GlobalExceptionHandler {
                 Map.of(
                     "operator", ex.getOperator().name(),
                     "status", ex.getStatus(),
-                    "suggestion", "Consulte GET /api/operators/status para ver operadores disponíveis"))
+                    "suggestion",
+                        "Consulte GET /api/operators/status para ver operadores disponíveis"))
             .build();
 
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(error);
@@ -343,9 +344,7 @@ public class GlobalExceptionHandler {
             .error("Invalid Payload")
             .message(ex.getMessage())
             .path(request.getRequestURI())
-            .details(
-                Map.of(
-                    "field", ex.getField() != null ? ex.getField() : "unknown"))
+            .details(Map.of("field", ex.getField() != null ? ex.getField() : "unknown"))
             .build();
 
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
@@ -401,9 +400,12 @@ public class GlobalExceptionHandler {
             .error("Payload Too Large")
             .message(ex.getMessage())
             .path(request.getRequestURI())
-            .details(Map.of(
-                "maxSize", com.rulex.api.CachedBodyHttpServletRequest.MAX_BODY_SIZE,
-                "suggestion", "Reduza o tamanho do payload ou divida em múltiplas requisições"))
+            .details(
+                Map.of(
+                    "maxSize",
+                    com.rulex.api.CachedBodyHttpServletRequest.MAX_BODY_SIZE,
+                    "suggestion",
+                    "Reduza o tamanho do payload ou divida em múltiplas requisições"))
             .build();
 
     return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);

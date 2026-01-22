@@ -51,7 +51,8 @@ public final class Iso20022Evaluator {
     try {
       if (context.getPayload() == null) return false;
       Object infoObj =
-          FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+          FieldValueExtractor.getFieldValue(
+              condition.getFieldName(), condition.getFieldPath(), context);
       if (infoObj == null) {
         infoObj = context.getPayload().get("remittance_info");
         if (infoObj == null) infoObj = context.getPayload().get("remittanceInfo");
@@ -89,7 +90,8 @@ public final class Iso20022Evaluator {
     try {
       if (context.getPayload() == null) return false;
       Object purposeObj =
-          FieldValueExtractor.getFieldValue(condition.getFieldName(), condition.getFieldPath(), context);
+          FieldValueExtractor.getFieldValue(
+              condition.getFieldName(), condition.getFieldPath(), context);
       if (purposeObj == null) {
         purposeObj = context.getPayload().get("purpose_code");
         if (purposeObj == null) purposeObj = context.getPayload().get("purposeCode");

@@ -198,7 +198,8 @@ public class DatabaseRuleExecutorService {
         Object otherValue = getFieldValue(transaction, expectedValue);
         yield compareFieldValues(actualValue, otherValue, operator);
       }
-      case "PERCENTAGE_OF_FIELD" -> evaluatePercentageOfField(actualValue, transaction, expectedValue);
+      case "PERCENTAGE_OF_FIELD" ->
+          evaluatePercentageOfField(actualValue, transaction, expectedValue);
       case "MODULO_ZERO" -> evaluateModuloZero(actualValue, expectedValue);
       case "DECIMAL_PLACES_GT" -> evaluateDecimalPlacesGt(actualValue, expectedValue);
       case "IS_NULL" -> actualValue == null;

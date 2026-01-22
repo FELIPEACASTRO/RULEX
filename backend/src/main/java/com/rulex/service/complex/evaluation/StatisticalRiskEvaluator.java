@@ -13,7 +13,9 @@ public final class StatisticalRiskEvaluator {
   private StatisticalRiskEvaluator() {}
 
   public static boolean evaluateZScoreGt(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       if (context.getPayload() == null && context.getTransactionRequest() == null) return false;
       double threshold = Double.parseDouble(condition.getValueSingle().trim());
@@ -44,7 +46,9 @@ public final class StatisticalRiskEvaluator {
   }
 
   public static boolean evaluateStandardDeviationGt(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       if (context.getTransactionRequest() == null) return false;
       BigDecimal threshold = new BigDecimal(condition.getValueSingle().trim());
@@ -77,7 +81,9 @@ public final class StatisticalRiskEvaluator {
   }
 
   public static boolean evaluateCoefficientVariationGt(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       if (context.getTransactionRequest() == null) return false;
       double threshold = Double.parseDouble(condition.getValueSingle().trim());

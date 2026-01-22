@@ -37,14 +37,9 @@ public class CorsConfig implements WebMvcConfigurer {
             "Accept",
             "Origin",
             "Cache-Control",
-            "X-Request-ID"
-        )
+            "X-Request-ID")
         .exposedHeaders(
-            "X-RateLimit-Remaining",
-            "X-RateLimit-Limit",
-            "X-RateLimit-Retry-After",
-            "X-Request-ID"
-        )
+            "X-RateLimit-Remaining", "X-RateLimit-Limit", "X-RateLimit-Retry-After", "X-Request-ID")
         .allowCredentials(true)
         .maxAge(3600);
   }

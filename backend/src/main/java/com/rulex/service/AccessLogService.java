@@ -10,12 +10,12 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -27,7 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@ConditionalOnProperty(name = "rulex.access-log.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+    name = "rulex.access-log.enabled",
+    havingValue = "true",
+    matchIfMissing = true)
 public class AccessLogService {
 
   private final AccessLogRepository accessLogRepository;

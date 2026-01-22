@@ -24,8 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class VelocityOperatorEvaluatorTest {
 
-  @Mock
-  private VelocityService velocityService;
+  @Mock private VelocityService velocityService;
 
   private VelocityOperatorEvaluator evaluator;
 
@@ -161,7 +160,8 @@ class VelocityOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenDistinctCountriesAboveThreshold() {
-      RuleCondition condition = condition(ConditionOperator.COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS, "2:4");
+      RuleCondition condition =
+          condition(ConditionOperator.COUNT_DISTINCT_COUNTRIES_LAST_N_HOURS, "2:4");
 
       when(velocityService.getAggregation(any(), any(), any(), any()))
           .thenReturn(new BigDecimal("4"));

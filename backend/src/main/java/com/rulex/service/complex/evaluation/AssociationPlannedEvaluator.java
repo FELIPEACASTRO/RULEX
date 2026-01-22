@@ -16,8 +16,7 @@ public final class AssociationPlannedEvaluator {
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");
   }
 
-  public static boolean evaluateEclatItemset(
-      RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateEclatItemset(RuleCondition condition, EvaluationContext context) {
     throw new UnsupportedOperatorException(
         ConditionOperator.ECLAT_ITEMSET,
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status para operadores disponíveis.");

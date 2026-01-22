@@ -79,7 +79,8 @@ public final class BasicOperatorEvaluator {
     return false;
   }
 
-  public static boolean evaluateContains(Object fieldValue, String substring, Boolean caseSensitive) {
+  public static boolean evaluateContains(
+      Object fieldValue, String substring, Boolean caseSensitive) {
     if (fieldValue == null || substring == null) return false;
 
     String fieldStr = String.valueOf(fieldValue);
@@ -89,7 +90,8 @@ public final class BasicOperatorEvaluator {
     return fieldStr.contains(substring);
   }
 
-  public static boolean evaluateStartsWith(Object fieldValue, String prefix, Boolean caseSensitive) {
+  public static boolean evaluateStartsWith(
+      Object fieldValue, String prefix, Boolean caseSensitive) {
     if (fieldValue == null || prefix == null) return false;
 
     String fieldStr = String.valueOf(fieldValue);

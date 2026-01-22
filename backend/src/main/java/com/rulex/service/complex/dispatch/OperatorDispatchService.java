@@ -30,8 +30,7 @@ public final class OperatorDispatchService {
     } catch (Exception e) {
       log.error("Erro ao delegar operador {} para registry: {}", operator, e.getMessage());
       throw new UnsupportedOperatorException(
-          operator,
-          "Erro ao avaliar operador via registry: " + e.getMessage());
+          operator, "Erro ao avaliar operador via registry: " + e.getMessage());
     }
   }
 }

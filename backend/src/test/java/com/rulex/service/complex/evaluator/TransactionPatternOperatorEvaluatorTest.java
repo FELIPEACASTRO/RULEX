@@ -140,7 +140,8 @@ class TransactionPatternOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenAttemptsAboveThreshold() {
-      RuleCondition condition = condition(ConditionOperator.TRANSACTION_ATTEMPT_COUNT_PER_CARD, "5");
+      RuleCondition condition =
+          condition(ConditionOperator.TRANSACTION_ATTEMPT_COUNT_PER_CARD, "5");
       EvaluationContext context = context(Map.of("txAttemptCountPerCard", 7));
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();

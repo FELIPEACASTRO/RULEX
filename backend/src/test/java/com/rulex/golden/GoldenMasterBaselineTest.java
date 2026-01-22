@@ -60,12 +60,12 @@ class GoldenMasterBaselineTest {
     String currentJson = MAPPER.writeValueAsString(currentState);
 
     if (Files.exists(baselinePath)) {
-        String baselineJson = Files.readString(baselinePath);
-        Map<String, Object> baselineState =
+      String baselineJson = Files.readString(baselinePath);
+      Map<String, Object> baselineState =
           MAPPER.readValue(baselineJson, new TypeReference<Map<String, Object>>() {});
-        Map<String, Object> currentStateNormalized =
+      Map<String, Object> currentStateNormalized =
           MAPPER.readValue(currentJson, new TypeReference<Map<String, Object>>() {});
-        assertEquals(
+      assertEquals(
           baselineState,
           currentStateNormalized,
           "Operator inventory changed! If intentional, update baseline and document in CHANGELOG.");
@@ -91,12 +91,12 @@ class GoldenMasterBaselineTest {
     String currentJson = MAPPER.writeValueAsString(categories);
 
     if (Files.exists(baselinePath)) {
-        String baselineJson = Files.readString(baselinePath);
-        Map<String, Integer> baselineCategories =
+      String baselineJson = Files.readString(baselinePath);
+      Map<String, Integer> baselineCategories =
           MAPPER.readValue(baselineJson, new TypeReference<Map<String, Integer>>() {});
-        Map<String, Integer> currentCategories =
+      Map<String, Integer> currentCategories =
           MAPPER.readValue(currentJson, new TypeReference<Map<String, Integer>>() {});
-        assertEquals(
+      assertEquals(
           baselineCategories,
           currentCategories,
           "Operator categories changed! If intentional, update baseline.");

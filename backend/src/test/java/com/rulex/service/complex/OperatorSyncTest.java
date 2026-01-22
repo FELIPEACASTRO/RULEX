@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * TRIPLE CHECK AVASSALADOR - Testes de Sincronização de Operadores Verifica que TODOS os operadores
- * estão sincronizados entre: - Entity (ConditionOperator) - DTO
- * (ConditionDTO.OperatorType) - Evaluator (ComplexRuleEvaluator)
+ * estão sincronizados entre: - Entity (ConditionOperator) - DTO (ConditionDTO.OperatorType) -
+ * Evaluator (ComplexRuleEvaluator)
  */
 public class OperatorSyncTest {
 
@@ -73,7 +73,7 @@ public class OperatorSyncTest {
 
     // Contar métodos evaluate* de TODAS as classes evaluator (modular architecture)
     Set<String> evaluateMethods = new HashSet<>();
-    
+
     // Classes de evaluators modulares em /evaluation/
     String[] evaluationClasses = {
       "com.rulex.service.complex.evaluation.AmlTypologyEvaluator",
@@ -116,7 +116,7 @@ public class OperatorSyncTest {
       "com.rulex.service.complex.evaluation.VelocityAggregationEvaluator",
       "com.rulex.service.complex.ComplexRuleEvaluator"
     };
-    
+
     for (String className : evaluationClasses) {
       try {
         Class<?> clazz = Class.forName(className);
@@ -140,7 +140,8 @@ public class OperatorSyncTest {
     // Verificamos que há métodos suficientes para cobrir os operadores
     assertTrue(
         evaluateMethods.size() >= 100,
-        "Deve haver pelo menos 100 métodos evaluate* distribuídos. Encontrados: " + evaluateMethods.size());
+        "Deve haver pelo menos 100 métodos evaluate* distribuídos. Encontrados: "
+            + evaluateMethods.size());
 
     System.out.println("✅ Métodos evaluate suficientes (arquitetura modular)!");
   }

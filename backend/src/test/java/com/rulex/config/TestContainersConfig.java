@@ -15,9 +15,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 /**
- * Configuração de teste que cria um DataSource usando Testcontainers.
- * Esta configuração é usada para garantir que o DataSource seja criado
- * antes dos repositórios JPA.
+ * Configuração de teste que cria um DataSource usando Testcontainers. Esta configuração é usada
+ * para garantir que o DataSource seja criado antes dos repositórios JPA.
  */
 @TestConfiguration
 public class TestContainersConfig {
@@ -25,10 +24,11 @@ public class TestContainersConfig {
   private static final PostgreSQLContainer<?> postgres;
 
   static {
-    postgres = new PostgreSQLContainer<>("postgres:16-alpine")
-        .withDatabaseName("rulex_db")
-        .withUsername("postgres")
-        .withPassword("postgres");
+    postgres =
+        new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("rulex_db")
+            .withUsername("postgres")
+            .withPassword("postgres");
     postgres.start();
   }
 
@@ -58,8 +58,7 @@ public class TestContainersConfig {
         "com.rulex.entity.complex",
         "com.rulex.entity.homolog",
         "com.rulex.v31.execlog",
-        "com.rulex.v31.field"
-    );
+        "com.rulex.v31.field");
 
     HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
     vendorAdapter.setGenerateDdl(true);
@@ -77,7 +76,8 @@ public class TestContainersConfig {
 
   @Bean
   @Primary
-  public PlatformTransactionManager transactionManager(LocalContainerEntityManagerFactoryBean entityManagerFactory) {
+  public PlatformTransactionManager transactionManager(
+      LocalContainerEntityManagerFactoryBean entityManagerFactory) {
     JpaTransactionManager transactionManager = new JpaTransactionManager();
     transactionManager.setEntityManagerFactory(entityManagerFactory.getObject());
     return transactionManager;

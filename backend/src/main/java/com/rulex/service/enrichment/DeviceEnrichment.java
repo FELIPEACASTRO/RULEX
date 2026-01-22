@@ -254,7 +254,8 @@ public class DeviceEnrichment {
             ageDays = (int) ChronoUnit.DAYS.between(device.getFirstSeen(), OffsetDateTime.now());
           }
           if (device.getLastSeen() != null) {
-            lastSeenHours = (int) ChronoUnit.HOURS.between(device.getLastSeen(), OffsetDateTime.now());
+            lastSeenHours =
+                (int) ChronoUnit.HOURS.between(device.getLastSeen(), OffsetDateTime.now());
           }
         }
       }
@@ -269,9 +270,9 @@ public class DeviceEnrichment {
       boolean isFingerprintBlocked = false;
       if (analysis.fingerprintHash() != null) {
         try {
-          var blocklistResult = bloomFilterService.isBlacklisted(
-              com.rulex.entity.RuleList.EntityType.DEVICE_ID,
-              analysis.fingerprintHash());
+          var blocklistResult =
+              bloomFilterService.isBlacklisted(
+                  com.rulex.entity.RuleList.EntityType.DEVICE_ID, analysis.fingerprintHash());
           isFingerprintBlocked = blocklistResult.inList();
         } catch (Exception e) {
           log.debug("Erro ao verificar blocklist de fingerprint: {}", e.getMessage());
@@ -279,7 +280,8 @@ public class DeviceEnrichment {
       }
 
       // Flags compostas
-      boolean isHighRisk = riskScore >= 70 || isEmulator || isRooted || isTor || isFingerprintBlocked;
+      boolean isHighRisk =
+          riskScore >= 70 || isEmulator || isRooted || isTor || isFingerprintBlocked;
       boolean isSuspicious = riskScore >= 50 || isVpn || isProxy || anomalyScore >= 30;
 
       return DeviceContext.builder()

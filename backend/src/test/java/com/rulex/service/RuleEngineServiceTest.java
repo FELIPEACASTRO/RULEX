@@ -27,16 +27,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
-import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 
 @SuppressWarnings("null")
 class RuleEngineServiceTest {
 
   // Setup mock para TransactionEnrichmentFacade retornar contexto vazio
-  private static com.rulex.service.enrichment.TransactionEnrichmentFacade createMockEnrichmentFacade() {
+  private static com.rulex.service.enrichment.TransactionEnrichmentFacade
+      createMockEnrichmentFacade() {
     var mock = Mockito.mock(com.rulex.service.enrichment.TransactionEnrichmentFacade.class);
-    var emptyContext = com.rulex.service.enrichment.TransactionEnrichmentFacade.FullEnrichmentContext.empty();
+    var emptyContext =
+        com.rulex.service.enrichment.TransactionEnrichmentFacade.FullEnrichmentContext.empty();
     Mockito.when(mock.enrichFull(Mockito.any())).thenReturn(emptyContext);
     return mock;
   }
@@ -70,8 +71,8 @@ class RuleEngineServiceTest {
   private final GeoService geoService = Mockito.mock(GeoService.class);
   private final RedisVelocityService redisVelocityService =
       Mockito.mock(RedisVelocityService.class);
-  private final com.rulex.service.enrichment.TransactionEnrichmentFacade transactionEnrichmentFacade =
-      createMockEnrichmentFacade();
+  private final com.rulex.service.enrichment.TransactionEnrichmentFacade
+      transactionEnrichmentFacade = createMockEnrichmentFacade();
 
   private final RuleEngineService service =
       new RuleEngineService(

@@ -16,8 +16,7 @@ public final class StatisticalPlannedEvaluator {
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
-  public static boolean evaluateStatAnovaFTest(
-      RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateStatAnovaFTest(RuleCondition condition, EvaluationContext context) {
     throw new UnsupportedOperatorException(
         ConditionOperator.STAT_ANOVA_F_TEST,
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
@@ -72,15 +71,13 @@ public final class StatisticalPlannedEvaluator {
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
-  public static boolean evaluateStatGrubbsTest(
-      RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateStatGrubbsTest(RuleCondition condition, EvaluationContext context) {
     throw new UnsupportedOperatorException(
         ConditionOperator.STAT_GRUBBS_TEST,
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
-  public static boolean evaluateStatDixonQTest(
-      RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateStatDixonQTest(RuleCondition condition, EvaluationContext context) {
     throw new UnsupportedOperatorException(
         ConditionOperator.STAT_DIXON_Q_TEST,
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
@@ -93,15 +90,13 @@ public final class StatisticalPlannedEvaluator {
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
-  public static boolean evaluateStatLeveneTest(
-      RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateStatLeveneTest(RuleCondition condition, EvaluationContext context) {
     throw new UnsupportedOperatorException(
         ConditionOperator.STAT_LEVENE_TEST,
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
   }
 
-  public static boolean evaluateStatWelchTTest(
-      RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateStatWelchTTest(RuleCondition condition, EvaluationContext context) {
     throw new UnsupportedOperatorException(
         ConditionOperator.STAT_WELCH_T_TEST,
         "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");

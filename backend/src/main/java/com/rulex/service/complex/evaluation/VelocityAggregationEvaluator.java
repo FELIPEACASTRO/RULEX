@@ -18,7 +18,9 @@ public final class VelocityAggregationEvaluator {
   private VelocityAggregationEvaluator() {}
 
   public static boolean evaluateSumLastNDays(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String[] parts = condition.getValueSingle().split("\\|");
       if (parts.length != 4) {
@@ -53,7 +55,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluateCountLastNHours(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String[] parts = condition.getValueSingle().split("\\|");
       if (parts.length != 3) {
@@ -87,7 +91,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluateAvgLastNDays(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String[] parts = condition.getValueSingle().split("\\|");
       if (parts.length != 4) {
@@ -122,7 +128,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluateCountDistinctMerchantsLastNDays(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String[] parts = condition.getValueSingle().split("\\|");
       if (parts.length != 3) {
@@ -158,7 +166,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluateCountDistinctCountriesLastNHours(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String[] parts = condition.getValueSingle().split("\\|");
       if (parts.length != 3) {
@@ -194,7 +204,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluateMaxAmountLastNDays(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String[] parts = condition.getValueSingle().split("\\|");
       if (parts.length != 3) {
@@ -228,7 +240,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluateMinAmountLastNDays(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String[] parts = condition.getValueSingle().split("\\|");
       if (parts.length != 3) {
@@ -262,7 +276,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluateCountDistinctPansLastNHours(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String[] parts = condition.getValueSingle().split(":");
       if (parts.length < 2) {
@@ -296,7 +312,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluateCountDistinctAccounts(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       int threshold = Integer.parseInt(condition.getValueSingle().trim());
 
@@ -322,7 +340,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluateSumLastNHours(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String[] parts = condition.getValueSingle().split(":");
       if (parts.length < 2) {
@@ -370,7 +390,8 @@ public final class VelocityAggregationEvaluator {
       int hours = Integer.parseInt(parts[0].trim());
       int threshold = Integer.parseInt(parts[1].trim());
 
-      Object customerIdObj = FieldValueExtractor.getFieldValue("customerIdFromHeader", null, context);
+      Object customerIdObj =
+          FieldValueExtractor.getFieldValue("customerIdFromHeader", null, context);
       if (customerIdObj == null) {
         customerIdObj = FieldValueExtractor.getFieldValue("customerId", null, context);
       }
@@ -404,7 +425,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluateCountDistinctMerchantsLastNHours(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String[] parts = condition.getValueSingle().split(":");
       if (parts.length < 2) {
@@ -437,7 +460,8 @@ public final class VelocityAggregationEvaluator {
     try {
       int thresholdMinutes = Integer.parseInt(condition.getValueSingle().trim());
 
-      Object customerIdObj = FieldValueExtractor.getFieldValue("customerIdFromHeader", null, context);
+      Object customerIdObj =
+          FieldValueExtractor.getFieldValue("customerIdFromHeader", null, context);
       if (customerIdObj == null) {
         customerIdObj = FieldValueExtractor.getFieldValue("customerId", null, context);
       }
@@ -473,7 +497,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluateVelocitySpike(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       double multiplier = Double.parseDouble(condition.getValueSingle().trim());
 
@@ -503,7 +529,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluateAmountSpike(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       double multiplier = Double.parseDouble(condition.getValueSingle().trim());
 
@@ -535,7 +563,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluatePatternEscalation(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String[] parts = condition.getValueSingle().split(":");
       int minTransactions = parts.length > 0 ? Integer.parseInt(parts[0].trim()) : 3;
@@ -580,7 +610,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluatePatternSplitTransaction(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String[] parts = condition.getValueSingle().split(":");
       if (parts.length < 3) {
@@ -610,7 +642,9 @@ public final class VelocityAggregationEvaluator {
   }
 
   public static boolean evaluateCountLastNDays(
-      RuleCondition condition, EvaluationContext context, VelocityServiceFacade velocityServiceFacade) {
+      RuleCondition condition,
+      EvaluationContext context,
+      VelocityServiceFacade velocityServiceFacade) {
     try {
       String valueSingle = condition.getValueSingle();
       if (valueSingle == null || valueSingle.isBlank()) {

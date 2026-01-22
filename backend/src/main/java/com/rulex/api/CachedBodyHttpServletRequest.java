@@ -28,7 +28,8 @@ public class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
     this(request, MAX_BODY_SIZE);
   }
 
-  public CachedBodyHttpServletRequest(HttpServletRequest request, int maxBodySize) throws IOException {
+  public CachedBodyHttpServletRequest(HttpServletRequest request, int maxBodySize)
+      throws IOException {
     super(request);
 
     // Check Content-Length header first for early rejection
@@ -44,9 +45,7 @@ public class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
     }
   }
 
-  /**
-   * Reads input stream with a size limit to prevent memory DoS.
-   */
+  /** Reads input stream with a size limit to prevent memory DoS. */
   private byte[] readWithLimit(InputStream is, int maxSize) throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     byte[] chunk = new byte[8192];
@@ -101,9 +100,7 @@ public class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
         new InputStreamReader(new ByteArrayInputStream(cachedBody), StandardCharsets.UTF_8));
   }
 
-  /**
-   * Exception thrown when request body exceeds the maximum allowed size.
-   */
+  /** Exception thrown when request body exceeds the maximum allowed size. */
   public static class PayloadTooLargeException extends IOException {
     private static final long serialVersionUID = 1L;
 

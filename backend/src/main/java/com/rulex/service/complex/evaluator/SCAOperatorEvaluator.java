@@ -1,7 +1,7 @@
 package com.rulex.service.complex.evaluator;
 
-import com.rulex.entity.complex.RuleCondition;
 import com.rulex.entity.complex.ConditionOperator;
+import com.rulex.entity.complex.RuleCondition;
 import com.rulex.service.complex.ComplexRuleEvaluator.EvaluationContext;
 import java.util.Map;
 import java.util.Set;
@@ -9,27 +9,27 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * Evaluator para operadores SCA (Strong Customer Authentication).
- * Implementa isenções e regras PSD2/PSD3.
+ * Evaluator para operadores SCA (Strong Customer Authentication). Implementa isenções e regras
+ * PSD2/PSD3.
  */
 @Component
 @Slf4j
 public class SCAOperatorEvaluator implements OperatorEvaluator {
 
-  private static final Set<ConditionOperator> SUPPORTED = Set.of(
-      ConditionOperator.SCA_LOW_VALUE_EXEMPTION,
-      ConditionOperator.SCA_CONTACTLESS_EXEMPTION,
-      ConditionOperator.SCA_TRA_EXEMPTION,
-      ConditionOperator.SCA_TRUSTED_BENEFICIARY,
-      ConditionOperator.SCA_RECURRING_TRANSACTION,
-      ConditionOperator.SCA_MERCHANT_INITIATED,
-      ConditionOperator.SCA_CORPORATE_PAYMENT,
-      ConditionOperator.SCA_SECURE_CORPORATE_PROTOCOL,
-      ConditionOperator.SCA_LIABILITY_SHIFT,
-      ConditionOperator.SCA_DYNAMIC_3DS_ROUTING,
-      ConditionOperator.SCA_FRAUD_RATE_MONITORING,
-      ConditionOperator.SCA_CHALLENGE_MANDATORY
-  );
+  private static final Set<ConditionOperator> SUPPORTED =
+      Set.of(
+          ConditionOperator.SCA_LOW_VALUE_EXEMPTION,
+          ConditionOperator.SCA_CONTACTLESS_EXEMPTION,
+          ConditionOperator.SCA_TRA_EXEMPTION,
+          ConditionOperator.SCA_TRUSTED_BENEFICIARY,
+          ConditionOperator.SCA_RECURRING_TRANSACTION,
+          ConditionOperator.SCA_MERCHANT_INITIATED,
+          ConditionOperator.SCA_CORPORATE_PAYMENT,
+          ConditionOperator.SCA_SECURE_CORPORATE_PROTOCOL,
+          ConditionOperator.SCA_LIABILITY_SHIFT,
+          ConditionOperator.SCA_DYNAMIC_3DS_ROUTING,
+          ConditionOperator.SCA_FRAUD_RATE_MONITORING,
+          ConditionOperator.SCA_CHALLENGE_MANDATORY);
 
   @Override
   public Set<ConditionOperator> getSupportedOperators() {
@@ -48,13 +48,16 @@ public class SCAOperatorEvaluator implements OperatorEvaluator {
 
     return switch (condition.getOperator()) {
       case SCA_LOW_VALUE_EXEMPTION -> evaluateLowValueExemption(fieldValue, threshold, payload);
-      case SCA_CONTACTLESS_EXEMPTION -> evaluateContactlessExemption(fieldValue, threshold, payload);
+      case SCA_CONTACTLESS_EXEMPTION ->
+          evaluateContactlessExemption(fieldValue, threshold, payload);
       case SCA_TRA_EXEMPTION -> evaluateTraExemption(fieldValue, threshold, payload);
       case SCA_TRUSTED_BENEFICIARY -> evaluateTrustedBeneficiary(fieldValue, threshold, payload);
-      case SCA_RECURRING_TRANSACTION -> evaluateRecurringTransaction(fieldValue, threshold, payload);
+      case SCA_RECURRING_TRANSACTION ->
+          evaluateRecurringTransaction(fieldValue, threshold, payload);
       case SCA_MERCHANT_INITIATED -> evaluateMerchantInitiated(fieldValue, threshold, payload);
       case SCA_CORPORATE_PAYMENT -> evaluateCorporatePayment(fieldValue, threshold, payload);
-      case SCA_SECURE_CORPORATE_PROTOCOL -> evaluateSecureCorporateProtocol(fieldValue, threshold, payload);
+      case SCA_SECURE_CORPORATE_PROTOCOL ->
+          evaluateSecureCorporateProtocol(fieldValue, threshold, payload);
       case SCA_LIABILITY_SHIFT -> evaluateLiabilityShift(fieldValue, threshold, payload);
       case SCA_DYNAMIC_3DS_ROUTING -> evaluateDynamic3dsRouting(fieldValue, threshold, payload);
       case SCA_FRAUD_RATE_MONITORING -> evaluateFraudRateMonitoring(fieldValue, threshold, payload);
@@ -72,7 +75,8 @@ public class SCAOperatorEvaluator implements OperatorEvaluator {
     return null;
   }
 
-  private boolean evaluateLowValueExemption(Object fieldValue, String threshold, Map<String, Object> payload) {
+  private boolean evaluateLowValueExemption(
+      Object fieldValue, String threshold, Map<String, Object> payload) {
     // Isenção para valores baixos (≤€30)
     try {
       double amount = Double.parseDouble(fieldValue.toString());
@@ -83,7 +87,8 @@ public class SCAOperatorEvaluator implements OperatorEvaluator {
     }
   }
 
-  private boolean evaluateContactlessExemption(Object fieldValue, String threshold, Map<String, Object> payload) {
+  private boolean evaluateContactlessExemption(
+      Object fieldValue, String threshold, Map<String, Object> payload) {
     // Isenção para contactless (≤€50)
     try {
       double amount = Double.parseDouble(fieldValue.toString());
@@ -95,7 +100,8 @@ public class SCAOperatorEvaluator implements OperatorEvaluator {
     }
   }
 
-  private boolean evaluateTraExemption(Object fieldValue, String threshold, Map<String, Object> payload) {
+  private boolean evaluateTraExemption(
+      Object fieldValue, String threshold, Map<String, Object> payload) {
     // Isenção por Transaction Risk Analysis
     try {
       double riskScore = Double.parseDouble(fieldValue.toString());
@@ -106,49 +112,64 @@ public class SCAOperatorEvaluator implements OperatorEvaluator {
     }
   }
 
-  private boolean evaluateTrustedBeneficiary(Object fieldValue, String threshold, Map<String, Object> payload) {
+  private boolean evaluateTrustedBeneficiary(
+      Object fieldValue, String threshold, Map<String, Object> payload) {
     // Beneficiário confiável
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+    return Boolean.TRUE.equals(fieldValue)
+        || "true".equalsIgnoreCase(String.valueOf(fieldValue))
         || "TRUSTED".equalsIgnoreCase(String.valueOf(fieldValue));
   }
 
-  private boolean evaluateRecurringTransaction(Object fieldValue, String threshold, Map<String, Object> payload) {
+  private boolean evaluateRecurringTransaction(
+      Object fieldValue, String threshold, Map<String, Object> payload) {
     // Transação recorrente
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+    return Boolean.TRUE.equals(fieldValue)
+        || "true".equalsIgnoreCase(String.valueOf(fieldValue))
         || "RECURRING".equalsIgnoreCase(String.valueOf(fieldValue));
   }
 
-  private boolean evaluateMerchantInitiated(Object fieldValue, String threshold, Map<String, Object> payload) {
+  private boolean evaluateMerchantInitiated(
+      Object fieldValue, String threshold, Map<String, Object> payload) {
     // Transação iniciada pelo merchant
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+    return Boolean.TRUE.equals(fieldValue)
+        || "true".equalsIgnoreCase(String.valueOf(fieldValue))
         || "MIT".equalsIgnoreCase(String.valueOf(fieldValue));
   }
 
-  private boolean evaluateCorporatePayment(Object fieldValue, String threshold, Map<String, Object> payload) {
+  private boolean evaluateCorporatePayment(
+      Object fieldValue, String threshold, Map<String, Object> payload) {
     // Pagamento corporativo
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+    return Boolean.TRUE.equals(fieldValue)
+        || "true".equalsIgnoreCase(String.valueOf(fieldValue))
         || "CORPORATE".equalsIgnoreCase(String.valueOf(fieldValue));
   }
 
-  private boolean evaluateSecureCorporateProtocol(Object fieldValue, String threshold, Map<String, Object> payload) {
+  private boolean evaluateSecureCorporateProtocol(
+      Object fieldValue, String threshold, Map<String, Object> payload) {
     // Protocolo corporativo seguro
     return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue));
   }
 
-  private boolean evaluateLiabilityShift(Object fieldValue, String threshold, Map<String, Object> payload) {
+  private boolean evaluateLiabilityShift(
+      Object fieldValue, String threshold, Map<String, Object> payload) {
     // Mudança de responsabilidade
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+    return Boolean.TRUE.equals(fieldValue)
+        || "true".equalsIgnoreCase(String.valueOf(fieldValue))
         || "SHIFT".equalsIgnoreCase(String.valueOf(fieldValue));
   }
 
-  private boolean evaluateDynamic3dsRouting(Object fieldValue, String threshold, Map<String, Object> payload) {
+  private boolean evaluateDynamic3dsRouting(
+      Object fieldValue, String threshold, Map<String, Object> payload) {
     // Roteamento dinâmico 3DS
     if (fieldValue == null) return false;
     String routing = fieldValue.toString().toUpperCase();
-    return routing.equals("FRICTIONLESS") || routing.equals("CHALLENGE") || routing.equals("EXEMPT");
+    return routing.equals("FRICTIONLESS")
+        || routing.equals("CHALLENGE")
+        || routing.equals("EXEMPT");
   }
 
-  private boolean evaluateFraudRateMonitoring(Object fieldValue, String threshold, Map<String, Object> payload) {
+  private boolean evaluateFraudRateMonitoring(
+      Object fieldValue, String threshold, Map<String, Object> payload) {
     // Monitoramento de taxa de fraude do PSP
     try {
       double fraudRate = Double.parseDouble(fieldValue.toString());
@@ -159,9 +180,11 @@ public class SCAOperatorEvaluator implements OperatorEvaluator {
     }
   }
 
-  private boolean evaluateChallengeMandatory(Object fieldValue, String threshold, Map<String, Object> payload) {
+  private boolean evaluateChallengeMandatory(
+      Object fieldValue, String threshold, Map<String, Object> payload) {
     // Challenge obrigatório
-    return Boolean.TRUE.equals(fieldValue) || "true".equalsIgnoreCase(String.valueOf(fieldValue))
+    return Boolean.TRUE.equals(fieldValue)
+        || "true".equalsIgnoreCase(String.valueOf(fieldValue))
         || "MANDATORY".equalsIgnoreCase(String.valueOf(fieldValue));
   }
 

@@ -259,8 +259,7 @@ public class RedisVelocityCacheService {
     return getDistinctCountries(request, keyType, TimeWindow.HOUR_24);
   }
 
-  public long getDistinctCountries(
-      TransactionRequest request, KeyType keyType, TimeWindow window) {
+  public long getDistinctCountries(TransactionRequest request, KeyType keyType, TimeWindow window) {
     String keyValue = extractKeyValue(request, keyType);
     if (keyValue == null) {
       return 0;

@@ -87,7 +87,8 @@ class ListOperatorEvaluatorTest {
     @Test
     void shouldReturnFalseWhenValueInHistory() {
       RuleCondition condition = createCondition("merchantId", ConditionOperator.NOT_IN_HISTORICAL);
-      EvaluationContext context = createContext(Map.of("merchantId_history", List.of("m1", "m2"), "merchantId", "m2"));
+      EvaluationContext context =
+          createContext(Map.of("merchantId_history", List.of("m1", "m2"), "merchantId", "m2"));
 
       assertThat(evaluator.evaluate(condition, context)).isFalse();
     }
@@ -99,7 +100,8 @@ class ListOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenCustomerHistoryMissing() {
-      RuleCondition condition = createCondition("deviceId", ConditionOperator.NOT_IN_CUSTOMER_HISTORY);
+      RuleCondition condition =
+          createCondition("deviceId", ConditionOperator.NOT_IN_CUSTOMER_HISTORY);
       EvaluationContext context = createContext(Map.of());
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
@@ -112,8 +114,10 @@ class ListOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenHourNotUsual() {
-      RuleCondition condition = createCondition("transactionHour", ConditionOperator.NOT_IN_CUSTOMER_USUAL_HOURS);
-      EvaluationContext context = createContext(Map.of("transactionHour", 3, "transactionHour_usual", List.of(9, 12, 18)));
+      RuleCondition condition =
+          createCondition("transactionHour", ConditionOperator.NOT_IN_CUSTOMER_USUAL_HOURS);
+      EvaluationContext context =
+          createContext(Map.of("transactionHour", 3, "transactionHour_usual", List.of(9, 12, 18)));
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();
     }
@@ -154,7 +158,8 @@ class ListOperatorEvaluatorTest {
       "confirmar senha urgente, true"
     })
     void shouldDetectSuspiciousKeywords(String text, boolean expected) {
-      RuleCondition condition = createCondition("message", ConditionOperator.CONTAINS_SUSPICIOUS_KEYWORDS);
+      RuleCondition condition =
+          createCondition("message", ConditionOperator.CONTAINS_SUSPICIOUS_KEYWORDS);
       EvaluationContext context = createContext(Map.of("message", text));
 
       assertThat(evaluator.evaluate(condition, context)).isEqualTo(expected);

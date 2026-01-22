@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import org.springframework.stereotype.Component;
 
@@ -86,8 +85,8 @@ public class RuleDslEvaluatorAdapter implements RuleDslEvaluatorPort {
   }
 
   /**
-   * Compara igualdade normalizando tipos numéricos para evitar problemas Integer vs Long.
-   * Usa BigDecimal para comparação numérica precisa.
+   * Compara igualdade normalizando tipos numéricos para evitar problemas Integer vs Long. Usa
+   * BigDecimal para comparação numérica precisa.
    */
   private boolean equalsNormalized(Object actual, String expectedRaw) {
     if (actual == null && expectedRaw == null) {
@@ -127,14 +126,15 @@ public class RuleDslEvaluatorAdapter implements RuleDslEvaluatorPort {
     return String.valueOf(actual).equals(expectedRaw);
   }
 
-  /**
-   * Converte Number para BigDecimal de forma segura.
-   */
+  /** Converte Number para BigDecimal de forma segura. */
   private BigDecimal toBigDecimal(Number num) {
     if (num instanceof BigDecimal bd) {
       return bd;
     }
-    if (num instanceof Integer || num instanceof Long || num instanceof Short || num instanceof Byte) {
+    if (num instanceof Integer
+        || num instanceof Long
+        || num instanceof Short
+        || num instanceof Byte) {
       return BigDecimal.valueOf(num.longValue());
     }
     if (num instanceof Float || num instanceof Double) {

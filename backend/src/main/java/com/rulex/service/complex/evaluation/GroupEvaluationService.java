@@ -13,7 +13,8 @@ public final class GroupEvaluationService {
 
   @FunctionalInterface
   public interface ConditionEvaluator {
-    boolean evaluate(RuleCondition condition, EvaluationContext context, List<RuleExecutionDetail> details);
+    boolean evaluate(
+        RuleCondition condition, EvaluationContext context, List<RuleExecutionDetail> details);
   }
 
   public static boolean evaluateGroup(

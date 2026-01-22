@@ -84,7 +84,8 @@ class BaselOperatorEvaluatorTest {
 
     @Test
     void shouldMatchAbove30BnBucket() {
-      RuleCondition condition = condition(ConditionOperator.BSL_BUCKET_CLASSIFICATION, "ABOVE_30BN");
+      RuleCondition condition =
+          condition(ConditionOperator.BSL_BUCKET_CLASSIFICATION, "ABOVE_30BN");
       EvaluationContext context = context(Map.of("field", 31_000_000_000L));
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();

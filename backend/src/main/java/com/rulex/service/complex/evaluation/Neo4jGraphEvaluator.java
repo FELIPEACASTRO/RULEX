@@ -68,7 +68,8 @@ public final class Neo4jGraphEvaluator {
 
     double similarity = neo4jGraphService.getPairwiseSimilarity(accountId, otherAccountId);
     double threshold = 0.7;
-    log.debug("NEO4J_PII_SIMILARITY: {} vs {}, similarity={}", accountId, otherAccountId, similarity);
+    log.debug(
+        "NEO4J_PII_SIMILARITY: {} vs {}, similarity={}", accountId, otherAccountId, similarity);
     return similarity > threshold;
   }
 

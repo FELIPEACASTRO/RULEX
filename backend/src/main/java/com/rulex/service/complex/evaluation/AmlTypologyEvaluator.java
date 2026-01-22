@@ -43,7 +43,8 @@ public final class AmlTypologyEvaluator {
     }
   }
 
-  public static boolean evaluateLayeringPattern(RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateLayeringPattern(
+      RuleCondition condition, EvaluationContext context) {
     try {
       if (context.getPayload() == null) return false;
       int minHops = Integer.parseInt(condition.getValueSingle().trim());

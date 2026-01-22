@@ -111,11 +111,11 @@ public class VelocityServiceFacade {
     BigDecimal total = redisVelocityCacheService.getTotalAmount(request, cacheKeyType, cacheWindow);
     BigDecimal avg = redisVelocityCacheService.getAverageAmount(request, cacheKeyType, cacheWindow);
     long distinctMerchants =
-      redisVelocityCacheService.getDistinctMerchants(request, cacheKeyType, cacheWindow);
+        redisVelocityCacheService.getDistinctMerchants(request, cacheKeyType, cacheWindow);
     long distinctMccs =
-      redisVelocityCacheService.getDistinctMccs(request, cacheKeyType, cacheWindow);
+        redisVelocityCacheService.getDistinctMccs(request, cacheKeyType, cacheWindow);
     long distinctCountries =
-      redisVelocityCacheService.getDistinctCountries(request, cacheKeyType, cacheWindow);
+        redisVelocityCacheService.getDistinctCountries(request, cacheKeyType, cacheWindow);
 
     return VelocityService.VelocityStats.builder()
         .transactionCount(count)

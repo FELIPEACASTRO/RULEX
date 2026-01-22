@@ -77,7 +77,8 @@ class AmlFraudOperatorEvaluatorTest {
       TransactionRequest request = new TransactionRequest();
       request.setTransactionAmount(new BigDecimal("500"));
 
-      assertThat(evaluator.evaluate(condition, context(Map.of("similarAmountTxnCount", 10), request)))
+      assertThat(
+              evaluator.evaluate(condition, context(Map.of("similarAmountTxnCount", 10), request)))
           .isFalse();
     }
 
@@ -97,10 +98,10 @@ class AmlFraudOperatorEvaluatorTest {
     @Test
     void shouldReturnTrueWhenMultipleHopsAndRapid() {
       RuleCondition condition = condition(ConditionOperator.LAYERING_PATTERN, "3");
-      Map<String, Object> payload = Map.of(
-          "transactionHopCount", 4,
-          "minutesToNextTransaction", 10
-      );
+      Map<String, Object> payload =
+          Map.of(
+              "transactionHopCount", 4,
+              "minutesToNextTransaction", 10);
 
       assertThat(evaluator.evaluate(condition, context(payload, null))).isTrue();
     }
@@ -108,10 +109,8 @@ class AmlFraudOperatorEvaluatorTest {
     @Test
     void shouldReturnTrueWhenMultipleHopsAndCrossBorder() {
       RuleCondition condition = condition(ConditionOperator.LAYERING_PATTERN, "3");
-      Map<String, Object> payload = Map.of(
-          "intermediaryAccountCount", 3,
-          "crossBorderTransfer", true
-      );
+      Map<String, Object> payload =
+          Map.of("intermediaryAccountCount", 3, "crossBorderTransfer", true);
 
       assertThat(evaluator.evaluate(condition, context(payload, null))).isTrue();
     }
@@ -127,7 +126,8 @@ class AmlFraudOperatorEvaluatorTest {
     @Test
     void shouldReturnFalseWhenNotRapidOrCrossBorder() {
       RuleCondition condition = condition(ConditionOperator.LAYERING_PATTERN, "3");
-      Map<String, Object> payload = Map.of("transactionHopCount", 4, "minutesToNextTransaction", 120);
+      Map<String, Object> payload =
+          Map.of("transactionHopCount", 4, "minutesToNextTransaction", 120);
 
       assertThat(evaluator.evaluate(condition, context(payload, null))).isFalse();
     }

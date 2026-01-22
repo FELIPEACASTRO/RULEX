@@ -10,7 +10,8 @@ public final class NameSimilarityEvaluator {
 
   private NameSimilarityEvaluator() {}
 
-  public static boolean evaluateNameSimilarityLt(RuleCondition condition, EvaluationContext context) {
+  public static boolean evaluateNameSimilarityLt(
+      RuleCondition condition, EvaluationContext context) {
     try {
       String[] parts = condition.getValueSingle().split(":");
       if (parts.length < 2) {
@@ -63,9 +64,7 @@ public final class NameSimilarityEvaluator {
     for (int i = 1; i <= s1.length(); i++) {
       for (int j = 1; j <= s2.length(); j++) {
         int cost = s1.charAt(i - 1) == s2.charAt(j - 1) ? 0 : 1;
-        dp[i][j] =
-            Math.min(
-                Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1), dp[i - 1][j - 1] + cost);
+        dp[i][j] = Math.min(Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1), dp[i - 1][j - 1] + cost);
       }
     }
 

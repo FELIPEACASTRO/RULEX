@@ -116,7 +116,8 @@ class MiscOperatorEvaluatorTest {
 
     @Test
     void shouldReturnTrueWhenIncomingAmountPositive() {
-      RuleCondition condition = condition(ConditionOperator.HAS_INCOMING_TRANSFER_LAST_N_HOURS, null);
+      RuleCondition condition =
+          condition(ConditionOperator.HAS_INCOMING_TRANSFER_LAST_N_HOURS, null);
       EvaluationContext context = context(Map.of("lastIncomingAmount", "50"));
 
       assertThat(evaluator.evaluate(condition, context)).isTrue();

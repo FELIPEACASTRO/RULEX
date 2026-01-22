@@ -7,7 +7,6 @@ import com.rulex.service.ImpossibleTravelService;
 import com.rulex.service.ImpossibleTravelService.TravelAnalysis;
 import com.rulex.util.PanHashUtil;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -250,28 +249,33 @@ public class GeoEnrichment {
         try {
           String panHash = PanHashUtil.sha256Hex(request.getPan());
           LocalDateTime txTime = parseTransactionTime(request);
-          boolean isCardPresent = request.getCustomerPresent() != null
-              && "1".equals(String.valueOf(request.getCustomerPresent()));
+          boolean isCardPresent =
+              request.getCustomerPresent() != null
+                  && "1".equals(String.valueOf(request.getCustomerPresent()));
 
-          TravelAnalysis travelAnalysis = impossibleTravelService.analyzeTravel(
-              panHash,
-              coords.getLatitude(),
-              coords.getLongitude(),
-              city,
-              countryCode,
-              txTime,
-              request.getExternalTransactionId(),
-              isCardPresent
-          );
+          TravelAnalysis travelAnalysis =
+              impossibleTravelService.analyzeTravel(
+                  panHash,
+                  coords.getLatitude(),
+                  coords.getLongitude(),
+                  city,
+                  countryCode,
+                  txTime,
+                  request.getExternalTransactionId(),
+                  isCardPresent);
 
           // Verificar se é viagem impossível baseado no riskLevel
-          isImpossibleTravel = travelAnalysis.riskLevel() == ImpossibleTravelService.TravelRisk.IMPOSSIBLE;
+          isImpossibleTravel =
+              travelAnalysis.riskLevel() == ImpossibleTravelService.TravelRisk.IMPOSSIBLE;
           travelSpeedKmh = travelAnalysis.speedKmh();
           travelDistanceKm = travelAnalysis.distanceKm();
           timeSinceLastMinutes = (int) travelAnalysis.elapsedMinutes();
 
-          log.debug("Análise de viagem: impossible={}, speed={}km/h, distance={}km",
-              isImpossibleTravel, travelSpeedKmh, travelDistanceKm);
+          log.debug(
+              "Análise de viagem: impossible={}, speed={}km/h, distance={}km",
+              isImpossibleTravel,
+              travelSpeedKmh,
+              travelDistanceKm);
         } catch (Exception e) {
           log.debug("Erro ao analisar viagem impossível: {}", e.getMessage());
         }
