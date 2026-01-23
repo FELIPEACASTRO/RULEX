@@ -1,24 +1,21 @@
 package com.rulex.service.complex;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleCondition;
 import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleConditionGroup.GroupLogicOperator;
-import com.rulex.service.FuzzyLogicService;
-import com.rulex.service.GeoService;
-import com.rulex.service.Neo4jGraphService;
-import com.rulex.service.OperatorDataService;
-import com.rulex.service.StatisticalAnalysisService;
-import com.rulex.service.StringSimilarityService;
-import com.rulex.service.VelocityService;
-import com.rulex.service.VelocityServiceFacade;
+import com.rulex.service.complex.evaluator.OperatorEvaluator;
 import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
 import com.rulex.service.complex.evaluation.ConditionGroupEvaluator;
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,278 +25,79 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 /**
- * Testes para o ComplexRuleEvaluator.
+ * Testes para o ComplexRuleEvaluator refatorado.
  *
- * <p>GAP-FIX #3: Cobertura de testes para classes críticas.
+ * <p>Estes testes focam na orquestração da avaliação, não na lógica de operadores individuais
+ * (que é testada nos testes dos evaluators específicos).
  */
 @DisplayName("ComplexRuleEvaluator Tests")
 class ComplexRuleEvaluatorTest {
 
-  private GeoService geoService;
-  private VelocityService velocityService;
-  private VelocityServiceFacade velocityServiceFacade;
-  private OperatorDataService operatorDataService;
-  private Neo4jGraphService neo4jGraphService;
-  private StatisticalAnalysisService statisticalAnalysisService;
-  private FuzzyLogicService fuzzyLogicService;
-  private StringSimilarityService stringSimilarityService;
   private OperatorEvaluatorRegistry operatorEvaluatorRegistry;
+  private OperatorEvaluator mockEvaluator;
   private ConditionGroupEvaluator conditionGroupEvaluator;
   private ComplexRuleEvaluator evaluator;
 
   @BeforeEach
   void setUp() {
-    geoService = Mockito.mock(GeoService.class);
-    velocityService = Mockito.mock(VelocityService.class);
-    velocityServiceFacade = Mockito.mock(VelocityServiceFacade.class);
-    operatorDataService = Mockito.mock(OperatorDataService.class);
-    neo4jGraphService = Mockito.mock(Neo4jGraphService.class);
-    statisticalAnalysisService = Mockito.mock(StatisticalAnalysisService.class);
-    fuzzyLogicService = Mockito.mock(FuzzyLogicService.class);
-    stringSimilarityService = Mockito.mock(StringSimilarityService.class);
-    // ARCH-001 FIX: Adicionado mock do OperatorEvaluatorRegistry
-    operatorEvaluatorRegistry = new OperatorEvaluatorRegistry(Collections.emptyList());
+    operatorEvaluatorRegistry = Mockito.mock(OperatorEvaluatorRegistry.class);
+    mockEvaluator = Mockito.mock(OperatorEvaluator.class);
     conditionGroupEvaluator = new ConditionGroupEvaluator();
-    evaluator =
-        new ComplexRuleEvaluator(
-            velocityServiceFacade,
-            operatorDataService,
-            neo4jGraphService,
-            statisticalAnalysisService,
-            fuzzyLogicService,
-            stringSimilarityService,
-        operatorEvaluatorRegistry,
-        conditionGroupEvaluator);
+
+    when(operatorEvaluatorRegistry.getEvaluator(any(ConditionOperator.class)))
+        .thenReturn(mockEvaluator);
+
+    evaluator = new ComplexRuleEvaluator(operatorEvaluatorRegistry, conditionGroupEvaluator);
   }
 
   @Nested
-  @DisplayName("Operadores de Comparação")
-  class ComparisonOperators {
+  @DisplayName("Delegação para Registry")
+  class RegistryDelegation {
 
     @Test
-    @DisplayName("EQ deve comparar valores iguais")
-    void equalsOperator_shouldMatchEqualValues() {
+    @DisplayName("Deve delegar avaliação para o registry")
+    void shouldDelegateToRegistry() {
+      when(mockEvaluator.evaluate(any(), any())).thenReturn(true);
+
       RuleCondition condition = createCondition("mcc", ConditionOperator.EQ, "5411");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
       ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411));
 
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
+      evaluator.evaluate(group, context);
 
-      assertThat(result.isMatched()).isTrue();
+      verify(operatorEvaluatorRegistry).getEvaluator(ConditionOperator.EQ);
+      verify(mockEvaluator).evaluate(any(RuleCondition.class), any());
     }
 
     @Test
-    @DisplayName("NEQ deve comparar valores diferentes")
-    void notEqualsOperator_shouldMatchDifferentValues() {
-      RuleCondition condition = createCondition("mcc", ConditionOperator.NEQ, "5411");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 7995));
+    @DisplayName("Deve delegar múltiplas condições para o registry")
+    void shouldDelegateMultipleConditionsToRegistry() {
+      when(mockEvaluator.evaluate(any(), any())).thenReturn(true);
 
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-
-    @Test
-    @DisplayName("GT deve comparar valores numéricos")
-    void greaterThanOperator_shouldCompareNumericValues() {
-      RuleCondition condition = createCondition("transactionAmount", ConditionOperator.GT, "1000");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("transactionAmount", new BigDecimal("1500")));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-
-    @Test
-    @DisplayName("LT deve comparar valores numéricos")
-    void lessThanOperator_shouldCompareNumericValues() {
-      RuleCondition condition = createCondition("transactionAmount", ConditionOperator.LT, "1000");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("transactionAmount", new BigDecimal("500")));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-
-    @Test
-    @DisplayName("GTE deve incluir valor igual")
-    void greaterThanOrEqualsOperator_shouldIncludeEqualValue() {
-      RuleCondition condition = createCondition("transactionAmount", ConditionOperator.GTE, "1000");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("transactionAmount", new BigDecimal("1000")));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-
-    @Test
-    @DisplayName("LTE deve incluir valor igual")
-    void lessThanOrEqualsOperator_shouldIncludeEqualValue() {
-      RuleCondition condition = createCondition("transactionAmount", ConditionOperator.LTE, "1000");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("transactionAmount", new BigDecimal("1000")));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-  }
-
-  @Nested
-  @DisplayName("Operadores de String")
-  class StringOperators {
-
-    @Test
-    @DisplayName("CONTAINS deve verificar substring")
-    void containsOperator_shouldCheckSubstring() {
-      RuleCondition condition =
-          createCondition("merchantName", ConditionOperator.CONTAINS, "FRAUD");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("merchantName", "SUSPECTED FRAUD MERCHANT"));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-
-    @Test
-    @DisplayName("NOT_CONTAINS deve verificar ausência de substring")
-    void notContainsOperator_shouldCheckAbsenceOfSubstring() {
-      RuleCondition condition =
-          createCondition("merchantName", ConditionOperator.NOT_CONTAINS, "FRAUD");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("merchantName", "LEGITIMATE MERCHANT"));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-
-    @Test
-    @DisplayName("STARTS_WITH deve verificar prefixo")
-    void startsWithOperator_shouldCheckPrefix() {
-      RuleCondition condition = createCondition("pan", ConditionOperator.STARTS_WITH, "4111");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("pan", "4111111111111111"));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-
-    @Test
-    @DisplayName("ENDS_WITH deve verificar sufixo")
-    void endsWithOperator_shouldCheckSuffix() {
-      RuleCondition condition = createCondition("pan", ConditionOperator.ENDS_WITH, "1111");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("pan", "4111111111111111"));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-
-    @Test
-    @DisplayName("REGEX deve validar padrão regex")
-    void matchesRegexOperator_shouldValidatePattern() {
-      RuleCondition condition = createCondition("email", ConditionOperator.REGEX, ".*@test\\.com$");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("email", "user@test.com"));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-  }
-
-  @Nested
-  @DisplayName("Operadores de Lista")
-  class ListOperators {
-
-    @Test
-    @DisplayName("IN deve verificar se valor está na lista")
-    void inOperator_shouldCheckValueInList() {
-      RuleCondition condition =
-          createConditionWithArray("mcc", ConditionOperator.IN, List.of("5411", "7995", "5812"));
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 7995));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-
-    @Test
-    @DisplayName("NOT_IN deve verificar se valor não está na lista")
-    void notInOperator_shouldCheckValueNotInList() {
-      RuleCondition condition =
-          createConditionWithArray(
-              "mcc", ConditionOperator.NOT_IN, List.of("5411", "7995", "5812"));
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 1234));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-  }
-
-  @Nested
-  @DisplayName("Operadores Nulos")
-  class NullOperators {
-
-    @Test
-    @DisplayName("IS_NULL deve verificar valor nulo")
-    void isNullOperator_shouldCheckNullValue() {
-      RuleCondition condition = createCondition("cardExpireDate", ConditionOperator.IS_NULL, "");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("someOtherField", "value"));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-
-    @Test
-    @DisplayName("NOT_NULL deve verificar valor não nulo")
-    void isNotNullOperator_shouldCheckNonNullValue() {
-      RuleCondition condition = createCondition("mcc", ConditionOperator.NOT_NULL, "");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-  }
-
-  @Nested
-  @DisplayName("Operadores Lógicos")
-  class LogicalOperators {
-
-    @Test
-    @DisplayName("AND deve exigir todas as condições verdadeiras")
-    void andOperator_shouldRequireAllConditionsTrue() {
       RuleCondition condition1 = createCondition("mcc", ConditionOperator.EQ, "5411");
-      RuleCondition condition2 = createCondition("transactionAmount", ConditionOperator.GT, "100");
+      RuleCondition condition2 = createCondition("amount", ConditionOperator.GT, "100");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition1, condition2);
+      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411, "amount", 500));
 
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("mcc", 5411, "transactionAmount", new BigDecimal("500")));
+      evaluator.evaluate(group, context);
+
+      verify(mockEvaluator, times(2)).evaluate(any(RuleCondition.class), any());
+    }
+  }
+
+  @Nested
+  @DisplayName("Lógica AND")
+  class AndLogic {
+
+    @Test
+    @DisplayName("AND deve retornar true quando todas condições são verdadeiras")
+    void andShouldReturnTrueWhenAllConditionsTrue() {
+      when(mockEvaluator.evaluate(any(), any())).thenReturn(true);
+
+      RuleCondition condition1 = createCondition("mcc", ConditionOperator.EQ, "5411");
+      RuleCondition condition2 = createCondition("amount", ConditionOperator.GT, "100");
+      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition1, condition2);
+      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411, "amount", 500));
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 
@@ -307,30 +105,38 @@ class ComplexRuleEvaluatorTest {
     }
 
     @Test
-    @DisplayName("AND deve falhar se uma condição for falsa")
-    void andOperator_shouldFailIfOneConditionFalse() {
-      RuleCondition condition1 = createCondition("mcc", ConditionOperator.EQ, "5411");
-      RuleCondition condition2 = createCondition("transactionAmount", ConditionOperator.GT, "1000");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition1, condition2);
+    @DisplayName("AND deve retornar false quando uma condição é falsa")
+    void andShouldReturnFalseWhenOneConditionFalse() {
+      when(mockEvaluator.evaluate(any(), any()))
+          .thenReturn(true)
+          .thenReturn(false);
 
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("mcc", 5411, "transactionAmount", new BigDecimal("500")));
+      RuleCondition condition1 = createCondition("mcc", ConditionOperator.EQ, "5411");
+      RuleCondition condition2 = createCondition("amount", ConditionOperator.GT, "1000");
+      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition1, condition2);
+      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411, "amount", 500));
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 
       assertThat(result.isMatched()).isFalse();
     }
+  }
+
+  @Nested
+  @DisplayName("Lógica OR")
+  class OrLogic {
 
     @Test
-    @DisplayName("OR deve exigir pelo menos uma condição verdadeira")
-    void orOperator_shouldRequireAtLeastOneConditionTrue() {
-      RuleCondition condition1 = createCondition("mcc", ConditionOperator.EQ, "7995");
-      RuleCondition condition2 =
-          createCondition("transactionAmount", ConditionOperator.GT, "10000");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.OR, condition1, condition2);
+    @DisplayName("OR deve retornar true quando pelo menos uma condição é verdadeira")
+    void orShouldReturnTrueWhenAtLeastOneConditionTrue() {
+      when(mockEvaluator.evaluate(any(), any()))
+          .thenReturn(false)
+          .thenReturn(true);
 
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("mcc", 5411, "transactionAmount", new BigDecimal("15000")));
+      RuleCondition condition1 = createCondition("mcc", ConditionOperator.EQ, "7995");
+      RuleCondition condition2 = createCondition("amount", ConditionOperator.GT, "100");
+      RuleConditionGroup group = createGroup(GroupLogicOperator.OR, condition1, condition2);
+      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411, "amount", 500));
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 
@@ -338,63 +144,66 @@ class ComplexRuleEvaluatorTest {
     }
 
     @Test
-    @DisplayName("OR deve falhar se todas as condições forem falsas")
-    void orOperator_shouldFailIfAllConditionsFalse() {
-      RuleCondition condition1 = createCondition("mcc", ConditionOperator.EQ, "7995");
-      RuleCondition condition2 =
-          createCondition("transactionAmount", ConditionOperator.GT, "10000");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.OR, condition1, condition2);
+    @DisplayName("OR deve retornar false quando todas condições são falsas")
+    void orShouldReturnFalseWhenAllConditionsFalse() {
+      when(mockEvaluator.evaluate(any(), any())).thenReturn(false);
 
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("mcc", 5411, "transactionAmount", new BigDecimal("500")));
+      RuleCondition condition1 = createCondition("mcc", ConditionOperator.EQ, "7995");
+      RuleCondition condition2 = createCondition("amount", ConditionOperator.GT, "10000");
+      RuleConditionGroup group = createGroup(GroupLogicOperator.OR, condition1, condition2);
+      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411, "amount", 500));
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 
       assertThat(result.isMatched()).isFalse();
     }
+  }
+
+  @Nested
+  @DisplayName("Grupos Aninhados")
+  class NestedGroups {
 
     @Test
-    @DisplayName("XOR deve exigir exatamente uma condição verdadeira")
-    void xorOperator_shouldRequireExactlyOneConditionTrue() {
+    @DisplayName("Deve avaliar grupos aninhados corretamente")
+    void shouldEvaluateNestedGroupsCorrectly() {
+      when(mockEvaluator.evaluate(any(), any())).thenReturn(true);
+
       RuleCondition condition1 = createCondition("mcc", ConditionOperator.EQ, "5411");
-      RuleCondition condition2 =
-          createCondition("transactionAmount", ConditionOperator.GT, "10000");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.XOR, condition1, condition2);
+      RuleCondition condition2 = createCondition("amount", ConditionOperator.GT, "100");
+      RuleConditionGroup childGroup = createGroup(GroupLogicOperator.AND, condition2);
+      
+      RuleConditionGroup parentGroup = createGroup(GroupLogicOperator.AND, condition1);
+      parentGroup.setChildren(List.of(childGroup));
 
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("mcc", 5411, "transactionAmount", new BigDecimal("500")));
+      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411, "amount", 500));
 
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
-    }
-
-    @Test
-    @DisplayName("NOT deve inverter resultado")
-    void notOperator_shouldInvertResult() {
-      RuleCondition condition = createCondition("mcc", ConditionOperator.EQ, "7995");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.NOT, condition);
-
-      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
+      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(parentGroup, context);
 
       assertThat(result.isMatched()).isTrue();
+      verify(mockEvaluator, times(2)).evaluate(any(), any());
     }
   }
 
   @Nested
-  @DisplayName("Cenários de Borda")
-  class EdgeCases {
+  @DisplayName("Condições Desabilitadas")
+  class DisabledConditions {
 
     @Test
-    @DisplayName("Deve retornar true para grupo nulo")
-    void shouldReturnTrueForNullGroup() {
-      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411));
+    @DisplayName("Deve ignorar condições desabilitadas")
+    void shouldIgnoreDisabledConditions() {
+      when(mockEvaluator.evaluate(any(), any())).thenReturn(true);
 
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(null, context);
+      RuleCondition enabledCondition = createCondition("mcc", ConditionOperator.EQ, "5411");
+      RuleCondition disabledCondition = createCondition("amount", ConditionOperator.GT, "10000");
+      disabledCondition.setEnabled(false);
+
+      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, enabledCondition, disabledCondition);
+      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411, "amount", 500));
+
+      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 
       assertThat(result.isMatched()).isTrue();
+      verify(mockEvaluator, times(1)).evaluate(any(), any());
     }
 
     @Test
@@ -409,35 +218,22 @@ class ComplexRuleEvaluatorTest {
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 
       assertThat(result.isMatched()).isTrue();
+      verify(mockEvaluator, never()).evaluate(any(), any());
     }
+  }
+
+  @Nested
+  @DisplayName("Casos de Borda")
+  class EdgeCases {
 
     @Test
-    @DisplayName("Deve ignorar condição desabilitada")
-    void shouldIgnoreDisabledCondition() {
-      RuleCondition condition1 = createCondition("mcc", ConditionOperator.EQ, "5411");
-      RuleCondition condition2 = createCondition("mcc", ConditionOperator.EQ, "7995");
-      condition2.setEnabled(false);
-
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition1, condition2);
-
+    @DisplayName("Deve retornar true para grupo nulo")
+    void shouldReturnTrueForNullGroup() {
       ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411));
 
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
+      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(null, context);
 
       assertThat(result.isMatched()).isTrue();
-    }
-
-    @Test
-    @DisplayName("Deve incluir tempo de execução no resultado")
-    void shouldIncludeExecutionTimeInResult() {
-      RuleCondition condition = createCondition("mcc", ConditionOperator.EQ, "5411");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-
-      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.getExecutionTimeMs()).isGreaterThanOrEqualTo(0);
     }
 
     @Test
@@ -453,65 +249,59 @@ class ComplexRuleEvaluatorTest {
 
       assertThat(result.isMatched()).isTrue();
     }
-  }
-
-  @Nested
-  @DisplayName("Operadores de Range")
-  class RangeOperators {
 
     @Test
-    @DisplayName("BETWEEN deve verificar valor no intervalo")
-    void betweenOperator_shouldCheckValueInRange() {
-      RuleCondition condition =
-          createConditionWithRange("transactionAmount", ConditionOperator.BETWEEN, "100", "1000");
+    @DisplayName("Deve incluir tempo de execução no resultado")
+    void shouldIncludeExecutionTimeInResult() {
+      when(mockEvaluator.evaluate(any(), any())).thenReturn(true);
+
+      RuleCondition condition = createCondition("mcc", ConditionOperator.EQ, "5411");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("transactionAmount", new BigDecimal("500")));
+      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411));
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 
-      assertThat(result.isMatched()).isTrue();
+      assertThat(result.getExecutionTimeMs()).isGreaterThanOrEqualTo(0);
     }
 
     @Test
-    @DisplayName("NOT_BETWEEN deve verificar valor fora do intervalo")
-    void notBetweenOperator_shouldCheckValueOutOfRange() {
-      RuleCondition condition =
-          createConditionWithRange(
-              "transactionAmount", ConditionOperator.NOT_BETWEEN, "100", "1000");
+    @DisplayName("Deve coletar detalhes de execução")
+    void shouldCollectExecutionDetails() {
+      when(mockEvaluator.evaluate(any(), any())).thenReturn(true);
+
+      RuleCondition condition = createCondition("mcc", ConditionOperator.EQ, "5411");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context =
-          createContext(Map.of("transactionAmount", new BigDecimal("1500")));
+      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411));
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 
-      assertThat(result.isMatched()).isTrue();
+      assertThat(result.getExecutionDetails()).isNotNull();
+      assertThat(result.getExecutionDetails()).hasSize(1);
     }
   }
 
   @Nested
-  @DisplayName("Avaliação com TransactionRequest")
-  class TransactionRequestEvaluation {
+  @DisplayName("Contexto com TransactionRequest")
+  class TransactionRequestContext {
 
     @Test
-    @DisplayName("Deve avaliar condição com TransactionRequest")
-    void shouldEvaluateConditionWithTransactionRequest() {
-      TransactionRequest request =
-          TransactionRequest.builder()
-              .externalTransactionId("tx-1")
-              .mcc(5411)
-              .transactionAmount(new BigDecimal("1500"))
-              .merchantCountryCode("076")
-              .build();
+    @DisplayName("Deve avaliar com TransactionRequest no contexto")
+    void shouldEvaluateWithTransactionRequest() {
+      when(mockEvaluator.evaluate(any(), any())).thenReturn(true);
+
+      TransactionRequest request = TransactionRequest.builder()
+          .externalTransactionId("tx-1")
+          .mcc(5411)
+          .transactionAmount(new BigDecimal("1500"))
+          .build();
 
       RuleCondition condition = createCondition("mcc", ConditionOperator.EQ, "5411");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
 
-      ComplexRuleEvaluator.EvaluationContext context =
-          ComplexRuleEvaluator.EvaluationContext.builder()
-              .transactionRequest(request)
-              .payload(Map.of("mcc", 5411))
-              .build();
+      ComplexRuleEvaluator.EvaluationContext context = ComplexRuleEvaluator.EvaluationContext.builder()
+          .transactionRequest(request)
+          .payload(Map.of("mcc", 5411))
+          .build();
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 
@@ -520,31 +310,24 @@ class ComplexRuleEvaluatorTest {
   }
 
   @Nested
-  @DisplayName("Operadores Booleanos")
-  class BooleanOperators {
+  @DisplayName("Tratamento de Erros")
+  class ErrorHandling {
 
     @Test
-    @DisplayName("IS_TRUE deve verificar valor verdadeiro")
-    void isTrueOperator_shouldCheckTrueValue() {
-      RuleCondition condition = createCondition("isHighRisk", ConditionOperator.IS_TRUE, "");
+    @DisplayName("Deve capturar erro e retornar resultado com mensagem de erro")
+    void shouldCaptureErrorAndReturnResultWithErrorMessage() {
+      when(mockEvaluator.evaluate(any(), any()))
+          .thenThrow(new RuntimeException("Erro de teste"));
+
+      RuleCondition condition = createCondition("mcc", ConditionOperator.EQ, "5411");
       RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("isHighRisk", true));
+      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("mcc", 5411));
 
       ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
 
-      assertThat(result.isMatched()).isTrue();
-    }
-
-    @Test
-    @DisplayName("IS_FALSE deve verificar valor falso")
-    void isFalseOperator_shouldCheckFalseValue() {
-      RuleCondition condition = createCondition("isHighRisk", ConditionOperator.IS_FALSE, "");
-      RuleConditionGroup group = createGroup(GroupLogicOperator.AND, condition);
-      ComplexRuleEvaluator.EvaluationContext context = createContext(Map.of("isHighRisk", false));
-
-      ComplexRuleEvaluator.EvaluationResult result = evaluator.evaluate(group, context);
-
-      assertThat(result.isMatched()).isTrue();
+      assertThat(result.isMatched()).isFalse();
+      // O erro é capturado na condição individual, não no grupo
+      assertThat(result.getExecutionDetails()).hasSize(1);
     }
   }
 
@@ -559,29 +342,7 @@ class ComplexRuleEvaluatorTest {
     return condition;
   }
 
-  private RuleCondition createConditionWithArray(
-      String field, ConditionOperator operator, List<String> values) {
-    RuleCondition condition = new RuleCondition();
-    condition.setFieldName(field);
-    condition.setOperator(operator);
-    condition.setValueArray(values);
-    condition.setEnabled(true);
-    return condition;
-  }
-
-  private RuleCondition createConditionWithRange(
-      String field, ConditionOperator operator, String min, String max) {
-    RuleCondition condition = new RuleCondition();
-    condition.setFieldName(field);
-    condition.setOperator(operator);
-    condition.setValueMin(min);
-    condition.setValueMax(max);
-    condition.setEnabled(true);
-    return condition;
-  }
-
-  private RuleConditionGroup createGroup(
-      GroupLogicOperator logicOperator, RuleCondition... conditions) {
+  private RuleConditionGroup createGroup(GroupLogicOperator logicOperator, RuleCondition... conditions) {
     RuleConditionGroup group = new RuleConditionGroup();
     group.setLogicOperator(logicOperator);
     group.setConditions(List.of(conditions));
