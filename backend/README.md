@@ -51,6 +51,7 @@ Se ocorrer erro de bloqueio de arquivo durante `mvn test`, use o script:
 
 - `scripts/run-backend-tests.ps1` (recompila e executa testes)
 - `scripts/run-backend-tests-clean.ps1` (cópia para diretório temporário)
+- `pnpm test:backend:clean` (versão cross‑platform em Node)
 
 O primeiro força recompilação do `ComplexRuleEvaluator.class`. O segundo copia o backend para um diretório temporário e executa os testes fora do workspace para evitar locks.
 

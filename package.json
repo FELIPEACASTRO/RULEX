@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "test:backend:clean": "node scripts/run-backend-tests-clean.mjs",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "api:generate": "openapi-typescript ./openapi/rulex.yaml -o ./client/src/lib/api.generated.ts",

@@ -18,6 +18,7 @@ import com.rulex.service.complex.evaluation.BasicOperatorEvaluator;
 import com.rulex.service.complex.evaluation.BehavioralPatternEvaluator;
 import com.rulex.service.complex.evaluation.CriticalOperatorEvaluator;
 import com.rulex.service.complex.evaluation.CustomerHistoryEvaluator;
+import com.rulex.service.complex.evaluation.ConditionGroupEvaluator;
 import com.rulex.service.complex.evaluation.DeviceFingerprintEvaluator;
 import com.rulex.service.complex.evaluation.DeviceRiskEvaluator;
 import com.rulex.service.complex.evaluation.ExpectedValueFormatter;
@@ -72,6 +73,7 @@ public class ComplexRuleEvaluator {
 
   // ARCH-001 FIX: Integração com OperatorEvaluatorRegistry para delegação modular
   private final OperatorEvaluatorRegistry operatorEvaluatorRegistry;
+  private final ConditionGroupEvaluator conditionGroupEvaluator;
 
   /** Resultado da avaliação de uma regra */
   @Data
@@ -100,7 +102,8 @@ public class ComplexRuleEvaluator {
     List<RuleExecutionDetail> details = new ArrayList<>();
 
     try {
-      boolean result = evaluateGroup(rootGroup, context, details);
+        boolean result =
+          conditionGroupEvaluator.evaluateGroup(rootGroup, context, details, this::evaluateCondition);
 
       return EvaluationResult.builder()
           .matched(result)
@@ -117,57 +120,6 @@ public class ComplexRuleEvaluator {
           .errorMessage(e.getMessage())
           .build();
     }
-  }
-
-  /** Avalia um grupo de condições recursivamente */
-  private boolean evaluateGroup(
-      RuleConditionGroup group, EvaluationContext context, List<RuleExecutionDetail> details) {
-    if (group == null || !Boolean.TRUE.equals(group.getEnabled())) {
-      return true; // Grupo desabilitado é considerado verdadeiro
-    }
-
-    List<Boolean> results = new ArrayList<>();
-
-    // Avaliar condições diretas do grupo
-    if (group.getConditions() != null) {
-      for (RuleCondition condition : group.getConditions()) {
-        if (Boolean.TRUE.equals(condition.getEnabled())) {
-          boolean conditionResult = evaluateCondition(condition, context, details);
-          results.add(conditionResult);
-        }
-      }
-    }
-
-    // Avaliar grupos filhos recursivamente
-    if (group.getChildren() != null) {
-      for (RuleConditionGroup child : group.getChildren()) {
-        boolean childResult = evaluateGroup(child, context, details);
-        results.add(childResult);
-      }
-    }
-
-    // Se não há resultados, retorna verdadeiro
-    if (results.isEmpty()) {
-      return true;
-    }
-
-    // Aplicar operador lógico
-    return applyLogicOperator(group.getLogicOperator(), results);
-  }
-
-  /** Aplica o operador lógico aos resultados */
-  private boolean applyLogicOperator(
-      RuleConditionGroup.GroupLogicOperator operator, List<Boolean> results) {
-    if (results.isEmpty()) return true;
-
-    return switch (operator) {
-      case AND -> results.stream().allMatch(Boolean::booleanValue);
-      case OR -> results.stream().anyMatch(Boolean::booleanValue);
-      case NOT -> !results.get(0); // NOT aplica ao primeiro resultado
-      case XOR -> results.stream().filter(Boolean::booleanValue).count() == 1;
-      case NAND -> !results.stream().allMatch(Boolean::booleanValue);
-      case NOR -> !results.stream().anyMatch(Boolean::booleanValue);
-    };
   }
 
   /** Avalia uma condição individual */

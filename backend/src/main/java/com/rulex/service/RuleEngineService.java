@@ -16,6 +16,7 @@ import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
 import com.rulex.service.engine.ConditionMatcher;
+import com.rulex.service.engine.RuleEngineResponseBuilder;
 import com.rulex.service.enrichment.TransactionEnrichmentFacade;
 import com.rulex.util.PanHashUtil;
 import com.rulex.util.PanMaskingUtil;
@@ -27,10 +28,7 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.*;
-import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -61,6 +59,7 @@ public class RuleEngineService {
   private final EnrichmentService enrichmentService;
   private final RuleOrderingService ruleOrderingService;
   private final TransactionEnrichmentFacade transactionEnrichmentFacade;
+  private final RuleEngineResponseBuilder responseBuilder;
 
   // V4.0: advanced hard-rule services (opt-in via config)
   private final BloomFilterService bloomFilterService;
@@ -133,14 +132,14 @@ public class RuleEngineService {
 
           TransactionDecision tamperDecision =
               buildTamperDecision(externalTransactionId, payloadHash);
-          return buildResponseFromTamperDecision(tamperDecision, startTime);
+            return responseBuilder.buildResponseFromTamperDecision(tamperDecision, startTime);
         }
 
         // Idempotency: return same previous decision (no recomputation)
         Optional<Transaction> existingTxOpt =
             transactionRepository.findByExternalTransactionId(externalTransactionId);
         if (existingTxOpt.isPresent()) {
-          return buildResponseFromExisting(existingTxOpt.get(), startTime);
+          return responseBuilder.buildResponseFromExisting(existingTxOpt.get(), startTime);
         }
         // Raw store exists but transaction row is missing (partial failure recovery).
         // Continue to create the transaction normally - raw store already validated hash match.
@@ -167,9 +166,9 @@ public class RuleEngineService {
           safeLogAntiTamper(externalTransactionId, existing.getPayloadRawHash(), payloadHash);
           TransactionDecision tamperDecision =
               buildTamperDecision(externalTransactionId, payloadHash);
-          return buildResponseFromTamperDecision(tamperDecision, startTime);
+          return responseBuilder.buildResponseFromTamperDecision(tamperDecision, startTime);
         }
-        return buildResponseFromExisting(existing, startTime);
+        return responseBuilder.buildResponseFromExisting(existing, startTime);
       }
 
       // 1. Salvar a transação
@@ -190,9 +189,9 @@ public class RuleEngineService {
           safeLogAntiTamper(externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
           TransactionDecision tamperDecision =
               buildTamperDecision(externalTransactionId, payloadHash);
-          return buildResponseFromTamperDecision(tamperDecision, startTime);
+          return responseBuilder.buildResponseFromTamperDecision(tamperDecision, startTime);
         }
-        return buildResponseFromExisting(racedTx, startTime);
+        return responseBuilder.buildResponseFromExisting(racedTx, startTime);
       }
 
       // 2. Avaliar regras
@@ -213,7 +212,7 @@ public class RuleEngineService {
         }
       }
 
-      safeLogEvaluate(
+        responseBuilder.safeLogEvaluate(
           ExecutionEventType.EVALUATE,
           transaction.getExternalTransactionId(),
           payloadHash,
@@ -226,7 +225,7 @@ public class RuleEngineService {
 
       // 5. Construir resposta
       long processingTime = System.currentTimeMillis() - startTime;
-      return buildResponse(transaction, decision, result, processingTime);
+      return responseBuilder.buildResponse(transaction, decision, result, processingTime);
 
     } catch (Exception e) {
       log.error("Erro ao processar transação: {}", request.getExternalTransactionId(), e);
@@ -270,13 +269,13 @@ public class RuleEngineService {
           safeLogAntiTamper(externalTransactionId, existingRaw.getPayloadRawHash(), payloadHash);
           TransactionDecision tamperDecision =
               buildTamperDecision(externalTransactionId, payloadHash);
-          return buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
+            return responseBuilder.buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
         }
 
         Optional<Transaction> existingTxOpt =
             transactionRepository.findByExternalTransactionId(externalTransactionId);
         if (existingTxOpt.isPresent()) {
-          return buildEvaluateResponseFromExisting(existingTxOpt.get(), startTime);
+          return responseBuilder.buildEvaluateResponseFromExisting(existingTxOpt.get(), startTime);
         }
         // Raw store exists but transaction row is missing (partial failure recovery).
         // Continue to create the transaction normally - raw store already validated hash match.
@@ -301,9 +300,9 @@ public class RuleEngineService {
           safeLogAntiTamper(externalTransactionId, existing.getPayloadRawHash(), payloadHash);
           TransactionDecision tamperDecision =
               buildTamperDecision(externalTransactionId, payloadHash);
-          return buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
+          return responseBuilder.buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
         }
-        return buildEvaluateResponseFromExisting(existing, startTime);
+        return responseBuilder.buildEvaluateResponseFromExisting(existing, startTime);
       }
 
       // 1. Salvar a transação
@@ -324,9 +323,9 @@ public class RuleEngineService {
           safeLogAntiTamper(externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
           TransactionDecision tamperDecision =
               buildTamperDecision(externalTransactionId, payloadHash);
-          return buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
+          return responseBuilder.buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
         }
-        return buildEvaluateResponseFromExisting(racedTx, startTime);
+        return responseBuilder.buildEvaluateResponseFromExisting(racedTx, startTime);
       }
 
       // 2. Avaliar regras
@@ -347,7 +346,7 @@ public class RuleEngineService {
         }
       }
 
-      safeLogEvaluate(
+        responseBuilder.safeLogEvaluate(
           ExecutionEventType.EVALUATE,
           transaction.getExternalTransactionId(),
           payloadHash,
@@ -360,7 +359,7 @@ public class RuleEngineService {
 
       // 5. Construir resposta
       long processingTime = System.currentTimeMillis() - startTime;
-      return buildEvaluateResponse(transaction, decision, result, processingTime);
+      return responseBuilder.buildEvaluateResponse(transaction, decision, result, processingTime);
 
     } catch (Exception e) {
       log.error("Erro ao avaliar transação: {}", request.getExternalTransactionId(), e);
@@ -969,59 +968,6 @@ public class RuleEngineService {
         .build();
   }
 
-  private TransactionResponse buildResponseFromTamperDecision(
-      TransactionDecision decision, long startTime) {
-    long processingTime = System.currentTimeMillis() - startTime;
-    return TransactionResponse.builder()
-        .id(decision.getTransaction() != null ? decision.getTransaction().getId() : null)
-        .transactionId(decision.getExternalTransactionId())
-        .customerIdFromHeader(
-            decision.getTransaction() != null
-                ? decision.getTransaction().getCustomerIdFromHeader()
-                : null)
-        .merchantId(
-            decision.getTransaction() != null ? decision.getTransaction().getMerchantId() : null)
-        .merchantName(
-            decision.getTransaction() != null ? decision.getTransaction().getMerchantName() : null)
-        .transactionAmount(
-            decision.getTransaction() != null
-                ? decision.getTransaction().getTransactionAmount()
-                : null)
-        .transactionDate(
-            decision.getTransaction() != null
-                ? decision.getTransaction().getTransactionDate()
-                : null)
-        .transactionTime(
-            decision.getTransaction() != null
-                ? decision.getTransaction().getTransactionTime()
-                : null)
-        .classification(decision.getClassification().name())
-        .riskScore(decision.getRiskScore())
-        .triggeredRules(java.util.List.of())
-        .reason(decision.getReason())
-        .rulesetVersion(decision.getRulesVersion())
-        .processingTimeMs(processingTime)
-        .timestamp(OffsetDateTime.now(clock))
-        .success(true)
-        .build();
-  }
-
-  private EvaluateResponse buildEvaluateResponseFromTamperDecision(
-      TransactionDecision decision, long startTime) {
-    long processingTime = System.currentTimeMillis() - startTime;
-    return EvaluateResponse.builder()
-        .transactionId(decision.getExternalTransactionId())
-        .classification(decision.getClassification().name())
-        .riskScore(decision.getRiskScore())
-        .reason(decision.getReason())
-        .rulesetVersion(decision.getRulesVersion())
-        .processingTimeMs(processingTime)
-        .timestamp(LocalDateTime.now(clock))
-        .ruleHits(java.util.List.of())
-        .popups(java.util.List.of())
-        .build();
-  }
-
   /** Cria a entidade de decisão. */
   private TransactionDecision createDecision(Transaction transaction, RuleEvaluationResult result) {
     return TransactionDecision.builder()
@@ -1044,27 +990,6 @@ public class RuleEngineService {
     } catch (Exception e) {
       log.error("Erro ao serializar JSON", e);
       return "{}";
-    }
-  }
-
-  private void safeLogEvaluate(
-      ExecutionEventType eventType,
-      String externalTransactionId,
-      String payloadHash,
-      TransactionDecision decision,
-      List<?> rulesFired,
-      com.fasterxml.jackson.databind.JsonNode errorJson) {
-    try {
-      ruleExecutionLogService.logEvaluate(
-          eventType,
-          externalTransactionId,
-          payloadHash,
-          decision != null ? decision.getClassification() : null,
-          decision != null ? decision.getRiskScore() : 0,
-          rulesFired,
-          errorJson);
-    } catch (DataAccessException e) {
-      log.debug("Falha ao registrar rule_execution_log (ignorado)", e);
     }
   }
 
@@ -1103,332 +1028,6 @@ public class RuleEngineService {
           errorJson);
     } catch (DataAccessException e) {
       log.debug("Falha ao registrar rule_execution_log contract error (ignorado)", e);
-    }
-  }
-
-  /** Constrói a resposta da análise. */
-  private TransactionResponse buildResponse(
-      Transaction transaction,
-      TransactionDecision decision,
-      RuleEvaluationResult result,
-      long processingTime) {
-    return TransactionResponse.builder()
-        .id(transaction.getId())
-        .transactionId(transaction.getExternalTransactionId())
-        .customerIdFromHeader(transaction.getCustomerIdFromHeader())
-        .merchantId(transaction.getMerchantId())
-        .merchantName(transaction.getMerchantName())
-        .transactionAmount(transaction.getTransactionAmount())
-        .transactionDate(transaction.getTransactionDate())
-        .transactionTime(transaction.getTransactionTime())
-        .classification(decision.getClassification().name())
-        .riskScore(decision.getRiskScore())
-        .triggeredRules(result.getTriggeredRules())
-        .reason(decision.getReason())
-        .rulesetVersion(decision.getRulesVersion())
-        .processingTimeMs(processingTime)
-        .timestamp(OffsetDateTime.now(clock))
-        .success(true)
-        .build();
-  }
-
-  private EvaluateResponse buildEvaluateResponse(
-      Transaction transaction,
-      TransactionDecision decision,
-      RuleEvaluationResult result,
-      long processingTime) {
-    List<RuleHitDTO> ruleHits = enrichRuleHits(result.getTriggeredRules());
-    List<PopupDTO> popups = aggregatePopups(ruleHits);
-
-    return EvaluateResponse.builder()
-        .transactionId(transaction.getExternalTransactionId())
-        .classification(decision.getClassification().name())
-        .riskScore(decision.getRiskScore())
-        .reason(decision.getReason())
-        .rulesetVersion(decision.getRulesVersion())
-        .processingTimeMs(processingTime)
-        .timestamp(
-            decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
-        .ruleHits(ruleHits)
-        .popups(popups)
-        .build();
-  }
-
-  private EvaluateResponse buildEvaluateResponseFromExisting(
-      Transaction transaction, long startTime) {
-    TransactionDecision decision =
-        decisionRepository
-            .findByTransactionId(transaction.getId())
-            .orElseThrow(
-                () -> new IllegalStateException("Transação existe sem decisão registrada"));
-
-    long processingTime = System.currentTimeMillis() - startTime;
-    List<TriggeredRuleDTO> triggeredRules = readTriggeredRules(decision.getRulesApplied());
-    List<RuleHitDTO> ruleHits = enrichRuleHits(triggeredRules);
-    List<PopupDTO> popups = aggregatePopups(ruleHits);
-
-    safeLogEvaluate(
-        ExecutionEventType.IDEMPOTENT_REPLAY,
-        transaction.getExternalTransactionId(),
-        decision.getPayloadRawHash() != null
-            ? decision.getPayloadRawHash()
-            : transaction.getPayloadRawHash(),
-        decision,
-        triggeredRules,
-        null);
-
-    return EvaluateResponse.builder()
-        .transactionId(transaction.getExternalTransactionId())
-        .classification(decision.getClassification().name())
-        .riskScore(decision.getRiskScore())
-        .reason(decision.getReason())
-        .rulesetVersion(decision.getRulesVersion())
-        .processingTimeMs(processingTime)
-        .timestamp(
-            decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
-        .ruleHits(ruleHits)
-        .popups(popups)
-        .build();
-  }
-
-  private List<RuleHitDTO> enrichRuleHits(List<TriggeredRuleDTO> triggeredRules) {
-    if (triggeredRules == null || triggeredRules.isEmpty()) {
-      return List.of();
-    }
-
-    List<String> names =
-        triggeredRules.stream()
-            .map(TriggeredRuleDTO::getName)
-            .filter(Objects::nonNull)
-            .distinct()
-            .toList();
-    Map<String, RuleConfiguration> byName =
-        ruleConfigRepository.findByRuleNameIn(names).stream()
-            .collect(
-                java.util.stream.Collectors.toMap(
-                    RuleConfiguration::getRuleName, Function.identity(), (a, b) -> a));
-
-    List<RuleHitDTO> hits = new ArrayList<>();
-    for (TriggeredRuleDTO tr : triggeredRules) {
-      RuleConfiguration rc = tr.getName() != null ? byName.get(tr.getName()) : null;
-      hits.add(
-          RuleHitDTO.builder()
-              .ruleName(tr.getName())
-              .description(rc != null ? rc.getDescription() : null)
-              .ruleType(rc != null && rc.getRuleType() != null ? rc.getRuleType().name() : null)
-              .classification(
-                  rc != null && rc.getClassification() != null
-                      ? rc.getClassification().name()
-                      : null)
-              .threshold(rc != null ? rc.getThreshold() : null)
-              .weight(tr.getWeight())
-              .contribution(tr.getContribution())
-              .detail(tr.getDetail())
-              .build());
-    }
-    return hits;
-  }
-
-  private List<PopupDTO> aggregatePopups(List<RuleHitDTO> ruleHits) {
-    if (ruleHits == null || ruleHits.isEmpty()) {
-      return List.of();
-    }
-
-    Map<String, List<RuleHitDTO>> grouped = new LinkedHashMap<>();
-    for (RuleHitDTO hit : ruleHits) {
-      String key = hit.getClassification() != null ? hit.getClassification() : "UNKNOWN";
-      grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(hit);
-    }
-
-    List<String> order = List.of("FRAUD", "SUSPICIOUS", "APPROVED", "UNKNOWN");
-    List<PopupDTO> popups = new ArrayList<>();
-    for (String key : order) {
-      List<RuleHitDTO> hits = grouped.get(key);
-      if (hits == null || hits.isEmpty()) continue;
-
-      int total =
-          hits.stream()
-              .map(RuleHitDTO::getContribution)
-              .filter(Objects::nonNull)
-              .mapToInt(Integer::intValue)
-              .sum();
-      String title =
-          switch (key) {
-            case "FRAUD" -> "Bloqueio";
-            case "SUSPICIOUS" -> "Suspeita";
-            case "APPROVED" -> "Aprovada";
-            default -> "Atenção";
-          };
-
-      String reason =
-          hits.stream()
-              .map(h -> h.getDetail() != null ? h.getDetail() : h.getDescription())
-              .filter(s -> s != null && !s.isBlank())
-              .distinct()
-              .reduce((a, b) -> a + " | " + b)
-              .orElse(null);
-
-      popups.add(
-          PopupDTO.builder()
-              .key(key)
-              .title(title)
-              .classification(key)
-              .totalContribution(total)
-              .rules(hits)
-              .reason(reason)
-              .build());
-    }
-
-    // Qualquer classificação fora da ordem (extensão futura)
-    for (Map.Entry<String, List<RuleHitDTO>> e : grouped.entrySet()) {
-      if (order.contains(e.getKey())) continue;
-      List<RuleHitDTO> hits = e.getValue();
-      int total =
-          hits.stream()
-              .map(RuleHitDTO::getContribution)
-              .filter(Objects::nonNull)
-              .mapToInt(Integer::intValue)
-              .sum();
-      String reason =
-          hits.stream()
-              .map(h -> h.getDetail() != null ? h.getDetail() : h.getDescription())
-              .filter(s -> s != null && !s.isBlank())
-              .distinct()
-              .reduce((a, b) -> a + " | " + b)
-              .orElse(null);
-      popups.add(
-          PopupDTO.builder()
-              .key(e.getKey())
-              .title("Atenção")
-              .classification(e.getKey())
-              .totalContribution(total)
-              .rules(hits)
-              .reason(reason)
-              .build());
-    }
-
-    return popups;
-  }
-
-  private TransactionResponse buildResponseFromExisting(Transaction transaction, long startTime) {
-    TransactionDecision decision =
-        decisionRepository
-            .findByTransactionId(transaction.getId())
-            .orElseThrow(
-                () -> new IllegalStateException("Transação existe sem decisão registrada"));
-
-    long processingTime = System.currentTimeMillis() - startTime;
-    List<TriggeredRuleDTO> triggeredRules = readTriggeredRules(decision.getRulesApplied());
-
-    safeLogEvaluate(
-        ExecutionEventType.IDEMPOTENT_REPLAY,
-        transaction.getExternalTransactionId(),
-        decision.getPayloadRawHash() != null
-            ? decision.getPayloadRawHash()
-            : transaction.getPayloadRawHash(),
-        decision,
-        triggeredRules,
-        null);
-
-    return TransactionResponse.builder()
-        .id(transaction.getId())
-        .transactionId(transaction.getExternalTransactionId())
-        .customerIdFromHeader(transaction.getCustomerIdFromHeader())
-        .merchantId(transaction.getMerchantId())
-        .merchantName(transaction.getMerchantName())
-        .transactionAmount(transaction.getTransactionAmount())
-        .transactionDate(transaction.getTransactionDate())
-        .transactionTime(transaction.getTransactionTime())
-        .classification(decision.getClassification().name())
-        .riskScore(decision.getRiskScore())
-        .triggeredRules(triggeredRules)
-        .reason(decision.getReason())
-        .rulesetVersion(decision.getRulesVersion())
-        .processingTimeMs(processingTime)
-        .timestamp(
-            toOffsetDateTime(
-                decision.getCreatedAt() != null
-                    ? decision.getCreatedAt()
-                    : transaction.getCreatedAt()))
-        .success(true)
-        .build();
-  }
-
-  private TransactionResponse buildResponseFromExistingDecision(
-      TransactionDecision decision, long startTime) {
-    Transaction transaction = decision.getTransaction();
-    long processingTime = System.currentTimeMillis() - startTime;
-    List<TriggeredRuleDTO> triggeredRules = readTriggeredRules(decision.getRulesApplied());
-
-    return TransactionResponse.builder()
-        .id(transaction != null ? transaction.getId() : null)
-        .transactionId(transaction.getExternalTransactionId())
-        .customerIdFromHeader(transaction.getCustomerIdFromHeader())
-        .merchantId(transaction.getMerchantId())
-        .merchantName(transaction.getMerchantName())
-        .transactionAmount(transaction.getTransactionAmount())
-        .transactionDate(transaction.getTransactionDate())
-        .transactionTime(transaction.getTransactionTime())
-        .classification(decision.getClassification().name())
-        .riskScore(decision.getRiskScore())
-        .triggeredRules(triggeredRules)
-        .reason(decision.getReason())
-        .rulesetVersion(decision.getRulesVersion())
-        .processingTimeMs(processingTime)
-        .timestamp(
-            toOffsetDateTime(
-                decision.getCreatedAt() != null
-                    ? decision.getCreatedAt()
-                    : transaction.getCreatedAt()))
-        .success(true)
-        .build();
-  }
-
-  private EvaluateResponse buildEvaluateResponseFromExistingDecision(
-      TransactionDecision decision, long startTime) {
-    Transaction transaction = decision.getTransaction();
-    long processingTime = System.currentTimeMillis() - startTime;
-    List<TriggeredRuleDTO> triggeredRules = readTriggeredRules(decision.getRulesApplied());
-    List<RuleHitDTO> ruleHits = enrichRuleHits(triggeredRules);
-    List<PopupDTO> popups = aggregatePopups(ruleHits);
-
-    return EvaluateResponse.builder()
-        .transactionId(transaction.getExternalTransactionId())
-        .classification(decision.getClassification().name())
-        .riskScore(decision.getRiskScore())
-        .reason(decision.getReason())
-        .rulesetVersion(decision.getRulesVersion())
-        .processingTimeMs(processingTime)
-        .timestamp(
-            decision.getCreatedAt() != null ? decision.getCreatedAt() : transaction.getCreatedAt())
-        .ruleHits(ruleHits)
-        .popups(popups)
-        .build();
-  }
-
-  private OffsetDateTime toOffsetDateTime(LocalDateTime dt) {
-    if (dt == null) {
-      return null;
-    }
-    return dt.atZone(ZoneId.systemDefault()).toOffsetDateTime();
-  }
-
-  private List<TriggeredRuleDTO> readTriggeredRules(String rulesApplied) {
-    if (rulesApplied == null || rulesApplied.isBlank()) {
-      return List.of();
-    }
-    try {
-      return objectMapper.readValue(
-          rulesApplied,
-          objectMapper
-              .getTypeFactory()
-              .constructCollectionType(List.class, TriggeredRuleDTO.class));
-    } catch (Exception e) {
-      return List.of(rulesApplied.split(",")).stream()
-          .map(String::trim)
-          .filter(s -> !s.isBlank())
-          .map(name -> TriggeredRuleDTO.builder().name(name).weight(0).contribution(0).build())
-          .toList();
     }
   }
 
