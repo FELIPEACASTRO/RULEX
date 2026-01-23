@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -15,6 +16,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -48,11 +51,12 @@ import org.springframework.stereotype.Service;
  * @see VelocityService for database-backed fallback
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class RedisVelocityService {
 
   private final VelocityService velocityService;
+  private final StringRedisTemplate redisTemplate;
+  private final boolean redisEnabled;
 
   // Sliding window buckets: key -> window -> bucket[]
   // Each bucket represents 1 minute of data
@@ -68,6 +72,16 @@ public class RedisVelocityService {
   private static final int BUCKET_SIZE_MINUTES = 1;
   private static final int MAX_BUCKETS = 60 * 24 * 7; // 7 days of 1-minute buckets
   private static final int CLEANUP_THRESHOLD = 100_000; // Max entries before cleanup
+  private static final Duration REDIS_TTL = Duration.ofDays(8);
+
+  public RedisVelocityService(
+      VelocityService velocityService,
+      StringRedisTemplate redisTemplate,
+      @Value("${rulex.engine.velocity.redis.enabled:false}") boolean redisEnabled) {
+    this.velocityService = velocityService;
+    this.redisTemplate = redisTemplate;
+    this.redisEnabled = redisEnabled;
+  }
 
   /** Time windows supported (in minutes). */
   public enum TimeWindow {
@@ -151,6 +165,10 @@ public class RedisVelocityService {
 
     String cacheKey = buildCacheKey(keyType, keyValue);
 
+    if (redisEnabled) {
+      return getStatsFromRedis(cacheKey, window, startNanos);
+    }
+
     // Get count from sliding window
     SlidingWindowCounter counter = velocityCounters.get(cacheKey);
     long count = counter != null ? counter.getCount(window.getMinutes()) : 0;
@@ -191,7 +209,7 @@ public class RedisVelocityService {
         .distinctMccs(distinctMccs)
         .distinctCountries(distinctCountries)
         .distinctDevices(distinctDevices)
-        .fromCache(true)
+      .fromCache(true)
         .latencyMicros(latencyMicros)
         .build();
   }
@@ -251,6 +269,10 @@ public class RedisVelocityService {
 
   private void recordToCounters(
       String cacheKey, Instant timestamp, BigDecimal amount, TransactionRequest request) {
+    if (redisEnabled) {
+      recordToRedis(cacheKey, timestamp, amount, request);
+      return;
+    }
     // Record count
     velocityCounters
         .computeIfAbsent(cacheKey, k -> new SlidingWindowCounter())
@@ -274,6 +296,132 @@ public class RedisVelocityService {
       distinctCounters
           .computeIfAbsent(cacheKey + ":countries", k -> new HyperLogLogCounter())
           .add(request.getMerchantCountryCode());
+    }
+  }
+
+  private VelocityStats getStatsFromRedis(String cacheKey, TimeWindow window, long startNanos) {
+    long currentBucket = Instant.now().toEpochMilli() / (BUCKET_SIZE_MINUTES * 60_000L);
+    long startBucket = currentBucket - (window.getMinutes() / BUCKET_SIZE_MINUTES);
+
+    String baseKey = "rulex:velocity:" + cacheKey;
+    String countKey = baseKey + ":count";
+    String sumKey = baseKey + ":sum";
+
+    ArrayList<Object> bucketFields = new ArrayList<>();
+    ArrayList<String> merchantHllKeys = new ArrayList<>();
+    ArrayList<String> mccHllKeys = new ArrayList<>();
+    ArrayList<String> countryHllKeys = new ArrayList<>();
+    ArrayList<String> deviceHllKeys = new ArrayList<>();
+
+    for (long bucket = startBucket; bucket <= currentBucket; bucket++) {
+      String field = String.valueOf(bucket);
+      bucketFields.add(field);
+      merchantHllKeys.add(baseKey + ":hll:merchants:" + field);
+      mccHllKeys.add(baseKey + ":hll:mccs:" + field);
+      countryHllKeys.add(baseKey + ":hll:countries:" + field);
+      deviceHllKeys.add(baseKey + ":hll:devices:" + field);
+    }
+
+    long count = 0;
+    BigDecimal sum = BigDecimal.ZERO;
+
+    if (!bucketFields.isEmpty()) {
+      var countValues = redisTemplate.opsForHash().multiGet(countKey, bucketFields);
+      if (countValues != null) {
+        for (Object value : countValues) {
+          if (value != null) {
+            try {
+              count += Long.parseLong(value.toString());
+            } catch (NumberFormatException ignored) {
+              // ignore malformed values
+            }
+          }
+        }
+      }
+
+      var sumValues = redisTemplate.opsForHash().multiGet(sumKey, bucketFields);
+      if (sumValues != null) {
+        for (Object value : sumValues) {
+          if (value != null) {
+            try {
+              sum = sum.add(new BigDecimal(value.toString()));
+            } catch (NumberFormatException ignored) {
+              // ignore malformed values
+            }
+          }
+        }
+      }
+    }
+
+    long distinctMerchants = getHllCount(merchantHllKeys);
+    long distinctMccs = getHllCount(mccHllKeys);
+    long distinctCountries = getHllCount(countryHllKeys);
+    long distinctDevices = getHllCount(deviceHllKeys);
+
+    BigDecimal avg =
+        count > 0
+            ? sum.divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP)
+            : BigDecimal.ZERO;
+
+    long latencyMicros = (System.nanoTime() - startNanos) / 1000;
+
+    return VelocityStats.builder()
+        .transactionCount(count)
+        .totalAmount(sum)
+        .avgAmount(avg)
+        .distinctMerchants(distinctMerchants)
+        .distinctMccs(distinctMccs)
+        .distinctCountries(distinctCountries)
+        .distinctDevices(distinctDevices)
+        .fromCache(true)
+        .latencyMicros(latencyMicros)
+        .build();
+  }
+
+  private long getHllCount(ArrayList<String> keys) {
+    if (keys.isEmpty()) {
+      return 0;
+    }
+    Long count = redisTemplate.opsForHyperLogLog().size(keys.toArray(new String[0]));
+    return count == null ? 0 : count;
+  }
+
+  private void recordToRedis(
+      String cacheKey, Instant timestamp, BigDecimal amount, TransactionRequest request) {
+    long bucket = timestamp.toEpochMilli() / (BUCKET_SIZE_MINUTES * 60_000L);
+    String bucketField = String.valueOf(bucket);
+
+    String baseKey = "rulex:velocity:" + cacheKey;
+    String countKey = baseKey + ":count";
+    String sumKey = baseKey + ":sum";
+
+    redisTemplate.opsForHash().increment(countKey, bucketField, 1);
+    redisTemplate.opsForHash().increment(sumKey, bucketField, amount.doubleValue());
+
+    redisTemplate.expire(countKey, REDIS_TTL);
+    redisTemplate.expire(sumKey, REDIS_TTL);
+
+    if (request.getMerchantId() != null) {
+      String hllKey = baseKey + ":hll:merchants:" + bucketField;
+      redisTemplate.opsForHyperLogLog().add(hllKey, request.getMerchantId());
+      redisTemplate.expire(hllKey, REDIS_TTL);
+    }
+    if (request.getMcc() != null) {
+      String hllKey = baseKey + ":hll:mccs:" + bucketField;
+      redisTemplate.opsForHyperLogLog().add(hllKey, String.valueOf(request.getMcc()));
+      redisTemplate.expire(hllKey, REDIS_TTL);
+    }
+    if (request.getMerchantCountryCode() != null) {
+      String hllKey = baseKey + ":hll:countries:" + bucketField;
+      redisTemplate.opsForHyperLogLog().add(hllKey, request.getMerchantCountryCode());
+      redisTemplate.expire(hllKey, REDIS_TTL);
+    }
+
+    String deviceId = request.getTerminalId();
+    if (deviceId != null && !deviceId.isBlank()) {
+      String hllKey = baseKey + ":hll:devices:" + bucketField;
+      redisTemplate.opsForHyperLogLog().add(hllKey, deviceId);
+      redisTemplate.expire(hllKey, REDIS_TTL);
     }
   }
 

@@ -1,16 +1,19 @@
 package com.rulex.service;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.Config;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.SessionConfig;
+import org.neo4j.driver.TransactionConfig;
 import org.springframework.stereotype.Service;
 
 /**
@@ -25,6 +28,7 @@ public class Neo4jGraphService {
   private final boolean enabled;
   private volatile boolean available;
   private final String uri;
+  private final long queryTimeoutMs;
 
   public Neo4jGraphService(
       @org.springframework.beans.factory.annotation.Value(
@@ -35,7 +39,17 @@ public class Neo4jGraphService {
       @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.password:}")
           String password,
       @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.enabled:true}")
-          boolean enabled) {
+        boolean enabled,
+      @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.connection-timeout-ms:2000}")
+        long connectionTimeoutMs,
+      @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.acquire-timeout-ms:2000}")
+        long acquisitionTimeoutMs,
+      @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.max-pool-size:30}")
+        int maxPoolSize,
+      @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.max-connection-lifetime-ms:600000}")
+        long maxConnectionLifetimeMs,
+      @org.springframework.beans.factory.annotation.Value("${rulex.neo4j.query-timeout-ms:2000}")
+        long queryTimeoutMs) {
     boolean resolvedEnabled = enabled;
     if (enabled && (password == null || password.isBlank())) {
       resolvedEnabled = false;
@@ -44,12 +58,20 @@ public class Neo4jGraphService {
     }
     this.enabled = resolvedEnabled;
     this.uri = uri;
+    this.queryTimeoutMs = queryTimeoutMs;
 
     if (resolvedEnabled) {
       Driver tempDriver = null;
       boolean tempAvailable = false;
       try {
-        tempDriver = GraphDatabase.driver(uri, AuthTokens.basic(username, password));
+        Config config =
+            Config.builder()
+                .withConnectionTimeout(Duration.ofMillis(connectionTimeoutMs))
+                .withConnectionAcquisitionTimeout(Duration.ofMillis(acquisitionTimeoutMs))
+                .withMaxConnectionPoolSize(maxPoolSize)
+                .withMaxConnectionLifetime(Duration.ofMillis(maxConnectionLifetimeMs))
+                .build();
+        tempDriver = GraphDatabase.driver(uri, AuthTokens.basic(username, password), config);
         // Testar conexão sem bloquear startup
         tempDriver.verifyConnectivity();
         tempAvailable = true;
@@ -87,7 +109,7 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session(SessionConfig.defaultConfig())) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         return result.next().get("componentId").asInt();
       }
@@ -108,7 +130,7 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         return result.next().get("degree").asInt();
       }
@@ -129,7 +151,7 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         org.neo4j.driver.Value score = result.next().get("score");
         return score.isNull() ? 0.0 : score.asDouble();
@@ -151,7 +173,7 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         org.neo4j.driver.Value communityId = result.next().get("communityId");
         return communityId.isNull() ? -1 : communityId.asInt();
@@ -179,7 +201,7 @@ public class Neo4jGraphService {
 
     try (Session session = driver.session()) {
       Result result =
-          session.run(query, Map.of("accountId1", accountId1, "accountId2", accountId2));
+          run(session, query, Map.of("accountId1", accountId1, "accountId2", accountId2));
       if (result.hasNext()) {
         return result.next().get("similarity").asDouble();
       }
@@ -200,7 +222,7 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         return result.next().get("sharedAccounts").asList(org.neo4j.driver.Value::asString);
       }
@@ -225,7 +247,7 @@ public class Neo4jGraphService {
 
     try (Session session = driver.session()) {
       Result result =
-          session.run(query, Map.of("accountId", accountId, "minRingSize", minRingSize));
+          run(session, query, Map.of("accountId", accountId, "minRingSize", minRingSize));
       if (result.hasNext()) {
         return result.next().get("inRing").asBoolean();
       }
@@ -251,7 +273,7 @@ public class Neo4jGraphService {
             .formatted(maxHops);
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("sourceId", sourceAccountId));
+      Result result = run(session, query, Map.of("sourceId", sourceAccountId));
       if (result.hasNext()) {
         Record record = result.next();
         Map<String, Object> analysis = new HashMap<>();
@@ -279,7 +301,7 @@ public class Neo4jGraphService {
             .formatted(minCycleLength);
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         return result.next().get("hasCircular").asBoolean();
       }
@@ -301,7 +323,7 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         org.neo4j.driver.Value clusterId = result.next().get("clusterId");
         return clusterId.isNull() ? -1 : clusterId.asInt();
@@ -324,7 +346,7 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         return result.next().get("isSecondLevel").asBoolean();
       }
@@ -345,7 +367,7 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         org.neo4j.driver.Value centrality = result.next().get("centrality");
         return centrality.isNull() ? 0.0 : centrality.asDouble();
@@ -367,7 +389,7 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         org.neo4j.driver.Value label = result.next().get("label");
         return label.isNull() ? "UNKNOWN" : label.asString();
@@ -392,7 +414,7 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         return result.next().get("pathLength").asInt();
       }
@@ -413,7 +435,7 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         return result.next().get("triangles").asInt();
       }
@@ -440,7 +462,7 @@ public class Neo4jGraphService {
 
     try (Session session = driver.session()) {
       Result result =
-          session.run(query, Map.of("accountId1", accountId1, "accountId2", accountId2));
+          run(session, query, Map.of("accountId1", accountId1, "accountId2", accountId2));
       if (result.hasNext()) {
         org.neo4j.driver.Value similarity = result.next().get("similarity");
         return similarity.isNull() ? 0.0 : similarity.asDouble();
@@ -463,7 +485,7 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         org.neo4j.driver.Value score = result.next().get("score");
         return score.isNull() ? 0.0 : score.asDouble();
@@ -490,7 +512,7 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session()) {
-      Result result = session.run(query, Map.of("accountId", accountId));
+      Result result = run(session, query, Map.of("accountId", accountId));
       if (result.hasNext()) {
         return result.next().get("motifCount").asInt();
       }
@@ -513,17 +535,18 @@ public class Neo4jGraphService {
         """;
 
     try (Session session = driver.session()) {
-      session.run(
-          query,
-          Map.of(
-              "fromId",
-              fromAccountId,
-              "toId",
-              toAccountId,
-              "amount",
-              amount,
-              "timestamp",
-              timestamp));
+      run(
+        session,
+        query,
+        Map.of(
+          "fromId",
+          fromAccountId,
+          "toId",
+          toAccountId,
+          "amount",
+          amount,
+          "timestamp",
+          timestamp));
     } catch (Exception e) {
       log.warn("Failed to record transaction in Neo4j: {}", e.getMessage());
     }
@@ -536,7 +559,7 @@ public class Neo4jGraphService {
     // Se já está marcado como disponível, verificar se ainda está
     if (available) {
       try (Session session = driver.session()) {
-        session.run("RETURN 1");
+        run(session, "RETURN 1", Map.of());
         return true;
       } catch (Exception e) {
         log.warn("Neo4j connection lost: {}", e.getMessage());
@@ -547,7 +570,7 @@ public class Neo4jGraphService {
 
     // Tentar reconectar se estava indisponível
     try (Session session = driver.session()) {
-      session.run("RETURN 1");
+      run(session, "RETURN 1", Map.of());
       available = true;
       log.info("Neo4j reconnected successfully: {}", uri);
       return true;
@@ -576,5 +599,11 @@ public class Neo4jGraphService {
         log.warn("Error closing Neo4j driver: {}", e.getMessage());
       }
     }
+  }
+
+  private Result run(Session session, String query, Map<String, Object> params) {
+    TransactionConfig txConfig =
+        TransactionConfig.builder().withTimeout(Duration.ofMillis(queryTimeoutMs)).build();
+    return session.run(query, params, txConfig);
   }
 }

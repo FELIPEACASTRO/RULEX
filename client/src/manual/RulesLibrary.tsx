@@ -41,11 +41,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   RULES_LIBRARY,
-  RULES_LIBRARY_STATS,
   RuleCategory,
   RuleComplexity,
   RuleExample,
 } from "@/manual/data/rulesLibraryData";
+import { RULES_LIBRARY_STATS } from "@/manual/data/rulesLibraryStats";
 // ============================================================================
 // COMPONENTE: BIBLIOTECA DE REGRAS
 // ============================================================================

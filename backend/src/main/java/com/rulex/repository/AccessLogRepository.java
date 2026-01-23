@@ -57,6 +57,7 @@ public interface AccessLogRepository extends JpaRepository<AccessLog, Long> {
       @Param("eventTypes") List<AccessEventType> eventTypes, @Param("since") LocalDateTime since);
 
   /** Delete old access logs for retention policy */
+    @Modifying
   @Query("DELETE FROM AccessLog a WHERE a.timestamp < :before")
   void deleteOldLogs(@Param("before") LocalDateTime before);
 

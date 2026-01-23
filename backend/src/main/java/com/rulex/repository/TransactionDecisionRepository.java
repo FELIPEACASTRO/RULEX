@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -88,4 +89,9 @@ public interface TransactionDecisionRepository extends JpaRepository<Transaction
               + "GROUP BY bucket ORDER BY bucket",
       nativeQuery = true)
   List<Object[]> timelineDailySince(@Param("since") LocalDateTime since);
+
+  /** Delete old transaction decisions for retention policy */
+  @Modifying
+  @Query("DELETE FROM TransactionDecision d WHERE d.createdAt < :before")
+  void deleteOldDecisions(@Param("before") LocalDateTime before);
 }

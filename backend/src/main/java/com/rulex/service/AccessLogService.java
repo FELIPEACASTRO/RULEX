@@ -10,10 +10,12 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,12 @@ public class AccessLogService {
 
   private final AccessLogRepository accessLogRepository;
   private final ObjectMapper objectMapper;
+
+  @Value("${rulex.access-log.retention-days:30}")
+  private int retentionDays;
+
+  @Value("${rulex.access-log.cleanup-enabled:true}")
+  private boolean cleanupEnabled;
 
   /** Maximum failed login attempts before account lockout warning */
   private static final int MAX_FAILED_ATTEMPTS = 5;
@@ -328,5 +336,19 @@ public class AccessLogService {
       log.error("Failed to serialize object to JSON", e);
       return "{}";
     }
+  }
+
+  /**
+   * Periodic cleanup to enforce access-log retention policy.
+   */
+  @Scheduled(fixedRate = 86_400_000) // Daily
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void cleanupOldAccessLogs() {
+    if (!cleanupEnabled) {
+      return;
+    }
+    LocalDateTime cutoff = LocalDateTime.now().minusDays(retentionDays);
+    accessLogRepository.deleteOldLogs(cutoff);
+    log.info("Access log cleanup complete. RetentionDays={}", retentionDays);
   }
 }

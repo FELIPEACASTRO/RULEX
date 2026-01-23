@@ -12,13 +12,14 @@ export { SystemMap } from "./SystemMap";
 export { QaAndE2EGuide } from "./QaAndE2EGuide";
 export { InfraRunbook } from "./InfraRunbook";
 export { ComplexRulesGuide } from "./ComplexRulesGuide";
-export { RulesLibrary, RULES_LIBRARY_STATS } from "./RulesLibrary";
+export { RulesLibrary } from "./RulesLibrary";
 export { OperatorCatalog } from "./OperatorCatalog";
 export { FieldDictionary } from "./FieldDictionary";
 export { TemplatesGallery } from "./TemplatesGallery";
 
 // Data exports
 export * from "./manualData";
+export { RULES_LIBRARY_STATS } from "./data/rulesLibraryStats";
 
 // NOTE: generated artifacts are imported from "@/manual/generated" directly.
 // Re-exporting here causes name collisions (e.g. LogicOperator).

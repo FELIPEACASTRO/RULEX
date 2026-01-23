@@ -157,6 +157,22 @@ rulex:
     # Sampling rate para logs de sucesso (0.0 = nenhum, 1.0 = todos)
     # Erros (4xx/5xx) e mutações (POST/PUT/DELETE) são sempre logados
     success-sampling-rate: ${RULEX_ACCESS_LOG_SAMPLING:0.1}
+    retention-days: ${RULEX_ACCESS_LOG_RETENTION_DAYS:30}
+    cleanup-enabled: ${RULEX_ACCESS_LOG_CLEANUP_ENABLED:true}
+  retention:
+    enabled: ${RULEX_RETENTION_ENABLED:true}
+    audit-log-days: ${RULEX_AUDIT_LOG_RETENTION_DAYS:90}
+    audit-log-cleanup-enabled: ${RULEX_AUDIT_LOG_CLEANUP_ENABLED:true}
+    decision-days: ${RULEX_DECISION_RETENTION_DAYS:90}
+    decision-cleanup-enabled: ${RULEX_DECISION_CLEANUP_ENABLED:true}
+    raw-payload-days: ${RULEX_RAW_PAYLOAD_RETENTION_DAYS:30}
+    raw-payload-cleanup-enabled: ${RULEX_RAW_PAYLOAD_CLEANUP_ENABLED:true}
+    homolog-audit-days: ${RULEX_HOMOLOG_AUDIT_RETENTION_DAYS:30}
+    homolog-audit-cleanup-enabled: ${RULEX_HOMOLOG_AUDIT_CLEANUP_ENABLED:true}
+    homolog-decision-days: ${RULEX_HOMOLOG_DECISION_RETENTION_DAYS:30}
+    homolog-decision-cleanup-enabled: ${RULEX_HOMOLOG_DECISION_CLEANUP_ENABLED:true}
+    rule-exec-details-days: ${RULEX_RULE_EXEC_DETAILS_RETENTION_DAYS:30}
+    rule-exec-details-cleanup-enabled: ${RULEX_RULE_EXEC_DETAILS_CLEANUP_ENABLED:true}
   security:
     enabled: ${RULEX_SECURITY_ENABLED:true}
     admin:
@@ -176,6 +192,11 @@ rulex:
     uri: ${RULEX_NEO4J_URI:bolt://localhost:7687}
     username: ${RULEX_NEO4J_USERNAME:neo4j}
     password: ${RULEX_NEO4J_PASSWORD:}
+    connection-timeout-ms: ${RULEX_NEO4J_CONNECTION_TIMEOUT_MS:2000}
+    acquire-timeout-ms: ${RULEX_NEO4J_ACQUIRE_TIMEOUT_MS:2000}
+    max-pool-size: ${RULEX_NEO4J_MAX_POOL_SIZE:30}
+    max-connection-lifetime-ms: ${RULEX_NEO4J_MAX_CONN_LIFETIME_MS:600000}
+    query-timeout-ms: ${RULEX_NEO4J_QUERY_TIMEOUT_MS:2000}
 
   # QUAL-002 FIX: Configurações externalizadas (substitui magic numbers)
   limits:

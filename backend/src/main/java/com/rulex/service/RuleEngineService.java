@@ -2,9 +2,7 @@ package com.rulex.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rulex.dto.EvaluateResponse;
-import com.rulex.dto.PopupDTO;
 import com.rulex.dto.RuleConditionDTO;
-import com.rulex.dto.RuleHitDTO;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
 import com.rulex.dto.TriggeredRuleDTO;
@@ -16,11 +14,16 @@ import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
 import com.rulex.service.engine.ConditionMatcher;
+import com.rulex.service.engine.ContractValidationHelper;
+import com.rulex.service.engine.RuleCandidateIndexHelper;
+import com.rulex.service.engine.RuleEngineConditionHelper;
+import com.rulex.service.engine.RuleEngineDecisionHelper;
+import com.rulex.service.engine.RuleEngineLegacyRuleHelper;
+import com.rulex.service.engine.RuleEnginePrecheckHelper;
 import com.rulex.service.engine.RuleEngineResponseBuilder;
+import com.rulex.service.engine.ShadowRuleExecutionHelper;
 import com.rulex.service.enrichment.TransactionEnrichmentFacade;
-import com.rulex.util.PanHashUtil;
 import com.rulex.util.PanMaskingUtil;
-import com.rulex.util.RegexValidator;
 import com.rulex.v31.execlog.ExecutionEventType;
 import com.rulex.v31.execlog.RuleExecutionLogService;
 import java.beans.PropertyDescriptor;
@@ -60,10 +63,16 @@ public class RuleEngineService {
   private final RuleOrderingService ruleOrderingService;
   private final TransactionEnrichmentFacade transactionEnrichmentFacade;
   private final RuleEngineResponseBuilder responseBuilder;
+  private final RuleEngineConditionHelper conditionHelper;
+  private final ContractValidationHelper contractValidationHelper;
+  private final RuleEngineDecisionHelper decisionHelper;
+  private final RuleEnginePrecheckHelper precheckHelper;
+  private final ShadowRuleExecutionHelper shadowRuleExecutionHelper;
+  private final RuleEngineLegacyRuleHelper legacyRuleHelper;
+  private final RuleCandidateIndexHelper candidateIndexHelper;
 
   // V4.0: advanced hard-rule services (opt-in via config)
   private final BloomFilterService bloomFilterService;
-  private final ShadowModeService shadowModeService;
   private final ImpossibleTravelService impossibleTravelService;
   private final GeoService geoService;
   private final RedisVelocityService redisVelocityService;
@@ -91,8 +100,6 @@ public class RuleEngineService {
 
   @Value("${rulex.engine.velocity.redis.enabled:false}")
   private boolean redisVelocityEnabled;
-
-  private volatile CandidateIndexCache candidateIndexCache;
 
   /** Processa uma transação e retorna a classificação de fraude. */
   public TransactionResponse analyzeTransaction(TransactionRequest request) {
@@ -131,7 +138,7 @@ public class RuleEngineService {
           safeLogAntiTamper(externalTransactionId, existingRaw.getPayloadRawHash(), payloadHash);
 
           TransactionDecision tamperDecision =
-              buildTamperDecision(externalTransactionId, payloadHash);
+              decisionHelper.buildTamperDecision(externalTransactionId, payloadHash);
             return responseBuilder.buildResponseFromTamperDecision(tamperDecision, startTime);
         }
 
@@ -165,7 +172,7 @@ public class RuleEngineService {
               externalTransactionId, existing.getPayloadRawHash(), payloadHash);
           safeLogAntiTamper(externalTransactionId, existing.getPayloadRawHash(), payloadHash);
           TransactionDecision tamperDecision =
-              buildTamperDecision(externalTransactionId, payloadHash);
+              decisionHelper.buildTamperDecision(externalTransactionId, payloadHash);
           return responseBuilder.buildResponseFromTamperDecision(tamperDecision, startTime);
         }
         return responseBuilder.buildResponseFromExisting(existing, startTime);
@@ -188,7 +195,7 @@ public class RuleEngineService {
               externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
           safeLogAntiTamper(externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
           TransactionDecision tamperDecision =
-              buildTamperDecision(externalTransactionId, payloadHash);
+              decisionHelper.buildTamperDecision(externalTransactionId, payloadHash);
           return responseBuilder.buildResponseFromTamperDecision(tamperDecision, startTime);
         }
         return responseBuilder.buildResponseFromExisting(racedTx, startTime);
@@ -198,7 +205,7 @@ public class RuleEngineService {
       RuleEvaluationResult result = evaluateRules(transaction, request);
 
       // 3. Salvar decisão
-      TransactionDecision decision = createDecision(transaction, result);
+      TransactionDecision decision = decisionHelper.createDecision(transaction, result);
       decision.setExternalTransactionId(transaction.getExternalTransactionId());
       decision.setPayloadRawHash(payloadHash);
       decisionRepository.save(decision);
@@ -268,7 +275,7 @@ public class RuleEngineService {
               externalTransactionId, existingRaw.getPayloadRawHash(), payloadHash);
           safeLogAntiTamper(externalTransactionId, existingRaw.getPayloadRawHash(), payloadHash);
           TransactionDecision tamperDecision =
-              buildTamperDecision(externalTransactionId, payloadHash);
+              decisionHelper.buildTamperDecision(externalTransactionId, payloadHash);
             return responseBuilder.buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
         }
 
@@ -299,7 +306,7 @@ public class RuleEngineService {
               externalTransactionId, existing.getPayloadRawHash(), payloadHash);
           safeLogAntiTamper(externalTransactionId, existing.getPayloadRawHash(), payloadHash);
           TransactionDecision tamperDecision =
-              buildTamperDecision(externalTransactionId, payloadHash);
+              decisionHelper.buildTamperDecision(externalTransactionId, payloadHash);
           return responseBuilder.buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
         }
         return responseBuilder.buildEvaluateResponseFromExisting(existing, startTime);
@@ -322,7 +329,7 @@ public class RuleEngineService {
               externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
           safeLogAntiTamper(externalTransactionId, racedTx.getPayloadRawHash(), payloadHash);
           TransactionDecision tamperDecision =
-              buildTamperDecision(externalTransactionId, payloadHash);
+              decisionHelper.buildTamperDecision(externalTransactionId, payloadHash);
           return responseBuilder.buildEvaluateResponseFromTamperDecision(tamperDecision, startTime);
         }
         return responseBuilder.buildEvaluateResponseFromExisting(racedTx, startTime);
@@ -332,7 +339,7 @@ public class RuleEngineService {
       RuleEvaluationResult result = evaluateRules(transaction, request);
 
       // 3. Salvar decisão
-      TransactionDecision decision = createDecision(transaction, result);
+      TransactionDecision decision = decisionHelper.createDecision(transaction, result);
       decision.setExternalTransactionId(transaction.getExternalTransactionId());
       decision.setPayloadRawHash(payloadHash);
       decisionRepository.save(decision);
@@ -389,9 +396,9 @@ public class RuleEngineService {
       parsed = objectMapper.readValue(rawBody, TransactionRequest.class);
     } catch (Exception e) {
       auditService.logError("/evaluate", e);
-      safeLogContractError(
+        contractValidationHelper.safeLogContractError(
           null, payloadHash, "CONTRACT_INVALID_JSON", "Payload JSON inválido (parse falhou)");
-      return buildContractErrorEvaluateResponse(
+        return contractValidationHelper.buildContractErrorEvaluateResponse(
           "CONTRACT_INVALID_JSON",
           "Payload JSON inválido (parse falhou)",
           TransactionDecision.TransactionClassification.FRAUD,
@@ -401,12 +408,12 @@ public class RuleEngineService {
 
     String externalTransactionId = parsed == null ? null : parsed.getExternalTransactionId();
     if (externalTransactionId == null || externalTransactionId.isBlank()) {
-      safeLogContractError(
+        contractValidationHelper.safeLogContractError(
           null,
           payloadHash,
           "CONTRACT_MISSING_EXTERNAL_TRANSACTION_ID",
           "externalTransactionId ausente ou vazio");
-      return buildContractErrorEvaluateResponse(
+        return contractValidationHelper.buildContractErrorEvaluateResponse(
           "CONTRACT_MISSING_EXTERNAL_TRANSACTION_ID",
           "externalTransactionId ausente ou vazio",
           TransactionDecision.TransactionClassification.FRAUD,
@@ -417,14 +424,14 @@ public class RuleEngineService {
     // If the payload is missing required fields for persistence, we still must return a decision
     // (no 400). In that scenario we classify as SUSPICIOUS and skip DB writes that would violate
     // NOT NULL constraints in transactions.
-    List<String> missing = contractMissingRequiredForPersistence(parsed);
+    List<String> missing = contractValidationHelper.missingRequiredForPersistence(parsed);
     if (!missing.isEmpty()) {
-      safeLogContractError(
+      contractValidationHelper.safeLogContractError(
           externalTransactionId,
           payloadHash,
           "CONTRACT_MISSING_REQUIRED_FIELDS",
           "Campos obrigatórios ausentes para persistência: " + String.join(", ", missing));
-      return buildContractErrorEvaluateResponse(
+      return contractValidationHelper.buildContractErrorEvaluateResponse(
           "CONTRACT_MISSING_REQUIRED_FIELDS",
           "Campos obrigatórios ausentes para persistência: " + String.join(", ", missing),
           TransactionDecision.TransactionClassification.SUSPICIOUS,
@@ -436,80 +443,6 @@ public class RuleEngineService {
     return evaluate(parsed, effectiveRawBytes, contentType);
   }
 
-  private List<String> contractMissingRequiredForPersistence(TransactionRequest request) {
-    List<String> missing = new ArrayList<>();
-    if (isBlank(request.getCustomerIdFromHeader())) missing.add("customerIdFromHeader");
-    if (request.getCustomerAcctNumber() == null) missing.add("customerAcctNumber");
-    if (isBlank(request.getPan())) missing.add("pan");
-    if (request.getTransactionCurrencyCode() == null) missing.add("transactionCurrencyCode");
-    if (request.getTransactionAmount() == null) missing.add("transactionAmount");
-    if (request.getTransactionDate() == null) missing.add("transactionDate");
-    if (request.getTransactionTime() == null) missing.add("transactionTime");
-    if (request.getMcc() == null) missing.add("mcc");
-    if (request.getConsumerAuthenticationScore() == null)
-      missing.add("consumerAuthenticationScore");
-    if (request.getExternalScore3() == null) missing.add("externalScore3");
-    if (request.getCavvResult() == null) missing.add("cavvResult");
-    if (request.getEciIndicator() == null) missing.add("eciIndicator");
-    if (request.getAtcCard() == null) missing.add("atcCard");
-    if (request.getAtcHost() == null) missing.add("atcHost");
-    if (request.getTokenAssuranceLevel() == null) missing.add("tokenAssuranceLevel");
-    if (request.getAvailableCredit() == null) missing.add("availableCredit");
-    if (request.getCardCashBalance() == null) missing.add("cardCashBalance");
-    if (request.getCardDelinquentAmount() == null) missing.add("cardDelinquentAmount");
-    return missing;
-  }
-
-  private boolean isBlank(String s) {
-    return s == null || s.isBlank();
-  }
-
-  private EvaluateResponse buildContractErrorEvaluateResponse(
-      String ruleName,
-      String detail,
-      TransactionDecision.TransactionClassification classification,
-      String payloadHash,
-      long startTime) {
-
-    RuleHitDTO hit =
-        RuleHitDTO.builder()
-            .ruleName(ruleName)
-            .description(detail)
-            .ruleType("CONTRACT")
-            .classification(classification.name())
-            .threshold(null)
-            .weight(100)
-            .contribution(0)
-            .detail(detail)
-            .build();
-
-    PopupDTO popup =
-        PopupDTO.builder()
-            .key(classification.name())
-            .title(
-                classification == TransactionDecision.TransactionClassification.FRAUD
-                    ? "Bloqueio"
-                    : "Suspeita")
-            .classification(classification.name())
-            .totalContribution(0)
-            .rules(List.of(hit))
-            .reason(detail)
-            .build();
-
-    long processingTime = System.currentTimeMillis() - startTime;
-    return EvaluateResponse.builder()
-        .transactionId(null)
-        .classification(classification.name())
-        .riskScore(0)
-        .reason(detail)
-        .rulesetVersion("contract")
-        .processingTimeMs(processingTime)
-        .timestamp(LocalDateTime.now(clock))
-        .ruleHits(List.of(hit))
-        .popups(List.of(popup))
-        .build();
-  }
-
   /** Avalia as regras configuradas contra a transação. */
   private RuleEvaluationResult evaluateRules(Transaction transaction, TransactionRequest request) {
     RuleEvaluationResult result = new RuleEvaluationResult();
@@ -518,7 +451,8 @@ public class RuleEngineService {
             ? ruleOrderingService.getOptimizedRuleOrder()
             : ruleConfigRepository.findByEnabled(true);
 
-    CandidateIndex index = buildOrReuseCandidateIndex(enabledRules);
+    RuleCandidateIndexHelper.CandidateIndex index =
+      candidateIndexHelper.buildOrReuseCandidateIndex(enabledRules);
 
     // V3.2: Derivar tipos ricos do payload sem alterar o payload original
     DerivedContext derivedContext = DerivedContext.from(request);
@@ -546,7 +480,13 @@ public class RuleEngineService {
 
     // V4.0: cheap deterministic pre-checks (short-circuit on FRAUD)
     TransactionDecision.TransactionClassification preClassification =
-        runPreChecks(request, derivedContext, triggeredRules, scoreDetails);
+        precheckHelper.runPreChecks(
+            request,
+            derivedContext,
+            triggeredRules,
+            scoreDetails,
+            bloomFilterEnabled,
+            impossibleTravelEnabled);
     maxByRule = maxSeverity(maxByRule, preClassification);
     if (maxByRule == TransactionDecision.TransactionClassification.FRAUD) {
       result.setRiskScore(100);
@@ -582,7 +522,8 @@ public class RuleEngineService {
     }
 
     for (RuleConfiguration rule : decisionRules) {
-      RulePreconditions pre = index.byRuleName.get(rule.getRuleName());
+      RuleCandidateIndexHelper.RulePreconditions pre =
+          index.byRuleName().get(rule.getRuleName());
       if (pre != null && pre.canSkipWithMissingFields && !hasAllRequiredFields(request, pre)) {
         // Maintain parity with existing scoreDetails shape.
         scoreDetails.put(rule.getRuleName(), Map.of("triggered", false));
@@ -665,9 +606,8 @@ public class RuleEngineService {
             return ShadowModeService.RuleEvaluationResult.triggered(score, action, rm.detail);
           };
 
-      for (RuleConfiguration shadowRule : shadowRules) {
-        shadowModeService.executeShadow(shadowRule, request, evaluator, actualDecision);
-      }
+      shadowRuleExecutionHelper.executeShadowRules(
+          shadowRules, request, actualDecision, evaluator);
     }
 
     return result;
@@ -678,158 +618,6 @@ public class RuleEngineService {
     if (percentage >= 100) return true;
     int bucket = Math.floorMod(stableKey.hashCode(), 100);
     return bucket < percentage;
-  }
-
-  private TransactionDecision.TransactionClassification runPreChecks(
-      TransactionRequest request,
-      DerivedContext derivedContext,
-      List<TriggeredRuleDTO> triggeredRules,
-      Map<String, Object> scoreDetails) {
-    TransactionDecision.TransactionClassification max =
-        TransactionDecision.TransactionClassification.APPROVED;
-
-    if (bloomFilterEnabled) {
-      try {
-        if (request.getPan() != null && !request.getPan().isBlank()) {
-          var r =
-              bloomFilterService.isBlacklisted(
-                  com.rulex.entity.RuleList.EntityType.PAN, request.getPan());
-          if (r.inList()) {
-            triggeredRules.add(
-                TriggeredRuleDTO.builder()
-                    .name("BLOCKLIST_PAN")
-                    .weight(100)
-                    .contribution(100)
-                    .detail("PAN encontrado em blacklist")
-                    .build());
-            scoreDetails.put("BLOCKLIST_PAN", Map.of("triggered", true, "source", r.source()));
-            return TransactionDecision.TransactionClassification.FRAUD;
-          }
-        }
-
-        if (request.getMerchantId() != null && !request.getMerchantId().isBlank()) {
-          var r =
-              bloomFilterService.isBlacklisted(
-                  com.rulex.entity.RuleList.EntityType.MERCHANT_ID, request.getMerchantId());
-          if (r.inList()) {
-            triggeredRules.add(
-                TriggeredRuleDTO.builder()
-                    .name("BLOCKLIST_MERCHANT")
-                    .weight(100)
-                    .contribution(100)
-                    .detail("MerchantId encontrado em blacklist")
-                    .build());
-            scoreDetails.put("BLOCKLIST_MERCHANT", Map.of("triggered", true, "source", r.source()));
-            return TransactionDecision.TransactionClassification.FRAUD;
-          }
-        }
-
-        if (request.getCustomerIdFromHeader() != null
-            && !request.getCustomerIdFromHeader().isBlank()) {
-          var r =
-              bloomFilterService.isBlacklisted(
-                  com.rulex.entity.RuleList.EntityType.CUSTOMER_ID,
-                  request.getCustomerIdFromHeader());
-          if (r.inList()) {
-            triggeredRules.add(
-                TriggeredRuleDTO.builder()
-                    .name("BLOCKLIST_CUSTOMER")
-                    .weight(100)
-                    .contribution(100)
-                    .detail("CustomerId encontrado em blacklist")
-                    .build());
-            scoreDetails.put("BLOCKLIST_CUSTOMER", Map.of("triggered", true, "source", r.source()));
-            return TransactionDecision.TransactionClassification.FRAUD;
-          }
-        }
-
-        // Use terminalId as a proxy for device id if present.
-        if (request.getTerminalId() != null && !request.getTerminalId().isBlank()) {
-          var r =
-              bloomFilterService.isBlacklisted(
-                  com.rulex.entity.RuleList.EntityType.DEVICE_ID, request.getTerminalId());
-          if (r.inList()) {
-            triggeredRules.add(
-                TriggeredRuleDTO.builder()
-                    .name("BLOCKLIST_DEVICE")
-                    .weight(100)
-                    .contribution(100)
-                    .detail("DeviceId (terminalId) encontrado em blacklist")
-                    .build());
-            scoreDetails.put("BLOCKLIST_DEVICE", Map.of("triggered", true, "source", r.source()));
-            return TransactionDecision.TransactionClassification.FRAUD;
-          }
-        }
-      } catch (Exception e) { // SEC-006 FIX
-        // best-effort
-      }
-    }
-
-    if (impossibleTravelEnabled
-        && request.getPan() != null
-        && !request.getPan().isBlank()
-        && derivedContext.getTransactionTimestamp() != null) {
-      try {
-        GeoService.GeoCoordinates coords = geoService.deriveCoordinates(request);
-        if (coords != null && coords.isFound()) {
-          String panHash = PanHashUtil.sha256Hex(request.getPan());
-          boolean cardPresent = "Y".equals(request.getCustomerPresent());
-
-          var analysis =
-              impossibleTravelService.analyzeTravel(
-                  panHash,
-                  coords.getLatitude(),
-                  coords.getLongitude(),
-                  request.getMerchantCity(),
-                  derivedContext.getNormalizedCountryCode(),
-                  derivedContext.getTransactionTimestamp().toLocalDateTime(),
-                  request.getExternalTransactionId(),
-                  cardPresent);
-
-          if (analysis.riskLevel() == ImpossibleTravelService.TravelRisk.IMPOSSIBLE) {
-            triggeredRules.add(
-                TriggeredRuleDTO.builder()
-                    .name("IMPOSSIBLE_TRAVEL")
-                    .weight(100)
-                    .contribution(100)
-                    .detail(
-                        String.format(
-                            "Viagem impossível: %.0fkm em %.0fmin (%.0f km/h)",
-                            analysis.distanceKm(), analysis.elapsedMinutes(), analysis.speedKmh()))
-                    .build());
-            scoreDetails.put(
-                "IMPOSSIBLE_TRAVEL",
-                Map.of(
-                    "triggered",
-                    true,
-                    "distanceKm",
-                    analysis.distanceKm(),
-                    "speedKmh",
-                    analysis.speedKmh(),
-                    "elapsedMinutes",
-                    analysis.elapsedMinutes()));
-            return TransactionDecision.TransactionClassification.FRAUD;
-          }
-
-          if (analysis.riskLevel() == ImpossibleTravelService.TravelRisk.HIGH) {
-            triggeredRules.add(
-                TriggeredRuleDTO.builder()
-                    .name("SUSPICIOUS_TRAVEL")
-                    .weight(60)
-                    .contribution(60)
-                    .detail(String.format("Viagem suspeita: %.0f km/h", analysis.speedKmh()))
-                    .build());
-            scoreDetails.put(
-                "SUSPICIOUS_TRAVEL", Map.of("triggered", true, "speedKmh", analysis.speedKmh()));
-            max = maxSeverity(max, TransactionDecision.TransactionClassification.SUSPICIOUS);
-          }
-        }
-      } catch (Exception e) { // SEC-006 FIX
-        // best-effort
-      }
-    }
-
-    return max;
   }
 
   /** Avalia uma regra específica contra a transação. */
@@ -845,7 +633,8 @@ public class RuleEngineService {
 
     // 1) Preferir condições genéricas (configuráveis)
     if (rule.getConditionsJson() != null && !rule.getConditionsJson().isBlank()) {
-      List<RuleConditionDTO> conditions = readConditions(rule.getConditionsJson());
+      List<RuleConditionDTO> conditions =
+          candidateIndexHelper.readConditions(rule.getConditionsJson());
       RuleConfiguration.LogicOperator op =
           rule.getLogicOperator() != null
               ? rule.getLogicOperator()
@@ -856,8 +645,8 @@ public class RuleEngineService {
 
         boolean triggered = (op == RuleConfiguration.LogicOperator.AND);
         for (RuleConditionDTO condition : conditions) {
-          boolean condResult = evaluateCondition(request, condition);
-          explanations.add(explainCondition(request, condition, condResult));
+          boolean condResult = conditionHelper.evaluateCondition(request, condition);
+          explanations.add(conditionHelper.explainCondition(request, condition, condResult));
 
           if (op == RuleConfiguration.LogicOperator.AND) {
             triggered = triggered && condResult;
@@ -879,55 +668,12 @@ public class RuleEngineService {
     }
 
     // 2) Fallback legada por nome (compatibilidade)
-    boolean legacy =
-        switch (rule.getRuleName()) {
-          case "LOW_AUTHENTICATION_SCORE" ->
-              request.getConsumerAuthenticationScore() < rule.getThreshold();
+    RuleEngineLegacyRuleHelper.LegacyRuleResult legacyResult =
+        legacyRuleHelper.evaluateLegacyRule(request, rule);
 
-          case "LOW_EXTERNAL_SCORE" -> request.getExternalScore3() < rule.getThreshold();
-
-          case "INVALID_CAVV" -> request.getCavvResult() != 0;
-
-          case "INVALID_CRYPTOGRAM" -> !"V".equals(request.getCryptogramValid());
-
-          case "CVV_MISMATCH" -> "N".equals(request.getCvv2Response());
-
-          case "HIGH_TRANSACTION_AMOUNT" ->
-              request.getTransactionAmount().doubleValue() > rule.getThreshold();
-
-          case "HIGH_RISK_MCC" -> isHighRiskMcc(request.getMcc());
-
-          case "INTERNATIONAL_TRANSACTION" -> isInternationalTransaction(request);
-
-          case "CARD_NOT_PRESENT" -> !"Y".equals(request.getCustomerPresent());
-
-          case "PIN_VERIFICATION_FAILED" -> "I".equals(request.getPinVerifyCode());
-
-            // Mapear para os campos corretos (sem depender de códigos textuais inconsistentes)
-          case "CVV_PIN_LIMIT_EXCEEDED" ->
-              Integer.valueOf(1).equals(request.getCvvPinTryLimitExceeded());
-
-          case "OFFLINE_PIN_FAILED" ->
-              Integer.valueOf(1).equals(request.getCvrofflinePinVerificationPerformed())
-                  && Integer.valueOf(1).equals(request.getCvrofflinePinVerificationFailed());
-
-          default -> false;
-        };
-
-    return new RuleMatch(legacy, legacy ? "regra legada por nome" : null);
+    return new RuleMatch(legacyResult.triggered(), legacyResult.detail());
   }
 
-  /** Verifica se o MCC é de alto risco usando EnrichmentService com fallback. */
-  private boolean isHighRiskMcc(Integer mcc) {
-    return enrichmentService.isHighRiskMcc(mcc);
-  }
-
-  /** Verifica se é uma transação internacional. */
-  private boolean isInternationalTransaction(TransactionRequest request) {
-    // Assumir que 076 é o código do Brasil
-    return request.getMerchantCountryCode() != null
-        && !request.getMerchantCountryCode().equals("076");
-  }
   /** Gera uma descrição do motivo da decisão. */
   private String generateReason(
       TransactionDecision.TransactionClassification classification,
@@ -945,54 +691,6 @@ public class RuleEngineService {
     };
   }
 
-  private TransactionDecision buildTamperDecision(
-      String externalTransactionId, String newPayloadHash) {
-    return TransactionDecision.builder()
-        .transaction(
-            transactionRepository
-                .findByExternalTransactionId(externalTransactionId)
-                .orElseThrow(
-                    () ->
-                        new IllegalStateException(
-                            "Tamper detected but transaction row is missing for externalTransactionId="
-                                + externalTransactionId)))
-        .externalTransactionId(externalTransactionId)
-        .payloadRawHash(newPayloadHash)
-        .classification(TransactionDecision.TransactionClassification.FRAUD)
-        .riskScore(100)
-        .rulesApplied(writeJson(java.util.List.of()))
-        .scoreDetails(writeJson(java.util.Map.of()))
-        .reason("ANTI_TAMPER: externalTransactionId reutilizado com payload diferente")
-        .rulesVersion("ANTI_TAMPER_V1")
-        .createdAt(LocalDateTime.now(clock))
-        .build();
-  }
-
-  /** Cria a entidade de decisão. */
-  private TransactionDecision createDecision(Transaction transaction, RuleEvaluationResult result) {
-    return TransactionDecision.builder()
-        .transaction(transaction)
-        .externalTransactionId(transaction.getExternalTransactionId())
-        .payloadRawHash(transaction.getPayloadRawHash())
-        .classification(result.getClassification())
-        .riskScore(result.getRiskScore())
-        .rulesApplied(writeJson(result.getTriggeredRules()))
-        .scoreDetails(writeJson(result.getScoreDetails()))
-        .reason(result.getReason())
-        .rulesVersion("1")
-        .createdAt(LocalDateTime.now(clock))
-        .build();
-  }
-
-  private String writeJson(Object value) {
-    try {
-      return objectMapper.writeValueAsString(value);
-    } catch (Exception e) {
-      log.error("Erro ao serializar JSON", e);
-      return "{}";
-    }
-  }
-
   private void safeLogAntiTamper(
       String externalTransactionId, String storedPayloadHash, String attemptedPayloadHash) {
     try {
@@ -1003,31 +701,6 @@ public class RuleEngineService {
           externalTransactionId, storedPayloadHash, attemptedPayloadHash, errorJson);
     } catch (DataAccessException e) {
       log.debug("Falha ao registrar rule_execution_log anti-tamper (ignorado)", e);
-    }
-  }
-
-  private void safeLogContractError(
-      String externalTransactionId, String payloadHash, String code, String message) {
-    try {
-      var errorJson = objectMapper.createObjectNode();
-      errorJson.put("code", code);
-      errorJson.put("message", message);
-
-      TransactionDecision.TransactionClassification classification =
-          "CONTRACT_MISSING_REQUIRED_FIELDS".equals(code)
-              ? TransactionDecision.TransactionClassification.SUSPICIOUS
-              : TransactionDecision.TransactionClassification.FRAUD;
-
-      ruleExecutionLogService.logEvaluate(
-          ExecutionEventType.EVALUATE,
-          externalTransactionId,
-          payloadHash,
-          classification,
-          0,
-          List.of(),
-          errorJson);
-    } catch (DataAccessException e) {
-      log.debug("Falha ao registrar rule_execution_log contract error (ignorado)", e);
     }
   }
 
@@ -1107,26 +780,12 @@ public class RuleEngineService {
     };
   }
 
-  private List<RuleConditionDTO> readConditions(String conditionsJson) {
-    try {
-      if (conditionsJson == null || conditionsJson.isBlank()) {
-        return List.of();
-      }
-      return objectMapper.readValue(
-          conditionsJson,
-          objectMapper
-              .getTypeFactory()
-              .constructCollectionType(List.class, RuleConditionDTO.class));
-    } catch (Exception e) {
-      return List.of();
-    }
-  }
-
-  private boolean hasAllRequiredFields(TransactionRequest request, RulePreconditions pre) {
-    if (pre.requiredFields.isEmpty()) {
+  private boolean hasAllRequiredFields(
+      TransactionRequest request, RuleCandidateIndexHelper.RulePreconditions pre) {
+    if (pre.requiredFields().isEmpty()) {
       return true;
     }
-    for (String f : pre.requiredFields) {
+    for (String f : pre.requiredFields()) {
       Object v = readFieldValue(request, TransactionRequest.class, f);
       if (v == null) {
         return false;
@@ -1134,611 +793,6 @@ public class RuleEngineService {
     }
     return true;
   }
-
-  private CandidateIndex buildOrReuseCandidateIndex(List<RuleConfiguration> enabledRules) {
-    if (enabledRules == null || enabledRules.isEmpty()) {
-      return CandidateIndex.EMPTY;
-    }
-
-    LocalDateTime maxUpdatedAt = null;
-    int size = enabledRules.size();
-    for (RuleConfiguration r : enabledRules) {
-      if (r != null && r.getUpdatedAt() != null) {
-        if (maxUpdatedAt == null || r.getUpdatedAt().isAfter(maxUpdatedAt)) {
-          maxUpdatedAt = r.getUpdatedAt();
-        }
-      }
-    }
-    CandidateIndexSignature sig = new CandidateIndexSignature(size, maxUpdatedAt);
-
-    CandidateIndexCache cached = candidateIndexCache;
-    if (cached != null && cached.signature.equals(sig)) {
-      return cached.index;
-    }
-
-    CandidateIndex built = buildCandidateIndex(enabledRules);
-    candidateIndexCache = new CandidateIndexCache(sig, built);
-    return built;
-  }
-
-  private CandidateIndex buildCandidateIndex(List<RuleConfiguration> enabledRules) {
-    Map<String, RulePreconditions> out = new HashMap<>();
-    for (RuleConfiguration rule : enabledRules) {
-      if (rule == null || rule.getRuleName() == null) continue;
-
-      String cj = rule.getConditionsJson();
-      if (cj == null || cj.isBlank()) {
-        continue;
-      }
-
-      List<RuleConditionDTO> conditions = readConditions(cj);
-      if (conditions.isEmpty()) {
-        continue;
-      }
-
-      RuleConfiguration.LogicOperator op =
-          rule.getLogicOperator() != null
-              ? rule.getLogicOperator()
-              : RuleConfiguration.LogicOperator.AND;
-
-      Set<String> required = new HashSet<>();
-      boolean hasIsNull = false;
-
-      for (RuleConditionDTO c : conditions) {
-        if (c == null) continue;
-        String operator = conditionMatcher.normalizeOperator(c.getOperator());
-        if ("IS_NULL".equals(operator)) {
-          hasIsNull = true;
-          continue;
-        }
-        required.addAll(extractFieldDependencies(c.getField()));
-      }
-
-      // Conservative skipping:
-      // - AND rules: safe to skip when any required field is missing (would evaluate to false)
-      // - OR rules: do not skip (could still trigger via IS_NULL or any present condition)
-      boolean canSkip = (op == RuleConfiguration.LogicOperator.AND);
-      if (op == RuleConfiguration.LogicOperator.OR && hasIsNull) {
-        canSkip = false;
-      }
-
-      out.put(rule.getRuleName(), new RulePreconditions(required, canSkip));
-    }
-    return new CandidateIndex(Collections.unmodifiableMap(out));
-  }
-
-  private Set<String> extractFieldDependencies(String fieldExpr) {
-    if (fieldExpr == null) return Set.of();
-    String raw = fieldExpr.trim();
-    if (raw.isEmpty()) return Set.of();
-
-    java.util.regex.Matcher unary =
-        java.util.regex.Pattern.compile("^(ABS|LEN|LOWER|UPPER|TRIM)\\(([A-Za-z0-9_]+)\\)$")
-            .matcher(raw);
-    if (unary.matches()) {
-      return Set.of(unary.group(2));
-    }
-
-    java.util.regex.Matcher absExpr =
-        java.util.regex.Pattern.compile("^ABS\\((.+)\\)$").matcher(raw);
-    if (absExpr.matches()) {
-      return extractDepsFromNumericExpr(absExpr.group(1));
-    }
-
-    java.util.regex.Matcher absDiff =
-        java.util.regex.Pattern.compile("^ABS_DIFF\\(([A-Za-z0-9_]+)\\s*,\\s*([A-Za-z0-9_]+)\\)$")
-            .matcher(raw);
-    if (absDiff.matches()) {
-      return Set.of(absDiff.group(1), absDiff.group(2));
-    }
-
-    java.util.regex.Matcher coalesce =
-        java.util.regex.Pattern.compile("^COALESCE\\(([A-Za-z0-9_]+)\\s*,\\s*(.+)\\)$")
-            .matcher(raw);
-    if (coalesce.matches()) {
-      return Set.of(coalesce.group(1));
-    }
-
-    return Set.of(raw);
-  }
-
-  private Set<String> extractDepsFromNumericExpr(String expr) {
-    if (expr == null) return Set.of();
-    String e = expr.trim();
-    if (e.isEmpty()) return Set.of();
-
-    int minus = indexOfTopLevelMinus(e);
-    if (minus > 0) {
-      String left = e.substring(0, minus).trim();
-      String right = e.substring(minus + 1).trim();
-      Set<String> out = new HashSet<>();
-      String a = depToken(left);
-      String b = depToken(right);
-      if (a != null) out.add(a);
-      if (b != null) out.add(b);
-      return out;
-    }
-
-    String single = depToken(e);
-    return single == null ? Set.of() : Set.of(single);
-  }
-
-  private String depToken(String token) {
-    if (token == null) return null;
-    String t = token.trim();
-    if (t.isEmpty()) return null;
-    try {
-      new BigDecimal(t);
-      return null;
-    } catch (Exception e) { // SEC-006 FIX
-      return t;
-    }
-  }
-
-  private record CandidateIndex(Map<String, RulePreconditions> byRuleName) {
-    static final CandidateIndex EMPTY = new CandidateIndex(Map.of());
-  }
-
-  private record RulePreconditions(Set<String> requiredFields, boolean canSkipWithMissingFields) {}
-
-  private record CandidateIndexSignature(int ruleCount, LocalDateTime maxUpdatedAt) {}
-
-  private record CandidateIndexCache(CandidateIndexSignature signature, CandidateIndex index) {}
-
-  private boolean evaluateCondition(TransactionRequest request, RuleConditionDTO condition) {
-    String operatorRaw = condition.getOperator() == null ? "" : condition.getOperator().trim();
-    String operator = conditionMatcher.normalizeOperator(operatorRaw);
-    String rawValue = condition.getValue() == null ? "" : condition.getValue();
-
-    Object leftValue = readComputedLeftValue(request, condition.getField());
-
-    // Operadores unários (não exigem value)
-    switch (operator) {
-      case "IS_NULL":
-        return leftValue == null;
-      case "IS_NOT_NULL":
-        return leftValue != null;
-      case "IS_TRUE":
-        return conditionMatcher.truthy(leftValue);
-      case "IS_FALSE":
-        return leftValue != null && !conditionMatcher.truthy(leftValue);
-      default:
-        // seguir
-    }
-
-    // Operadores que comparam com outro campo
-    switch (operator) {
-      case "GT_FIELD", "EQ_FIELD", "NE_FIELD", "GTE_FIELD", "LT_FIELD", "LTE_FIELD" -> {
-        Object rightValue = readComputedLeftValue(request, rawValue);
-        return compareFieldValues(leftValue, rightValue, operator);
-      }
-      case "PERCENTAGE_OF_FIELD" -> {
-        return evaluatePercentageOfField(leftValue, request, rawValue);
-      }
-      case "MODULO_ZERO" -> {
-        return evaluateModuloZero(leftValue, rawValue);
-      }
-      case "DECIMAL_PLACES_GT" -> {
-        return evaluateDecimalPlacesGt(leftValue, rawValue);
-      }
-      default -> {
-        // seguir
-      }
-    }
-
-    if (leftValue == null) {
-      return false;
-    }
-
-    if (leftValue instanceof Number || leftValue instanceof BigDecimal) {
-      BigDecimal left =
-          (leftValue instanceof BigDecimal)
-              ? (BigDecimal) leftValue
-              : new BigDecimal(leftValue.toString());
-      try {
-        return switch (operator) {
-          case "EQ" -> left.compareTo(new BigDecimal(rawValue)) == 0;
-          case "NE" -> left.compareTo(new BigDecimal(rawValue)) != 0;
-          case "GT" -> left.compareTo(new BigDecimal(rawValue)) > 0;
-          case "LT" -> left.compareTo(new BigDecimal(rawValue)) < 0;
-          case "GTE" -> left.compareTo(new BigDecimal(rawValue)) >= 0;
-          case "LTE" -> left.compareTo(new BigDecimal(rawValue)) <= 0;
-          case "IN" -> inListNumberFlexible(left, rawValue);
-          case "NOT_IN" -> !inListNumberFlexible(left, rawValue);
-          case "BETWEEN" -> betweenNumber(left, rawValue, true);
-          case "NOT_BETWEEN" -> !betweenNumber(left, rawValue, true);
-          default -> false;
-        };
-      } catch (Exception e) {
-        return false;
-      }
-    }
-
-    String left = String.valueOf(leftValue);
-    String right = unquote(rawValue);
-    return switch (operator) {
-      case "EQ" -> left.equals(right);
-      case "NE" -> !left.equals(right);
-      case "CONTAINS" -> left.contains(right);
-      case "NOT_CONTAINS" -> !left.contains(right);
-      case "STARTS_WITH" -> left.startsWith(right);
-      case "ENDS_WITH" -> left.endsWith(right);
-      case "MATCHES_REGEX" -> matchesRegex(left, rawValue);
-      case "IN" -> inListStringFlexible(left, rawValue);
-      case "NOT_IN" -> !inListStringFlexible(left, rawValue);
-      default -> false;
-    };
-  }
-
-  private boolean truthy(Object v) {
-    if (v == null) return false;
-    if (v instanceof Boolean b) return b;
-    if (v instanceof Number n) return n.intValue() != 0;
-    String s = String.valueOf(v).trim().toLowerCase(java.util.Locale.ROOT);
-    return s.equals("true") || s.equals("1") || s.equals("y") || s.equals("yes");
-  }
-
-  private String normalizeOperator(String raw) {
-    if (raw == null) return "";
-    String o = raw.trim();
-    // aceitar operadores simbólicos (compatibilidade com FE/legado)
-    return switch (o) {
-      case "==" -> "EQ";
-      case "!=" -> "NE";
-      case ">" -> "GT";
-      case "<" -> "LT";
-      case ">=" -> "GTE";
-      case "<=" -> "LTE";
-      case "IN_LIST" -> "IN";
-      case "NOT_IN_LIST" -> "NOT_IN";
-      case "NEQ_FIELD" -> "NE_FIELD";
-      default -> o.toUpperCase(java.util.Locale.ROOT);
-    };
-  }
-
-  private boolean compareFieldValues(Object leftValue, Object rightValue, String operator) {
-    if (leftValue == null || rightValue == null) {
-      return false;
-    }
-
-    if (leftValue instanceof Number
-        || leftValue instanceof BigDecimal
-        || rightValue instanceof Number
-        || rightValue instanceof BigDecimal) {
-      BigDecimal left = toBigDecimal(leftValue);
-      BigDecimal right = toBigDecimal(rightValue);
-      if (left == null || right == null) {
-        return false;
-      }
-      return switch (operator) {
-        case "GT_FIELD" -> left.compareTo(right) > 0;
-        case "GTE_FIELD" -> left.compareTo(right) >= 0;
-        case "LT_FIELD" -> left.compareTo(right) < 0;
-        case "LTE_FIELD" -> left.compareTo(right) <= 0;
-        case "EQ_FIELD" -> left.compareTo(right) == 0;
-        case "NE_FIELD" -> left.compareTo(right) != 0;
-        default -> false;
-      };
-    }
-
-    String left = String.valueOf(leftValue);
-    String right = String.valueOf(rightValue);
-    return switch (operator) {
-      case "EQ_FIELD" -> left.equals(right);
-      case "NE_FIELD" -> !left.equals(right);
-      case "GT_FIELD" -> left.compareTo(right) > 0;
-      case "GTE_FIELD" -> left.compareTo(right) >= 0;
-      case "LT_FIELD" -> left.compareTo(right) < 0;
-      case "LTE_FIELD" -> left.compareTo(right) <= 0;
-      default -> false;
-    };
-  }
-
-  private BigDecimal toBigDecimal(Object value) {
-    if (value == null) return null;
-    if (value instanceof BigDecimal bd) return bd;
-    try {
-      return new BigDecimal(String.valueOf(value));
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
-  private boolean evaluatePercentageOfField(
-      Object leftValue, TransactionRequest request, String rawValue) {
-    if (leftValue == null || rawValue == null || rawValue.isBlank()) {
-      return false;
-    }
-    String[] parts = rawValue.split(":");
-    if (parts.length < 2) {
-      return false;
-    }
-
-    String otherField = parts[0].trim();
-    BigDecimal min = parseBigDecimalSafe(parts[1]);
-    BigDecimal max = parts.length >= 3 ? parseBigDecimalSafe(parts[2]) : null;
-    if (min == null) {
-      return false;
-    }
-
-    Object otherValue = readComputedLeftValue(request, otherField);
-    BigDecimal left = toBigDecimal(leftValue);
-    BigDecimal right = toBigDecimal(otherValue);
-    if (left == null || right == null || right.compareTo(BigDecimal.ZERO) == 0) {
-      return false;
-    }
-
-    BigDecimal pct =
-        left.multiply(BigDecimal.valueOf(100)).divide(right, 6, java.math.RoundingMode.HALF_UP);
-    if (max == null) {
-      return pct.compareTo(min) >= 0;
-    }
-    return pct.compareTo(min) >= 0 && pct.compareTo(max) <= 0;
-  }
-
-  private BigDecimal parseBigDecimalSafe(String value) {
-    try {
-      return new BigDecimal(value.trim());
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
-  private boolean evaluateModuloZero(Object leftValue, String rawValue) {
-    BigDecimal left = toBigDecimal(leftValue);
-    BigDecimal divisor = parseBigDecimalSafe(rawValue == null ? "" : rawValue);
-    if (left == null || divisor == null || divisor.compareTo(BigDecimal.ZERO) == 0) {
-      return false;
-    }
-    return left.remainder(divisor).compareTo(BigDecimal.ZERO) == 0;
-  }
-
-  private boolean evaluateDecimalPlacesGt(Object leftValue, String rawValue) {
-    BigDecimal left = toBigDecimal(leftValue);
-    if (left == null) {
-      return false;
-    }
-    int threshold = 0;
-    try {
-      threshold = Integer.parseInt(rawValue.trim());
-    } catch (Exception e) {
-      return false;
-    }
-    String normalized = left.stripTrailingZeros().toPlainString();
-    int idx = normalized.indexOf('.');
-    int decimals = idx >= 0 ? normalized.length() - idx - 1 : 0;
-    return decimals > threshold;
-  }
-
-  private boolean betweenNumber(BigDecimal left, String raw, boolean inclusive) {
-    java.util.List<String> parts = parseListTokens(raw);
-    if (parts.size() < 2) {
-      // aceitar "min..max"
-      String s = raw == null ? "" : raw.trim();
-      if (s.contains("..")) {
-        String[] p = s.split("\\.\\.", 2);
-        parts = java.util.List.of(p[0].trim(), p[1].trim());
-      } else {
-        return false;
-      }
-    }
-    BigDecimal a = new BigDecimal(parts.get(0));
-    BigDecimal b = new BigDecimal(parts.get(1));
-    BigDecimal min = a.min(b);
-    BigDecimal max = a.max(b);
-    return inclusive
-        ? left.compareTo(min) >= 0 && left.compareTo(max) <= 0
-        : left.compareTo(min) > 0 && left.compareTo(max) < 0;
-  }
-
-  private boolean matchesRegex(String left, String rawRegex) {
-    // Usa RegexValidator para proteção contra ReDoS
-    return RegexValidator.safeFind(rawRegex, left);
-  }
-
-  private boolean inListNumberFlexible(BigDecimal left, String rawList) {
-    for (String token : parseListTokens(rawList)) {
-      if (token.isEmpty()) continue;
-      if (left.compareTo(new BigDecimal(token)) == 0) return true;
-    }
-    return false;
-  }
-
-  private boolean inListStringFlexible(String left, String rawList) {
-    for (String token : parseListTokens(rawList)) {
-      if (left.equals(token)) return true;
-    }
-    return false;
-  }
-
-  /** Aceita: - "a,b,c" - "[a,b,c]" - "['RU','CN']" - "[7995, 7994]" */
-  private java.util.List<String> parseListTokens(String raw) {
-    if (raw == null) return java.util.List.of();
-    String s = raw.trim();
-    if (s.startsWith("[") && s.endsWith("]") && s.length() >= 2) {
-      s = s.substring(1, s.length() - 1).trim();
-    }
-    if (s.isEmpty()) return java.util.List.of();
-    String[] tokens = s.split(",");
-    java.util.List<String> out = new java.util.ArrayList<>(tokens.length);
-    for (String t : tokens) {
-      String v = t == null ? "" : t.trim();
-      if ((v.startsWith("'") && v.endsWith("'")) || (v.startsWith("\"") && v.endsWith("\""))) {
-        v = v.substring(1, v.length() - 1);
-      }
-      out.add(v.trim());
-    }
-    return out;
-  }
-
-  private String unquote(String raw) {
-    if (raw == null) return "";
-    String v = raw.trim();
-    if ((v.startsWith("'") && v.endsWith("'")) || (v.startsWith("\"") && v.endsWith("\""))) {
-      if (v.length() >= 2) {
-        v = v.substring(1, v.length() - 1);
-      }
-    }
-    return v;
-  }
-
-  private String explainCondition(
-      TransactionRequest request, RuleConditionDTO condition, boolean result) {
-    Object fieldValue = readComputedLeftValue(request, condition.getField());
-    return condition.getField()
-        + " "
-        + condition.getOperator()
-        + " "
-        + condition.getValue()
-        + " (actual="
-        + fieldValue
-        + ") => "
-        + result;
-  }
-
-  private Object readComputedLeftValue(TransactionRequest request, String fieldExpr) {
-    if (fieldExpr == null) {
-      return null;
-    }
-    String raw = fieldExpr.trim();
-    if (raw.isEmpty()) {
-      return null;
-    }
-
-    // ABS(x)
-    java.util.regex.Matcher unary =
-        java.util.regex.Pattern.compile("^(ABS|LEN|LOWER|UPPER|TRIM)\\(([A-Za-z0-9_]+)\\)$")
-            .matcher(raw);
-    if (unary.matches()) {
-      String fn = unary.group(1);
-      String arg = unary.group(2);
-      Object base = readFieldValue(request, TransactionRequest.class, arg);
-      return applyUnary(fn, base);
-    }
-
-    // ABS(<expr>) onde <expr> pode ser "a-b" (compatível com FRAUDE_REGRAS_DURAS_EXPORT.yaml)
-    java.util.regex.Matcher absExpr =
-        java.util.regex.Pattern.compile("^ABS\\((.+)\\)$").matcher(raw);
-    if (absExpr.matches()) {
-      Object v = evalNumericExpression(request, absExpr.group(1));
-      return applyUnary("ABS", v);
-    }
-
-    // ABS_DIFF(a,b)
-    java.util.regex.Matcher absDiff =
-        java.util.regex.Pattern.compile("^ABS_DIFF\\(([A-Za-z0-9_]+)\\s*,\\s*([A-Za-z0-9_]+)\\)$")
-            .matcher(raw);
-    if (absDiff.matches()) {
-      Object a = readFieldValue(request, TransactionRequest.class, absDiff.group(1));
-      Object b = readFieldValue(request, TransactionRequest.class, absDiff.group(2));
-      return absDiff(a, b);
-    }
-
-    // COALESCE(field, literal)
-    java.util.regex.Matcher coalesce =
-        java.util.regex.Pattern.compile("^COALESCE\\(([A-Za-z0-9_]+)\\s*,\\s*(.+)\\)$")
-            .matcher(raw);
-    if (coalesce.matches()) {
-      Object base = readFieldValue(request, TransactionRequest.class, coalesce.group(1));
-      if (base != null) return base;
-      String literal = coalesce.group(2).trim();
-      if ((literal.startsWith("'") && literal.endsWith("'"))
-          || (literal.startsWith("\"") && literal.endsWith("\""))) {
-        literal = literal.substring(1, literal.length() - 1);
-      }
-      return literal;
-    }
-
-    return readFieldValue(request, TransactionRequest.class, raw);
-  }
-
-  private Object applyUnary(String fn, Object v) {
-    if (v == null) return null;
-    return switch (fn) {
-      case "ABS" -> {
-        try {
-          BigDecimal n =
-              (v instanceof BigDecimal) ? (BigDecimal) v : new BigDecimal(String.valueOf(v));
-          yield n.abs();
-        } catch (Exception e) {
-          yield null;
-        }
-      }
-      case "LEN" -> String.valueOf(v).length();
-      case "LOWER" -> String.valueOf(v).toLowerCase(java.util.Locale.ROOT);
-      case "UPPER" -> String.valueOf(v).toUpperCase(java.util.Locale.ROOT);
-      case "TRIM" -> String.valueOf(v).trim();
-      default -> v;
-    };
-  }
-
-  private Object absDiff(Object a, Object b) {
-    if (a == null || b == null) return null;
-    try {
-      BigDecimal na =
-          (a instanceof BigDecimal) ? (BigDecimal) a : new BigDecimal(String.valueOf(a));
-      BigDecimal nb =
-          (b instanceof BigDecimal) ? (BigDecimal) b : new BigDecimal(String.valueOf(b));
-      return na.subtract(nb).abs();
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
-  /**
-   * Avaliador mínimo de expressão numérica para o LHS (campo).
-   *
-   * <p>Objetivo: suportar padrão real do YAML: {@code ABS(atcCard - atcHost)}.
-   *
-   * <p>Suporta apenas: - literal numérico (ex.: "5", "10.2") - campo (property do
-   * TransactionRequest) - subtração binária: "a-b" com espaços opcionais
-   *
-   * <p>Se não conseguir avaliar, retorna null.
-   */
-  private Object evalNumericExpression(TransactionRequest request, String expr) {
-    if (expr == null) return null;
-    String e = expr.trim();
-    if (e.isEmpty()) return null;
-
-    int minus = indexOfTopLevelMinus(e);
-    if (minus > 0) {
-      String left = e.substring(0, minus).trim();
-      String right = e.substring(minus + 1).trim();
-      BigDecimal a = resolveToBigDecimal(request, left);
-      BigDecimal b = resolveToBigDecimal(request, right);
-      if (a == null || b == null) return null;
-      return a.subtract(b);
-    }
-
-    return resolveToBigDecimal(request, e);
-  }
-
-  private int indexOfTopLevelMinus(String e) {
-    // Evita confundir número negativo "-5" no primeiro char.
-    for (int i = 1; i < e.length(); i++) {
-      if (e.charAt(i) == '-') return i;
-    }
-    return -1;
-  }
-
-  private BigDecimal resolveToBigDecimal(TransactionRequest request, String token) {
-    if (token == null) return null;
-    String t = token.trim();
-    if (t.isEmpty()) return null;
-    try {
-      return new BigDecimal(t);
-    } catch (Exception e) { // SEC-006 FIX
-      // not a literal
-    }
-    Object v = readFieldValue(request, TransactionRequest.class, t);
-    if (v == null) return null;
-    try {
-      return (v instanceof BigDecimal) ? (BigDecimal) v : new BigDecimal(String.valueOf(v));
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
   /**
    * VELOCITY/state (janela temporal) baseado em persistência.
    *

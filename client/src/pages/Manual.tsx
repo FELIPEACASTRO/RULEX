@@ -9,7 +9,7 @@
  * - Estilo didático "Use a Cabeça"
  * - Dados 100% reais do código fonte
  */
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { 
   Search, 
   BookOpen, 
@@ -59,30 +59,25 @@ import {
   DECISION_TYPES,
   type NullBehavior,
 } from "@/manual/manualData";
-import { OperatorCatalog } from "@/manual/OperatorCatalog";
-import { FieldDictionary } from "@/manual/FieldDictionary";
-import { TemplatesGallery } from "@/manual/TemplatesGallery";
+// Lazy manual components
+const OperatorCatalog = lazy(() => import("@/manual/OperatorCatalog").then((m) => ({ default: m.OperatorCatalog })));
+const FieldDictionary = lazy(() => import("@/manual/FieldDictionary").then((m) => ({ default: m.FieldDictionary })));
+const TemplatesGallery = lazy(() => import("@/manual/TemplatesGallery").then((m) => ({ default: m.TemplatesGallery })));
+const ActionsCatalog = lazy(() => import("@/manual").then((m) => ({ default: m.ActionsCatalog })));
+const FunctionsCatalog = lazy(() => import("@/manual").then((m) => ({ default: m.FunctionsCatalog })));
+const ApiCatalog = lazy(() => import("@/manual").then((m) => ({ default: m.ApiCatalog })));
+const DbCatalog = lazy(() => import("@/manual").then((m) => ({ default: m.DbCatalog })));
+const SystemMap = lazy(() => import("@/manual").then((m) => ({ default: m.SystemMap })));
+const QaAndE2EGuide = lazy(() => import("@/manual").then((m) => ({ default: m.QaAndE2EGuide })));
+const InfraRunbook = lazy(() => import("@/manual").then((m) => ({ default: m.InfraRunbook })));
+const ComplexRulesGuide = lazy(() => import("@/manual").then((m) => ({ default: m.ComplexRulesGuide })));
+const RulesLibrary = lazy(() => import("@/manual").then((m) => ({ default: m.RulesLibrary })));
 
-// New manual components from generated data
-import { 
-  ActionsCatalog, 
-  FunctionsCatalog, 
-  ApiCatalog, 
-  DbCatalog, 
-  SystemMap, 
-  QaAndE2EGuide,
-  InfraRunbook,
-  ComplexRulesGuide,
-  RulesLibrary,
-  RULES_LIBRARY_STATS,
-} from "@/manual";
+import { RULES_LIBRARY_STATS } from "@/manual/data/rulesLibraryStats";
 
-import {
-  BACKEND_ACTIONS,
-  EXPRESSION_FUNCTIONS,
-  API_ENDPOINTS,
-} from "@/manual/generated";
-import { RULES_LIBRARY } from "@/manual/RulesLibrary";
+const ManualTabFallback = () => (
+  <div className="text-sm text-muted-foreground">Carregando conteúdo…</div>
+);
 
 // ============================================================================
 // TAB: VISÃO GERAL
@@ -637,11 +632,15 @@ function OperationsTab() {
 function ActionsTab({ highlightTemplateId }: { highlightTemplateId?: string }) {
   return (
     <div className="space-y-8">
-      <TemplatesGallery highlightTemplateId={highlightTemplateId} />
+      <Suspense fallback={<ManualTabFallback />}>
+        <TemplatesGallery highlightTemplateId={highlightTemplateId} />
+      </Suspense>
 
       <div className="border-t pt-6" />
 
-      <RulesLibrary />
+      <Suspense fallback={<ManualTabFallback />}>
+        <RulesLibrary />
+      </Suspense>
     </div>
   );
 }
@@ -836,6 +835,53 @@ function GlobalSearch({
   onSelect: (result: GlobalSearchResult) => void;
 }) {
   const [query, setQuery] = useState("");
+  const [rulesLibrary, setRulesLibrary] = useState<
+    Array<{
+      id: string;
+      name: string;
+      tags: string[];
+      narrativa: { situacao: string };
+      complexity: string;
+      category: string;
+    }>
+  >([]);
+  const [backendActions, setBackendActions] = useState<Array<{ name: string; description?: string }>>([]);
+  const [expressionFunctions, setExpressionFunctions] = useState<
+    Array<{ name: string; alias?: string; description?: string; example?: string }>
+  >([]);
+  const [apiEndpoints, setApiEndpoints] = useState<
+    Array<{ method: string; path: string; summary?: string; operationId?: string }>
+  >([]);
+
+  useEffect(() => {
+    if (!query.trim() || rulesLibrary.length > 0) return;
+    let active = true;
+    import("@/manual/data/rulesLibraryData").then((mod) => {
+      if (active) {
+        setRulesLibrary(mod.RULES_LIBRARY ?? []);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [query, rulesLibrary.length]);
+
+  useEffect(() => {
+    if (!query.trim() || backendActions.length > 0 || expressionFunctions.length > 0 || apiEndpoints.length > 0) {
+      return;
+    }
+    let active = true;
+    import("@/manual/generated").then((mod) => {
+      if (active) {
+        setBackendActions(mod.BACKEND_ACTIONS ?? []);
+        setExpressionFunctions(mod.EXPRESSION_FUNCTIONS ?? []);
+        setApiEndpoints(mod.API_ENDPOINTS ?? []);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [query, backendActions.length, expressionFunctions.length, apiEndpoints.length]);
 
   const results = useMemo((): GlobalSearchResult[] => {
     if (!query.trim() || query.length < 2) return [];
@@ -882,7 +928,7 @@ function GlobalSearch({
     });
 
     // Buscar em ações
-    BACKEND_ACTIONS.forEach((a) => {
+    backendActions.forEach((a) => {
       const hay = `${a.name} ${a.description || ""}`.toLowerCase();
       if (hay.includes(q)) {
         matches.push({
@@ -895,7 +941,7 @@ function GlobalSearch({
     });
 
     // Buscar em funções
-    EXPRESSION_FUNCTIONS.forEach((fn) => {
+    expressionFunctions.forEach((fn) => {
       const hay = `${fn.name} ${fn.alias || ""} ${fn.description || ""} ${fn.example || ""}`.toLowerCase();
       if (hay.includes(q)) {
         matches.push({
@@ -908,7 +954,7 @@ function GlobalSearch({
     });
 
     // Buscar em endpoints
-    API_ENDPOINTS.forEach((ep) => {
+    apiEndpoints.forEach((ep) => {
       const hay = `${ep.method} ${ep.path} ${ep.summary || ""} ${ep.operationId || ""}`.toLowerCase();
       if (hay.includes(q)) {
         matches.push({
@@ -921,7 +967,7 @@ function GlobalSearch({
     });
 
     // Buscar em exemplos (biblioteca)
-    RULES_LIBRARY.forEach((rule) => {
+    rulesLibrary.forEach((rule) => {
       const hay = `${rule.id} ${rule.name} ${rule.tags.join(" ")} ${rule.narrativa.situacao}`.toLowerCase();
       if (hay.includes(q)) {
         matches.push({
@@ -1173,11 +1219,15 @@ export default function Manual() {
         </TabsContent>
 
         <TabsContent value="mapa">
-          <SystemMap />
+          <Suspense fallback={<ManualTabFallback />}>
+            <SystemMap />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="infra">
-          <InfraRunbook />
+          <Suspense fallback={<ManualTabFallback />}>
+            <InfraRunbook />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="fluxo">
@@ -1185,9 +1235,11 @@ export default function Manual() {
         </TabsContent>
 
         <TabsContent value="payload">
-          <FieldDictionary
-            highlightField={highlight?.type === "field" ? highlight.value : undefined}
-          />
+          <Suspense fallback={<ManualTabFallback />}>
+            <FieldDictionary
+              highlightField={highlight?.type === "field" ? highlight.value : undefined}
+            />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="regras">
@@ -1195,23 +1247,31 @@ export default function Manual() {
         </TabsContent>
 
         <TabsContent value="regras-complexas">
-          <ComplexRulesGuide />
+          <Suspense fallback={<ManualTabFallback />}>
+            <ComplexRulesGuide />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="operadores">
-          <OperatorCatalog
-            highlightOperator={
-              highlight?.type === "operator" ? highlight.value : undefined
-            }
-          />
+          <Suspense fallback={<ManualTabFallback />}>
+            <OperatorCatalog
+              highlightOperator={
+                highlight?.type === "operator" ? highlight.value : undefined
+              }
+            />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="funcoes">
-          <FunctionsCatalog />
+          <Suspense fallback={<ManualTabFallback />}>
+            <FunctionsCatalog />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="acoes">
-          <ActionsCatalog />
+          <Suspense fallback={<ManualTabFallback />}>
+            <ActionsCatalog />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="operacoes">
@@ -1219,11 +1279,15 @@ export default function Manual() {
         </TabsContent>
 
         <TabsContent value="api">
-          <ApiCatalog />
+          <Suspense fallback={<ManualTabFallback />}>
+            <ApiCatalog />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="banco">
-          <DbCatalog />
+          <Suspense fallback={<ManualTabFallback />}>
+            <DbCatalog />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="exemplos">
@@ -1235,7 +1299,9 @@ export default function Manual() {
         </TabsContent>
 
         <TabsContent value="qa">
-          <QaAndE2EGuide />
+          <Suspense fallback={<ManualTabFallback />}>
+            <QaAndE2EGuide />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="faq">
