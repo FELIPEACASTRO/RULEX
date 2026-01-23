@@ -54,21 +54,33 @@ public class RuleEngineConditionHelper {
     // Operadores numéricos
     if (leftValue instanceof Number || isNumericString(leftValue)) {
       BigDecimal left = toBigDecimal(leftValue);
-      BigDecimal right = toBigDecimal(rawValue);
+      if (left == null) {
+        return false;
+      }
       return switch (operator) {
-        case "GT" -> left.compareTo(right) > 0;
-        case "GTE" -> left.compareTo(right) >= 0;
-        case "LT" -> left.compareTo(right) < 0;
-        case "LTE" -> left.compareTo(right) <= 0;
-        case "EQ" -> left.compareTo(right) == 0;
-        case "NE" -> left.compareTo(right) != 0;
         case "IN" -> inListNumberFlexible(left, rawValue);
         case "NOT_IN" -> !inListNumberFlexible(left, rawValue);
         case "BETWEEN" -> betweenNumber(left, rawValue, true);
         case "NOT_BETWEEN" -> !betweenNumber(left, rawValue, true);
-        case "PERCENT_OF" -> evaluatePercentageOfField(leftValue, request, rawValue);
+        case "PERCENTAGE_OF_FIELD", "PERCENT_OF" ->
+            evaluatePercentageOfField(leftValue, request, rawValue);
         case "MODULO_ZERO" -> evaluateModuloZero(leftValue, rawValue);
         case "DECIMAL_PLACES_GT" -> evaluateDecimalPlacesGt(leftValue, rawValue);
+        case "GT", "GTE", "LT", "LTE", "EQ", "NE" -> {
+          BigDecimal right = toBigDecimal(rawValue);
+          if (right == null) {
+            yield false;
+          }
+          yield switch (operator) {
+            case "GT" -> left.compareTo(right) > 0;
+            case "GTE" -> left.compareTo(right) >= 0;
+            case "LT" -> left.compareTo(right) < 0;
+            case "LTE" -> left.compareTo(right) <= 0;
+            case "EQ" -> left.compareTo(right) == 0;
+            case "NE" -> left.compareTo(right) != 0;
+            default -> false;
+          };
+        }
         default -> false;
       };
     }

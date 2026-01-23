@@ -43,6 +43,20 @@ A UI usa proxy de `/api` para o backend (configurado em `vite.config.ts`).
 - **Build estrito**: compilação com `-Werror` e lint (`-Xlint:all,-processing`) no backend.
 - **Logs/erros**: mensagens em PT‑BR e sem vazamento de dados sensíveis no retorno ao cliente.
 
+### Retenção de dados
+
+Rotinas diárias de limpeza são configuráveis via `application.yml`:
+
+- `rulex.access-log.retention-days` (logs de acesso)
+- `rulex.retention.audit-log-days` (audit logs)
+- `rulex.retention.decision-days` (decisões)
+- `rulex.retention.raw-payload-days` (payloads brutos)
+- `rulex.retention.homolog-audit-days` (audit homolog)
+- `rulex.retention.homolog-decision-days` (decision log homolog)
+- `rulex.retention.rule-exec-details-days` (detalhes de execução)
+
+Cada rotina possui a flag `*-cleanup-enabled` correspondente.
+
 ## SOLID
 
 - **S**: classes de use case focam em fluxo/regra; adapters focam em integração.
@@ -89,8 +103,8 @@ O relatório HTML fica em `backend/target/site/jacoco/index.html`.
 
 ### Arquitetura de Operadores
 
-O sistema possui **496 operadores** distribuídos em:
-- 43 classes de evaluators em `/evaluation/`
+O sistema possui **82 operadores** definidos no enum `ConditionOperator`, distribuídos em:
+- 33 classes de evaluators em `/evaluation/`
 - 32 classes de evaluators em `/evaluator/`
 - Registry centralizado: `OperatorEvaluatorRegistry`
 

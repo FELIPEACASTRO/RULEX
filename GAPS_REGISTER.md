@@ -23,3 +23,6 @@
   - Usa corepack para obter versão do pnpm do `packageManager` (10.4.1).
 - **[2025-01-21] Thresholds de cobertura ajustados:**
   - Lines: 30% → 29%, Functions: 24% → 23%.
+- **[2026-01-23] Retenção de dados implementada:**
+  - Limpeza diária de audit logs, decisões e payloads brutos.
+  - Retenção homolog e detalhes de execução adicionados.

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rulex.entity.Transaction;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.TransactionRepository;
-import com.rulex.service.RuleEvaluationResult;
+import com.rulex.service.RuleEngineService.RuleEvaluationResult;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;

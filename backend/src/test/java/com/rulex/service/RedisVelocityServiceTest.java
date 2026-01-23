@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * Testes para o RedisVelocityService.
@@ -36,10 +37,11 @@ class RedisVelocityServiceTest {
   @BeforeEach
   void setUp() {
     velocityService = Mockito.mock(VelocityService.class);
+    StringRedisTemplate redisTemplate = Mockito.mock(StringRedisTemplate.class);
     doNothing()
         .when(velocityService)
         .logTransaction(any(TransactionRequest.class), anyString(), anyInt());
-    redisVelocityService = new RedisVelocityService(velocityService);
+    redisVelocityService = new RedisVelocityService(velocityService, redisTemplate, false);
   }
 
   @Nested

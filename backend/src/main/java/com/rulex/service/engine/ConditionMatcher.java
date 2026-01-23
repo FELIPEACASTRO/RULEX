@@ -244,11 +244,13 @@ public class ConditionMatcher {
     if (raw == null) return "EQ";
     return switch (raw.toUpperCase().trim()) {
       case "=", "==", "EQUALS" -> "EQ";
-      case "!=", "<>", "NOT_EQUALS" -> "NEQ";
+      case "!=", "<>", "NOT_EQUALS", "NEQ" -> "NE";
       case ">", "GREATER_THAN" -> "GT";
       case ">=", "GREATER_THAN_OR_EQUAL" -> "GTE";
       case "<", "LESS_THAN" -> "LT";
       case "<=", "LESS_THAN_OR_EQUAL" -> "LTE";
+      case "IN_LIST" -> "IN";
+      case "NOT_IN_LIST" -> "NOT_IN";
       default -> raw.toUpperCase().trim();
     };
   }

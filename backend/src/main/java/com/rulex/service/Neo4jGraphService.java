@@ -1,6 +1,7 @@
 package com.rulex.service;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,10 +67,10 @@ public class Neo4jGraphService {
       try {
         Config config =
             Config.builder()
-                .withConnectionTimeout(Duration.ofMillis(connectionTimeoutMs))
-                .withConnectionAcquisitionTimeout(Duration.ofMillis(acquisitionTimeoutMs))
+            .withConnectionTimeout(connectionTimeoutMs, TimeUnit.MILLISECONDS)
+            .withConnectionAcquisitionTimeout(acquisitionTimeoutMs, TimeUnit.MILLISECONDS)
                 .withMaxConnectionPoolSize(maxPoolSize)
-                .withMaxConnectionLifetime(Duration.ofMillis(maxConnectionLifetimeMs))
+            .withMaxConnectionLifetime(maxConnectionLifetimeMs, TimeUnit.MILLISECONDS)
                 .build();
         tempDriver = GraphDatabase.driver(uri, AuthTokens.basic(username, password), config);
         // Testar conexão sem bloquear startup

@@ -15,7 +15,7 @@ O RULEX é um **motor de regras determinísticas** para detecção de fraude em 
 | Camada | Tecnologia | Versão |
 |--------|------------|--------|
 | Backend | Java + Spring Boot | 21 / 3.5.9 |
-| Frontend | React + TypeScript + Vite | 18.x / 5.x |
+| Frontend | React + TypeScript + Vite | 19.2.1 / 7.1.7 |
 | Banco de Dados | PostgreSQL | 16.x |
 | Migrations | Flyway | 11.20.0 |
 | Testes | JUnit 5 + Testcontainers + Playwright | - |

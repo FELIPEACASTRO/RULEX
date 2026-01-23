@@ -10,7 +10,8 @@ const repoRoot = path.resolve(scriptDir, "..");
 const backendPath = path.join(repoRoot, "backend");
 const mavenArgs = process.argv.slice(2);
 const args = mavenArgs.length > 0 ? mavenArgs : ["test"];
-const mvnCommand = process.platform === "win32" ? "mvn.cmd" : "mvn";
+const mvnCommand =
+  process.env.MAVEN_CMD || (process.platform === "win32" ? "mvn.cmd" : "mvn");
 
 if (!existsSync(backendPath)) {
   console.error("Backend folder not found:", backendPath);
@@ -42,6 +43,7 @@ try {
   const result = spawnSync(mvnCommand, ["-q", ...args], {
     cwd: tempBackendPath,
     stdio: "inherit",
+    shell: process.platform === "win32",
     env: {
       ...process.env,
       SPRING_PROFILES_ACTIVE: "test",

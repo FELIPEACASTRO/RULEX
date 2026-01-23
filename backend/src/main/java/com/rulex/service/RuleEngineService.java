@@ -524,7 +524,7 @@ public class RuleEngineService {
     for (RuleConfiguration rule : decisionRules) {
       RuleCandidateIndexHelper.RulePreconditions pre =
           index.byRuleName().get(rule.getRuleName());
-      if (pre != null && pre.canSkipWithMissingFields && !hasAllRequiredFields(request, pre)) {
+      if (pre != null && pre.canSkipWithMissingFields() && !hasAllRequiredFields(request, pre)) {
         // Maintain parity with existing scoreDetails shape.
         scoreDetails.put(rule.getRuleName(), Map.of("triggered", false));
         continue;

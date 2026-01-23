@@ -16,6 +16,7 @@ import com.rulex.service.StringSimilarityService;
 import com.rulex.service.VelocityService;
 import com.rulex.service.VelocityServiceFacade;
 import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
+import com.rulex.service.complex.evaluation.ConditionGroupEvaluator;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
@@ -43,6 +44,7 @@ class ComplexRuleEvaluatorTest {
   private FuzzyLogicService fuzzyLogicService;
   private StringSimilarityService stringSimilarityService;
   private OperatorEvaluatorRegistry operatorEvaluatorRegistry;
+  private ConditionGroupEvaluator conditionGroupEvaluator;
   private ComplexRuleEvaluator evaluator;
 
   @BeforeEach
@@ -57,6 +59,7 @@ class ComplexRuleEvaluatorTest {
     stringSimilarityService = Mockito.mock(StringSimilarityService.class);
     // ARCH-001 FIX: Adicionado mock do OperatorEvaluatorRegistry
     operatorEvaluatorRegistry = new OperatorEvaluatorRegistry(Collections.emptyList());
+    conditionGroupEvaluator = new ConditionGroupEvaluator();
     evaluator =
         new ComplexRuleEvaluator(
             velocityServiceFacade,
@@ -65,7 +68,8 @@ class ComplexRuleEvaluatorTest {
             statisticalAnalysisService,
             fuzzyLogicService,
             stringSimilarityService,
-            operatorEvaluatorRegistry);
+        operatorEvaluatorRegistry,
+        conditionGroupEvaluator);
   }
 
   @Nested

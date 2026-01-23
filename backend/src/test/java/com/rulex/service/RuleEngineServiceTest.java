@@ -17,6 +17,15 @@ import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.repository.TransactionDecisionRepository;
 import com.rulex.repository.TransactionRepository;
+import com.rulex.service.engine.ConditionMatcher;
+import com.rulex.service.engine.ContractValidationHelper;
+import com.rulex.service.engine.RuleCandidateIndexHelper;
+import com.rulex.service.engine.RuleEngineConditionHelper;
+import com.rulex.service.engine.RuleEngineDecisionHelper;
+import com.rulex.service.engine.RuleEngineLegacyRuleHelper;
+import com.rulex.service.engine.RuleEnginePrecheckHelper;
+import com.rulex.service.engine.RuleEngineResponseBuilder;
+import com.rulex.service.engine.ShadowRuleExecutionHelper;
 import com.rulex.v31.execlog.RuleExecutionLogService;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -67,7 +76,7 @@ class RuleEngineServiceTest {
   private final RuleOrderingService ruleOrderingService = Mockito.mock(RuleOrderingService.class);
 
   private final BloomFilterService bloomFilterService = Mockito.mock(BloomFilterService.class);
-  private final ShadowModeService shadowModeService = Mockito.mock(ShadowModeService.class);
+    private final ShadowModeService shadowModeService = Mockito.mock(ShadowModeService.class);
   private final ImpossibleTravelService impossibleTravelService =
       Mockito.mock(ImpossibleTravelService.class);
   private final GeoService geoService = Mockito.mock(GeoService.class);
@@ -76,8 +85,25 @@ class RuleEngineServiceTest {
   private final com.rulex.service.enrichment.TransactionEnrichmentFacade
       transactionEnrichmentFacade = createMockEnrichmentFacade();
   // Usar instância real ao invés de mock - ConditionMatcher é stateless e não tem dependências
-  private final com.rulex.service.engine.ConditionMatcher conditionMatcher =
-      new com.rulex.service.engine.ConditionMatcher();
+    private final ConditionMatcher conditionMatcher = new ConditionMatcher();
+
+    private final RuleEngineResponseBuilder responseBuilder =
+      new RuleEngineResponseBuilder(
+        decisionRepository, ruleConfigRepository, ruleExecutionLogService, objectMapper, clock);
+    private final RuleEngineConditionHelper conditionHelper =
+      new RuleEngineConditionHelper(conditionMatcher);
+    private final ContractValidationHelper contractValidationHelper =
+      new ContractValidationHelper(objectMapper, ruleExecutionLogService, clock);
+    private final RuleEngineDecisionHelper decisionHelper =
+      new RuleEngineDecisionHelper(transactionRepository, objectMapper, clock);
+    private final RuleEnginePrecheckHelper precheckHelper =
+      new RuleEnginePrecheckHelper(bloomFilterService, impossibleTravelService, geoService);
+    private final ShadowRuleExecutionHelper shadowRuleExecutionHelper =
+      new ShadowRuleExecutionHelper(shadowModeService);
+    private final RuleEngineLegacyRuleHelper legacyRuleHelper =
+      new RuleEngineLegacyRuleHelper(enrichmentService);
+    private final RuleCandidateIndexHelper candidateIndexHelper =
+      new RuleCandidateIndexHelper(objectMapper, conditionMatcher);
 
   private final RuleEngineService service =
       new RuleEngineService(
@@ -93,12 +119,19 @@ class RuleEngineServiceTest {
           enrichmentService,
           ruleOrderingService,
           transactionEnrichmentFacade,
-          bloomFilterService,
-          shadowModeService,
-          impossibleTravelService,
-          geoService,
-          redisVelocityService,
-          conditionMatcher);
+        responseBuilder,
+        conditionHelper,
+        contractValidationHelper,
+        decisionHelper,
+        precheckHelper,
+        shadowRuleExecutionHelper,
+        legacyRuleHelper,
+        candidateIndexHelper,
+        bloomFilterService,
+        impossibleTravelService,
+        geoService,
+        redisVelocityService,
+        conditionMatcher);
 
   @Test
   void returnsApproved_whenNoEnabledRules() {
