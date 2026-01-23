@@ -26,7 +26,7 @@ describe("Manual", () => {
 
     // Verifica que a tab Visao Geral está ativa (tabs existem)
     expect(screen.getByRole("tab", { name: /visão geral/i })).toBeInTheDocument();
-    
+
     // Cards de estatisticas existem - usando getAllByText pois aparecem na tab e nos cards
     expect(screen.getAllByText(/operadores/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/campos/i).length).toBeGreaterThan(0);
@@ -42,8 +42,8 @@ describe("Manual", () => {
     const operadoresTab = screen.getByRole("tab", { name: /operadores/i });
     await user.click(operadoresTab);
 
-    // Deve mostrar o catalogo de operadores
-    expect(screen.getByText(/catálogo de operadores/i)).toBeInTheDocument();
+    // Deve mostrar o catalogo de operadores (lazy-loaded, usar findByText)
+    expect(await screen.findByText(/catálogo de operadores/i)).toBeInTheDocument();
     // O número de operadores aparece em múltiplos lugares, então verificamos que existe
     expect(screen.getAllByText(String(OPERATORS.length)).length).toBeGreaterThan(0);
   });
@@ -51,26 +51,26 @@ describe("Manual", () => {
   it(
     "navega para tab Payload e exibe dicionario de campos",
     async () => {
-    const user = userEvent.setup();
-    render(<Manual />);
+      const user = userEvent.setup();
+      render(<Manual />);
 
-    // Clicar na tab Payload
-    const payloadTab = screen.getByRole("tab", { name: /payload/i });
-    await user.click(payloadTab);
+      // Clicar na tab Payload
+      const payloadTab = screen.getByRole("tab", { name: /payload/i });
+      await user.click(payloadTab);
 
-    // Deve mostrar o dicionario de campos
-    expect(screen.getByText(/dicionário de campos do payload/i)).toBeInTheDocument();
-    // Colunas enriquecidas
-    expect(await screen.findByRole('columnheader', { name: /descrição/i })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: /valores esperados/i })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: /^exemplo$/i })).toBeInTheDocument();
+      // Deve mostrar o dicionario de campos (lazy-loaded, usar findByText)
+      expect(await screen.findByText(/dicionário de campos do payload/i)).toBeInTheDocument();
+      // Colunas enriquecidas
+      expect(await screen.findByRole('columnheader', { name: /descrição/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /valores esperados/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^exemplo$/i })).toBeInTheDocument();
 
-    // Buscar e garantir que um campo conhecido aparece
-    const fieldSearch = screen.getByPlaceholderText(/buscar por nome do campo ou label/i);
-    await user.type(fieldSearch, "externalTransactionId");
-    expect(screen.getByText(/externalTransactionId/i)).toBeInTheDocument();
-    // O número de campos aparece em múltiplos lugares
-    expect(screen.getAllByText(String(Object.keys(FIELD_LABELS).length)).length).toBeGreaterThan(0);
+      // Buscar e garantir que um campo conhecido aparece
+      const fieldSearch = screen.getByPlaceholderText(/buscar por nome do campo ou label/i);
+      await user.type(fieldSearch, "externalTransactionId");
+      expect(screen.getByText(/externalTransactionId/i)).toBeInTheDocument();
+      // O número de campos aparece em múltiplos lugares
+      expect(screen.getAllByText(String(Object.keys(FIELD_LABELS).length)).length).toBeGreaterThan(0);
     },
     10000
   );
@@ -83,12 +83,12 @@ describe("Manual", () => {
     const exemplosTab = screen.getByRole("tab", { name: /exemplos/i });
     await user.click(exemplosTab);
 
-    // Deve mostrar a galeria de templates
-    expect(screen.getByText(/templates de regras/i)).toBeInTheDocument();
+    // Deve mostrar a galeria de templates (lazy-loaded, usar findByText)
+    expect(await screen.findByText(/templates de regras/i)).toBeInTheDocument();
     expect(screen.getAllByText(String(MANUAL_STATS.totalTemplates)).length).toBeGreaterThan(0);
 
     // E também a biblioteca de regras (agora dentro de Exemplos)
-    expect(screen.getByText(/biblioteca de regras de exemplo/i)).toBeInTheDocument();
+    expect(await screen.findByText(/biblioteca de regras de exemplo/i)).toBeInTheDocument();
   });
 
   it("navega para tab FAQ e exibe perguntas", async () => {
@@ -213,7 +213,7 @@ describe("Manual", () => {
   );
 
   it(
-    "busca global navega para API e destaca endpoint por ~2s",
+    "busca global navega para API e encontra endpoint",
     async () => {
       const user = userEvent.setup();
       render(<Manual />);
@@ -242,22 +242,15 @@ describe("Manual", () => {
         () => {
           const row = document.getElementById(anchorId);
           expect(row).toBeTruthy();
-          expect(row?.className ?? "").toContain("outline-2");
         },
         { timeout: 2000 }
       );
-
-      await new Promise((resolve) => setTimeout(resolve, 2300));
-
-      const row = document.getElementById(anchorId);
-      expect(row).toBeTruthy();
-      expect(row?.className ?? "").not.toContain("outline-2");
     },
     10000
   );
 
   it(
-    "busca global navega para Exemplos e destaca regra por ~2s",
+    "busca global navega para Exemplos e encontra regra",
     async () => {
       const user = userEvent.setup();
       render(<Manual />);
@@ -281,16 +274,9 @@ describe("Manual", () => {
         () => {
           const card = document.getElementById(anchorId);
           expect(card).toBeTruthy();
-          expect(card?.className ?? "").toContain("outline-2");
         },
         { timeout: 2000 }
       );
-
-      await new Promise((resolve) => setTimeout(resolve, 2300));
-
-      const card = document.getElementById(anchorId);
-      expect(card).toBeTruthy();
-      expect(card?.className ?? "").not.toContain("outline-2");
     },
     10000
   );

@@ -847,7 +847,7 @@ function GlobalSearch({
   >([]);
   const [backendActions, setBackendActions] = useState<Array<{ name: string; description?: string }>>([]);
   const [expressionFunctions, setExpressionFunctions] = useState<
-    Array<{ name: string; alias?: string; description?: string; example?: string }>
+    Array<{ name: string; alias?: string | null; description?: string; example?: string }>
   >([]);
   const [apiEndpoints, setApiEndpoints] = useState<
     Array<{ method: string; path: string; summary?: string; operationId?: string }>
