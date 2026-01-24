@@ -140,14 +140,10 @@ export const OPERATORS: OperatorOption[] = [
   { value: 'VELOCITY_AVG_LT', label: 'VELOCITY AVG <', description: 'Média < (keyType,minutes,threshold)' },
   { value: 'VELOCITY_DISTINCT_GT', label: 'VELOCITY DISTINCT >', description: 'Distintos > (keyType,minutes,type,threshold)' },
   { value: 'VELOCITY_DISTINCT_LT', label: 'VELOCITY DISTINCT <', description: 'Distintos < (keyType,minutes,type,threshold)' },
-  // ========== Legacy (mantidos para compatibilidade) ==========
-  { value: 'NE', label: '!= (legacy)', description: 'Use NEQ' },
-  { value: 'MATCHES_REGEX', label: 'REGEX (legacy)', description: 'Use REGEX' },
-  { value: 'IS_NOT_NULL', label: 'NOT NULL (legacy)', description: 'Use NOT_NULL', requiresValue: false },
 ];
 
 // Operadores que não requerem valor
-export const UNARY_OPERATORS: ConditionOperator[] = ['IS_NULL', 'NOT_NULL', 'IS_NOT_NULL', 'IS_TRUE', 'IS_FALSE'];
+export const UNARY_OPERATORS: ConditionOperator[] = ['IS_NULL', 'NOT_NULL', 'IS_TRUE', 'IS_FALSE'];
 
 // Operadores que requerem referência a outro campo
 export const FIELD_REF_OPERATORS: ConditionOperator[] = ['FIELD_EQ', 'FIELD_NEQ', 'FIELD_GT', 'FIELD_GTE', 'FIELD_LT', 'FIELD_LTE'];

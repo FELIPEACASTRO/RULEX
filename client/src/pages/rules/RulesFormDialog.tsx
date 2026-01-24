@@ -287,7 +287,7 @@ export function RulesFormDialog({
 
                 const baseOps: RuleConfiguration['conditions'][number]['operator'][] = [
                   'EQ',
-                  'NE',
+                  'NEQ',
                   'GT',
                   'LT',
                   'GTE',
@@ -300,9 +300,9 @@ export function RulesFormDialog({
                   'NOT_CONTAINS',
                   'STARTS_WITH',
                   'ENDS_WITH',
-                  'MATCHES_REGEX',
+                  'REGEX',
                   'IS_NULL',
-                  'IS_NOT_NULL',
+                  'NOT_NULL',
                   'IS_TRUE',
                   'IS_FALSE',
                 ];
@@ -319,18 +319,18 @@ export function RulesFormDialog({
                             'NOT_CONTAINS',
                             'STARTS_WITH',
                             'ENDS_WITH',
-                            'MATCHES_REGEX',
+                            'REGEX',
                           ].includes(o),
                       )
                     : typeForField === 'boolean'
-                      ? baseOps.filter((o) => ['IS_TRUE', 'IS_FALSE', 'IS_NULL', 'IS_NOT_NULL'].includes(o))
+                      ? baseOps.filter((o) => ['IS_TRUE', 'IS_FALSE', 'IS_NULL', 'NOT_NULL'].includes(o))
                       : baseOps;
                 const ops = opsFromCatalog ?? opsFallback;
-                const isUnary = ['IS_NULL', 'IS_NOT_NULL', 'IS_TRUE', 'IS_FALSE'].includes(c.operator);
+                const isUnary = ['IS_NULL', 'NOT_NULL', 'IS_TRUE', 'IS_FALSE'].includes(c.operator);
                 const operatorLabel = (op: string) => {
                   const map: Record<string, string> = {
                     EQ: '== (EQ)',
-                    NE: '!= (NE)',
+                    NEQ: '!= (NEQ)',
                     GT: '> (GT)',
                     LT: '< (LT)',
                     GTE: '>= (GTE)',
@@ -343,17 +343,12 @@ export function RulesFormDialog({
                     NOT_CONTAINS: 'NOT CONTAINS',
                     STARTS_WITH: 'STARTS WITH',
                     ENDS_WITH: 'ENDS WITH',
-                    MATCHES_REGEX: 'MATCHES REGEX',
+                    REGEX: 'REGEX',
+                    NOT_REGEX: 'NOT REGEX',
                     IS_NULL: 'IS NULL',
-                    IS_NOT_NULL: 'IS NOT NULL',
+                    NOT_NULL: 'NOT NULL',
                     IS_TRUE: 'IS TRUE',
                     IS_FALSE: 'IS FALSE',
-                    '==': '==',
-                    '!=': '!=',
-                    '>': '>',
-                    '<': '<',
-                    '>=': '>=',
-                    '<=': '<=',
                   };
                   return map[op] ?? op;
                 };
@@ -405,7 +400,7 @@ export function RulesFormDialog({
                             ...next[idx],
                             operator: e.target.value as RuleConfiguration['conditions'][number]['operator'],
                             // Operadores unários não usam value.
-                            value: ['IS_NULL', 'IS_NOT_NULL', 'IS_TRUE', 'IS_FALSE'].includes(e.target.value)
+                            value: ['IS_NULL', 'NOT_NULL', 'IS_TRUE', 'IS_FALSE'].includes(e.target.value)
                               ? ''
                               : next[idx].value,
                           };

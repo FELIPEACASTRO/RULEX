@@ -228,26 +228,26 @@ describe('Schema de Regras - Testes Adversariais', () => {
   // ============================================
   describe('REG - Regex Maliciosas', () => {
     it('REG-01: regex inválida deve retornar erro', () => {
-      const error = validateValueByOperator('MATCHES_REGEX', '[');
+      const error = validateValueByOperator('REGEX', '[');
       expect(error).not.toBeNull();
       expect(error).toContain('inválida');
     });
 
     it('REG-02: regex ReDoS deve ser REJEITADA (com proteção ReDoS)', () => {
       // NOTA: Agora há proteção contra ReDoS via regexValidator
-      const error = validateValueByOperator('MATCHES_REGEX', '(a+)+');
+      const error = validateValueByOperator('REGEX', '(a+)+');
       // Deve falhar pois é regex perigosa (catastrophic backtracking)
       expect(error).not.toBeNull();
       expect(error).toContain('perigosa');
     });
 
     it('REG-03: regex match-all deve ser aceita', () => {
-      const error = validateValueByOperator('MATCHES_REGEX', '.*');
+      const error = validateValueByOperator('REGEX', '.*');
       expect(error).toBeNull();
     });
 
     it('REG-06: regex com null byte deve ser tratada', () => {
-      const error = validateValueByOperator('MATCHES_REGEX', '\\x00');
+      const error = validateValueByOperator('REGEX', '\\x00');
       // Deve passar pois é regex válida
       expect(error).toBeNull();
     });
@@ -347,8 +347,8 @@ describe('Schema de Regras - Testes Adversariais', () => {
       expect(error).toBeNull();
     });
 
-    it('UNA-02: IS_NOT_NULL com valor deve ignorar', () => {
-      const error = validateValueByOperator('IS_NOT_NULL', 'qualquer');
+    it('UNA-02: NOT_NULL com valor deve ignorar', () => {
+      const error = validateValueByOperator('NOT_NULL', 'qualquer');
       expect(error).toBeNull();
     });
 
@@ -603,8 +603,8 @@ describe('getPlaceholderForOperator', () => {
     expect(result).toContain('10,100');
   });
 
-  it('retorna placeholder para MATCHES_REGEX', () => {
-    const result = getPlaceholderForOperator('MATCHES_REGEX');
+  it('retorna placeholder para REGEX', () => {
+    const result = getPlaceholderForOperator('REGEX');
     expect(result).toContain('regular'); // Expressão regular
   });
 
@@ -638,8 +638,8 @@ describe('getPlaceholderForOperator', () => {
     expect(result).toContain('aplicável'); // Com acento
   });
 
-  it('retorna placeholder para IS_NOT_NULL', () => {
-    const result = getPlaceholderForOperator('IS_NOT_NULL');
+  it('retorna placeholder para NOT_NULL', () => {
+    const result = getPlaceholderForOperator('NOT_NULL');
     expect(result).toContain('aplicável'); // Com acento
   });
 

@@ -46,7 +46,7 @@ const ALL_OPERATORS = {
     'NEO4J_GRAPH_EMBEDDING_FRAUD_PREDICTION', 'NEO4J_TEMPORAL_MOTIF_PATTERN'
   ],
   // Legacy (6)
-  legacy: ['NE', 'MATCHES_REGEX', 'IS_NOT_NULL', '==', '!=', '>', '<', '>=', '<='],
+  legacy: ['==', '!=', '>', '<', '>=', '<='],
 } as const;
 
 // ============================================
@@ -440,7 +440,7 @@ describe('Operadores Unários', () => {
 
   describe('IS_NOT_NULL (legacy)', () => {
     it('ignora valor (unário)', () => {
-      const error = validateValueByOperator('IS_NOT_NULL', 'qualquer');
+      const error = validateValueByOperator('NOT_NULL', 'qualquer');
       expect(error).toBeNull();
     });
   });
@@ -762,24 +762,24 @@ describe('Operadores Velocity', () => {
 describe('Operadores Legacy', () => {
   describe('NE (legacy para NEQ)', () => {
     it('aceita valor', () => {
-      const error = validateValueByOperator('NE', 'test');
+      const error = validateValueByOperator('NEQ', 'test');
       expect(error).toBeNull();
     });
   });
 
-  describe('MATCHES_REGEX (legacy para REGEX)', () => {
+  describe('REGEX', () => {
     it('aceita regex válida', () => {
-      const error = validateValueByOperator('MATCHES_REGEX', '^[0-9]+$');
+      const error = validateValueByOperator('REGEX', '^[0-9]+$');
       expect(error).toBeNull();
     });
 
     it('rejeita regex inválida', () => {
-      const error = validateValueByOperator('MATCHES_REGEX', '[invalid');
+      const error = validateValueByOperator('REGEX', '[invalid');
       expect(error).not.toBeNull();
     });
 
     it('rejeita regex ReDoS', () => {
-      const error = validateValueByOperator('MATCHES_REGEX', '(a+)+');
+      const error = validateValueByOperator('REGEX', '(a+)+');
       expect(error).not.toBeNull();
     });
   });
@@ -966,7 +966,7 @@ describe('Cobertura de Operadores', () => {
     if (op === 'GEO_IN_POLYGON') return 'BRASIL';
     if (op === 'VELOCITY_DISTINCT_GT' || op === 'VELOCITY_DISTINCT_LT') return 'PAN,1440,MERCHANTS,3';
     if (op.startsWith('VELOCITY_')) return 'PAN,60,5';
-    if (op === 'REGEX' || op === 'NOT_REGEX' || op === 'MATCHES_REGEX') return '[A-Z]+';
+    if (op === 'REGEX' || op === 'NOT_REGEX' || op === 'REGEX') return '[A-Z]+';
     return 'testValue';
   };
 
