@@ -103,6 +103,7 @@ export function RulesFormDialog({
               value={formData.ruleName}
               onChange={(e) => onUpdateFormData({ ruleName: e.target.value })}
               placeholder="EX: HIGH_AMOUNT_RULE"
+              disabled={!!editingRule}
               aria-invalid={!!validationErrors.ruleName}
               aria-describedby={validationErrors.ruleName ? 'ruleName-error' : undefined}
               className={validationErrors.ruleName ? 'border-red-500 focus:ring-red-500' : ''}
