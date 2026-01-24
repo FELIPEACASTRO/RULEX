@@ -21,8 +21,9 @@ import org.springframework.stereotype.Component;
 /**
  * ARCH-003: Responsável por construir respostas de transação.
  * Extraído do RuleEngineService para Single Responsibility.
+ * Renomeado para evitar conflito com SpringDoc responseBuilder bean.
  */
-@Component
+@Component("rulexResponseBuilder")
 @RequiredArgsConstructor
 public class ResponseBuilder {
 
