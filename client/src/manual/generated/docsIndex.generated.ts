@@ -88,6 +88,34 @@ export const DOCS_INDEX: DocEntry[] = [
     "isEssential": true
   },
   {
+    "id": "DIAGRAMAS",
+    "filename": "DIAGRAMAS.md",
+    "title": "DIAGRAMAS — Documentação Oficial do RULEX",
+    "category": "Outros",
+    "isEssential": false
+  },
+  {
+    "id": "DIAGRAMS_RULEX_PASSADA2_REPORT",
+    "filename": "DIAGRAMS_RULEX_PASSADA2_REPORT.md",
+    "title": "Central de Diagramas — Solução RULEX (PASSADA 2: Consistência)",
+    "category": "Regras",
+    "isEssential": false
+  },
+  {
+    "id": "DIAGRAMS_RULEX_PASSADA3_REPORT",
+    "filename": "DIAGRAMS_RULEX_PASSADA3_REPORT.md",
+    "title": "Central de Diagramas — Solução RULEX (PASSADA 3: Validação Executável)",
+    "category": "Regras",
+    "isEssential": false
+  },
+  {
+    "id": "DIAGRAMS_RULEX_REPORT",
+    "filename": "DIAGRAMS_RULEX_REPORT.md",
+    "title": "Central de Diagramas — Solução RULEX (Relatório)",
+    "category": "Regras",
+    "isEssential": false
+  },
+  {
     "id": "DSL_ADVANCED_AGGREGATIONS",
     "filename": "DSL_ADVANCED_AGGREGATIONS.md",
     "title": "DSL Avançada: Operadores de Agregação Temporal",
@@ -214,9 +242,23 @@ export const DOCS_INDEX: DocEntry[] = [
     "isEssential": false
   },
   {
+    "id": "RELATORIO_AUDITORIA_TOTAL",
+    "filename": "RELATORIO_AUDITORIA_TOTAL.md",
+    "title": "RELATÓRIO — AUDITORIA TOTAL (FRONT, BACK, POSTGRES, REDIS, NEO4J)",
+    "category": "Outros",
+    "isEssential": false
+  },
+  {
     "id": "RELATORIO_EVOLUCAO_MOTOR_REGRAS_EFICIENCIA_ML",
     "filename": "RELATORIO_EVOLUCAO_MOTOR_REGRAS_EFICIENCIA_ML.md",
     "title": "RELATÓRIO: EVOLUÇÃO DE MOTOR DE REGRAS DURAS PARA EFICIÊNCIA NÍVEL ML",
+    "category": "Outros",
+    "isEssential": false
+  },
+  {
+    "id": "RELATORIO_GAPS_USABILIDADE_NEGOCIO",
+    "filename": "RELATORIO_GAPS_USABILIDADE_NEGOCIO.md",
+    "title": "RELATÓRIO MULTIDISCIPLINAR — GAPS DE USABILIDADE E NEGÓCIO (FRAUDE BANCÁRIA)",
     "category": "Outros",
     "isEssential": false
   },
@@ -231,6 +273,13 @@ export const DOCS_INDEX: DocEntry[] = [
     "id": "RULEX_COMPETITIVE_POSITIONING_V3",
     "filename": "RULEX_COMPETITIVE_POSITIONING_V3.md",
     "title": "🏆 RULEX V3.0 COMPETITIVE POSITIONING",
+    "category": "Regras",
+    "isEssential": false
+  },
+  {
+    "id": "RULEX_CORRECTIONS_PROMPT",
+    "filename": "RULEX_CORRECTIONS_PROMPT.md",
+    "title": "🎯 RULEX - Prompt de Correções para Devin",
     "category": "Regras",
     "isEssential": false
   },
@@ -313,7 +362,7 @@ export const DOCS_INDEX: DocEntry[] = [
   }
 ];
 
-export const DOCS_COUNT = 47;
+export const DOCS_COUNT = 50;
 
 export const ESSENTIAL_DOCS = DOCS_INDEX.filter(d => d.isEssential);
 

@@ -5,7 +5,9 @@ import Operators from "./Operators";
 describe("Operators", () => {
   it("renders the operators title", () => {
     render(<Operators />);
-    expect(screen.getByText(/Operadores/i)).toBeTruthy();
+    // Usa getAllByText porque pode haver múltiplos elementos com "Operadores"
+    const elements = screen.getAllByText(/Operadores/i);
+    expect(elements.length).toBeGreaterThan(0);
   });
 
   it("renders the operators list", () => {
