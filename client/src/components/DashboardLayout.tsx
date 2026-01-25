@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, FileText, Settings, Zap, Layers, Shield, Activity, ChevronDown, ChevronRight, BookOpen, CheckSquare } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, FileText, Settings, Zap, Layers, Shield, Activity, ChevronDown, ChevronRight, BookOpen, CheckSquare, ListChecks } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -56,6 +56,7 @@ const menuSections = [
     items: [
       { icon: FileText, label: "Regras Simples", path: "/rules-simple" },
       { icon: Layers, label: "Regras Complexas", path: "/rules" },
+      { icon: ListChecks, label: "Operadores", path: "/operators" },
       { icon: CheckSquare, label: "Aprovações", path: "/approvals" },
       { icon: BookOpen, label: "Manual do RULEX", path: "/manual" },
       { icon: FileText, label: "Auditoria", path: "/audit" },
