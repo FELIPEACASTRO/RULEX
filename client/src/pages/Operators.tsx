@@ -1380,29 +1380,237 @@ const derivePurpose = (operator: Operator): string => {
   return `Operador da categoria ${normalizeCategory(operator.category)}.`;
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 🎯 ANALOGIAS ESPECÍFICAS POR TIPO DE OPERADOR
+// ─────────────────────────────────────────────────────────────────────────────
+const ANALOGIAS_POR_TIPO: Record<OperatorKind, { analogia: string; personagem: string; dicaDeOuro: string }> = {
+  logical: {
+    analogia: "🧠 Como um juiz que avalia múltiplas evidências: com AND todas precisam ser verdadeiras, com OR basta uma, com NOT inverte o veredicto.",
+    personagem: "👨‍⚖️ Juiz de Regras",
+    dicaDeOuro: "💎 Combine operadores lógicos para criar regras sofisticadas sem duplicação.",
+  },
+  compare: {
+    analogia: "⚖️ Como uma balança de precisão: coloque o valor do campo de um lado e o limite do outro. A balança mostra se é maior, menor ou igual.",
+    personagem: "👩‍🔬 Cientista de Dados",
+    dicaDeOuro: "💎 Lembre-se: GT exclui o limite, GTE inclui. Na dúvida, pergunte: o limite é válido?",
+  },
+  range: {
+    analogia: "📏 Como uma régua com duas marcações: o valor precisa estar entre elas. BETWEEN inclui as marcas, NOT_BETWEEN captura o que está fora.",
+    personagem: "👨‍💼 Gerente de Limites",
+    dicaDeOuro: "💎 Use BETWEEN para faixas de valor, idade, score. Muito mais legível que AND + AND.",
+  },
+  list: {
+    analogia: "📋 Como uma lista de convidados VIP: IN verifica se o nome está na lista, NOT_IN verifica se está na lista negra.",
+    personagem: "👮 Segurança da Festa",
+    dicaDeOuro: "💎 Mantenha suas listas em cadastros do sistema para atualizá-las sem mudar as regras.",
+  },
+  string: {
+    analogia: "🔍 Como um detetive com lupa examinando texto: CONTAINS busca pistas no meio, STARTS/ENDS verifica início/fim, REGEX usa padrões complexos.",
+    personagem: "🕵️ Detetive de Padrões",
+    dicaDeOuro: "💎 Use REGEX com cuidado - é poderoso mas pode ser lento. Prefira CONTAINS quando possível.",
+  },
+  null: {
+    analogia: "📭 Como verificar uma caixa de correio: IS_NULL = está vazia, NOT_NULL = tem algo dentro. Essencial para dados opcionais.",
+    personagem: "📮 Carteiro de Dados",
+    dicaDeOuro: "💎 Sempre considere: e se esse campo vier vazio? Use IS_NULL para tratar o caso.",
+  },
+  boolean: {
+    analogia: "💡 Como um interruptor de luz: só tem dois estados - ligado (true) ou desligado (false). Simples e binário.",
+    personagem: "🔌 Eletricista Lógico",
+    dicaDeOuro: "💎 IS_TRUE/IS_FALSE são mais legíveis que campo = true. Use para flags e configurações.",
+  },
+  array: {
+    analogia: "🛒 Como um carrinho de compras: ARRAY_CONTAINS verifica se tem leite, ARRAY_SIZE conta quantos itens tem.",
+    personagem: "🛍️ Conferente de Listas",
+    dicaDeOuro: "💎 Use operadores de array quando o campo é uma lista (tags, itens, IDs).",
+  },
+  datetime: {
+    analogia: "⏰ Como um calendário inteligente: verifica datas, horários, idade de registros, janelas de tempo. O tempo é crucial em fraude!",
+    personagem: "📅 Guardião do Tempo",
+    dicaDeOuro: "💎 Transações de madrugada e contas recém-criadas são sinais clássicos de risco.",
+  },
+  aggregation: {
+    analogia: "📊 Como um contador automático: COUNT soma quantas vezes, SUM soma valores, AVG calcula média. Essencial para velocity!",
+    personagem: "🧮 Matemático de Fraude",
+    dicaDeOuro: "💎 Agregações são a base de regras de velocity. Fraudadores fragmentam - você soma!",
+  },
+  risk_pattern: {
+    analogia: "🎯 Como um radar de fraude: detecta padrões suspeitos automaticamente - velocity spikes, comportamento anômalo, sinais de AML.",
+    personagem: "🛡️ Sentinela Antifraude",
+    dicaDeOuro: "💎 Estes operadores encapsulam conhecimento especialista. Use-os para regras avançadas.",
+  },
+  graph: {
+    analogia: "🕸️ Como um mapa de conexões: mostra quem está ligado a quem. Essencial para detectar redes de fraude e conluios.",
+    personagem: "🔗 Analista de Redes",
+    dicaDeOuro: "💎 Grafos revelam conexões invisíveis: mesmo dispositivo, mesmo endereço, mesma rede.",
+  },
+  device: {
+    analogia: "📱 Como um perito forense de dispositivos: analisa fingerprint, detecta jailbreak, avalia trust score. O dispositivo conta a verdade!",
+    personagem: "🔬 Perito Digital",
+    dicaDeOuro: "💎 Dispositivos adulterados (root/jailbreak) e emuladores são red flags importantes.",
+  },
+  identity: {
+    analogia: "🪪 Como um verificador de documentos: valida CPF, e-mail, telefone, endereço. Dados cadastrais falsos são sinal de fraude.",
+    personagem: "👤 Verificador de Identidade",
+    dicaDeOuro: "💎 E-mails temporários, telefones VoIP e CPFs inválidos são sinais clássicos.",
+  },
+  merchant: {
+    analogia: "🏪 Como um inspetor de estabelecimentos: avalia MCC, categoria, histórico do merchant. Alguns MCCs são de alto risco!",
+    personagem: "🔎 Inspetor de Merchants",
+    dicaDeOuro: "💎 MCCs de gambling, crypto e gift cards merecem atenção especial.",
+  },
+  platform: {
+    analogia: "🏛️ Como um auditor de compliance: verifica DORA, GDPR, eIDAS. Regulamentação é obrigatória, não opcional!",
+    personagem: "📋 Auditor Regulatório",
+    dicaDeOuro: "💎 Mantenha-se atualizado com regulamentações - multas podem ser severas.",
+  },
+  validation: {
+    analogia: "✅ Como um checklist de aprovação: verifica sanções, PEP, adverse media. Cada verificação é um carimbo necessário.",
+    personagem: "✔️ Validador Oficial",
+    dicaDeOuro: "💎 Listas de sanções (OFAC, EU) são obrigatórias. Automatize essas verificações.",
+  },
+  statistical: {
+    analogia: "📈 Como um cientista de dados: detecta anomalias, calcula desvios, aplica testes estatísticos. Números não mentem!",
+    personagem: "📊 Estatístico de Fraude",
+    dicaDeOuro: "💎 Machine learning e estatística encontram padrões que regras simples não pegam.",
+  },
+  unknown: {
+    analogia: "🔧 Operador especializado para cenários específicos. Consulte a documentação técnica para entender seu uso exato.",
+    personagem: "👤 Especialista Técnico",
+    dicaDeOuro: "💎 Teste sempre em ambiente de homologação antes de usar em produção.",
+  },
+};
+
+// Gera história contextualizada baseada no nome do operador
+const gerarHistoriaContextualizada = (name: string, kind: OperatorKind): string => {
+  const upper = name.toUpperCase();
+  
+  // Detectar contexto pelo nome do operador
+  if (upper.includes("VELOCITY") || upper.includes("COUNT")) {
+    return `Maria, analista de fraude, precisa detectar comportamento de alta frequência. O operador ${name} permite monitorar a velocidade de eventos e identificar padrões anômalos.`;
+  }
+  if (upper.includes("AMOUNT") || upper.includes("SUM") || upper.includes("VALUE")) {
+    return `João, do time de risco, precisa avaliar valores de transação. O operador ${name} ajuda a identificar movimentações suspeitas por valor.`;
+  }
+  if (upper.includes("DEVICE") || upper.includes("FINGERPRINT") || upper.includes("BROWSER")) {
+    return `Carlos, especialista em segurança, precisa avaliar a confiabilidade do dispositivo. O operador ${name} analisa características técnicas do device.`;
+  }
+  if (upper.includes("EMAIL") || upper.includes("PHONE") || upper.includes("CPF") || upper.includes("ADDRESS")) {
+    return `Ana, do onboarding, precisa validar dados cadastrais. O operador ${name} verifica a consistência das informações do cliente.`;
+  }
+  if (upper.includes("MERCHANT") || upper.includes("MCC") || upper.includes("STORE")) {
+    return `Pedro, analista de pagamentos, precisa avaliar o estabelecimento. O operador ${name} verifica características do merchant.`;
+  }
+  if (upper.includes("DATE") || upper.includes("TIME") || upper.includes("DAY") || upper.includes("HOUR")) {
+    return `Fernanda, do monitoramento, precisa criar regras temporais. O operador ${name} permite avaliar datas e horários suspeitos.`;
+  }
+  if (upper.includes("GRAPH") || upper.includes("NEO4J") || upper.includes("NETWORK") || upper.includes("LINK")) {
+    return `Ricardo, investigador de fraude, precisa mapear conexões. O operador ${name} revela relações ocultas entre entidades.`;
+  }
+  if (upper.includes("SANCTION") || upper.includes("PEP") || upper.includes("ADVERSE") || upper.includes("FATF")) {
+    return `Juliana, do compliance, precisa verificar listas regulatórias. O operador ${name} automatiza verificações obrigatórias.`;
+  }
+  if (upper.includes("ANOMALY") || upper.includes("DEVIATION") || upper.includes("SCORE")) {
+    return `Marcos, cientista de dados, precisa detectar outliers. O operador ${name} usa estatística para identificar anomalias.`;
+  }
+  if (upper.includes("DORA") || upper.includes("GDPR") || upper.includes("PLT_") || upper.includes("EIDAS")) {
+    return `Beatriz, do jurídico, precisa garantir compliance regulatório. O operador ${name} verifica conformidade com normas específicas.`;
+  }
+  
+  // Fallback baseado no kind
+  const kindHistorias: Record<OperatorKind, string> = {
+    logical: `Um analista precisa combinar múltiplas condições em uma regra complexa. O operador ${name} permite conectar condições de forma lógica.`,
+    compare: `Um gerente de risco precisa definir limites para transações. O operador ${name} compara valores com precisão.`,
+    range: `Uma analista precisa verificar se valores estão dentro de faixas aceitáveis. O operador ${name} valida intervalos.`,
+    list: `Um especialista precisa verificar valores contra listas conhecidas. O operador ${name} facilita essa validação.`,
+    string: `Um investigador precisa analisar padrões em textos. O operador ${name} busca e valida strings.`,
+    null: `Um analista precisa tratar campos opcionais. O operador ${name} detecta dados ausentes.`,
+    boolean: `Um desenvolvedor precisa avaliar flags de configuração. O operador ${name} trabalha com valores true/false.`,
+    array: `Uma analista precisa verificar conteúdo de listas. O operador ${name} opera sobre arrays.`,
+    datetime: `Um monitor precisa criar regras baseadas em tempo. O operador ${name} avalia datas e horários.`,
+    aggregation: `Um especialista precisa calcular métricas agregadas. O operador ${name} realiza cálculos sobre conjuntos.`,
+    risk_pattern: `Um analista de fraude precisa detectar padrões de risco. O operador ${name} identifica sinais suspeitos.`,
+    graph: `Um investigador precisa mapear redes de relacionamento. O operador ${name} analisa conexões em grafos.`,
+    device: `Um especialista de segurança precisa avaliar dispositivos. O operador ${name} analisa características do device.`,
+    identity: `Um verificador precisa validar dados de identidade. O operador ${name} checa informações cadastrais.`,
+    merchant: `Um analista de pagamentos precisa avaliar merchants. O operador ${name} verifica estabelecimentos.`,
+    platform: `Um auditor precisa garantir compliance. O operador ${name} verifica requisitos regulatórios.`,
+    validation: `Um verificador precisa checar listas e validações. O operador ${name} automatiza verificações.`,
+    statistical: `Um cientista de dados precisa aplicar análises. O operador ${name} usa métodos estatísticos.`,
+    unknown: `Um especialista precisa aplicar uma verificação específica. O operador ${name} atende esse cenário.`,
+  };
+  
+  return kindHistorias[kind];
+};
+
+// Gera problema contextualizado
+const gerarProblemaContextualizado = (name: string, kind: OperatorKind): string => {
+  const upper = name.toUpperCase();
+  
+  if (upper.includes("VELOCITY")) return "Como detectar padrões de alta frequência que indicam automação ou fraude?";
+  if (upper.includes("COUNT")) return "Como contar eventos em um período para identificar comportamento anômalo?";
+  if (upper.includes("SUM")) return "Como somar valores para detectar fragmentação (smurfing)?";
+  if (upper.includes("DEVICE")) return "Como avaliar se o dispositivo é confiável ou suspeito?";
+  if (upper.includes("FINGERPRINT")) return "Como identificar dispositivos únicos mesmo com dados alterados?";
+  if (upper.includes("EMAIL")) return "Como validar se o e-mail é legítimo ou temporário/descartável?";
+  if (upper.includes("PHONE")) return "Como verificar se o telefone é real ou VoIP descartável?";
+  if (upper.includes("MERCHANT") || upper.includes("MCC")) return "Como avaliar o risco do estabelecimento comercial?";
+  if (upper.includes("GRAPH") || upper.includes("NEO4J")) return "Como descobrir conexões ocultas entre entidades suspeitas?";
+  if (upper.includes("SANCTION") || upper.includes("PEP")) return "Como automatizar verificações de compliance obrigatórias?";
+  if (upper.includes("ANOMALY") || upper.includes("DEVIATION")) return "Como detectar comportamentos que fogem do padrão estatístico?";
+  
+  const kindProblemas: Record<OperatorKind, string> = {
+    logical: "Como combinar múltiplas condições de forma eficiente?",
+    compare: "Como definir limites precisos para valores?",
+    range: "Como verificar se um valor está em uma faixa aceitável?",
+    list: "Como verificar valores contra listas conhecidas?",
+    string: "Como encontrar padrões em dados textuais?",
+    null: "Como tratar campos que podem estar vazios?",
+    boolean: "Como avaliar flags de forma clara e legível?",
+    array: "Como trabalhar com campos que contêm listas?",
+    datetime: "Como criar regras baseadas em tempo e calendário?",
+    aggregation: "Como calcular métricas sobre múltiplos eventos?",
+    risk_pattern: "Como detectar padrões de risco automaticamente?",
+    graph: "Como identificar redes e conexões suspeitas?",
+    device: "Como avaliar a confiabilidade do dispositivo?",
+    identity: "Como validar dados cadastrais do cliente?",
+    merchant: "Como avaliar o risco do estabelecimento?",
+    platform: "Como garantir conformidade regulatória?",
+    validation: "Como automatizar verificações de compliance?",
+    statistical: "Como aplicar análises estatísticas na detecção?",
+    unknown: `Como aplicar o operador ${name} corretamente?`,
+  };
+  
+  return kindProblemas[kind];
+};
+
 const deriveHeadFirstExample = (name: string): HeadFirstExample => {
   const found = HEAD_FIRST_EXAMPLES[name] || HEAD_FIRST_EXAMPLES[name.toUpperCase()];
   if (found) return found;
 
-  // Fallback genérico para operadores sem exemplo específico
+  // Gerar exemplo contextualizado baseado na classificação
+  const kind = classifyOperator(name);
+  const info = ANALOGIAS_POR_TIPO[kind];
+  const explain = explainOperatorName(name);
+  
   return {
-    historia: `Um analista precisa usar o operador ${name} para criar uma regra de negócio específica.`,
-    personagem: "👤 Analista de Regras",
-    problema: `Como aplicar o operador ${name} em uma regra?`,
-    analogia: "🔧 Pense neste operador como uma ferramenta específica na sua caixa de ferramentas de regras.",
+    historia: gerarHistoriaContextualizada(name, kind),
+    personagem: info.personagem,
+    problema: gerarProblemaContextualizado(name, kind),
+    analogia: info.analogia,
     passoAPasso: [
-      "1️⃣ Selecione o campo que deseja avaliar",
-      `2️⃣ Escolha o operador ${name}`,
-      "3️⃣ Configure os parâmetros necessários",
-      "4️⃣ Teste a regra com dados reais",
+      `1️⃣ Identifique o campo relevante para o operador ${name}`,
+      `2️⃣ Aplique ${name} com os parâmetros apropriados`,
+      "3️⃣ Configure valores/limites baseados no seu cenário",
+      "4️⃣ Teste com dados reais antes de publicar",
     ],
-    antes: "❌ ANTES: Sem este operador, você teria que contornar com lógica mais complexa.",
-    depois: "✅ DEPOIS: Com este operador, a regra fica direta e eficiente.",
-    sintaxe: `campo ${name} valor`,
-    explicacaoSintaxe: `📖 Aplique o operador ${name} ao campo desejado com o valor apropriado.`,
-    perguntaComum: "Quando devo usar este operador?",
-    respostaPergunta: "Consulte a categoria e o propósito para entender o cenário de uso.",
-    dicaDeOuro: "💎 Sempre teste suas regras em ambiente de homologação antes de produção.",
+    antes: `❌ ANTES: Sem ${name}, você precisaria de lógica mais complexa ou manual para este cenário.`,
+    depois: `✅ DEPOIS: Com ${name}, a regra fica direta, eficiente e fácil de manter.`,
+    sintaxe: guessDslForKind(name, kind),
+    explicacaoSintaxe: `📖 O operador ${name} (${explain.leituraHumana}) aplica a lógica de ${kind} ao seu campo.`,
+    perguntaComum: gerarProblemaContextualizado(name, kind),
+    respostaPergunta: `Use ${name} quando precisar de ${kind === "unknown" ? "verificação especializada" : kind.replace("_", " ")}. Veja os campos sugeridos e exemplos nesta página.`,
+    dicaDeOuro: info.dicaDeOuro,
   };
 };
 
