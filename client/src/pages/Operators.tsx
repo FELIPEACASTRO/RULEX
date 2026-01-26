@@ -173,23 +173,48 @@ type OperatorKind =
   | "aggregation"
   | "risk_pattern"
   | "graph"
+  | "device"
+  | "identity"
+  | "merchant"
+  | "platform"
+  | "validation"
+  | "statistical"
   | "unknown";
 
 const classifyOperator = (nameRaw: string): OperatorKind => {
   const name = nameRaw.toUpperCase();
-  if (["AND", "OR", "NOT", "NAND", "NOR", "XOR"].includes(name)) return "logical";
+
+  // Operadores lógicos básicos
+  if (["AND", "OR", "NOT", "NAND", "NOR", "XOR", "IMPLY"].includes(name)) return "logical";
+
+  // Range / faixa
   if (name.includes("BETWEEN")) return "range";
+
+  // Listas
   if (name === "IN" || name.endsWith("_IN") || name.includes("NOT_IN") || name.includes("IN_LIST")) return "list";
+
+  // Strings / texto
   if (
     name.includes("CONTAINS") ||
     name.includes("REGEX") ||
     name.includes("STARTS_WITH") ||
-    name.includes("ENDS_WITH")
+    name.includes("ENDS_WITH") ||
+    name.includes("MATCH")
   )
     return "string";
-  if (name.includes("NULL") || name.startsWith("IS_NULL") || name.startsWith("NOT_NULL")) return "null";
-  if (name.startsWith("IS_TRUE") || name.startsWith("IS_FALSE")) return "boolean";
-  if (name.startsWith("ARRAY_") || name.includes("ARRAY")) return "array";
+
+  // Nulos / vazios
+  if (name.includes("NULL") || name.startsWith("IS_NULL") || name.startsWith("NOT_NULL") || name.includes("EMPTY"))
+    return "null";
+
+  // Booleanos
+  if (name.startsWith("IS_TRUE") || name.startsWith("IS_FALSE") || name === "IS_VALID" || name === "IS_INVALID")
+    return "boolean";
+
+  // Arrays / listas
+  if (name.startsWith("ARRAY_") || name.includes("ARRAY") || name.startsWith("LIST_")) return "array";
+
+  // Data/tempo
   if (
     name.includes("DATE") ||
     name.includes("TIME") ||
@@ -197,33 +222,126 @@ const classifyOperator = (nameRaw: string): OperatorKind => {
     name.includes("WEEK") ||
     name.includes("MONTH") ||
     name.includes("YEAR") ||
-    name.includes("AGE_")
+    name.includes("AGE_") ||
+    name.includes("HOUR") ||
+    name.includes("DORMANCY") ||
+    name.includes("EXPIRED")
   )
     return "datetime";
+
+  // Agregações
   if (
     name.includes("COUNT") ||
     name.includes("SUM") ||
     name.includes("AVG") ||
     name.includes("MAX") ||
     name.includes("MIN") ||
-    name.includes("PERCENT")
+    name.includes("PERCENT") ||
+    name.includes("MEDIAN") ||
+    name.includes("VARIANCE") ||
+    name.includes("STD_DEV")
   )
     return "aggregation";
-  if (name.startsWith("NEO4J_") || name.includes("GRAPH") || name.includes("LINK_DEPTH")) return "graph";
+
+  // Grafos
+  if (
+    name.startsWith("NEO4J_") ||
+    name.includes("GRAPH") ||
+    name.includes("LINK_DEPTH") ||
+    name.includes("CLUSTER") ||
+    name.includes("NETWORK") ||
+    name.includes("RING")
+  )
+    return "graph";
+
+  // Dispositivo / device
+  if (
+    name.startsWith("DEVICE_") ||
+    name.includes("BROWSER") ||
+    name.includes("FINGERPRINT") ||
+    name.includes("JAILBREAK") ||
+    name.includes("ROOTED") ||
+    name.includes("AUDIO_FINGERPRINT") ||
+    name.includes("TRUST_SCORE") ||
+    name.includes("USER_AGENT")
+  )
+    return "device";
+
+  // Identidade / cadastro
+  if (
+    name.includes("EMAIL") ||
+    name.includes("PHONE") ||
+    name.includes("CPF") ||
+    name.includes("SSN") ||
+    name.includes("ADDRESS") ||
+    name.includes("NAME_") ||
+    name.includes("BIOMETRIC") ||
+    name.includes("IDENTITY") ||
+    name.includes("CREDITOR")
+  )
+    return "identity";
+
+  // Merchant / comerciante
+  if (name.startsWith("MERCHANT_") || name.includes("MCC") || name.includes("STORE") || name.includes("POS_"))
+    return "merchant";
+
+  // Plataforma (PLT_)
+  if (name.startsWith("PLT_") || name.startsWith("DORA_") || name.startsWith("EIDAS_") || name.startsWith("GDPR_"))
+    return "platform";
+
+  // Validação / verificação
+  if (
+    name.includes("VALIDATION") ||
+    name.includes("CHECK") ||
+    name.includes("VERIFY") ||
+    name.includes("VALID") ||
+    name.includes("SANCTION") ||
+    name.includes("PEP") ||
+    name.includes("ADVERSE") ||
+    name.includes("CONSORTIUM")
+  )
+    return "validation";
+
+  // Estatísticos / ML
   if (
     name.includes("ANOMALY") ||
+    name.includes("DEVIATION") ||
+    name.includes("TEST") ||
+    name.includes("BENFORD") ||
+    name.includes("ANDERSON") ||
+    name.includes("CHI_SQUARE") ||
+    name.includes("KOLMOGOROV") ||
+    name.includes("ADAPTIVE") ||
+    name.includes("FUZZY") ||
+    name.includes("THRESHOLD") ||
+    name.includes("SCORE") ||
+    name.includes("INDICATOR")
+  )
+    return "statistical";
+
+  // Padrões de risco / fraude (catch-all para especialistas)
+  if (
     name.includes("VELOCITY") ||
     name.includes("DETECTION") ||
     name.includes("PATTERN") ||
     name.includes("RISK") ||
     name.includes("FRAUD") ||
+    name.includes("SPIKE") ||
+    name.includes("SUSPICIOUS") ||
     name.startsWith("FATF_") ||
     name.startsWith("SCA_") ||
-    name.startsWith("BSL_")
+    name.startsWith("BSL_") ||
+    name.includes("TAKEOVER") ||
+    name.includes("SMURFING") ||
+    name.includes("LAYERING") ||
+    name.includes("STRUCTURING")
   )
     return "risk_pattern";
+
+  // Comparações (fallback para _GT, _LT, etc.)
   if (["GT", "GTE", "LT", "LTE", "EQ", "NEQ"].some((k) => name === k || name.endsWith(`_${k}`) || name.includes(`_${k}_`)))
     return "compare";
+
   return "unknown";
 };
 
@@ -285,6 +403,46 @@ const defaultFieldHintsForKind = (kind: OperatorKind): FieldHint[] => {
         { path: "transaction.ip", type: "string", example: "203.0.113.10", note: "IP" },
         { path: "device.fingerprint", type: "string", example: "fp_xxx", note: "Fingerprint" },
       ];
+    case "device":
+      return [
+        { path: "device.fingerprint", type: "string", example: "fp_abc123", note: "Fingerprint do device" },
+        { path: "device.trust_score", type: "number", example: "0.75", note: "Score de confiança" },
+        { path: "device.is_rooted", type: "boolean", example: "false", note: "Dispositivo rooteado?" },
+        { path: "device.browser", type: "string", example: "Chrome 120", note: "Navegador" },
+      ];
+    case "identity":
+      return [
+        { path: "customer.email", type: "string", example: "user@empresa.com", note: "E-mail do cliente" },
+        { path: "customer.phone", type: "string", example: "+5511999998888", note: "Telefone" },
+        { path: "customer.cpf", type: "string", example: "123.456.789-00", note: "CPF formatado" },
+        { path: "customer.address", type: "object", example: "{...}", note: "Endereço completo" },
+      ];
+    case "merchant":
+      return [
+        { path: "merchant.mcc", type: "string", example: "5411", note: "Código MCC" },
+        { path: "merchant.name", type: "string", example: "LOJA XYZ", note: "Nome do merchant" },
+        { path: "merchant.country", type: "string", example: "BR", note: "País do merchant" },
+        { path: "merchant.risk_level", type: "string", example: "HIGH", note: "Nível de risco" },
+      ];
+    case "platform":
+      return [
+        { path: "platform.compliance_status", type: "string", example: "COMPLIANT", note: "Status de compliance" },
+        { path: "platform.region", type: "string", example: "EU", note: "Região regulatória" },
+        { path: "platform.data_retention_days", type: "number", example: "365", note: "Dias de retenção" },
+      ];
+    case "validation":
+      return [
+        { path: "validation.result", type: "string", example: "PASS", note: "Resultado da validação" },
+        { path: "validation.pep_status", type: "boolean", example: "false", note: "É PEP?" },
+        { path: "validation.sanction_hit", type: "boolean", example: "false", note: "Match em sanções?" },
+      ];
+    case "statistical":
+      return [
+        { path: "transaction.amount", type: "number", example: "1500", note: "Valor para análise" },
+        { path: "statistics.deviation", type: "number", example: "2.5", note: "Desvios da média" },
+        { path: "statistics.percentile", type: "number", example: "95", note: "Percentil" },
+        { path: "model.score", type: "number", example: "0.87", note: "Score do modelo" },
+      ];
     default:
       return [
         { path: "campo", type: "string", example: "valor", note: "Substitua pelo seu payload" },
@@ -306,6 +464,13 @@ const guessDslForKind = (name: string, kind: OperatorKind): string => {
   if (kind === "datetime") return "transaction.time TIME_BETWEEN \"22:00\" AND \"06:00\"";
   if (kind === "aggregation") return "COUNT(transactions, last_1h, customer_id) GT 10";
   if (kind === "graph") return "NEO4J_LINK_DEPTH(customer_id, device_id) GT 2";
+  if (kind === "device") return "device.trust_score GT 0.7";
+  if (kind === "identity") return "customer.email CONTAINS \"tempmail\"";
+  if (kind === "merchant") return "merchant.mcc IN [\"5999\", \"7995\"]";
+  if (kind === "platform") return "platform.compliance_status EQ \"COMPLIANT\"";
+  if (kind === "validation") return "validation.sanction_hit IS_FALSE";
+  if (kind === "statistical") return "statistics.deviation GT 3.0";
+  if (kind === "risk_pattern") return `${upper}(payload) GT threshold`;
   if (kind === "compare") {
     if (upper.endsWith("_GT") || upper === "GT") return "transaction.amount GT 5000";
     if (upper.endsWith("_GTE") || upper === "GTE") return "transaction.amount GTE 5000";
@@ -355,6 +520,30 @@ const deriveDidacticKit = (operator: Operator): DidacticKit => {
       "Para capturar sinais avançados sem escrever tudo na mão.",
     ],
     graph: ["Quando o risco depende de relação entre entidades (conta↔dispositivo↔cartão).", "Para detectar redes e conexões indiretas."],
+    device: [
+      "Quando precisa avaliar a confiabilidade do dispositivo que está fazendo a transação.",
+      "Quando quer detectar dispositivos adulterados (jailbreak, emuladores, bots).",
+    ],
+    identity: [
+      "Quando precisa validar dados cadastrais do cliente.",
+      "Quando quer verificar consistência de dados (CPF, e-mail, telefone).",
+    ],
+    merchant: [
+      "Quando o risco depende do tipo de estabelecimento (MCC de alto risco).",
+      "Quando precisa de regras específicas por categoria de merchant.",
+    ],
+    platform: [
+      "Quando precisa garantir compliance regulatório (GDPR, DORA, eIDAS).",
+      "Quando há requisitos específicos de plataforma a validar.",
+    ],
+    validation: [
+      "Quando precisa checar listas de sanções, PEP ou adverse media.",
+      "Quando a regra depende de verificações externas já realizadas.",
+    ],
+    statistical: [
+      "Quando precisa detectar anomalias estatísticas (desvios, outliers).",
+      "Quando quer usar machine learning ou scores calculados.",
+    ],
     unknown: ["Quando você já conhece o operador e quer aplicá-lo diretamente.", "Para cenários específicos descritos pela área de negócio."]
   };
 
@@ -371,6 +560,12 @@ const deriveDidacticKit = (operator: Operator): DidacticKit => {
     aggregation: ["Quando não há histórico suficiente (novos clientes podem gerar falsos positivos)."],
     risk_pattern: ["Quando você precisa de explicabilidade linha a linha (operadores compostos podem ser 'caixa preta')."],
     graph: ["Quando os dados de relacionamento não existem/estão incompletos (grafo vazio)."],
+    device: ["Quando o device_id não está presente ou é inconsistente.", "Quando o dispositivo é um canal legítimo sem fingerprint (ex: API B2B)."],
+    identity: ["Quando os dados já foram validados em etapa anterior.", "Quando quer velocidade e a validação é cara."],
+    merchant: ["Quando o merchant não faz parte do risco (ex: transação interna).", "Quando MCC não está disponível no payload."],
+    platform: ["Quando o requisito regulatório não se aplica à região/produto.", "Quando compliance é feito em camada separada."],
+    validation: ["Quando a validação gera latência e não é crítica para a decisão.", "Quando o resultado da validação já está cacheado."],
+    statistical: ["Quando o modelo não está calibrado para o segmento.", "Quando outliers legítimos são comuns (ex: VIPs com valores altos)."],
     unknown: ["Quando você não sabe o significado operacional: valide com a documentação do backend."]
   };
 
@@ -396,6 +591,30 @@ const deriveDidacticKit = (operator: Operator): DidacticKit => {
     ],
     risk_pattern: ["Operador pode depender de features/telemetria disponíveis.", "Tuning (limiares) é essencial para não explodir falsos positivos."],
     graph: ["Grafo precisa de identidade estável (IDs consistentes).", "Profundidade alta pode ser cara; comece baixo."],
+    device: [
+      "Fingerprint pode mudar após atualização do app/browser.",
+      "Dispositivos legítimos podem aparecer como 'novos' após limpar cache.",
+    ],
+    identity: [
+      "Dados podem ter formatos diferentes (CPF com/sem pontuação).",
+      "E-mails temporários são comuns; não confie só em formato válido.",
+    ],
+    merchant: [
+      "MCC pode ser genérico (5999 = 'outros').",
+      "Mesmo MCC pode ter merchants de risco muito diferente.",
+    ],
+    platform: [
+      "Requisitos regulatórios mudam; mantenha regras atualizadas.",
+      "Região do cliente vs região do servidor podem divergir.",
+    ],
+    validation: [
+      "Validações externas podem falhar/timeout; defina fallback.",
+      "Resultados de validação podem ficar desatualizados rapidamente.",
+    ],
+    statistical: [
+      "Modelos precisam de retreino periódico.",
+      "Threshold fixo pode não funcionar para todos os segmentos.",
+    ],
     unknown: ["Leia o nome do operador como uma frase e teste com 3 casos: passa, falha, borda (limite)."],
   };
 
@@ -467,6 +686,12 @@ const deriveDidacticKit = (operator: Operator): DidacticKit => {
     aggregation: "Extrato/resumo: olha o histórico e calcula contagem/soma.",
     risk_pattern: "Detector composto: avalia múltiplos sinais e retorna um resultado.",
     graph: "Mapa de conexões: segue relacionamentos e mede proximidade/rede.",
+    device: "Identidade do aparelho: avalia se o dispositivo é confiável.",
+    identity: "Checagem de documentos: valida dados pessoais do cliente.",
+    merchant: "Perfil do estabelecimento: avalia risco do comerciante.",
+    platform: "Checklist de compliance: garante conformidade regulatória.",
+    validation: "Carimbo de aprovação: verifica se passou em checagens externas.",
+    statistical: "Análise de dados: detecta anomalias e padrões estatísticos.",
     unknown: "Ferramenta especializada: use quando o nome/categoria descrevem o que você precisa.",
   };
 
@@ -1253,6 +1478,57 @@ const CATEGORY_GUIDE: Record<string, { title: string; emoji: string; intro: stri
     emoji: "🧠",
     intro: "A cola que une tudo! Combine múltiplas condições.",
     analogia: "Como conectar peças de Lego: você junta várias condições em uma regra.",
+  },
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NOVAS CATEGORIAS EXPANDIDAS (após double-check rigoroso)
+  // ═══════════════════════════════════════════════════════════════════════════
+  device: {
+    title: "Dispositivo & Fingerprint",
+    emoji: "📱",
+    intro: "Operadores que avaliam características do dispositivo: fingerprint, browser, jailbreak, trust score.",
+    analogia: "Como um detetive examinando a 'identidade' do aparelho que está fazendo a transação.",
+  },
+  identity: {
+    title: "Identidade & Cadastro",
+    emoji: "👤",
+    intro: "Validações de dados pessoais: e-mail, telefone, CPF, endereço, biometria.",
+    analogia: "Como verificar documentos antes de aprovar alguém.",
+  },
+  merchant: {
+    title: "Merchant & MCC",
+    emoji: "🏪",
+    intro: "Operadores relacionados ao comerciante: MCC, categoria, risco do estabelecimento.",
+    analogia: "Como avaliar se a loja onde a compra foi feita é confiável.",
+  },
+  platform: {
+    title: "Plataforma & Compliance",
+    emoji: "🏛️",
+    intro: "Operadores regulatórios: DORA, eIDAS, GDPR, controles de plataforma.",
+    analogia: "Como um checklist de auditoria para garantir que tudo está em conformidade.",
+  },
+  validation: {
+    title: "Validações & Verificações",
+    emoji: "✅",
+    intro: "Checagens específicas: sanções, PEP, adverse media, verificações cadastrais.",
+    analogia: "Como passar um documento por vários carimbos de aprovação.",
+  },
+  statistical: {
+    title: "Estatísticas & ML",
+    emoji: "📈",
+    intro: "Operadores estatísticos e de machine learning: scores, desvios, testes, thresholds adaptativos.",
+    analogia: "Como um cientista de dados analisando padrões nos números.",
+  },
+  graph: {
+    title: "Grafos & Redes",
+    emoji: "🕸️",
+    intro: "Análise de conexões: Neo4j, detecção de anéis de fraude, centralidade.",
+    analogia: "Como um mapa de relacionamentos mostrando quem está conectado a quem.",
+  },
+  risk_pattern: {
+    title: "Padrões de Risco",
+    emoji: "🎯",
+    intro: "Detecção de fraude e AML: velocity, anomalias, FATF, SCA, BSL.",
+    analogia: "Como um radar que detecta comportamentos suspeitos automaticamente.",
   },
   Geral: {
     title: "Outros Operadores",
