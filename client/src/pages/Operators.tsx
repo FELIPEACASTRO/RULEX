@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BACKEND_OPERATORS } from "@/manual/generated/backendOperators.generated";
+import { OPERATOR_SPECS, type OperatorDocConfidence, type OperatorDocLevel } from "@/manual/operatorSpecs";
 
 type Operator = (typeof BACKEND_OPERATORS)[number];
 
@@ -67,6 +68,52 @@ const safeJsonStringify = (value: unknown) => {
 };
 
 const tokenizeOperatorName = (name: string) => name.split(/[_\s]+/g).filter(Boolean);
+
+const tokensToSet = (name: string) => new Set(tokenizeOperatorName(name.toUpperCase()));
+
+const pickFirst = <T,>(values: T[]) => (values.length ? values[0] : undefined);
+
+type TokenContext = {
+  entityPt: string;
+  eventPlural: string;
+  groupBy: string;
+  thresholdExample: string;
+};
+
+const inferTokenContext = (name: string): TokenContext => {
+  const t = tokensToSet(name);
+
+  // Entities (prefer more specific)
+  if (t.has("ADDRESS")) {
+    return { entityPt: "endereço", eventPlural: "address_changes", groupBy: "customer_id", thresholdExample: "2" };
+  }
+  if (t.has("BENEFICIARY")) {
+    return { entityPt: "beneficiário", eventPlural: "beneficiary_events", groupBy: "customer_id", thresholdExample: "3" };
+  }
+  if (t.has("CHARGEBACK")) {
+    return { entityPt: "chargeback", eventPlural: "chargebacks", groupBy: "merchant_id", thresholdExample: "0.02" };
+  }
+  if (t.has("CARD")) {
+    return { entityPt: "cartão", eventPlural: "card_events", groupBy: "card_id", thresholdExample: "5" };
+  }
+  if (t.has("ACCOUNT")) {
+    return { entityPt: "conta", eventPlural: "account_events", groupBy: "account_id", thresholdExample: "2" };
+  }
+  if (t.has("DEVICE")) {
+    return { entityPt: "dispositivo", eventPlural: "device_events", groupBy: "device_fingerprint", thresholdExample: "2" };
+  }
+  if (t.has("IP")) {
+    return { entityPt: "IP", eventPlural: "ip_events", groupBy: "ip", thresholdExample: "10" };
+  }
+  if (t.has("CHANNEL")) {
+    return { entityPt: "canal", eventPlural: "channel_events", groupBy: "customer_id", thresholdExample: "2" };
+  }
+  if (t.has("MERCHANT") || t.has("MCC") || t.has("STORE")) {
+    return { entityPt: "merchant", eventPlural: "merchant_events", groupBy: "merchant_id", thresholdExample: "2" };
+  }
+
+  return { entityPt: "transação", eventPlural: "transactions", groupBy: "customer_id", thresholdExample: "5" };
+};
 
 const TOKEN_PT: Record<string, string> = {
   ACCOUNT: "conta",
@@ -596,6 +643,32 @@ const guessDslForKind = (name: string, kind: OperatorKind): string => {
   const upper = name.toUpperCase();
   if (HEAD_FIRST_EXAMPLES[upper]) return HEAD_FIRST_EXAMPLES[upper].sintaxe;
 
+  const ctx = inferTokenContext(upper);
+
+  // Templates por tokens (reduz repetição e deixa o exemplo "sobre" o assunto do operador)
+  if (upper.includes("VELOCITY")) {
+    return `VELOCITY(${ctx.eventPlural}, last_24h, ${ctx.groupBy}) GT ${ctx.thresholdExample}`;
+  }
+
+  // RATE / porcentagens (ex: CHARGEBACK_RATE_GT)
+  if (upper.includes("RATE") && (upper.endsWith("_GT") || upper.endsWith("_GTE") || upper.endsWith("_LT") || upper.endsWith("_LTE"))) {
+    if (upper.includes("CHARGEBACK")) return `merchant.chargeback_rate ${upper.endsWith("_LT") || upper.endsWith("_LTE") ? "LT" : "GT"} 0.02`;
+    if (upper.includes("FRAUD")) return `customer.fraud_rate ${upper.endsWith("_LT") || upper.endsWith("_LTE") ? "LT" : "GT"} 0.03`;
+    return `metrics.rate ${upper.endsWith("_LT") || upper.endsWith("_LTE") ? "LT" : "GT"} 0.02`;
+  }
+
+  // AGE em dias/minutos (ex: ACCOUNT_AGE_LT_DAYS)
+  if (upper.includes("AGE") && (upper.includes("_DAYS") || upper.includes("_MINUTES") || upper.includes("_HOURS"))) {
+    if (upper.includes("ACCOUNT")) return `account.age_${upper.includes("_DAYS") ? "days" : upper.includes("_HOURS") ? "hours" : "minutes"} LT 7`;
+    if (upper.includes("DEVICE")) return `device.first_seen_age_${upper.includes("_DAYS") ? "days" : upper.includes("_HOURS") ? "hours" : "minutes"} LT 1`;
+    return `entity.age_${upper.includes("_DAYS") ? "days" : upper.includes("_HOURS") ? "hours" : "minutes"} LT 7`;
+  }
+
+  // DETECTION/PATTERN/ANOMALY/TEST: deixa explícito que é ilustrativo (forma "função")
+  if (isHeuristicHeavyOperator(upper)) {
+    return `${upper}(transaction) IS_TRUE`;
+  }
+
   // Gerar sintaxe ÚNICA baseada no nome do operador
   // ═══════════════════════════════════════════════════════════════════════════
   
@@ -963,6 +1036,11 @@ const deriveDidacticKit = (operator: Operator): DidacticKit => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface HeadFirstExample {
+  // 📌 Metadados de documentação (para transparência/rigor)
+  docLevel?: OperatorDocLevel;
+  docConfidence?: OperatorDocConfidence;
+  docWarnings?: string[];
+
   // 🎭 História do mundo real
   historia: string;
   personagem: string;
@@ -1058,6 +1136,59 @@ interface HeadFirstExample {
   // 🔧 Como TESTAR esta regra antes de colocar em produção
   comoTestar?: string[];
 }
+
+type OperatorDocMeta = {
+  level: OperatorDocLevel;
+  confidence: OperatorDocConfidence;
+  warnings: string[];
+};
+
+const isHeuristicHeavyOperator = (nameRaw: string) => {
+  const name = nameRaw.toUpperCase();
+  return (
+    name.endsWith("_DETECTION") ||
+    name.endsWith("_PATTERN") ||
+    name.endsWith("_ANALYTICS") ||
+    name.endsWith("_ANOMALY") ||
+    name.endsWith("_TEST") ||
+    name.includes("_TEST_") ||
+    name.startsWith("ADAPTIVE_") ||
+    name.includes("BEHAVIORAL") ||
+    name.includes("BASELINE") ||
+    name.includes("ML") ||
+    name.includes("MODEL")
+  );
+};
+
+const docMetaForOperator = (name: string): OperatorDocMeta => {
+  const upper = name.toUpperCase();
+  const hasManual = Boolean(HEAD_FIRST_EXAMPLES[upper]);
+  const hasSpec = Boolean(OPERATOR_SPECS[upper]);
+
+  if (hasManual) {
+    return { level: "manual", confidence: "high", warnings: [] };
+  }
+
+  if (hasSpec) {
+    return {
+      level: "spec",
+      confidence: "high",
+      warnings: [],
+    };
+  }
+
+  const warnings: string[] = [
+    "Conteúdo gerado automaticamente (heurística).",
+    "Exemplos podem ser ilustrativos; confirme a semântica no backend/motor.",
+  ];
+
+  if (isHeuristicHeavyOperator(upper)) {
+    warnings.unshift("Este operador parece ser um detector/estatístico composto; a DSL exata pode não ser 1:1 com o nome.");
+    return { level: "generated", confidence: "low", warnings };
+  }
+
+  return { level: "generated", confidence: "medium", warnings };
+};
 
 // Mapeamento completo de exemplos Head First
 const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
@@ -2658,37 +2789,49 @@ const ANALOGIAS_POR_TIPO: Record<OperatorKind, { analogia: string; personagem: s
 // Gera história contextualizada baseada no nome do operador
 const gerarHistoriaContextualizada = (name: string, kind: OperatorKind): string => {
   const upper = name.toUpperCase();
+  const tokens = tokensToSet(upper);
+  const ctx = inferTokenContext(upper);
+
+  const actionPt =
+    tokens.has("CHANGE") ? "mudança" :
+    tokens.has("SWITCH") ? "troca" :
+    tokens.has("REUSE") ? "reuso" :
+    tokens.has("ADD") ? "adição" :
+    tokens.has("CAPTURE") ? "captura" :
+    tokens.has("TAKEOVER") ? "sequestro" :
+    tokens.has("SPIKE") ? "pico" :
+    tokens.has("DEVIATION") ? "desvio" :
+    tokens.has("ANOMALY") ? "anomalia" :
+    tokens.has("RING") ? "anel (rede)" :
+    tokens.has("LINK") ? "ligação" :
+    undefined;
+
+  const topic = actionPt ? `${actionPt} de ${ctx.entityPt}` : ctx.entityPt;
   
-  // Detectar contexto pelo nome do operador
-  if (upper.includes("VELOCITY") || upper.includes("COUNT")) {
-    return `Maria, analista de fraude, precisa detectar comportamento de alta frequência. O operador ${name} permite monitorar a velocidade de eventos e identificar padrões anômalos.`;
+  // Detectar contexto pelo nome do operador (token-based; menos repetição)
+  if (tokens.has("VELOCITY") || tokens.has("COUNT") || tokens.has("SUM") || tokens.has("AVG")) {
+    return `Maria, analista de fraude, precisa medir ${topic} ao longo do tempo. O operador ${name} ajuda a transformar histórico em um número (contagem/soma/velocidade) para detectar comportamento fora do normal.`;
   }
-  if (upper.includes("AMOUNT") || upper.includes("SUM") || upper.includes("VALUE")) {
-    return `João, do time de risco, precisa avaliar valores de transação. O operador ${name} ajuda a identificar movimentações suspeitas por valor.`;
+  if (tokens.has("DEVICE") || tokens.has("FINGERPRINT") || tokens.has("BROWSER") || tokens.has("USER_AGENT")) {
+    return `Carlos, especialista em segurança, precisa avaliar a confiabilidade do ${topic}. O operador ${name} destaca sinais técnicos (fingerprint, inconsistência, automação) que um olho humano não percebe facilmente.`;
   }
-  if (upper.includes("DEVICE") || upper.includes("FINGERPRINT") || upper.includes("BROWSER")) {
-    return `Carlos, especialista em segurança, precisa avaliar a confiabilidade do dispositivo. O operador ${name} analisa características técnicas do device.`;
+  if (tokens.has("EMAIL") || tokens.has("PHONE") || tokens.has("CPF") || tokens.has("ADDRESS") || tokens.has("IDENTITY")) {
+    return `Ana, do onboarding, precisa validar ${topic} antes de aprovar o cliente. O operador ${name} ajuda a detectar dados falsos, temporários ou inconsistentes.`;
   }
-  if (upper.includes("EMAIL") || upper.includes("PHONE") || upper.includes("CPF") || upper.includes("ADDRESS")) {
-    return `Ana, do onboarding, precisa validar dados cadastrais. O operador ${name} verifica a consistência das informações do cliente.`;
+  if (tokens.has("MERCHANT") || tokens.has("MCC") || tokens.has("STORE")) {
+    return `Pedro, analista de pagamentos, precisa entender o risco do ${topic}. O operador ${name} ajuda a aplicar regras diferentes por tipo de estabelecimento e comportamento.`;
   }
-  if (upper.includes("MERCHANT") || upper.includes("MCC") || upper.includes("STORE")) {
-    return `Pedro, analista de pagamentos, precisa avaliar o estabelecimento. O operador ${name} verifica características do merchant.`;
+  if (tokens.has("DATE") || tokens.has("TIME") || tokens.has("DAY") || tokens.has("HOUR") || tokens.has("WEEK") || tokens.has("MONTH") || tokens.has("YEAR")) {
+    return `Fernanda, do monitoramento, precisa criar regras baseadas em tempo: ${topic}. O operador ${name} permite capturar padrões como "madrugada", "fim de semana" e "conta recente".`;
   }
-  if (upper.includes("DATE") || upper.includes("TIME") || upper.includes("DAY") || upper.includes("HOUR")) {
-    return `Fernanda, do monitoramento, precisa criar regras temporais. O operador ${name} permite avaliar datas e horários suspeitos.`;
+  if (tokens.has("GRAPH") || tokens.has("NEO4J") || tokens.has("NETWORK") || tokens.has("LINK") || tokens.has("RING") || tokens.has("CLUSTER")) {
+    return `Ricardo, investigador de fraude, precisa mapear conexões relacionadas a ${topic}. O operador ${name} ajuda a revelar relações indiretas (mesmo device, mesmo endereço, mesma rede) que indicam conluio.`;
   }
-  if (upper.includes("GRAPH") || upper.includes("NEO4J") || upper.includes("NETWORK") || upper.includes("LINK")) {
-    return `Ricardo, investigador de fraude, precisa mapear conexões. O operador ${name} revela relações ocultas entre entidades.`;
+  if (tokens.has("SANCTION") || tokens.has("PEP") || tokens.has("ADVERSE") || tokens.has("FATF") || tokens.has("GDPR") || tokens.has("DORA") || tokens.has("EIDAS")) {
+    return `Juliana, do compliance, precisa validar requisitos regulatórios ligados a ${topic}. O operador ${name} automatiza checagens que seriam manuais e sujeitas a erro.`;
   }
-  if (upper.includes("SANCTION") || upper.includes("PEP") || upper.includes("ADVERSE") || upper.includes("FATF")) {
-    return `Juliana, do compliance, precisa verificar listas regulatórias. O operador ${name} automatiza verificações obrigatórias.`;
-  }
-  if (upper.includes("ANOMALY") || upper.includes("DEVIATION") || upper.includes("SCORE")) {
-    return `Marcos, cientista de dados, precisa detectar outliers. O operador ${name} usa estatística para identificar anomalias.`;
-  }
-  if (upper.includes("DORA") || upper.includes("GDPR") || upper.includes("PLT_") || upper.includes("EIDAS")) {
-    return `Beatriz, do jurídico, precisa garantir compliance regulatório. O operador ${name} verifica conformidade com normas específicas.`;
+  if (tokens.has("ANOMALY") || tokens.has("DEVIATION") || tokens.has("TEST") || tokens.has("SCORE") || tokens.has("ADAPTIVE")) {
+    return `Marcos, cientista de dados, precisa detectar ${topic} com base em estatística/modelos. O operador ${name} ajuda a sinalizar outliers e mudanças abruptas de padrão.`;
   }
   
   // Fallback baseado no kind
@@ -2720,18 +2863,32 @@ const gerarHistoriaContextualizada = (name: string, kind: OperatorKind): string 
 // Gera problema contextualizado
 const gerarProblemaContextualizado = (name: string, kind: OperatorKind): string => {
   const upper = name.toUpperCase();
+  const tokens = tokensToSet(upper);
+  const ctx = inferTokenContext(upper);
+
+  const actionPt =
+    tokens.has("CHANGE") ? "mudança" :
+    tokens.has("SWITCH") ? "troca" :
+    tokens.has("REUSE") ? "reuso" :
+    tokens.has("TAKEOVER") ? "sequestro de conta" :
+    tokens.has("CAPTURE") ? "captura" :
+    tokens.has("SPIKE") ? "pico" :
+    tokens.has("ANOMALY") ? "anomalia" :
+    tokens.has("DEVIATION") ? "desvio" :
+    undefined;
+
+  const topic = actionPt ? `${actionPt} de ${ctx.entityPt}` : ctx.entityPt;
   
-  if (upper.includes("VELOCITY")) return "Como detectar padrões de alta frequência que indicam automação ou fraude?";
-  if (upper.includes("COUNT")) return "Como contar eventos em um período para identificar comportamento anômalo?";
-  if (upper.includes("SUM")) return "Como somar valores para detectar fragmentação (smurfing)?";
-  if (upper.includes("DEVICE")) return "Como avaliar se o dispositivo é confiável ou suspeito?";
-  if (upper.includes("FINGERPRINT")) return "Como identificar dispositivos únicos mesmo com dados alterados?";
-  if (upper.includes("EMAIL")) return "Como validar se o e-mail é legítimo ou temporário/descartável?";
-  if (upper.includes("PHONE")) return "Como verificar se o telefone é real ou VoIP descartável?";
-  if (upper.includes("MERCHANT") || upper.includes("MCC")) return "Como avaliar o risco do estabelecimento comercial?";
-  if (upper.includes("GRAPH") || upper.includes("NEO4J")) return "Como descobrir conexões ocultas entre entidades suspeitas?";
-  if (upper.includes("SANCTION") || upper.includes("PEP")) return "Como automatizar verificações de compliance obrigatórias?";
-  if (upper.includes("ANOMALY") || upper.includes("DEVIATION")) return "Como detectar comportamentos que fogem do padrão estatístico?";
+  if (tokens.has("VELOCITY")) return `Como detectar ${topic} em alta frequência (sinal de automação/fraude)?`;
+  if (tokens.has("COUNT")) return `Como contar eventos relacionados a ${topic} dentro de uma janela de tempo?`;
+  if (tokens.has("SUM")) return `Como somar valores relacionados a ${topic} para detectar fragmentação/estruturação (smurfing)?`;
+  if (tokens.has("DEVICE") || tokens.has("FINGERPRINT") || tokens.has("BROWSER")) return `Como avaliar se o ${topic} é confiável ou suspeito?`;
+  if (tokens.has("EMAIL")) return `Como validar se o e-mail é legítimo ou temporário/descartável?`;
+  if (tokens.has("PHONE")) return `Como verificar se o telefone é real ou descartável/VoIP?`;
+  if (tokens.has("MERCHANT") || tokens.has("MCC")) return `Como avaliar o risco do merchant (categoria/MCC/comportamento)?`;
+  if (tokens.has("GRAPH") || tokens.has("NEO4J") || tokens.has("NETWORK") || tokens.has("LINK") || tokens.has("RING")) return `Como descobrir conexões ocultas relacionadas a ${topic}?`;
+  if (tokens.has("SANCTION") || tokens.has("PEP") || tokens.has("ADVERSE") || tokens.has("FATF")) return `Como automatizar checagens obrigatórias de compliance relacionadas a ${topic}?`;
+  if (tokens.has("ANOMALY") || tokens.has("DEVIATION") || tokens.has("TEST") || tokens.has("ADAPTIVE") || tokens.has("SCORE")) return `Como detectar ${topic} que foge do padrão estatístico/modelo?`;
   
   const kindProblemas: Record<OperatorKind, string> = {
     logical: "Como combinar múltiplas condições de forma eficiente?",
@@ -2759,15 +2916,81 @@ const gerarProblemaContextualizado = (name: string, kind: OperatorKind): string 
 };
 
 const deriveHeadFirstExample = (name: string): HeadFirstExample => {
-  const found = HEAD_FIRST_EXAMPLES[name] || HEAD_FIRST_EXAMPLES[name.toUpperCase()];
-  if (found) return found;
+  const upper = name.toUpperCase();
+  const found = HEAD_FIRST_EXAMPLES[name] || HEAD_FIRST_EXAMPLES[upper];
+  if (found) {
+    return {
+      ...found,
+      docLevel: "manual",
+      docConfidence: "high",
+      docWarnings: [],
+    };
+  }
+
+  const spec = OPERATOR_SPECS[upper];
+  if (spec) {
+    const kind = classifyOperator(name);
+    const info = ANALOGIAS_POR_TIPO[kind];
+    const sintaxeGerada = spec.syntax ?? guessDslForKind(name, kind);
+    return {
+      docLevel: "spec",
+      docConfidence: "high",
+      docWarnings: [],
+      historia: spec.story ?? gerarHistoriaContextualizada(name, kind),
+      personagem: info.personagem,
+      problema: spec.problem ?? gerarProblemaContextualizado(name, kind),
+      analogia: spec.analogy ?? info.analogia,
+      passoAPasso: spec.stepByStep ?? [
+        `1️⃣ Identifique o campo relevante para o operador ${name}`,
+        `2️⃣ Aplique ${name} com os parâmetros apropriados`,
+        "3️⃣ Configure valores/limites baseados no seu cenário",
+        "4️⃣ Teste com dados reais antes de publicar",
+      ],
+      antes: spec.before ?? `❌ ANTES: Sem ${name}, você precisaria de lógica mais complexa ou manual para este cenário.`,
+      depois: spec.after ?? `✅ DEPOIS: Com ${name}, a regra fica direta, eficiente e fácil de manter.`,
+      sintaxe: sintaxeGerada,
+      explicacaoSintaxe: spec.syntaxExplanation ?? gerarExplicacaoSintaxeUnica(name, kind, sintaxeGerada),
+      perguntaComum: spec.commonQuestion ?? gerarProblemaContextualizado(name, kind),
+      respostaPergunta: spec.commonAnswer ?? `Use ${name} quando precisar de ${kind === "unknown" ? "verificação especializada" : kind.replace("_", " ")}. Veja os campos sugeridos e exemplos nesta página.`,
+      dicaDeOuro: spec.goldenTip ?? info.dicaDeOuro,
+      comportamentoMotor: spec.engineBehavior
+        ? {
+            descricao: spec.engineBehavior.description,
+            passos: spec.engineBehavior.steps,
+            performance: spec.engineBehavior.performance,
+            cuidados: spec.engineBehavior.cautions,
+          }
+        : undefined,
+      situacoesReais: spec.realScenarios
+        ? spec.realScenarios.map((s) => ({
+            titulo: s.title,
+            contexto: s.context,
+            problema: s.problem,
+            solucao: s.solution,
+            impacto: s.impact,
+          }))
+        : undefined,
+      resultadosPossiveis: spec.possibleOutcomes
+        ? {
+            quandoDispara: spec.possibleOutcomes.whenTrue,
+            quandoNaoDispara: spec.possibleOutcomes.whenFalse,
+            acaoRecomendada: spec.possibleOutcomes.recommendedAction,
+          }
+        : undefined,
+      comoTestar: spec.howToTest,
+    };
+  }
 
   // Gerar exemplo contextualizado baseado na classificação
   const kind = classifyOperator(name);
   const info = ANALOGIAS_POR_TIPO[kind];
   const sintaxeGerada = guessDslForKind(name, kind);
+  const meta = docMetaForOperator(name);
   
   return {
+    docLevel: meta.level,
+    docConfidence: meta.confidence,
+    docWarnings: meta.warnings,
     historia: gerarHistoriaContextualizada(name, kind),
     personagem: info.personagem,
     problema: gerarProblemaContextualizado(name, kind),
@@ -2935,6 +3158,7 @@ const getCategoryGuide = (category: string) =>
 export default function Operators() {
   const [expandedOperator, setExpandedOperator] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [strictDocs, setStrictDocs] = useState(false);
 
   const operatorNames = BACKEND_OPERATORS.map((o) => o.name);
   const uniqueNameCount = new Set(operatorNames).size;
@@ -2966,6 +3190,8 @@ export default function Operators() {
   }));
 
   const headFirstCoverage = operators.filter((o) => Boolean(HEAD_FIRST_EXAMPLES[o.name] || HEAD_FIRST_EXAMPLES[o.name.toUpperCase()])).length;
+  const specCoverage = operators.filter((o) => Boolean(OPERATOR_SPECS[o.name.toUpperCase()])).length;
+  const generatedCoverage = Math.max(0, operators.length - headFirstCoverage - specCoverage);
 
   const filteredOperators = searchTerm
     ? operators.filter(
@@ -3059,6 +3285,25 @@ export default function Operators() {
             <span className="rounded-full bg-slate-100 px-2 py-1 dark:bg-slate-800">
               🎭 Head First: <span className="font-semibold text-foreground">{headFirstCoverage}</span> com histórias completas
             </span>
+            <span className="rounded-full bg-slate-100 px-2 py-1 dark:bg-slate-800">
+              📘 Spec: <span className="font-semibold text-foreground">{specCoverage}</span>
+            </span>
+            <span className="rounded-full bg-slate-100 px-2 py-1 dark:bg-slate-800">
+              🤖 Gerado: <span className="font-semibold text-foreground">{generatedCoverage}</span>
+            </span>
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-md bg-slate-50 p-3 dark:bg-slate-900/30">
+            <div className="text-xs">
+              <div className="font-semibold text-foreground">🧾 Transparência</div>
+              <div className="mt-0.5">
+                Quando estiver marcado como <span className="font-semibold text-foreground">Gerado</span>, o texto é heurístico (porque o backend não traz descrição por operador).
+              </div>
+            </div>
+            <label className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-100 px-3 py-1 dark:bg-slate-800">
+              <input type="checkbox" checked={strictDocs} onChange={(e) => setStrictDocs(e.target.checked)} />
+              <span className="font-medium text-foreground">Modo rigoroso</span>
+            </label>
           </div>
 
           {uniqueNameCount !== BACKEND_OPERATORS.length && (
@@ -3170,6 +3415,21 @@ export default function Operators() {
                           <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                             {operator.type}
                           </span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                              hf.docLevel === "manual"
+                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
+                                : hf.docLevel === "spec"
+                                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                  : hf.docConfidence === "low"
+                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                    : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                            }`}
+                          >
+                            {hf.docLevel === "manual" && "✅ Manual"}
+                            {hf.docLevel === "spec" && "📘 Spec"}
+                            {hf.docLevel === "generated" && (hf.docConfidence === "low" ? "⚠️ Gerado (baixo)" : "🤖 Gerado")}
+                          </span>
                         </div>
                         <p className="mt-1 text-sm text-muted-foreground">{operator.purpose}</p>
                       </div>
@@ -3194,8 +3454,22 @@ export default function Operators() {
                             Copiar
                           </button>
                         </div>
-                        <pre className="mt-1 overflow-x-auto text-sm text-green-400">{hf.sintaxe}</pre>
+                        {strictDocs && hf.docLevel === "generated" ? (
+                          <div className="mt-2 rounded bg-red-900/40 p-2 text-xs text-red-200">
+                            Modo rigoroso: este operador não tem documentação fonte.
+                            Adicione uma entrada em <span className="font-semibold">client/src/manual/operatorSpecs.ts</span> para liberar exemplos.
+                          </div>
+                        ) : (
+                          <pre className="mt-1 overflow-x-auto text-sm text-green-400">{hf.sintaxe}</pre>
+                        )}
                       </div>
+
+                      {!strictDocs && hf.docWarnings && hf.docWarnings.length > 0 && (
+                        <div className="rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                          <div className="font-semibold">⚠️ Atenção (conteúdo gerado)</div>
+                          <div className="mt-1">{hf.docWarnings[0]}</div>
+                        </div>
+                      )}
 
                       {/* Quando usar - resumo em 1 linha */}
                       <div className="flex items-start gap-2 rounded-lg bg-green-50 p-2 text-xs dark:bg-green-950">
@@ -3227,6 +3501,16 @@ export default function Operators() {
                     {/* Conteúdo expandido */}
                     {isExpanded && (
                       <div className="mt-4 space-y-4 border-t pt-4" onClick={(e) => e.stopPropagation()}>
+                        {!strictDocs && hf.docWarnings && hf.docWarnings.length > 0 && (
+                          <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                            <div className="font-semibold">⚠️ Transparência</div>
+                            <ul className="mt-2 space-y-1 text-xs">
+                              {hf.docWarnings.slice(0, 5).map((w) => (
+                                <li key={w}>• {w}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                         {/* 🧩 Como ler o nome */}
                         <div className="rounded-lg bg-slate-50 p-4 dark:bg-slate-900/30">
                           <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
@@ -3314,12 +3598,29 @@ export default function Operators() {
                           <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
                             <span>💻</span> Sintaxe DSL
                           </div>
-                          <pre className="overflow-x-auto rounded-lg bg-slate-900 p-3 text-sm text-green-400">
-                            {hf.sintaxe}
-                          </pre>
-                          <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-                            {hf.explicacaoSintaxe}
-                          </p>
+                          {strictDocs && hf.docLevel === "generated" ? (
+                            <div className="rounded-lg border-l-4 border-red-500 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+                              <div className="font-semibold">Modo rigoroso</div>
+                              <div className="mt-1 text-xs">
+                                Este operador está sem documentação fonte. Para liberar exemplos, crie uma entrada em <span className="font-semibold">client/src/manual/operatorSpecs.ts</span>.
+                              </div>
+                              <button
+                                className="mt-2 rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
+                                onClick={() => navigator.clipboard.writeText(operator.name)}
+                              >
+                                Copiar nome do operador
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <pre className="overflow-x-auto rounded-lg bg-slate-900 p-3 text-sm text-green-400">
+                                {hf.sintaxe}
+                              </pre>
+                              <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                                {hf.explicacaoSintaxe}
+                              </p>
+                            </>
+                          )}
                         </div>
 
                         {/* ❓ Não existem perguntas idiotas */}
