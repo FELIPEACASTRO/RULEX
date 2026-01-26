@@ -1979,13 +1979,15 @@ export default function Operators() {
                 return (
                   <div
                     key={operator.name}
-                    className={`cursor-pointer rounded-xl border-2 bg-card p-4 transition-all hover:border-blue-300 hover:shadow-lg ${
+                    className={`rounded-xl border-2 bg-card p-4 transition-all hover:border-blue-300 hover:shadow-lg ${
                       isExpanded ? "border-blue-500 shadow-xl" : ""
                     }`}
-                    onClick={() => toggleExpand(operator.name)}
                   >
                     {/* Header sempre visível */}
-                    <div className="flex items-start justify-between gap-2">
+                    <div 
+                      className="flex cursor-pointer items-start justify-between gap-2"
+                      onClick={() => toggleExpand(operator.name)}
+                    >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <code className="rounded bg-slate-100 px-2 py-1 text-sm font-bold text-blue-600 dark:bg-slate-800 dark:text-blue-400">
@@ -2000,12 +2002,52 @@ export default function Operators() {
                       <span className="text-lg">{isExpanded ? "🔽" : "▶️"}</span>
                     </div>
 
-                    {/* Preview rápido (sempre visível) */}
-                    <div className="mt-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>💡</span>
-                        <span className="line-clamp-1">{hf.analogia}</span>
+                    {/* ═══════════════════════════════════════════════════════════════════ */}
+                    {/* 🎯 GUIA RÁPIDO - SEMPRE VISÍVEL */}
+                    {/* ═══════════════════════════════════════════════════════════════════ */}
+                    <div className="mt-3 space-y-2">
+                      {/* Sintaxe copiável */}
+                      <div className="rounded-lg bg-slate-900 p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-400">📋 Sintaxe (clique para copiar)</span>
+                          <button
+                            className="rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-300 hover:bg-slate-600"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(hf.sintaxe);
+                            }}
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                        <pre className="mt-1 overflow-x-auto text-sm text-green-400">{hf.sintaxe}</pre>
                       </div>
+
+                      {/* Quando usar - resumo em 1 linha */}
+                      <div className="flex items-start gap-2 rounded-lg bg-green-50 p-2 text-xs dark:bg-green-950">
+                        <span className="mt-0.5">✅</span>
+                        <div>
+                          <span className="font-semibold text-green-800 dark:text-green-200">Quando usar: </span>
+                          <span className="text-green-700 dark:text-green-300">{kit.quandoUsar[0]}</span>
+                        </div>
+                      </div>
+
+                      {/* Dica rápida */}
+                      <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-2 text-xs dark:bg-amber-950">
+                        <span className="mt-0.5">💎</span>
+                        <div>
+                          <span className="font-semibold text-amber-800 dark:text-amber-200">Dica: </span>
+                          <span className="text-amber-700 dark:text-amber-300">{hf.dicaDeOuro.replace("💎 ", "")}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Clique para expandir */}
+                    <div 
+                      className="mt-3 cursor-pointer text-center text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => toggleExpand(operator.name)}
+                    >
+                      {isExpanded ? "▲ Ver menos" : "▼ Ver exemplo completo, passo a passo e mais detalhes"}
                     </div>
 
                     {/* Conteúdo expandido */}
