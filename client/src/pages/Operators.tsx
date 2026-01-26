@@ -3220,14 +3220,27 @@ export default function Operators() {
       {/* HEADER - BEM-VINDO AO GUIA */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       <div className="rounded-xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 dark:border-blue-800 dark:from-blue-950 dark:to-indigo-950">
-        <div className="flex items-center gap-3">
-          <span className="text-4xl">🧠</span>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Guia de Operadores - Estilo "Use a Cabeça"</h1>
-            <p className="text-sm text-muted-foreground">
-              Aprenda cada operador com histórias, analogias e exemplos do mundo real
-            </p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-4xl">🧠</span>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Guia de Operadores - Estilo "Use a Cabeça"</h1>
+              <p className="text-sm text-muted-foreground">
+                Aprenda cada operador com histórias, analogias e exemplos do mundo real
+              </p>
+            </div>
           </div>
+          <a
+            href="/src/manual/COMO_USAR_OPERADORES.md"
+            target="_blank"
+            className="flex items-center gap-2 rounded-lg border-2 border-green-500 bg-green-50 px-4 py-2 text-sm font-bold text-green-800 transition-all hover:bg-green-100 dark:bg-green-950 dark:text-green-200"
+          >
+            <span className="text-2xl">📖</span>
+            <div>
+              <div>Como Usar</div>
+              <div className="text-xs font-normal">Exemplos práticos do backend</div>
+            </div>
+          </a>
         </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -3592,6 +3605,158 @@ export default function Operators() {
                             <p className="mt-1 text-xs text-green-700 dark:text-green-300">{hf.depois}</p>
                           </div>
                         </div>
+
+                        {/* ═══════════════════════════════════════════════════════════════════ */}
+                        {/* 🏭 INFORMAÇÕES ENRIQUECIDAS DO BACKEND (OPERATOR_SPECS) */}
+                        {/* ═══════════════════════════════════════════════════════════════════ */}
+                        {OPERATOR_SPECS[operator.name] && (
+                          <div className="space-y-4 rounded-xl border-2 border-blue-300 bg-blue-50/50 p-4 dark:border-blue-700 dark:bg-blue-950/30">
+                            <div className="flex items-center gap-2 text-lg font-bold text-blue-800 dark:text-blue-200">
+                              <span>📘</span> Documentação Técnica (Backend Real)
+                            </div>
+
+                            {/* 🔄 Comportamento do Motor */}
+                            {OPERATOR_SPECS[operator.name].engineBehavior && (
+                              <div className="rounded-lg bg-white/80 p-4 dark:bg-black/40">
+                                <div className="mb-3 flex items-center gap-2 text-sm font-bold text-indigo-800 dark:text-indigo-200">
+                                  <span>🔄</span> Como o Motor Executa Este Operador
+                                </div>
+                                <p className="mb-3 text-sm text-indigo-700 dark:text-indigo-300">
+                                  {OPERATOR_SPECS[operator.name].engineBehavior?.description}
+                                </p>
+                                <div className="space-y-1.5">
+                                  {OPERATOR_SPECS[operator.name].engineBehavior?.steps.map((step, i) => (
+                                    <div key={i} className="flex items-start gap-2 rounded bg-indigo-50 p-2 text-xs text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                                      <span className="font-mono font-bold">{step}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                {OPERATOR_SPECS[operator.name].engineBehavior?.performance && (
+                                  <div className="mt-3 rounded-lg bg-green-50 p-3 dark:bg-green-950">
+                                    <div className="text-xs font-semibold text-green-800 dark:text-green-200">
+                                      ⚡ Performance
+                                    </div>
+                                    <p className="mt-1 text-xs text-green-700 dark:text-green-300">
+                                      {OPERATOR_SPECS[operator.name].engineBehavior?.performance}
+                                    </p>
+                                  </div>
+                                )}
+                                {OPERATOR_SPECS[operator.name].engineBehavior?.cautions && OPERATOR_SPECS[operator.name].engineBehavior.cautions.length > 0 && (
+                                  <div className="mt-3 rounded-lg bg-amber-50 p-3 dark:bg-amber-950">
+                                    <div className="text-xs font-semibold text-amber-800 dark:text-amber-200">
+                                      ⚠️ Cuidados Importantes
+                                    </div>
+                                    <ul className="mt-2 space-y-1 text-xs text-amber-700 dark:text-amber-300">
+                                      {OPERATOR_SPECS[operator.name].engineBehavior?.cautions.map((caution, i) => (
+                                        <li key={i} className="flex items-start gap-1">
+                                          <span className="mt-0.5">•</span>
+                                          <span>{caution}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* 🎬 Cenários Reais */}
+                            {OPERATOR_SPECS[operator.name].realScenarios && OPERATOR_SPECS[operator.name].realScenarios.length > 0 && (
+                              <div className="rounded-lg bg-white/80 p-4 dark:bg-black/40">
+                                <div className="mb-3 flex items-center gap-2 text-sm font-bold text-purple-800 dark:text-purple-200">
+                                  <span>🎬</span> Cenários Reais do Dia a Dia ({OPERATOR_SPECS[operator.name].realScenarios.length})
+                                </div>
+                                <div className="space-y-3">
+                                  {OPERATOR_SPECS[operator.name].realScenarios?.map((scenario, i) => (
+                                    <div key={i} className="rounded-lg border-l-4 border-purple-400 bg-purple-50 p-3 dark:border-purple-600 dark:bg-purple-950">
+                                      <div className="text-sm font-bold text-purple-900 dark:text-purple-100">
+                                        {i + 1}. {scenario.title}
+                                      </div>
+                                      <div className="mt-2 space-y-1.5 text-xs">
+                                        <div>
+                                          <span className="font-semibold text-purple-800 dark:text-purple-200">📍 Contexto:</span>
+                                          <span className="ml-1 text-purple-700 dark:text-purple-300">{scenario.context}</span>
+                                        </div>
+                                        <div>
+                                          <span className="font-semibold text-purple-800 dark:text-purple-200">🔴 Problema:</span>
+                                          <span className="ml-1 text-purple-700 dark:text-purple-300">{scenario.problem}</span>
+                                        </div>
+                                        <div>
+                                          <span className="font-semibold text-purple-800 dark:text-purple-200">✅ Solução:</span>
+                                          <span className="ml-1 text-purple-700 dark:text-purple-300">{scenario.solution}</span>
+                                        </div>
+                                        <div className="mt-2 rounded bg-emerald-100 p-2 dark:bg-emerald-900">
+                                          <span className="font-semibold text-emerald-800 dark:text-emerald-200">💰 Impacto Real:</span>
+                                          <span className="ml-1 text-emerald-700 dark:text-emerald-300">{scenario.impact}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 📊 Resultados Possíveis */}
+                            {OPERATOR_SPECS[operator.name].possibleOutcomes && (
+                              <div className="rounded-lg bg-white/80 p-4 dark:bg-black/40">
+                                <div className="mb-3 flex items-center gap-2 text-sm font-bold text-cyan-800 dark:text-cyan-200">
+                                  <span>📊</span> O Que Acontece Quando...
+                                </div>
+                                <div className="space-y-2">
+                                  <div className="rounded-lg bg-green-50 p-3 dark:bg-green-950">
+                                    <div className="text-xs font-semibold text-green-800 dark:text-green-200">
+                                      ✅ Quando a regra DISPARA (retorna true)
+                                    </div>
+                                    <p className="mt-1 text-xs text-green-700 dark:text-green-300">
+                                      {OPERATOR_SPECS[operator.name].possibleOutcomes?.whenTrue}
+                                    </p>
+                                  </div>
+                                  <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-950">
+                                    <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                      ⏸️ Quando a regra NÃO dispara (retorna false)
+                                    </div>
+                                    <p className="mt-1 text-xs text-slate-700 dark:text-slate-300">
+                                      {OPERATOR_SPECS[operator.name].possibleOutcomes?.whenFalse}
+                                    </p>
+                                  </div>
+                                  {OPERATOR_SPECS[operator.name].possibleOutcomes?.recommendedAction && (
+                                    <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+                                      <div className="text-xs font-semibold text-blue-800 dark:text-blue-200">
+                                        💡 Ação Recomendada
+                                      </div>
+                                      <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                                        {OPERATOR_SPECS[operator.name].possibleOutcomes?.recommendedAction}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 🧪 Como Testar */}
+                            {OPERATOR_SPECS[operator.name].howToTest && OPERATOR_SPECS[operator.name].howToTest.length > 0 && (
+                              <div className="rounded-lg bg-white/80 p-4 dark:bg-black/40">
+                                <div className="mb-3 flex items-center gap-2 text-sm font-bold text-teal-800 dark:text-teal-200">
+                                  <span>🧪</span> Como Testar Esta Regra (Passo a Passo)
+                                </div>
+                                <div className="space-y-2">
+                                  {OPERATOR_SPECS[operator.name].howToTest?.map((step, i) => (
+                                    <div key={i} className="flex items-start gap-2 rounded-lg bg-teal-50 p-2 text-xs text-teal-700 dark:bg-teal-950 dark:text-teal-300">
+                                      <span className="font-mono font-semibold text-teal-800 dark:text-teal-200">{step}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="mt-3 rounded-lg border border-dashed border-teal-400 bg-teal-50/50 p-3 dark:border-teal-600 dark:bg-teal-950/30">
+                                  <div className="text-xs font-semibold text-teal-800 dark:text-teal-200">
+                                    💡 Dica de Teste
+                                  </div>
+                                  <p className="mt-1 text-xs text-teal-700 dark:text-teal-300">
+                                    Sempre teste com 3 casos: (1) caso normal que deve disparar, (2) caso normal que NÃO deve disparar, (3) edge case (no limite exato do threshold).
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                         {/* 💻 Sintaxe DSL */}
                         <div className="rounded-lg bg-slate-100 p-4 dark:bg-slate-800">
