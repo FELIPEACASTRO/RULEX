@@ -777,6 +777,37 @@ interface HeadFirstExample {
     pergunta: string;
     resposta: string;
   };
+  
+  // ══════════════════════════════════════════════════════════════════════════
+  // 🏭 COMPORTAMENTO NO MOTOR DE REGRAS (O QUE ACONTECE QUANDO EXECUTA)
+  // ══════════════════════════════════════════════════════════════════════════
+  
+  // 🔄 O que acontece quando a regra é avaliada (passo a passo do motor)
+  comportamentoMotor?: {
+    descricao: string;
+    passos: string[];
+    performance?: string;
+    cuidados?: string[];
+  };
+  
+  // 🎬 Situações REAIS do dia a dia onde usar este operador
+  situacoesReais?: Array<{
+    titulo: string;
+    contexto: string;
+    problema: string;
+    solucao: string;
+    impacto: string;
+  }>;
+  
+  // 📊 Resultados possíveis quando a regra dispara/não dispara
+  resultadosPossiveis?: {
+    quandoDispara: string;
+    quandoNaoDispara: string;
+    acaoRecomendada?: string;
+  };
+  
+  // 🔧 Como TESTAR esta regra antes de colocar em produção
+  comoTestar?: string[];
 }
 
 // Mapeamento completo de exemplos Head First
@@ -849,6 +880,67 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
       pergunta: "Crie uma regra AND que detecte: valor > R$3.000 E cartão não verificado E horário entre 22h e 6h",
       resposta: "(amount GT 3000) AND (card_verified EQ false) AND (hour BETWEEN 22 AND 6)",
     },
+    
+    // 🏭 COMPORTAMENTO NO MOTOR DE REGRAS
+    comportamentoMotor: {
+      descricao: "Quando o motor encontra um AND, ele avalia as condições da esquerda para a direita com 'curto-circuito': se uma falha, para imediatamente.",
+      passos: [
+        "1️⃣ Motor recebe a transação no payload JSON",
+        "2️⃣ Identifica que a regra usa AND com N condições",
+        "3️⃣ Avalia a primeira condição (ex: amount GT 5000)",
+        "4️⃣ Se FALSA → para imediatamente, retorna FALSO (não avalia as outras)",
+        "5️⃣ Se VERDADEIRA → avalia a próxima condição",
+        "6️⃣ Repete até encontrar FALSA ou chegar ao fim",
+        "7️⃣ Se todas foram verdadeiras → retorna VERDADEIRO e dispara a regra",
+      ],
+      performance: "⚡ O curto-circuito torna AND eficiente: coloque a condição mais provável de ser FALSA primeiro para economizar processamento",
+      cuidados: [
+        "A ordem das condições pode afetar performance",
+        "Condições com chamadas externas (APIs) devem vir por último",
+        "Se uma condição depende de outra, garanta a ordem correta",
+      ],
+    },
+    
+    // 🎬 SITUAÇÕES REAIS
+    situacoesReais: [
+      {
+        titulo: "Black Friday - Compra fora do padrão",
+        contexto: "Durante a Black Friday, um cliente VIP (3 anos de conta) faz uma compra de R$15.000 em eletrônicos",
+        problema: "Sem AND, você bloquearia TODAS as compras acima de R$10.000, irritando clientes VIPs legítimos",
+        solucao: "(amount GT 10000) AND (account_age_days LT 30) - só bloqueia se valor alto E conta nova",
+        impacto: "🎯 Reduz falsos positivos em 60%: VIPs compram à vontade, contas novas são monitoradas",
+      },
+      {
+        titulo: "Cartão clonado - Múltiplos sinais",
+        contexto: "Fraudador rouba dados do cartão e tenta compra de madrugada, valor alto, primeiro uso online",
+        problema: "Cada sinal isolado pode ser legítimo. Juntos, são alarmantes.",
+        solucao: "(hour BETWEEN 1 AND 5) AND (amount GT 3000) AND (is_first_online_purchase EQ true)",
+        impacto: "🔒 Detecta 85% dos cartões clonados com combinação de fatores de risco",
+      },
+      {
+        titulo: "Compliance BACEN - PIX noturno",
+        contexto: "Regulação exige limite de R$1.000 para PIX noturno (20h-6h)",
+        problema: "Você precisa aplicar limite APENAS no horário noturno E apenas para PIX",
+        solucao: "(channel EQ \"PIX\") AND (hour BETWEEN 20 AND 6) AND (amount GT 1000)",
+        impacto: "📋 Conformidade regulatória 100%: bloqueia PIX noturno acima do limite",
+      },
+    ],
+    
+    // 📊 RESULTADOS POSSÍVEIS
+    resultadosPossiveis: {
+      quandoDispara: "🚨 A transação é marcada para AÇÃO (bloqueio, análise manual, score aumentado, etc.) - TODAS as condições foram atendidas",
+      quandoNaoDispara: "✅ A transação PASSA normalmente - pelo menos UMA condição não foi atendida",
+      acaoRecomendada: "Configure a ação da regra: BLOCK (bloquear), REVIEW (análise manual), FLAG (marcar), ou SCORE (adicionar pontos de risco)",
+    },
+    
+    // 🔧 COMO TESTAR
+    comoTestar: [
+      "📝 Teste 1 (Deve disparar): Envie transação com TODAS as condições verdadeiras",
+      "📝 Teste 2 (Não deve disparar): Envie com apenas UMA condição falsa",
+      "📝 Teste 3 (Borda): Teste valores exatamente no limite (ex: amount = 5000 quando regra é GT 5000)",
+      "📝 Teste 4 (Dados ausentes): O que acontece se um campo vier null?",
+      "📝 Teste 5 (Performance): Com 5+ condições, meça o tempo de resposta",
+    ],
   },
 
   OR: {
@@ -915,6 +1007,65 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
       pergunta: "Crie uma regra que dispare para transações do Brasil (BR) OU Argentina (AR)",
       resposta: "(country EQ \"BR\") OR (country EQ \"AR\")",
     },
+    
+    // 🏭 COMPORTAMENTO NO MOTOR DE REGRAS
+    comportamentoMotor: {
+      descricao: "O motor avalia da esquerda para a direita com 'curto-circuito': assim que encontra UMA verdadeira, para e retorna VERDADEIRO.",
+      passos: [
+        "1️⃣ Motor recebe a transação e identifica regra OR",
+        "2️⃣ Avalia a primeira condição",
+        "3️⃣ Se VERDADEIRA → para imediatamente, retorna VERDADEIRO",
+        "4️⃣ Se FALSA → avalia a próxima condição",
+        "5️⃣ Repete até encontrar VERDADEIRA ou acabarem as condições",
+        "6️⃣ Se TODAS foram falsas → retorna FALSO",
+      ],
+      performance: "⚡ Coloque a condição mais provável de ser VERDADEIRA primeiro para economizar processamento",
+      cuidados: [
+        "OR captura MAIS transações que AND - cuidado com falsos positivos",
+        "Múltiplos OR pode ser substituído por IN para melhor legibilidade",
+      ],
+    },
+    
+    // 🎬 SITUAÇÕES REAIS
+    situacoesReais: [
+      {
+        titulo: "Lista de países de alto risco FATF",
+        contexto: "Compliance precisa monitorar transações de países na lista FATF (Coreia do Norte, Irã, Myanmar...)",
+        problema: "São 20+ países. Criar 20 regras separadas é impraticável.",
+        solucao: "(country EQ \"KP\") OR (country EQ \"IR\") OR (country EQ \"MM\") OR ... [ou melhor: country IN lista_fatf]",
+        impacto: "📋 Uma única regra cobre todos os países de risco, fácil de manter",
+      },
+      {
+        titulo: "Detecção de anomalia em valores",
+        contexto: "Transações muito pequenas (teste de cartão) OU muito grandes (fraude) são suspeitas",
+        problema: "Você quer capturar os DOIS extremos com uma regra",
+        solucao: "(amount LT 10) OR (amount GT 50000)",
+        impacto: "🎯 Captura testes de cartão (R$1-R$9) E fraudes grandes (>R$50k) na mesma regra",
+      },
+      {
+        titulo: "Múltiplos canais de risco",
+        contexto: "Transações de APP mobile ou API externa têm risco diferente de POS físico",
+        problema: "Quer aplicar regras específicas para canais digitais",
+        solucao: "(channel EQ \"APP\") OR (channel EQ \"API\") OR (channel EQ \"WEB\")",
+        impacto: "🔒 Regras de segurança digital aplicadas apenas onde necessário",
+      },
+    ],
+    
+    // 📊 RESULTADOS POSSÍVEIS
+    resultadosPossiveis: {
+      quandoDispara: "🚨 PELO MENOS UMA condição foi atendida - a transação é capturada pela regra",
+      quandoNaoDispara: "✅ NENHUMA das condições foi atendida - transação passa",
+      acaoRecomendada: "Use OR para criar 'redes amplas' de captura. Combine com AND para refinar: (condição_ampla_OR) AND (condição_específica)",
+    },
+    
+    // 🔧 COMO TESTAR
+    comoTestar: [
+      "📝 Teste 1: Envie transação que atenda a PRIMEIRA condição apenas",
+      "📝 Teste 2: Envie transação que atenda a ÚLTIMA condição apenas",
+      "📝 Teste 3: Envie transação que não atenda NENHUMA (deve passar)",
+      "📝 Teste 4: Envie transação que atenda TODAS (deve disparar, mas não duplicar)",
+      "📝 Teste 5: Verifique se a ordem das condições afeta o resultado (não deveria)",
+    ],
   },
 
   NOT: {
@@ -1224,6 +1375,66 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
       pergunta: "Crie uma regra para transações entre R$500 e R$3.000 (incluindo ambos)",
       resposta: "transaction.amount BETWEEN 500 AND 3000",
     },
+    
+    // 🏭 COMPORTAMENTO NO MOTOR DE REGRAS
+    comportamentoMotor: {
+      descricao: "O motor extrai o valor do campo, compara com limite inferior (>=) e limite superior (<=). Se ambas comparações forem verdadeiras, retorna VERDADEIRO.",
+      passos: [
+        "1️⃣ Motor recebe a transação com campo numérico (ex: amount = 2500)",
+        "2️⃣ Extrai os limites da regra: inferior = 100, superior = 5000",
+        "3️⃣ Verifica: 2500 >= 100? SIM ✓",
+        "4️⃣ Verifica: 2500 <= 5000? SIM ✓",
+        "5️⃣ Ambas verdadeiras → retorna VERDADEIRO",
+        "6️⃣ Se qualquer uma falhar, retorna FALSO",
+      ],
+      performance: "⚡ BETWEEN é muito eficiente - apenas 2 comparações numéricas. Ideal para índices de range em banco de dados.",
+      cuidados: [
+        "Certifique-se que limite_inferior < limite_superior",
+        "BETWEEN INCLUI os limites (é inclusive nas duas pontas)",
+        "Para faixas de horário que cruzam meia-noite, use lógica especial",
+      ],
+    },
+    
+    // 🎬 SITUAÇÕES REAIS
+    situacoesReais: [
+      {
+        titulo: "Faixa de valor para análise manual",
+        contexto: "Valores muito baixos (<R$100) ou muito altos (>R$5.000) vão para análise automática. O meio precisa de humano.",
+        problema: "Como separar a 'faixa cinzenta' que precisa de olho humano?",
+        solucao: "amount BETWEEN 100 AND 5000 → envia para fila de análise manual",
+        impacto: "📊 Otimiza time de analistas: só revisam casos ambíguos, não os óbvios",
+      },
+      {
+        titulo: "Horário comercial para suporte",
+        contexto: "Chamados abertos das 9h às 18h têm SLA de 2h. Fora desse horário, SLA é 24h.",
+        problema: "Como aplicar SLA diferente baseado no horário?",
+        solucao: "created_hour BETWEEN 9 AND 18 → SLA = 2h",
+        impacto: "⏰ Expectativas corretas para cliente: promete o que pode cumprir",
+      },
+      {
+        titulo: "Score de risco para revisão",
+        contexto: "Score 0-30 = aprova auto, 31-70 = revisão, 71-100 = rejeita auto",
+        problema: "Como criar a faixa de revisão?",
+        solucao: "risk_score BETWEEN 31 AND 70 → envia para fila de compliance",
+        impacto: "🎯 Compliance foca nos casos borderline, não nos óbvios",
+      },
+    ],
+    
+    // 📊 RESULTADOS POSSÍVEIS
+    resultadosPossiveis: {
+      quandoDispara: "🎯 O valor está DENTRO da faixa (inclusive os limites) - transação se encaixa no perfil definido",
+      quandoNaoDispara: "↔️ O valor está FORA da faixa (abaixo do mínimo ou acima do máximo)",
+      acaoRecomendada: "Use BETWEEN para segmentação: diferentes faixas → diferentes ações. Combine múltiplos BETWEEN com OR para faixas complexas.",
+    },
+    
+    // 🔧 COMO TESTAR
+    comoTestar: [
+      "📝 Teste 1: Valor exatamente no limite inferior (100) → deve disparar",
+      "📝 Teste 2: Valor exatamente no limite superior (5000) → deve disparar",
+      "📝 Teste 3: Valor 1 abaixo do limite inferior (99) → não deve disparar",
+      "📝 Teste 4: Valor 1 acima do limite superior (5001) → não deve disparar",
+      "📝 Teste 5: Valor no meio (2500) → deve disparar",
+    ],
   },
 
   NOT_BETWEEN: {
@@ -1313,6 +1524,67 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
       pergunta: "Crie uma regra que detecte transações dos canais MOBILE, TABLET ou SMARTWATCH",
       resposta: "channel IN [\"MOBILE\", \"TABLET\", \"SMARTWATCH\"]",
     },
+    
+    // 🏭 COMPORTAMENTO NO MOTOR DE REGRAS
+    comportamentoMotor: {
+      descricao: "O motor extrai o valor do campo e verifica se existe na lista especificada. É uma busca sequencial ou hashmap dependendo da implementação.",
+      passos: [
+        "1️⃣ Motor recebe a transação com campo (ex: channel = \"APP\")",
+        "2️⃣ Carrega a lista da regra: [\"APP\", \"WEB\", \"POS\"]",
+        "3️⃣ Compara valor com primeiro elemento: \"APP\" == \"APP\"? SIM ✓",
+        "4️⃣ Encontrou match → retorna VERDADEIRO imediatamente",
+        "5️⃣ (Se não encontrar, continua comparando até o fim da lista)",
+        "6️⃣ Se chegar ao fim sem match → retorna FALSO",
+      ],
+      performance: "⚡ Para listas pequenas (<20 itens), busca sequencial é rápida. Para listas grandes, considere usar lookup tables ou hashsets.",
+      cuidados: [
+        "Case-sensitive por padrão: \"APP\" != \"app\"",
+        "Formato correto: strings entre aspas, números sem aspas",
+        "Listas muito grandes podem impactar performance",
+        "Considere usar referência a lista cadastrada no sistema",
+      ],
+    },
+    
+    // 🎬 SITUAÇÕES REAIS
+    situacoesReais: [
+      {
+        titulo: "Lista de países FATF/GAFI de alto risco",
+        contexto: "Compliance precisa bloquear transações de países na lista negra FATF",
+        problema: "São 20+ países e a lista muda periodicamente",
+        solucao: "country IN [\"KP\", \"IR\", \"MM\", \"SY\", ...] → BLOCK",
+        impacto: "📋 100% conformidade com FATF, atualização fácil da lista",
+      },
+      {
+        titulo: "MCCs de alto risco (gambling, adult, crypto)",
+        contexto: "Certas categorias de merchant têm risco elevado de fraude/chargeback",
+        problema: "Precisa monitorar MCCs específicos sem criar N regras",
+        solucao: "mcc IN [\"7995\", \"5967\", \"6051\", \"4829\"] → FLAG para análise",
+        impacto: "🎰 Detecta 90% das transações em estabelecimentos de risco",
+      },
+      {
+        titulo: "Canais digitais vs físicos",
+        contexto: "Transações online têm regras diferentes de POS físico",
+        problema: "Quer aplicar regras apenas para canais digitais",
+        solucao: "channel IN [\"APP\", \"WEB\", \"API\"] → aplica regras de e-commerce",
+        impacto: "🌐 Regras específicas para cada tipo de canal, zero desperdício",
+      },
+    ],
+    
+    // 📊 RESULTADOS POSSÍVEIS
+    resultadosPossiveis: {
+      quandoDispara: "📋 O valor do campo ESTÁ na lista - transação pertence ao grupo definido",
+      quandoNaoDispara: "🚫 O valor do campo NÃO está na lista - transação não pertence ao grupo",
+      acaoRecomendada: "Use IN para whitelists (valores permitidos) ou para segmentar grupos. Combine com AND para refinar: (country IN lista_latam) AND (amount GT 1000)",
+    },
+    
+    // 🔧 COMO TESTAR
+    comoTestar: [
+      "📝 Teste 1: Valor que está na lista (primeiro item) → deve disparar",
+      "📝 Teste 2: Valor que está na lista (último item) → deve disparar",
+      "📝 Teste 3: Valor que NÃO está na lista → não deve disparar",
+      "📝 Teste 4: Mesmo valor com case diferente (\"app\" vs \"APP\") → verificar comportamento",
+      "📝 Teste 5: Valor null ou vazio → verificar se dá erro ou retorna FALSO",
+    ],
   },
 
   NOT_IN: {
@@ -1799,6 +2071,67 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
       pergunta: "Crie uma regra que detecte mais de 20 transações por cartão nas últimas 24 horas",
       resposta: "COUNT(transactions, last_24h, card_id) GT 20",
     },
+    
+    // 🏭 COMPORTAMENTO NO MOTOR DE REGRAS
+    comportamentoMotor: {
+      descricao: "O motor acessa o banco de dados de histórico, agrupa eventos pela chave especificada (ex: customer_id), conta quantos existem na janela temporal, e compara com o limite.",
+      passos: [
+        "1️⃣ Motor recebe a transação atual com identificadores (customer_id, card_id, etc.)",
+        "2️⃣ Identifica a janela temporal (ex: last_1h = últimos 60 minutos)",
+        "3️⃣ Consulta o histórico: 'quantas transações deste customer_id existem nos últimos 60 min?'",
+        "4️⃣ Recebe o COUNT (ex: 12 transações)",
+        "5️⃣ Aplica o comparador: 12 GT 10? SIM → dispara a regra",
+        "6️⃣ Se a transação atual conta na janela depende da configuração (inclusive/exclusive)",
+      ],
+      performance: "⚡ Agregações são mais pesadas que comparações simples. Use índices no banco de histórico. Considere cache para janelas comuns.",
+      cuidados: [
+        "Janelas muito longas (last_30d) podem ser lentas sem otimização",
+        "Verifique se a transação atual entra ou não na contagem",
+        "Eventos duplicados/replay podem inflar a contagem",
+        "Considere usar COUNT_GTE se quiser incluir o limite",
+      ],
+    },
+    
+    // 🎬 SITUAÇÕES REAIS
+    situacoesReais: [
+      {
+        titulo: "Card Testing (teste de cartão roubado)",
+        contexto: "Fraudador obtém dados de cartão e faz várias transações pequenas para testar se funciona",
+        problema: "Cada transação individual parece normal (R$10, R$15, R$8...), mas o volume é anormal",
+        solucao: "COUNT(transactions, last_1h, card_id) GT 5 - mais de 5 transações em 1 hora com mesmo cartão",
+        impacto: "🛡️ Detecta 90% dos testes de cartão antes do fraudador fazer a compra grande",
+      },
+      {
+        titulo: "Account Takeover (ATO) - Múltiplos logins falhos",
+        contexto: "Atacante tenta adivinhar senha com múltiplas tentativas",
+        problema: "1 ou 2 tentativas falhas são normais (erro de digitação). 10+ é ataque.",
+        solucao: "COUNT(failed_logins, last_15min, user_id) GT 3",
+        impacto: "🔒 Bloqueia conta após 4ª tentativa falha, protege contra brute force",
+      },
+      {
+        titulo: "Criação de contas em massa (account farming)",
+        contexto: "Fraudador cria múltiplas contas para abusar promoções ou laundering",
+        problema: "Mesmo device/IP criando várias contas é suspeito",
+        solucao: "COUNT(account_creations, last_24h, device_fingerprint) GT 2",
+        impacto: "🚫 Bloqueia criação de mais de 2 contas por dispositivo por dia",
+      },
+    ],
+    
+    // 📊 RESULTADOS POSSÍVEIS
+    resultadosPossiveis: {
+      quandoDispara: "🚨 A contagem na janela temporal EXCEDE o limite - comportamento anômalo detectado (velocity alta)",
+      quandoNaoDispara: "✅ A contagem está DENTRO do esperado - frequência normal de uso",
+      acaoRecomendada: "Para velocity rules, considere escalar ações: >5 = FLAG, >10 = REVIEW, >20 = BLOCK",
+    },
+    
+    // 🔧 COMO TESTAR
+    comoTestar: [
+      "📝 Teste 1: Envie 1 transação → COUNT deve ser 1 (não dispara se limite > 1)",
+      "📝 Teste 2: Envie N+1 transações rapidamente onde N = limite → deve disparar na N+1",
+      "📝 Teste 3: Envie N transações, espere janela expirar, envie mais → não deve disparar (janela resetou)",
+      "📝 Teste 4: Verifique se a transação atual entra na contagem",
+      "📝 Teste 5: Teste com agrupamentos diferentes (mesmo customer, cards diferentes)",
+    ],
   },
 
   SUM_GT: {
@@ -1868,6 +2201,67 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
       pergunta: "Crie uma regra para detectar saques acima de R$3.000 por cartão em 24 horas",
       resposta: "SUM(withdrawals.amount, last_24h, card_id) GT 3000",
     },
+    
+    // 🏭 COMPORTAMENTO NO MOTOR DE REGRAS
+    comportamentoMotor: {
+      descricao: "O motor consulta o histórico, agrupa eventos pela chave, SOMA os valores do campo especificado na janela temporal, e compara com o limite.",
+      passos: [
+        "1️⃣ Motor recebe a transação atual (ex: R$500 do customer_123)",
+        "2️⃣ Consulta histórico: 'qual a soma de amount para customer_123 nas últimas 24h?'",
+        "3️⃣ Banco retorna: R$9.600 (soma das transações anteriores)",
+        "4️⃣ Motor soma com transação atual: R$9.600 + R$500 = R$10.100",
+        "5️⃣ Compara: R$10.100 GT R$10.000? SIM → dispara",
+        "6️⃣ Ação é executada: BLOCK, REVIEW, FLAG, etc.",
+      ],
+      performance: "⚡ SUM requer agregação no banco. Use índices compostos (customer_id + created_at). Pre-agregar em janelas fixas pode ajudar.",
+      cuidados: [
+        "Conversão de moeda: some na moeda base para evitar erros",
+        "Estornos: decida se devem subtrair da soma ou não",
+        "Valores negativos: créditos/estornos podem diminuir a soma",
+        "Considere usar SUM_GTE se o limite deve ser inclusive",
+      ],
+    },
+    
+    // 🎬 SITUAÇÕES REAIS
+    situacoesReais: [
+      {
+        titulo: "Smurfing (estruturação) para evadir detecção",
+        contexto: "Fraudador/lavador divide R$50.000 em 50 transações de R$1.000 para evitar alerta de valor alto",
+        problema: "Cada transação individual (R$1.000) não dispara regra de valor alto (GT 5.000)",
+        solucao: "SUM(transactions.amount, last_24h, customer_id) GT 10000",
+        impacto: "💰 Detecta 85% dos casos de estruturação que passariam despercebidos",
+      },
+      {
+        titulo: "Limite de transferência PIX diário",
+        contexto: "BACEN exige limite de R$1.000 para PIX noturno por segurança",
+        problema: "Cliente pode fazer 10 PIX de R$200 = R$2.000 (burla o limite unitário)",
+        solucao: "SUM(pix.amount, last_24h, customer_id) GT 1000 AND hour BETWEEN 20 AND 6",
+        impacto: "📋 Conformidade 100% com regulação BACEN de PIX noturno",
+      },
+      {
+        titulo: "Controle de saque em ATM",
+        contexto: "Cartão clonado sendo usado para sacar em múltiplos ATMs",
+        problema: "Fraudador faz vários saques pequenos para não disparar alerta unitário",
+        solucao: "SUM(withdrawals.amount, last_24h, card_id) GT 3000",
+        impacto: "🏧 Bloqueia cartão após R$3k em saques/dia, mesmo que distribuídos",
+      },
+    ],
+    
+    // 📊 RESULTADOS POSSÍVEIS
+    resultadosPossiveis: {
+      quandoDispara: "🚨 A SOMA de valores na janela EXCEDE o limite - possível estruturação/smurfing ou limite de operação ultrapassado",
+      quandoNaoDispara: "✅ A soma está DENTRO do limite - operações dentro do esperado para o período",
+      acaoRecomendada: "Configure thresholds escalonados: >10k = FLAG, >30k = REVIEW, >100k = BLOCK + SAR",
+    },
+    
+    // 🔧 COMO TESTAR
+    comoTestar: [
+      "📝 Teste 1: Envie transações que somem MENOS que o limite → não dispara",
+      "📝 Teste 2: Envie transações que EXATAMENTE igualam o limite → não dispara (GT é maior, não igual)",
+      "📝 Teste 3: Envie uma transação que faça a soma PASSAR do limite → dispara",
+      "📝 Teste 4: Teste com estornos (se aplicável) para ver se subtraem da soma",
+      "📝 Teste 5: Espere a janela expirar e verifique se a soma reseta",
+    ],
   },
 };
 
@@ -2855,6 +3249,137 @@ export default function Operators() {
                                 </pre>
                               </details>
                             </div>
+                          </div>
+                        )}
+
+                        {/* ══════════════════════════════════════════════════════════════════════════ */}
+                        {/* 🏭 SEÇÃO: COMPORTAMENTO NO MOTOR DE REGRAS */}
+                        {/* ══════════════════════════════════════════════════════════════════════════ */}
+                        {hf.comportamentoMotor && (
+                          <div className="rounded-lg border-2 border-purple-400 bg-purple-50 p-4 dark:border-purple-600 dark:bg-purple-950">
+                            <div className="mb-3 flex items-center gap-2 text-lg font-bold text-purple-800 dark:text-purple-200">
+                              <span>🏭</span> O Que Acontece no Motor de Regras?
+                            </div>
+                            <p className="mb-4 text-sm text-purple-700 dark:text-purple-300">
+                              {hf.comportamentoMotor.descricao}
+                            </p>
+                            
+                            <div className="mb-4 rounded-lg bg-white/60 p-3 dark:bg-black/20">
+                              <div className="mb-2 text-sm font-semibold text-purple-800 dark:text-purple-200">
+                                📋 Passo a passo da execução:
+                              </div>
+                              <ol className="space-y-1 text-sm text-purple-700 dark:text-purple-300">
+                                {hf.comportamentoMotor.passos.map((passo, i) => (
+                                  <li key={i}>{passo}</li>
+                                ))}
+                              </ol>
+                            </div>
+                            
+                            {hf.comportamentoMotor.performance && (
+                              <div className="mb-3 rounded-lg bg-green-100 p-2 text-sm text-green-800 dark:bg-green-900/50 dark:text-green-200">
+                                {hf.comportamentoMotor.performance}
+                              </div>
+                            )}
+                            
+                            {hf.comportamentoMotor.cuidados && hf.comportamentoMotor.cuidados.length > 0 && (
+                              <div className="rounded-lg bg-amber-100 p-2 dark:bg-amber-900/50">
+                                <div className="text-sm font-semibold text-amber-800 dark:text-amber-200">⚠️ Cuidados:</div>
+                                <ul className="mt-1 space-y-1 text-sm text-amber-700 dark:text-amber-300">
+                                  {hf.comportamentoMotor.cuidados.map((c, i) => (
+                                    <li key={i}>• {c}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* ══════════════════════════════════════════════════════════════════════════ */}
+                        {/* 🎬 SEÇÃO: SITUAÇÕES REAIS DO DIA A DIA */}
+                        {/* ══════════════════════════════════════════════════════════════════════════ */}
+                        {hf.situacoesReais && hf.situacoesReais.length > 0 && (
+                          <div className="rounded-lg border-2 border-orange-400 bg-orange-50 p-4 dark:border-orange-600 dark:bg-orange-950">
+                            <div className="mb-3 flex items-center gap-2 text-lg font-bold text-orange-800 dark:text-orange-200">
+                              <span>🎬</span> Situações REAIS: Quando Usar Este Operador
+                            </div>
+                            <div className="space-y-4">
+                              {hf.situacoesReais.map((sit, i) => (
+                                <div key={i} className="rounded-lg bg-white/60 p-4 dark:bg-black/20">
+                                  <div className="mb-2 text-base font-bold text-orange-900 dark:text-orange-100">
+                                    📌 {sit.titulo}
+                                  </div>
+                                  <div className="mb-2 text-sm">
+                                    <span className="font-semibold text-orange-700 dark:text-orange-300">Contexto: </span>
+                                    <span className="text-orange-600 dark:text-orange-400">{sit.contexto}</span>
+                                  </div>
+                                  <div className="mb-2 text-sm">
+                                    <span className="font-semibold text-red-700 dark:text-red-300">❌ Problema: </span>
+                                    <span className="text-red-600 dark:text-red-400">{sit.problema}</span>
+                                  </div>
+                                  <div className="mb-2">
+                                    <span className="text-sm font-semibold text-green-700 dark:text-green-300">✅ Solução: </span>
+                                    <pre className="mt-1 overflow-x-auto rounded bg-slate-900 p-2 text-xs text-green-400">
+                                      {sit.solucao}
+                                    </pre>
+                                  </div>
+                                  <div className="rounded bg-blue-100 p-2 text-sm text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">
+                                    <span className="font-semibold">💡 Impacto: </span>{sit.impacto}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ══════════════════════════════════════════════════════════════════════════ */}
+                        {/* 📊 SEÇÃO: RESULTADOS POSSÍVEIS */}
+                        {/* ══════════════════════════════════════════════════════════════════════════ */}
+                        {hf.resultadosPossiveis && (
+                          <div className="rounded-lg border-2 border-pink-400 bg-pink-50 p-4 dark:border-pink-600 dark:bg-pink-950">
+                            <div className="mb-3 flex items-center gap-2 text-lg font-bold text-pink-800 dark:text-pink-200">
+                              <span>📊</span> Resultados Quando a Regra é Avaliada
+                            </div>
+                            <div className="grid gap-3 md:grid-cols-2">
+                              <div className="rounded-lg bg-red-100 p-3 dark:bg-red-900/50">
+                                <div className="mb-1 text-sm font-bold text-red-800 dark:text-red-200">
+                                  🚨 Quando DISPARA (Verdadeiro):
+                                </div>
+                                <p className="text-sm text-red-700 dark:text-red-300">{hf.resultadosPossiveis.quandoDispara}</p>
+                              </div>
+                              <div className="rounded-lg bg-green-100 p-3 dark:bg-green-900/50">
+                                <div className="mb-1 text-sm font-bold text-green-800 dark:text-green-200">
+                                  ✅ Quando NÃO DISPARA (Falso):
+                                </div>
+                                <p className="text-sm text-green-700 dark:text-green-300">{hf.resultadosPossiveis.quandoNaoDispara}</p>
+                              </div>
+                            </div>
+                            {hf.resultadosPossiveis.acaoRecomendada && (
+                              <div className="mt-3 rounded-lg bg-blue-100 p-2 text-sm text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">
+                                <span className="font-semibold">💡 Ação recomendada: </span>
+                                {hf.resultadosPossiveis.acaoRecomendada}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* ══════════════════════════════════════════════════════════════════════════ */}
+                        {/* 🔧 SEÇÃO: COMO TESTAR ESTA REGRA */}
+                        {/* ══════════════════════════════════════════════════════════════════════════ */}
+                        {hf.comoTestar && hf.comoTestar.length > 0 && (
+                          <div className="rounded-lg border-2 border-sky-400 bg-sky-50 p-4 dark:border-sky-600 dark:bg-sky-950">
+                            <div className="mb-3 flex items-center gap-2 text-lg font-bold text-sky-800 dark:text-sky-200">
+                              <span>🔧</span> Como TESTAR Esta Regra Antes de Produção
+                            </div>
+                            <ul className="space-y-2 text-sm text-sky-700 dark:text-sky-300">
+                              {hf.comoTestar.map((teste, i) => (
+                                <li key={i} className="flex items-start gap-2 rounded-lg bg-white/60 p-2 dark:bg-black/20">
+                                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500 text-xs font-bold text-white">
+                                    {i + 1}
+                                  </span>
+                                  <span>{teste}</span>
+                                </li>
+                              ))}
+                            </ul>
                           </div>
                         )}
 
