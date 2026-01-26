@@ -450,34 +450,283 @@ const defaultFieldHintsForKind = (kind: OperatorKind): FieldHint[] => {
   }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════
+// GERADOR DE EXPLICAÇÕES ÚNICAS PARA CADA OPERADOR
+// ═══════════════════════════════════════════════════════════════════════════
+const gerarExplicacaoSintaxeUnica = (name: string, kind: OperatorKind, sintaxe: string): string => {
+  const upper = name.toUpperCase();
+  
+  // Operadores lógicos
+  if (upper === "NAND") return "📖 Leia: 'Só dispara se NÃO for verdade que AMBAS condições são verdadeiras'. É o oposto do AND.";
+  if (upper === "NOR") return "📖 Leia: 'Só dispara se NENHUMA das condições for verdadeira'. É o oposto do OR.";
+  if (upper === "XOR") return "📖 Leia: 'Dispara se APENAS UMA das condições for verdadeira, mas não ambas'. OU exclusivo.";
+  
+  // Comparadores de AMOUNT
+  if (upper === "AMOUNT_GT") return "📖 Leia: 'Se o valor da transação for MAIOR QUE 10.000, dispare'. Detecta transações de alto valor.";
+  if (upper === "AMOUNT_GTE") return "📖 Leia: 'Se o valor for MAIOR OU IGUAL a 5.000, dispare'. Inclui o limite.";
+  if (upper === "AMOUNT_LT") return "📖 Leia: 'Se o valor for MENOR QUE 50, dispare'. Detecta micro-transações suspeitas.";
+  if (upper === "AMOUNT_LTE") return "📖 Leia: 'Se o valor for MENOR OU IGUAL a 1.000, dispare'. Inclui o limite.";
+  
+  // Comparadores de SCORE
+  if (upper === "SCORE_GT") return "📖 Leia: 'Se o score de risco for MAIOR QUE 70, dispare'. Threshold de alta confiança.";
+  if (upper === "SCORE_GTE") return "📖 Leia: 'Se o score de risco for MAIOR OU IGUAL a 50, dispare'. Captura mais casos.";
+  if (upper === "SCORE_LT") return "📖 Leia: 'Se o score de risco for MENOR QUE 30, permita'. Transações seguras.";
+  if (upper === "SCORE_LTE") return "📖 Leia: 'Se o score for MENOR OU IGUAL a 40, considere baixo risco'.";
+  
+  // Comparadores de AGE (idade)
+  if (upper === "AGE_GT") return "📖 Leia: 'Se a idade do cliente for MAIOR QUE 65, aplique regras para idosos'.";
+  if (upper === "AGE_GTE") return "📖 Leia: 'Se a idade for MAIOR OU IGUAL a 18, permita'. Verificação de maioridade.";
+  if (upper === "AGE_LT") return "📖 Leia: 'Se a idade for MENOR QUE 18, bloqueie'. Proteção de menores.";
+  if (upper === "AGE_LTE") return "📖 Leia: 'Se a idade for MENOR OU IGUAL a 25, aplique regras para jovens'.";
+  
+  // Agregações COUNT
+  if (upper === "COUNT_GT") return "📖 Leia: 'Se o número de transações nas últimas 24h com este cartão for MAIOR QUE 10, dispare'. Velocity.";
+  if (upper === "COUNT_GTE") return "📖 Leia: 'Se houver 5 OU MAIS transações recentes, dispare'. Detecta burst.";
+  if (upper === "COUNT_LT") return "📖 Leia: 'Se tiver MENOS QUE 3 logins na última hora, considere normal'.";
+  if (upper === "COUNT_LTE") return "📖 Leia: 'Se as tentativas falhadas forem 5 OU MENOS, permita continuar'.";
+  
+  // Agregações SUM
+  if (upper === "SUM_GT") return "📖 Leia: 'Se a SOMA dos valores nos últimos 7 dias for MAIOR QUE 50.000, alerte'. Anti-smurfing.";
+  if (upper === "SUM_GTE") return "📖 Leia: 'Se a soma for MAIOR OU IGUAL a 50.000, sinalize para compliance'.";
+  if (upper === "SUM_LT") return "📖 Leia: 'Se a soma de reembolsos for MENOR QUE 10.000, considere normal'.";
+  if (upper === "SUM_LTE") return "📖 Leia: 'Se os saques forem MENORES OU IGUAIS a 3.000, permita'.";
+  
+  // Agregações AVG
+  if (upper === "AVG_GT") return "📖 Leia: 'Se a MÉDIA dos valores for MAIOR QUE 500, o cliente tem ticket alto'.";
+  if (upper === "AVG_GTE") return "📖 Leia: 'Se a média for MAIOR OU IGUAL a 200, classifique como premium'.";
+  if (upper === "AVG_LT") return "📖 Leia: 'Se a média for MENOR QUE 50, pode ser teste de cartão (baixos valores)'.";
+  if (upper === "AVG_LTE") return "📖 Leia: 'Se a gorjeta média for MENOR OU IGUAL a 10, comportamento normal'.";
+  
+  // Agregações MAX/MIN
+  if (upper === "MAX_GT") return "📖 Leia: 'Se o MAIOR valor nas últimas 24h for MAIOR QUE 5.000, houve pico'.";
+  if (upper === "MAX_GTE") return "📖 Leia: 'Se o máximo for MAIOR OU IGUAL a 10.000, revise manualmente'.";
+  if (upper === "MIN_LT") return "📖 Leia: 'Se o MENOR valor for MENOR QUE 10, pode ser teste de cartão'.";
+  if (upper === "MIN_LTE") return "📖 Leia: 'Se o mínimo de depósito for MENOR OU IGUAL a 100, considere normal'.";
+  
+  // Percentual e Velocity
+  if (upper.includes("PERCENT")) return "📖 Leia: 'Se a VARIAÇÃO PERCENTUAL for MAIOR QUE 200%, houve mudança drástica no padrão'.";
+  if (upper.includes("VELOCITY")) return "📖 Leia: 'Se a VELOCIDADE de transações por hora for MAIOR QUE 5, detectou burst de atividade'.";
+  if (upper.includes("DISTINCT")) return "📖 Leia: 'Se a QUANTIDADE DE PAÍSES DISTINTOS nas últimas 24h for MAIOR QUE 3, possível fraude geo-distribuída'.";
+  
+  // Operadores de lista (IN)
+  if (upper === "MCC_IN") return "📖 Leia: 'Se o MCC do merchant estiver NA LISTA [5411=supermercado, 5912=farmácia, 5999=varejo], dispare'.";
+  if (upper === "MCC_NOT_IN") return "📖 Leia: 'Se o MCC NÃO estiver na lista de alto risco [7995=apostas, 5967=MLM], permita'.";
+  if (upper === "COUNTRY_IN") return "📖 Leia: 'Se o país estiver NA LISTA [BR, AR, CL, MX] (América Latina), aplique regras regionais'.";
+  if (upper === "COUNTRY_NOT_IN") return "📖 Leia: 'Se o país NÃO estiver na lista de sanções [KP, IR, CU, SY], permita'.";
+  if (upper === "CHANNEL_IN") return "📖 Leia: 'Se o canal estiver NA LISTA [APP, WEB, API], são canais digitais válidos'.";
+  if (upper === "STATUS_IN") return "📖 Leia: 'Se o status estiver em [PENDING, REVIEW, HOLD], a transação precisa de atenção'.";
+  
+  // Operadores de string
+  if (upper === "EMAIL_CONTAINS") return "📖 Leia: 'Se o e-mail CONTIVER @tempmail, é provável e-mail descartável - alto risco'.";
+  if (upper === "NAME_CONTAINS") return "📖 Leia: 'Se o nome CONTIVER TEST, pode ser conta de teste sendo usada em produção'.";
+  if (upper === "DESCRIPTION_CONTAINS") return "📖 Leia: 'Se a descrição CONTIVER REFUND, é uma transação de estorno'.";
+  if (upper === "EMAIL_STARTS_WITH") return "📖 Leia: 'Se o e-mail COMEÇAR COM test_, é provável conta de teste'.";
+  if (upper === "PHONE_STARTS_WITH") return "📖 Leia: 'Se o telefone COMEÇAR COM +55, é número brasileiro'.";
+  if (upper === "BIN_STARTS_WITH") return "📖 Leia: 'Se o BIN COMEÇAR COM 411111, é cartão Visa de teste'.";
+  if (upper === "EMAIL_ENDS_WITH") return "📖 Leia: 'Se o e-mail TERMINAR COM @gmail.com, é conta pessoal (não corporativa)'.";
+  if (upper === "DOMAIN_ENDS_WITH") return "📖 Leia: 'Se o domínio TERMINAR COM .ru, é domínio russo - pode requerer revisão'.";
+  if (upper.includes("REGEX") || upper.includes("MATCH")) return "📖 O REGEX valida o formato exato do campo. Exemplo: /^\\+55\\d{11}$/ = telefone BR com +55 e 11 dígitos.";
+  
+  // Operadores de data/tempo
+  if (upper === "DATE_BEFORE") return "📖 Leia: 'Se a data for ANTERIOR a 01/01/2025, aplique regras do ano anterior'.";
+  if (upper === "DATE_AFTER_OR_EQ") return "📖 Leia: 'Se a data de criação for A PARTIR DE 01/06/2024, é conta nova'.";
+  if (upper === "AGE_DAYS_GT") return "📖 Leia: 'Se a conta existir há MAIS DE 30 dias, é conta estabelecida - menor risco'.";
+  if (upper === "AGE_DAYS_GTE") return "📖 Leia: 'Se o cartão foi emitido há 7 DIAS OU MAIS, já passou do período de alto risco'.";
+  if (upper === "AGE_HOURS_LT") return "📖 Leia: 'Se a sessão começou há MENOS DE 24 horas, ainda é sessão ativa válida'.";
+  if (upper === "HOUR_BETWEEN") return "📖 Leia: 'Se a hora estiver ENTRE 9h e 18h, é horário comercial - menor risco'.";
+  if (upper === "DAY_OF_WEEK_IN") return "📖 Leia: 'Se o dia for SÁBADO ou DOMINGO, aplique regras de fim de semana'.";
+  if (upper === "WEEKEND") return "📖 Leia: 'Se a data for FIM DE SEMANA, alguns padrões de fraude são mais comuns'.";
+  if (upper === "BUSINESS_HOURS") return "📖 Leia: 'Se for HORÁRIO COMERCIAL, espera-se mais transações B2B'.";
+  
+  // Operadores de device
+  if (upper.includes("DEVICE_NEW")) return "📖 Leia: 'Se o dispositivo foi visto pela PRIMEIRA VEZ há menos de 1 dia, é device novo - alto risco'.";
+  if (upper.includes("DEVICE_TRUST")) return "📖 Leia: 'Se o TRUST SCORE do device for MAIOR QUE 0.8 (80%), é dispositivo confiável'.";
+  if (upper.includes("DEVICE_FINGERPRINT")) return "📖 Leia: 'Se o FINGERPRINT DO DEVICE BATER com o histórico, é o mesmo aparelho'.";
+  if (upper.includes("JAILBREAK") || upper.includes("ROOT")) return "📖 Leia: 'Se o device ESTÁ ROOTED/JAILBROKEN, pode ter sido adulterado - alto risco'.";
+  if (upper.includes("EMULATOR")) return "📖 Leia: 'Se o device É UM EMULADOR, provável automação ou fraude - bloqueie'.";
+  if (upper.includes("VPN") || upper.includes("PROXY")) return "📖 Leia: 'Se a conexão USA VPN/PROXY, o usuário está escondendo localização real'.";
+  
+  // Operadores de grafo
+  if (upper.includes("NEO4J") || upper.includes("GRAPH")) {
+    if (upper.includes("LINK")) return "📖 Leia: 'Se a PROFUNDIDADE DO LINK entre cliente e cartão for MAIOR QUE 2, há intermediários suspeitos'.";
+    if (upper.includes("PATH")) return "📖 Leia: 'Se o CAMINHO MAIS CURTO entre contas A e B for MENOR OU IGUAL a 3, estão próximos na rede'.";
+    if (upper.includes("CLUSTER")) return "📖 Leia: 'Se o TAMANHO DO CLUSTER do device for MAIOR QUE 10, muitas contas usam o mesmo device'.";
+    return "📖 Leia: 'Se as CONEXÕES DO GRAFO forem MAIORES QUE 5, há muitos relacionamentos - investigar'.";
+  }
+  
+  // Operadores FATF/AML
+  if (upper.startsWith("FATF_")) {
+    if (upper.includes("COUNTRY")) return "📖 Leia: 'Se o país estiver na LISTA FATF DE ALTO RISCO, requer EDD (Enhanced Due Diligence)'.";
+    if (upper.includes("PEP")) return "📖 Leia: 'Se o cliente for PEP (Pessoa Exposta Politicamente), aplique controles reforçados'.";
+    if (upper.includes("SANCTION")) return "📖 Leia: 'Se o nome tiver HIT EM LISTA DE SANÇÕES, bloqueie imediatamente e alerte compliance'.";
+    return "📖 Leia: 'Se o SCORE FATF de risco for MAIOR QUE 70, a transação requer revisão AML'.";
+  }
+  
+  // Operadores de compliance
+  if (upper.startsWith("SCA_")) return "📖 Leia: 'Se a transação for ELEGÍVEL PARA ISENÇÃO SCA, pode pular autenticação forte'.";
+  if (upper.startsWith("PSD")) return "📖 Leia: 'Se PSD2 REQUER SCA para esta transação, exija autenticação de 2 fatores'.";
+  if (upper.startsWith("DORA_")) return "📖 Leia: 'Se a SEVERIDADE DO INCIDENTE DORA for MAIOR QUE 2, reporte ao regulador'.";
+  if (upper.startsWith("BSL_")) return "📖 Leia: 'Se houver VIOLAÇÃO DE POLÍTICA BSL, aplique controles de segurança bancária'.";
+  if (upper.startsWith("PLT_")) return "📖 Leia: 'Se o RATE LIMIT DA API foi EXCEDIDO, bloqueie para prevenir abuso'.";
+  
+  // Fallback por categoria com mais contexto
+  if (kind === "logical") return `📖 O operador ${name} combina condições logicamente. Leia: 'Se (condição A) ${name} (condição B), então dispare'.`;
+  if (kind === "range") return `📖 O operador ${name} verifica se um valor está dentro de uma faixa. Leia a sintaxe como: 'campo ${name} limite_inferior AND limite_superior'.`;
+  if (kind === "list") return `📖 O operador ${name} verifica pertencimento a uma lista. Leia: 'Se campo ${name} [valor1, valor2, ...], dispare'.`;
+  if (kind === "string") return `📖 O operador ${name} busca padrões em texto. Leia: 'Se texto_campo ${name} "padrão_buscado", dispare'.`;
+  if (kind === "null") return `📖 O operador ${name} detecta campos vazios ou preenchidos. Use para tratar dados ausentes no payload.`;
+  if (kind === "boolean") return `📖 O operador ${name} trabalha com true/false. Leia: 'Se campo_booleano ${name}, dispare'.`;
+  if (kind === "array") return `📖 O operador ${name} trabalha com listas/arrays. Verifica conteúdo ou tamanho de coleções.`;
+  if (kind === "datetime") return `📖 O operador ${name} avalia datas e horários. Use para criar regras temporais.`;
+  if (kind === "aggregation") return `📖 O operador ${name} agrega dados históricos. Sintaxe: ${name}(eventos, janela_tempo, agrupamento) COMPARADOR valor.`;
+  if (kind === "graph") return `📖 O operador ${name} analisa conexões em grafos. Revela relacionamentos ocultos entre entidades.`;
+  if (kind === "device") return `📖 O operador ${name} avalia características do dispositivo. Use para detectar devices suspeitos.`;
+  if (kind === "identity") return `📖 O operador ${name} valida dados cadastrais. Use para verificar consistência de identidade.`;
+  if (kind === "merchant") return `📖 O operador ${name} avalia o comerciante. Use para regras baseadas em tipo de estabelecimento.`;
+  if (kind === "platform") return `📖 O operador ${name} verifica compliance de plataforma. Use para requisitos regulatórios.`;
+  if (kind === "validation") return `📖 O operador ${name} executa validações externas. Use para checagens de sanções, PEP, etc.`;
+  if (kind === "statistical") return `📖 O operador ${name} aplica análise estatística. Use para detectar anomalias e desvios.`;
+  if (kind === "risk_pattern") return `📖 O operador ${name} detecta padrões de risco. É um detector composto de fraude/AML.`;
+  if (kind === "compare") return `📖 O operador ${name} compara valores. Leia: 'Se campo ${name} valor_limite, dispare'.`;
+
+  return `📖 O operador ${name} aplica a lógica específica da sintaxe: ${sintaxe}. Consulte a documentação para casos de uso avançados.`;
+};
+
 const guessDslForKind = (name: string, kind: OperatorKind): string => {
   const upper = name.toUpperCase();
   if (HEAD_FIRST_EXAMPLES[upper]) return HEAD_FIRST_EXAMPLES[upper].sintaxe;
 
-  if (kind === "logical") return "(A) AND (B)";
-  if (kind === "range") return "transaction.amount BETWEEN 100 AND 5000";
-  if (kind === "list") return "transaction.channel IN [\"APP\", \"WEB\", \"POS\"]";
-  if (kind === "string") return "customer.email CONTAINS \"tempmail\"";
-  if (kind === "null") return "transaction.device_id IS_NULL";
-  if (kind === "boolean") return "customer.is_vip IS_TRUE";
-  if (kind === "array") return "order.items ARRAY_SIZE_GT 10";
-  if (kind === "datetime") return "transaction.time TIME_BETWEEN \"22:00\" AND \"06:00\"";
-  if (kind === "aggregation") return "COUNT(transactions, last_1h, customer_id) GT 10";
-  if (kind === "graph") return "NEO4J_LINK_DEPTH(customer_id, device_id) GT 2";
-  if (kind === "device") return "device.trust_score GT 0.7";
-  if (kind === "identity") return "customer.email CONTAINS \"tempmail\"";
-  if (kind === "merchant") return "merchant.mcc IN [\"5999\", \"7995\"]";
-  if (kind === "platform") return "platform.compliance_status EQ \"COMPLIANT\"";
-  if (kind === "validation") return "validation.sanction_hit IS_FALSE";
-  if (kind === "statistical") return "statistics.deviation GT 3.0";
+  // Gerar sintaxe ÚNICA baseada no nome do operador
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Operadores lógicos
+  if (upper === "NAND") return "NOT ((amount GT 1000) AND (country EQ \"BR\"))";
+  if (upper === "NOR") return "NOT ((channel EQ \"APP\") OR (channel EQ \"WEB\"))";
+  if (upper === "XOR") return "(is_vip EQ true) XOR (is_employee EQ true)";
+  
+  // Comparadores específicos
+  if (upper === "EQ" || upper === "EQUALS") return "transaction.status EQ \"APPROVED\"";
+  if (upper === "NE" || upper === "NEQ" || upper === "NOT_EQUALS") return "transaction.currency NEQ \"BRL\"";
+  
+  // Variações de GT/GTE/LT/LTE
+  if (upper === "AMOUNT_GT") return "transaction.amount GT 10000";
+  if (upper === "AMOUNT_GTE") return "transaction.amount GTE 5000";
+  if (upper === "AMOUNT_LT") return "transaction.amount LT 50";
+  if (upper === "AMOUNT_LTE") return "transaction.amount LTE 1000";
+  if (upper === "SCORE_GT") return "risk.score GT 70";
+  if (upper === "SCORE_GTE") return "risk.score GTE 50";
+  if (upper === "SCORE_LT") return "risk.score LT 30";
+  if (upper === "SCORE_LTE") return "risk.score LTE 40";
+  if (upper === "AGE_GT") return "customer.age GT 65";
+  if (upper === "AGE_GTE") return "customer.age GTE 18";
+  if (upper === "AGE_LT") return "customer.age LT 18";
+  if (upper === "AGE_LTE") return "customer.age LTE 25";
+  
+  // Agregações específicas
+  if (upper === "COUNT_GTE") return "COUNT(transactions, last_24h, card_id) GTE 5";
+  if (upper === "COUNT_LT") return "COUNT(logins, last_1h, user_id) LT 3";
+  if (upper === "COUNT_LTE") return "COUNT(failed_attempts, last_15min, ip) LTE 5";
+  if (upper === "SUM_GTE") return "SUM(transactions.amount, last_7d, wallet_id) GTE 50000";
+  if (upper === "SUM_LT") return "SUM(refunds.amount, last_30d, merchant_id) LT 10000";
+  if (upper === "SUM_LTE") return "SUM(withdrawals.amount, last_24h, account_id) LTE 3000";
+  if (upper === "AVG_GT") return "AVG(transactions.amount, last_30d, customer_id) GT 500";
+  if (upper === "AVG_GTE") return "AVG(order.value, last_7d, user_id) GTE 200";
+  if (upper === "AVG_LT") return "AVG(purchase.amount, last_24h, session_id) LT 50";
+  if (upper === "AVG_LTE") return "AVG(tip.amount, last_7d, driver_id) LTE 10";
+  if (upper === "MAX_GT") return "MAX(transactions.amount, last_24h, customer_id) GT 5000";
+  if (upper === "MAX_GTE") return "MAX(order.value, last_7d, merchant_id) GTE 10000";
+  if (upper === "MIN_LT") return "MIN(transactions.amount, last_24h, card_id) LT 10";
+  if (upper === "MIN_LTE") return "MIN(deposit.amount, last_30d, account_id) LTE 100";
+  if (upper.includes("PERCENT")) return "PERCENT_CHANGE(transactions.amount, last_7d, customer_id) GT 200";
+  if (upper.includes("VELOCITY")) return "VELOCITY(transactions, last_1h, device_id) GT 5";
+  if (upper.includes("DISTINCT")) return "COUNT_DISTINCT(countries, last_24h, card_id) GT 3";
+  
+  // Operadores de lista específicos
+  if (upper === "MCC_IN") return "merchant.mcc IN [\"5411\", \"5912\", \"5999\"]";
+  if (upper === "MCC_NOT_IN") return "merchant.mcc NOT_IN [\"7995\", \"5967\", \"6051\"]";
+  if (upper === "COUNTRY_IN") return "transaction.country IN [\"BR\", \"AR\", \"CL\", \"MX\"]";
+  if (upper === "COUNTRY_NOT_IN") return "transaction.country NOT_IN [\"KP\", \"IR\", \"CU\", \"SY\"]";
+  if (upper === "CHANNEL_IN") return "transaction.channel IN [\"APP\", \"WEB\", \"API\"]";
+  if (upper === "STATUS_IN") return "transaction.status IN [\"PENDING\", \"REVIEW\", \"HOLD\"]";
+  
+  // Operadores de string específicos
+  if (upper === "EMAIL_CONTAINS") return "customer.email CONTAINS \"@tempmail\"";
+  if (upper === "NAME_CONTAINS") return "customer.name CONTAINS \"TEST\"";
+  if (upper === "DESCRIPTION_CONTAINS") return "transaction.description CONTAINS \"REFUND\"";
+  if (upper === "EMAIL_STARTS_WITH") return "customer.email STARTS_WITH \"test_\"";
+  if (upper === "PHONE_STARTS_WITH") return "customer.phone STARTS_WITH \"+55\"";
+  if (upper === "BIN_STARTS_WITH") return "card.bin STARTS_WITH \"411111\"";
+  if (upper === "EMAIL_ENDS_WITH") return "customer.email ENDS_WITH \"@gmail.com\"";
+  if (upper === "DOMAIN_ENDS_WITH") return "email.domain ENDS_WITH \".ru\"";
+  if (upper.includes("REGEX") || upper.includes("MATCH")) return "customer.phone MATCHES_REGEX /^\\+55\\d{11}$/";
+  
+  // Operadores de data/tempo específicos
+  if (upper === "DATE_BEFORE") return "transaction.date DATE_BEFORE \"2025-01-01\"";
+  if (upper === "DATE_AFTER_OR_EQ") return "customer.created_at DATE_AFTER_OR_EQ \"2024-06-01\"";
+  if (upper === "AGE_DAYS_GT") return "account.created_at AGE_DAYS_GT 30";
+  if (upper === "AGE_DAYS_GTE") return "card.issued_at AGE_DAYS_GTE 7";
+  if (upper === "AGE_HOURS_LT") return "session.started_at AGE_HOURS_LT 24";
+  if (upper === "HOUR_BETWEEN") return "transaction.hour BETWEEN 9 AND 18";
+  if (upper === "DAY_OF_WEEK_IN") return "transaction.day_of_week IN [\"SATURDAY\", \"SUNDAY\"]";
+  if (upper === "WEEKEND") return "transaction.date IS_WEEKEND";
+  if (upper === "BUSINESS_HOURS") return "transaction.time IS_BUSINESS_HOURS";
+  
+  // Operadores de device específicos
+  if (upper.includes("DEVICE_NEW")) return "device.first_seen AGE_DAYS_LT 1";
+  if (upper.includes("DEVICE_TRUST")) return "device.trust_score GT 0.8";
+  if (upper.includes("DEVICE_FINGERPRINT")) return "device.fingerprint_match IS_TRUE";
+  if (upper.includes("JAILBREAK") || upper.includes("ROOT")) return "device.is_rooted IS_TRUE";
+  if (upper.includes("EMULATOR")) return "device.is_emulator IS_TRUE";
+  if (upper.includes("VPN") || upper.includes("PROXY")) return "connection.is_vpn IS_TRUE";
+  
+  // Operadores de grafo específicos
+  if (upper.includes("NEO4J") || upper.includes("GRAPH")) {
+    if (upper.includes("LINK")) return "NEO4J_LINK_DEPTH(customer_id, card_id) GT 2";
+    if (upper.includes("PATH")) return "GRAPH_SHORTEST_PATH(account_a, account_b) LTE 3";
+    if (upper.includes("CLUSTER")) return "GRAPH_CLUSTER_SIZE(device_id) GT 10";
+    return "GRAPH_CONNECTIONS(customer_id) GT 5";
+  }
+  
+  // Operadores FATF/AML específicos
+  if (upper.startsWith("FATF_")) {
+    if (upper.includes("COUNTRY")) return "FATF_HIGH_RISK_COUNTRY(transaction.country) IS_TRUE";
+    if (upper.includes("PEP")) return "FATF_IS_PEP(customer.name, customer.country) IS_TRUE";
+    if (upper.includes("SANCTION")) return "FATF_SANCTION_HIT(customer.name) IS_TRUE";
+    return "FATF_RISK_SCORE(transaction) GT 70";
+  }
+  
+  // Operadores de compliance/regulatório
+  if (upper.startsWith("SCA_")) return "SCA_EXEMPTION_ELIGIBLE(transaction) IS_TRUE";
+  if (upper.startsWith("PSD")) return "PSD2_SCA_REQUIRED(transaction) IS_TRUE";
+  if (upper.startsWith("DORA_")) return "DORA_INCIDENT_SEVERITY(event) GT 2";
+  if (upper.startsWith("BSL_")) return "BSL_POLICY_VIOLATION(transaction) IS_TRUE";
+  if (upper.startsWith("PLT_")) return "PLT_RATE_LIMIT_EXCEEDED(api_key) IS_TRUE";
+
+  // Fallback por categoria (se nenhum específico acima)
+  if (kind === "logical") return `(condition_a) ${upper} (condition_b)`;
+  if (kind === "range") return `field ${upper} 100 AND 5000`;
+  if (kind === "list") return `field ${upper} [\"value1\", \"value2\"]`;
+  if (kind === "string") return `text_field ${upper} \"pattern\"`;
+  if (kind === "null") return `optional_field ${upper}`;
+  if (kind === "boolean") return `boolean_field ${upper}`;
+  if (kind === "array") return `array_field ${upper} \"element\"`;
+  if (kind === "datetime") return `date_field ${upper} \"2025-01-01\"`;
+  if (kind === "aggregation") return `${upper}(events, last_24h, group_by) GT 10`;
+  if (kind === "graph") return `${upper}(entity_a, entity_b) GT 2`;
+  if (kind === "device") return `device.${name.toLowerCase()} GT 0.5`;
+  if (kind === "identity") return `identity.${name.toLowerCase()} IS_TRUE`;
+  if (kind === "merchant") return `merchant.${name.toLowerCase()} IN [\"value\"]`;
+  if (kind === "platform") return `platform.${name.toLowerCase()} EQ \"value\"`;
+  if (kind === "validation") return `validation.${name.toLowerCase()} IS_TRUE`;
+  if (kind === "statistical") return `stats.${name.toLowerCase()} GT 2.0`;
   if (kind === "risk_pattern") return `${upper}(payload) GT threshold`;
   if (kind === "compare") {
-    if (upper.endsWith("_GT") || upper === "GT") return "transaction.amount GT 5000";
-    if (upper.endsWith("_GTE") || upper === "GTE") return "transaction.amount GTE 5000";
-    if (upper.endsWith("_LT") || upper === "LT") return "transaction.amount LT 10";
-    if (upper.endsWith("_LTE") || upper === "LTE") return "transaction.amount LTE 10";
-    if (upper.endsWith("_NEQ") || upper === "NEQ") return "transaction.country NEQ \"BR\"";
-    return "transaction.status EQ \"PENDING\"";
+    if (upper.endsWith("_GT") || upper === "GT") return `field ${upper.replace("_GT", "")} GT 1000`;
+    if (upper.endsWith("_GTE") || upper === "GTE") return `field ${upper.replace("_GTE", "")} GTE 500`;
+    if (upper.endsWith("_LT") || upper === "LT") return `field ${upper.replace("_LT", "")} LT 100`;
+    if (upper.endsWith("_LTE") || upper === "LTE") return `field ${upper.replace("_LTE", "")} LTE 50`;
+    if (upper.endsWith("_NEQ") || upper === "NEQ") return `field ${upper.replace("_NEQ", "")} NEQ \"value\"`;
+    return `field ${upper} \"value\"`;
   }
 
   return `campo ${upper} valor`;
@@ -2516,7 +2765,7 @@ const deriveHeadFirstExample = (name: string): HeadFirstExample => {
   // Gerar exemplo contextualizado baseado na classificação
   const kind = classifyOperator(name);
   const info = ANALOGIAS_POR_TIPO[kind];
-  const explain = explainOperatorName(name);
+  const sintaxeGerada = guessDslForKind(name, kind);
   
   return {
     historia: gerarHistoriaContextualizada(name, kind),
@@ -2531,8 +2780,8 @@ const deriveHeadFirstExample = (name: string): HeadFirstExample => {
     ],
     antes: `❌ ANTES: Sem ${name}, você precisaria de lógica mais complexa ou manual para este cenário.`,
     depois: `✅ DEPOIS: Com ${name}, a regra fica direta, eficiente e fácil de manter.`,
-    sintaxe: guessDslForKind(name, kind),
-    explicacaoSintaxe: `📖 O operador ${name} (${explain.leituraHumana}) aplica a lógica de ${kind} ao seu campo.`,
+    sintaxe: sintaxeGerada,
+    explicacaoSintaxe: gerarExplicacaoSintaxeUnica(name, kind, sintaxeGerada),
     perguntaComum: gerarProblemaContextualizado(name, kind),
     respostaPergunta: `Use ${name} quando precisar de ${kind === "unknown" ? "verificação especializada" : kind.replace("_", " ")}. Veja os campos sugeridos e exemplos nesta página.`,
     dicaDeOuro: info.dicaDeOuro,
