@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { BACKEND_OPERATORS } from "@/manual/generated/backendOperators.generated";
-import { OPERATOR_SPECS, type OperatorDocConfidence, type OperatorDocLevel } from "@/manual/operatorSpecs";
+import { OPERATOR_SPECS_BACKEND_ONLY as OPERATOR_SPECS } from "@/manual/operatorSpecsBackendOnly";
+import { type OperatorDocConfidence, type OperatorDocLevel } from "@/manual/operatorSpecs";
 
 type Operator = (typeof BACKEND_OPERATORS)[number];
 
