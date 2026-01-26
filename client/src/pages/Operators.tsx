@@ -741,6 +741,42 @@ interface HeadFirstExample {
   
   // 🎯 Dica de ouro
   dicaDeOuro: string;
+  
+  // ══════════════════════════════════════════════════════════════════════════
+  // 📖 NOVOS CAMPOS PARA "AULA COMPLETA"
+  // ══════════════════════════════════════════════════════════════════════════
+  
+  // 📝 Definição simples em 1 frase (para leigos)
+  definicaoSimples?: string;
+  
+  // 🔧 Como funciona por dentro (mecânica)
+  comoFunciona?: string;
+  
+  // 📊 Tabela de verdade ou comportamento (quando aplicável)
+  tabelaVerdade?: string[][];
+  
+  // 🎯 Múltiplos exemplos práticos com diferentes cenários
+  exemplosExtras?: Array<{
+    titulo: string;
+    cenario: string;
+    codigo: string;
+    resultado: string;
+  }>;
+  
+  // ⚠️ Erros comuns que iniciantes cometem
+  errosComuns?: string[];
+  
+  // 🔗 Operadores relacionados que você deveria conhecer
+  operadoresRelacionados?: string[];
+  
+  // 📋 Checklist: "Antes de usar, verifique..."
+  checklistUso?: string[];
+  
+  // 🧪 Mini exercício para praticar
+  exercicio?: {
+    pergunta: string;
+    resposta: string;
+  };
 }
 
 // Mapeamento completo de exemplos Head First
@@ -749,6 +785,7 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
   // OPERADORES LÓGICOS - A COLA QUE UNE TUDO
   // ══════════════════════════════════════════════════════════════════════════
   AND: {
+    // BÁSICO
     historia: "Ana, analista de fraude do Banco Digital, precisa criar uma regra que só dispare quando DUAS coisas acontecem juntas: valor alto E país diferente. Uma só não basta.",
     personagem: "👩‍💼 Ana, Analista de Fraude",
     problema: "Como garantir que TODAS as condições sejam verdadeiras ao mesmo tempo?",
@@ -766,6 +803,52 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
     perguntaComum: "Posso usar mais de duas condições no AND?",
     respostaPergunta: "Sim! Você pode encadear quantas quiser: (A) AND (B) AND (C). TODAS precisam ser verdadeiras.",
     dicaDeOuro: "💎 Use AND quando você quer ser RIGOROSO. Quanto mais condições no AND, mais específica (e restritiva) fica a regra.",
+    
+    // AULA COMPLETA
+    definicaoSimples: "AND significa 'E'. Une duas ou mais condições e só retorna VERDADEIRO quando TODAS são verdadeiras.",
+    comoFunciona: "O sistema avalia cada condição da esquerda para a direita. Se QUALQUER uma for falsa, para imediatamente e retorna FALSO (isso é chamado 'curto-circuito'). Só retorna VERDADEIRO se chegar ao final com todas verdadeiras.",
+    tabelaVerdade: [
+      ["Condição A", "Condição B", "A AND B"],
+      ["✅ Verdadeiro", "✅ Verdadeiro", "✅ VERDADEIRO"],
+      ["✅ Verdadeiro", "❌ Falso", "❌ FALSO"],
+      ["❌ Falso", "✅ Verdadeiro", "❌ FALSO"],
+      ["❌ Falso", "❌ Falso", "❌ FALSO"],
+    ],
+    exemplosExtras: [
+      {
+        titulo: "Transação internacional de alto valor",
+        cenario: "Queremos detectar compras acima de R$5.000 vindas do exterior",
+        codigo: "(amount GT 5000) AND (country NEQ \"BR\")",
+        resultado: "Dispara apenas se valor > 5000 E país não for Brasil",
+      },
+      {
+        titulo: "Cliente novo com valor alto",
+        cenario: "Conta com menos de 7 dias fazendo compra > R$1.000",
+        codigo: "(account_age_days LT 7) AND (amount GT 1000)",
+        resultado: "Detecta possível fraude em conta recém-criada",
+      },
+      {
+        titulo: "Tripla condição",
+        cenario: "Madrugada + valor alto + primeiro uso do cartão",
+        codigo: "(hour BETWEEN 0 AND 6) AND (amount GT 2000) AND (is_first_use EQ true)",
+        resultado: "Cenário de altíssimo risco - todas as 3 devem ser verdadeiras",
+      },
+    ],
+    errosComuns: [
+      "❌ Confundir AND com OR: AND é restritivo (todas verdadeiras), OR é permissivo (basta uma)",
+      "❌ Usar AND quando deveria usar OR: 'país = BR AND país = US' NUNCA será verdadeiro (um país não pode ser dois ao mesmo tempo!)",
+      "❌ Esquecer parênteses: (A AND B) OR C é diferente de A AND (B OR C)",
+    ],
+    operadoresRelacionados: ["OR", "NOT", "NAND"],
+    checklistUso: [
+      "☐ Todas as condições precisam ser verdadeiras juntas?",
+      "☐ Uma condição falsa deve bloquear o resultado?",
+      "☐ Os parênteses estão corretos para a precedência desejada?",
+    ],
+    exercicio: {
+      pergunta: "Crie uma regra AND que detecte: valor > R$3.000 E cartão não verificado E horário entre 22h e 6h",
+      resposta: "(amount GT 3000) AND (card_verified EQ false) AND (hour BETWEEN 22 AND 6)",
+    },
   },
 
   OR: {
@@ -786,6 +869,52 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
     perguntaComum: "Qual a diferença entre OR e AND?",
     respostaPergunta: "AND = TODAS verdadeiras (mais restritivo). OR = PELO MENOS UMA verdadeira (mais abrangente).",
     dicaDeOuro: "💎 Use OR quando você quer capturar MÚLTIPLOS cenários com uma única regra. É como uma rede de pesca maior.",
+    
+    // AULA COMPLETA
+    definicaoSimples: "OR retorna VERDADEIRO se PELO MENOS UMA das condições for verdadeira. É o 'OU' inclusivo - basta uma!",
+    comoFunciona: "O sistema avalia cada condição da esquerda para direita. No momento em que encontra UMA verdadeira, já retorna VERDADEIRO sem precisar verificar as outras (short-circuit evaluation). Só retorna FALSO se TODAS forem falsas.",
+    tabelaVerdade: [
+      ["Condição A", "Condição B", "A OR B", "Explicação"],
+      ["❌ FALSO", "❌ FALSO", "❌ FALSO", "Nenhuma verdadeira = FALSO"],
+      ["❌ FALSO", "✅ VERDADEIRO", "✅ VERDADEIRO", "Uma verdadeira basta!"],
+      ["✅ VERDADEIRO", "❌ FALSO", "✅ VERDADEIRO", "Uma verdadeira basta!"],
+      ["✅ VERDADEIRO", "✅ VERDADEIRO", "✅ VERDADEIRO", "Ambas verdadeiras = ainda VERDADEIRO"],
+    ],
+    exemplosExtras: [
+      {
+        titulo: "Canais de alto risco",
+        cenario: "Transações do APP ou WEB merecem atenção extra",
+        codigo: "(channel EQ \"APP\") OR (channel EQ \"WEB\")",
+        resultado: "APP = dispara, WEB = dispara, POS = não dispara",
+      },
+      {
+        titulo: "Valores extremos",
+        cenario: "Alertar valores muito baixos OU muito altos",
+        codigo: "(amount LT 10) OR (amount GT 10000)",
+        resultado: "R$5 = dispara, R$500 = não, R$50.000 = dispara",
+      },
+      {
+        titulo: "Países de risco",
+        cenario: "Monitorar transações de países específicos",
+        codigo: "(country EQ \"NG\") OR (country EQ \"RU\") OR (country EQ \"UA\")",
+        resultado: "Nigéria, Rússia ou Ucrânia = dispara",
+      },
+    ],
+    errosComuns: [
+      "❌ Confundir OR com AND: OR é MENOS restritivo (captura MAIS), AND é MAIS restritivo",
+      "❌ Usar OR quando deveria usar IN: channel IN [\"APP\", \"WEB\"] é mais limpo que múltiplos OR",
+      "❌ Esquecer parênteses: (A OR B) AND C é diferente de A OR (B AND C)",
+    ],
+    operadoresRelacionados: ["AND", "NOT", "XOR", "NOR", "IN"],
+    checklistUso: [
+      "☐ Você quer capturar MÚLTIPLOS cenários alternativos?",
+      "☐ Basta UMA condição ser verdadeira para disparar?",
+      "☐ Os parênteses estão corretos para precedência?",
+    ],
+    exercicio: {
+      pergunta: "Crie uma regra que dispare para transações do Brasil (BR) OU Argentina (AR)",
+      resposta: "(country EQ \"BR\") OR (country EQ \"AR\")",
+    },
   },
 
   NOT: {
@@ -829,6 +958,55 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
     perguntaComum: "EQ diferencia maiúsculas de minúsculas?",
     respostaPergunta: "Sim! 'PENDING' é diferente de 'pending'. Sempre verifique como os dados chegam no payload.",
     dicaDeOuro: "💎 Sempre use aspas para textos: \"PENDING\". Para números, não precisa: amount EQ 100.",
+    
+    // AULA COMPLETA
+    definicaoSimples: "EQ (equals) verifica se um valor é EXATAMENTE igual a outro. É o operador mais básico e mais usado!",
+    comoFunciona: "O sistema compara o valor do campo com o valor especificado, caractere por caractere para textos ou bit por bit para números. Só retorna VERDADEIRO se forem IDÊNTICOS. Um espaço a mais, uma letra diferente = FALSO.",
+    tabelaVerdade: [
+      ["Valor do Campo", "Comparar com", "EQ", "Explicação"],
+      ["\"PENDING\"", "\"PENDING\"", "✅ VERDADEIRO", "Textos idênticos"],
+      ["\"PENDING\"", "\"pending\"", "❌ FALSO", "Maiúscula ≠ minúscula"],
+      ["\"PENDING \"", "\"PENDING\"", "❌ FALSO", "Espaço extra no fim!"],
+      ["100", "100", "✅ VERDADEIRO", "Números iguais"],
+      ["100.0", "100", "✅ VERDADEIRO*", "Geralmente considera iguais"],
+    ],
+    exemplosExtras: [
+      {
+        titulo: "Filtrar por status",
+        cenario: "Processar apenas transações pendentes",
+        codigo: "status EQ \"PENDING\"",
+        resultado: "PENDING = captura, APPROVED = ignora, DECLINED = ignora",
+      },
+      {
+        titulo: "Bandeira específica",
+        cenario: "Regras especiais para cartões Visa",
+        codigo: "card_brand EQ \"VISA\"",
+        resultado: "VISA = captura, MASTERCARD = ignora",
+      },
+      {
+        titulo: "Valor exato",
+        cenario: "Detectar transações de teste (valor R$1)",
+        codigo: "amount EQ 1",
+        resultado: "R$1 exato = captura (provável teste)",
+      },
+    ],
+    errosComuns: [
+      "❌ Esquecer case-sensitivity: 'VISA' ≠ 'visa' ≠ 'Visa'",
+      "❌ Não usar aspas para texto: status EQ PENDING está errado, use \"PENDING\"",
+      "❌ Usar EQ para faixas: se quer 'acima de 100', use GT, não EQ",
+      "❌ Comparar tipos diferentes: \"100\" (texto) ≠ 100 (número)",
+    ],
+    operadoresRelacionados: ["NEQ", "IN", "CONTAINS", "IS_TRUE", "IS_FALSE"],
+    checklistUso: [
+      "☐ Você quer um valor EXATO (não faixa, não contém)?",
+      "☐ O case (maiúscula/minúscula) está correto?",
+      "☐ Está usando aspas para texto?",
+      "☐ O tipo de dado está correto (texto vs número)?",
+    ],
+    exercicio: {
+      pergunta: "Crie uma regra que capture transações com status exatamente igual a APPROVED",
+      resposta: "status EQ \"APPROVED\"",
+    },
   },
 
   NEQ: {
@@ -869,6 +1047,52 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
     perguntaComum: "E se eu quiser incluir o valor 5000 também?",
     respostaPergunta: "Use GTE (maior ou igual). GT = maior que (exclui o limite). GTE = maior ou igual (inclui o limite).",
     dicaDeOuro: "💎 Lembre: GT NÃO inclui o valor do limite. Se quer incluir, use GTE.",
+    
+    // AULA COMPLETA
+    definicaoSimples: "GT significa 'Greater Than' (Maior Que). Compara um número e retorna VERDADEIRO se for MAIOR que o limite especificado.",
+    comoFunciona: "O sistema pega o valor do campo (ex: amount = 5001), compara com o limite (5000), e verifica se é ESTRITAMENTE maior. 5001 > 5000? Sim! Retorna verdadeiro. 5000 > 5000? Não! São iguais, não é maior.",
+    tabelaVerdade: [
+      ["Valor do Campo", "Limite", "Resultado GT"],
+      ["5001", "5000", "✅ VERDADEIRO (5001 > 5000)"],
+      ["5000", "5000", "❌ FALSO (5000 = 5000, não é maior)"],
+      ["4999", "5000", "❌ FALSO (4999 < 5000)"],
+      ["10000", "5000", "✅ VERDADEIRO (10000 > 5000)"],
+    ],
+    exemplosExtras: [
+      {
+        titulo: "Alerta de alto valor",
+        cenario: "Transações acima de R$10.000 precisam de aprovação extra",
+        codigo: "transaction.amount GT 10000",
+        resultado: "R$10.001 dispara, R$10.000 não dispara",
+      },
+      {
+        titulo: "Score de risco elevado",
+        cenario: "Alertar quando score de risco passar de 80 pontos",
+        codigo: "risk_score GT 80",
+        resultado: "Score 81 dispara, score 80 não dispara",
+      },
+      {
+        titulo: "Combinado com AND",
+        cenario: "Valor alto + país estrangeiro",
+        codigo: "(amount GT 5000) AND (country NEQ \"BR\")",
+        resultado: "Só dispara se AMBAS condições forem verdadeiras",
+      },
+    ],
+    errosComuns: [
+      "❌ Confundir GT com GTE: GT exclui o limite! Se você quer 'a partir de 5000', use GTE",
+      "❌ Usar GT com texto: GT é para números! Para texto, use outros operadores",
+      "❌ Esquecer que 5000 GT 5000 é FALSO: são iguais, não é maior",
+    ],
+    operadoresRelacionados: ["GTE", "LT", "LTE", "BETWEEN", "EQ"],
+    checklistUso: [
+      "☐ O campo é numérico? (GT só funciona com números)",
+      "☐ Você quer EXCLUIR o limite? (se não, use GTE)",
+      "☐ O limite está na unidade correta? (centavos vs reais)",
+    ],
+    exercicio: {
+      pergunta: "Crie uma regra que alerte transações ACIMA de R$15.000 (R$15.000 não deve alertar)",
+      resposta: "transaction.amount GT 15000",
+    },
   },
 
   GTE: {
@@ -953,6 +1177,53 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
     perguntaComum: "BETWEEN inclui os limites?",
     respostaPergunta: "Sim! BETWEEN 100 AND 5000 inclui 100 e 5000. É equivalente a GTE 100 AND LTE 5000.",
     dicaDeOuro: "💎 BETWEEN é perfeito para faixas de valor, idade, score, etc. Mais legível que AND + AND.",
+    
+    // AULA COMPLETA
+    definicaoSimples: "BETWEEN verifica se um valor está DENTRO de uma faixa (intervalo). Inclui os limites inferior e superior.",
+    comoFunciona: "O sistema verifica: valor >= limite_inferior E valor <= limite_superior. Se ambas forem verdadeiras, retorna VERDADEIRO. É um atalho elegante para (campo GTE X) AND (campo LTE Y).",
+    tabelaVerdade: [
+      ["Valor", "BETWEEN 100 AND 5000", "Resultado"],
+      ["50", "50 está abaixo de 100", "❌ FALSO"],
+      ["100", "100 é o limite inferior", "✅ VERDADEIRO (inclui)"],
+      ["2500", "2500 está no meio", "✅ VERDADEIRO"],
+      ["5000", "5000 é o limite superior", "✅ VERDADEIRO (inclui)"],
+      ["5001", "5001 está acima de 5000", "❌ FALSO"],
+    ],
+    exemplosExtras: [
+      {
+        titulo: "Faixa de horário comercial",
+        cenario: "Transações das 9h às 18h são consideradas normais",
+        codigo: "transaction.hour BETWEEN 9 AND 18",
+        resultado: "9h, 12h, 18h = OK. 8h, 19h = fora do horário",
+      },
+      {
+        titulo: "Score de risco médio",
+        cenario: "Queremos regras para score entre 40 e 70",
+        codigo: "risk_score BETWEEN 40 AND 70",
+        resultado: "Captura faixa de risco médio para análise manual",
+      },
+      {
+        titulo: "Idade de conta madura",
+        cenario: "Contas entre 30 e 365 dias",
+        codigo: "account_age_days BETWEEN 30 AND 365",
+        resultado: "Não é nova nem muito antiga",
+      },
+    ],
+    errosComuns: [
+      "❌ Esquecer que BETWEEN INCLUI os limites: 100 e 5000 estão DENTRO da faixa",
+      "❌ Inverter os limites: BETWEEN 5000 AND 100 pode não funcionar como esperado",
+      "❌ Usar para exclusão: se quer valores FORA da faixa, use NOT_BETWEEN",
+    ],
+    operadoresRelacionados: ["NOT_BETWEEN", "GT", "GTE", "LT", "LTE"],
+    checklistUso: [
+      "☐ Você quer valores DENTRO de uma faixa?",
+      "☐ Os limites devem ser INCLUÍDOS?",
+      "☐ O limite inferior é menor que o superior?",
+    ],
+    exercicio: {
+      pergunta: "Crie uma regra para transações entre R$500 e R$3.000 (incluindo ambos)",
+      resposta: "transaction.amount BETWEEN 500 AND 3000",
+    },
   },
 
   NOT_BETWEEN: {
@@ -996,6 +1267,52 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
     perguntaComum: "Qual o formato correto da lista?",
     respostaPergunta: "Use colchetes e aspas: [\"valor1\", \"valor2\"]. Para números: [100, 200, 300].",
     dicaDeOuro: "💎 IN é perfeito para validar canais, status, países, MCCs, etc. Muito mais limpo que múltiplos OR.",
+    
+    // AULA COMPLETA
+    definicaoSimples: "IN verifica se um valor está presente em uma LISTA de opções. Basta estar em UMA posição da lista para retornar VERDADEIRO.",
+    comoFunciona: "O sistema percorre a lista item por item e compara com o valor do campo. Se encontrar uma correspondência EXATA em qualquer posição, retorna VERDADEIRO. Se chegar ao fim sem encontrar, retorna FALSO.",
+    tabelaVerdade: [
+      ["Valor do Campo", "Lista", "Resultado IN"],
+      ["\"APP\"", "[\"APP\", \"WEB\", \"POS\"]", "✅ VERDADEIRO (APP está na lista)"],
+      ["\"WEB\"", "[\"APP\", \"WEB\", \"POS\"]", "✅ VERDADEIRO (WEB está na lista)"],
+      ["\"API\"", "[\"APP\", \"WEB\", \"POS\"]", "❌ FALSO (API não está na lista)"],
+      ["\"app\"", "[\"APP\", \"WEB\", \"POS\"]", "❌ FALSO (case-sensitive!)"],
+    ],
+    exemplosExtras: [
+      {
+        titulo: "Países de alto risco FATF",
+        cenario: "Bloquear transações de países na lista negra",
+        codigo: "country IN [\"KP\", \"IR\", \"SY\", \"CU\"]",
+        resultado: "Coreia do Norte, Irã, Síria, Cuba = BLOQUEIA",
+      },
+      {
+        titulo: "MCCs de gambling",
+        cenario: "Alertar transações em estabelecimentos de jogos",
+        codigo: "mcc IN [\"7995\", \"7994\", \"7993\"]",
+        resultado: "Captura casinos, loterias, apostas",
+      },
+      {
+        titulo: "Status que precisam de ação",
+        cenario: "Processar apenas pedidos pendentes ou em análise",
+        codigo: "status IN [\"PENDING\", \"REVIEW\", \"WAITING\"]",
+        resultado: "Ignora APPROVED, DECLINED, CANCELLED",
+      },
+    ],
+    errosComuns: [
+      "❌ Esquecer as aspas em textos: [APP, WEB] está errado, use [\"APP\", \"WEB\"]",
+      "❌ Esquecer que é case-sensitive: \"app\" não é igual a \"APP\"",
+      "❌ Usar IN quando deveria usar CONTAINS: IN é para valor exato, CONTAINS é para trecho",
+    ],
+    operadoresRelacionados: ["NOT_IN", "EQ", "OR", "CONTAINS"],
+    checklistUso: [
+      "☐ Você tem uma lista finita de valores válidos?",
+      "☐ Os valores estão formatados corretamente? (aspas para texto)",
+      "☐ O case (maiúscula/minúscula) está correto?",
+    ],
+    exercicio: {
+      pergunta: "Crie uma regra que detecte transações dos canais MOBILE, TABLET ou SMARTWATCH",
+      resposta: "channel IN [\"MOBILE\", \"TABLET\", \"SMARTWATCH\"]",
+    },
   },
 
   NOT_IN: {
@@ -1039,6 +1356,75 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
     perguntaComum: "CONTAINS diferencia maiúsculas/minúsculas?",
     respostaPergunta: "Depende da configuração. Por padrão, geralmente é case-insensitive. Verifique a documentação do motor.",
     dicaDeOuro: "💎 Use CONTAINS para detectar padrões suspeitos em descrições, e-mails, nomes, etc.",
+    
+    // AULA COMPLETA
+    definicaoSimples: "CONTAINS verifica se um texto CONTÉM um trecho específico em QUALQUER posição (início, meio ou fim).",
+    comoFunciona: "O sistema percorre o texto caractere por caractere procurando a sequência especificada. Se encontrar em qualquer posição, retorna VERDADEIRO. A busca é como um Ctrl+F - não importa onde está, só importa que existe.",
+    tabelaVerdade: [
+      ["Valor do Campo", "Busca (CONTAINS)", "Resultado"],
+      ["\"user@tempmail.com\"", "\"tempmail\"", "✅ VERDADEIRO (está no meio)"],
+      ["\"tempmail_user@gmail.com\"", "\"tempmail\"", "✅ VERDADEIRO (está no início)"],
+      ["\"user@gmail.tempmail\"", "\"tempmail\"", "✅ VERDADEIRO (está no fim)"],
+      ["\"user@gmail.com\"", "\"tempmail\"", "❌ FALSO (não contém)"],
+      ["\"user@TempMail.com\"", "\"tempmail\"", "⚠️ Depende se é case-sensitive"],
+    ],
+    exemplosExtras: [
+      {
+        titulo: "Detectar e-mails descartáveis",
+        cenario: "Bloquear domínios de e-mail temporário conhecidos",
+        codigo: "email CONTAINS \"tempmail\" OR email CONTAINS \"disposable\" OR email CONTAINS \"guerrilla\"",
+        resultado: "Captura qualquer e-mail com esses provedores descartáveis",
+      },
+      {
+        titulo: "Palavras suspeitas em descrição",
+        cenario: "Identificar descrições que mencionam 'test' ou 'fake'",
+        codigo: "description CONTAINS \"test\" OR description CONTAINS \"fake\"",
+        resultado: "Alerta para transações de teste ou potencialmente fraudulentas",
+      },
+      {
+        titulo: "Nome de estabelecimento suspeito",
+        cenario: "Detectar merchants com 'crypto' ou 'forex' no nome",
+        codigo: "merchant_name CONTAINS \"crypto\" OR merchant_name CONTAINS \"forex\"",
+        resultado: "Sinaliza estabelecimentos de alto risco",
+      },
+    ],
+    errosComuns: [
+      "❌ Usar CONTAINS quando precisa de EXATO: CONTAINS \"BR\" vai pegar BRASIL, BRAGA, COBRA...",
+      "❌ Esquecer de considerar case-sensitivity: 'TempMail' vs 'tempmail'",
+      "❌ Usar CONTAINS em campos numéricos - é para TEXTO apenas",
+      "❌ Confundir com IN: CONTAINS busca TRECHO, IN busca VALOR EXATO na lista",
+    ],
+    operadoresRelacionados: ["NOT_CONTAINS", "STARTS_WITH", "ENDS_WITH", "MATCHES_REGEX", "IN"],
+    checklistUso: [
+      "☐ O campo é do tipo TEXTO (string)?",
+      "☐ Você quer encontrar um TRECHO (não valor exato)?",
+      "☐ O trecho que você busca é único o suficiente? (cuidado com 'BR', 'A', etc.)",
+      "☐ Você considerou variações de maiúscula/minúscula?",
+    ],
+    exercicio: {
+      pergunta: "Crie uma regra que detecte e-mails com 'hotmail' em qualquer posição",
+      resposta: "email CONTAINS \"hotmail\"",
+    },
+  },
+
+  NOT_CONTAINS: {
+    historia: "Ana quer garantir que e-mails NÃO contenham termos de domínios internos antes de enviar comunicações externas.",
+    personagem: "👩‍💻 Ana, DPO",
+    problema: "Como verificar se um texto NÃO contém uma palavra específica?",
+    analogia: "🚫 Pense em um filtro de spam ao contrário. Em vez de detectar spam, você quer garantir que NÃO há conteúdo proibido.",
+    passoAPasso: [
+      "1️⃣ Selecione o campo de texto",
+      "2️⃣ Escolha o operador NOT_CONTAINS",
+      "3️⃣ Digite o termo que NÃO deve aparecer",
+      "4️⃣ A regra dispara apenas se o texto NÃO contiver o termo",
+    ],
+    antes: "❌ ANTES: Você teria que usar negação complexa ou validação manual.",
+    depois: "✅ DEPOIS: Com NOT_CONTAINS, é direto: mensagem NOT_CONTAINS \"confidencial\" garante envio externo seguro.",
+    sintaxe: "message NOT_CONTAINS \"confidencial\"",
+    explicacaoSintaxe: "📖 Leia assim: 'Se a mensagem NÃO CONTIVER confidencial, então pode prosseguir'",
+    perguntaComum: "NOT_CONTAINS é o oposto de CONTAINS?",
+    respostaPergunta: "Exatamente! Se CONTAINS retorna VERDADEIRO, NOT_CONTAINS retorna FALSO, e vice-versa.",
+    dicaDeOuro: "💎 Use NOT_CONTAINS para validação de dados - garantir que campos não tenham conteúdo proibido.",
   },
 
   STARTS_WITH: {
@@ -1122,6 +1508,55 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
     perguntaComum: "Qual a diferença entre NULL e string vazia \"\"?",
     respostaPergunta: "NULL = campo não existe ou não foi enviado. \"\" = campo existe mas está vazio. IS_EMPTY pega strings vazias.",
     dicaDeOuro: "💎 Combine IS_NULL com regras de bloqueio para garantir dados cadastrais completos.",
+    
+    // AULA COMPLETA
+    definicaoSimples: "IS_NULL verifica se um campo está AUSENTE, VAZIO ou não foi informado. É um operador UNÁRIO (não precisa de valor à direita).",
+    comoFunciona: "O sistema verifica se o campo é literalmente 'null' (não existe), 'undefined' (não definido) ou, em alguns casos, vazio. É diferente de string vazia \"\" ou zero 0 - esses são VALORES, não ausência de valor.",
+    tabelaVerdade: [
+      ["Valor do Campo", "IS_NULL", "Explicação"],
+      ["null", "✅ VERDADEIRO", "Campo não existe"],
+      ["undefined", "✅ VERDADEIRO", "Campo não foi definido"],
+      ["\"\"", "❌ FALSO*", "String vazia É um valor (depende do sistema)"],
+      ["0", "❌ FALSO", "Zero É um valor numérico"],
+      ["\"João\"", "❌ FALSO", "Campo tem valor"],
+      ["false", "❌ FALSO", "False É um valor booleano"],
+    ],
+    exemplosExtras: [
+      {
+        titulo: "Cadastro incompleto - telefone",
+        cenario: "Detectar clientes que não informaram telefone",
+        codigo: "customer.phone IS_NULL",
+        resultado: "Solicita telefone antes de aprovar",
+      },
+      {
+        titulo: "Endereço de entrega ausente",
+        cenario: "Validar pedidos que precisam de endereço",
+        codigo: "order.shipping_address IS_NULL AND order.type EQ \"PHYSICAL\"",
+        resultado: "Bloqueia pedidos físicos sem endereço",
+      },
+      {
+        titulo: "Device fingerprint ausente",
+        cenario: "Identificar transações sem fingerprint (suspeitas)",
+        codigo: "transaction.device_fingerprint IS_NULL",
+        resultado: "Score de risco aumentado para análise manual",
+      },
+    ],
+    errosComuns: [
+      "❌ Confundir NULL com string vazia: \"\" NÃO é NULL (use IS_EMPTY para strings vazias)",
+      "❌ Confundir NULL com zero: 0 NÃO é NULL (use EQ 0 para verificar zero)",
+      "❌ Confundir NULL com false: false NÃO é NULL (use IS_FALSE para booleanos)",
+      "❌ Esquecer que IS_NULL é unário: NÃO escreva 'campo IS_NULL true'",
+    ],
+    operadoresRelacionados: ["NOT_NULL", "IS_EMPTY", "NOT_EMPTY", "EQ"],
+    checklistUso: [
+      "☐ Você quer verificar se o campo NÃO FOI INFORMADO?",
+      "☐ O campo pode ser enviado como NULL no payload?",
+      "☐ Você entende a diferença entre NULL e string vazia?",
+    ],
+    exercicio: {
+      pergunta: "Crie uma regra que detecte transações sem o campo customer.email",
+      resposta: "customer.email IS_NULL",
+    },
   },
 
   NOT_NULL: {
@@ -1316,6 +1751,54 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
     perguntaComum: "Quais períodos posso usar?",
     respostaPergunta: "Exemplos: last_1h, last_24h, last_7d, last_30d. Depende da configuração do sistema.",
     dicaDeOuro: "💎 COUNT é essencial para regras de velocity. Combine com diferentes períodos e limites.",
+    
+    // AULA COMPLETA
+    definicaoSimples: "COUNT_GT conta quantos eventos aconteceram em um período e verifica se passou de um limite. É a base das regras de VELOCITY (frequência).",
+    comoFunciona: "O sistema olha para trás no tempo (janela temporal), conta quantos eventos do tipo especificado aconteceram para aquele agrupamento (ex: customer_id), e compara com o limite. Se a contagem for MAIOR que o limite, dispara.",
+    tabelaVerdade: [
+      ["Contagem na Janela", "Limite (GT 10)", "Resultado"],
+      ["5 transações", "GT 10", "❌ FALSO (5 não é maior que 10)"],
+      ["10 transações", "GT 10", "❌ FALSO (10 não é MAIOR que 10, é igual)"],
+      ["11 transações", "GT 10", "✅ VERDADEIRO (11 > 10)"],
+      ["50 transações", "GT 10", "✅ VERDADEIRO (50 > 10, alerta crítico!)"],
+    ],
+    exemplosExtras: [
+      {
+        titulo: "Teste de cartão (card testing)",
+        cenario: "Fraudador testa se cartão roubado funciona com várias transações pequenas",
+        codigo: "COUNT(transactions, last_1h, card_id) GT 5",
+        resultado: "Mais de 5 transações com mesmo cartão em 1h = provável teste",
+      },
+      {
+        titulo: "Múltiplos logins falhos",
+        cenario: "Tentativa de brute force na conta",
+        codigo: "COUNT(failed_logins, last_15min, user_id) GT 3",
+        resultado: "Mais de 3 tentativas falhas em 15min = bloqueia conta",
+      },
+      {
+        titulo: "Criação em massa",
+        cenario: "Mesmo dispositivo criando muitas contas",
+        codigo: "COUNT(account_creations, last_24h, device_fingerprint) GT 2",
+        resultado: "Mais de 2 contas do mesmo device em 24h = suspeito",
+      },
+    ],
+    errosComuns: [
+      "❌ Esquecer que GT não inclui o limite: COUNT > 10 NÃO dispara quando tem exatamente 10",
+      "❌ Usar janela muito grande: last_30d pode ser lento e capturar muito ruído",
+      "❌ Escolher agrupamento errado: agrupar por email quando deveria agrupar por device",
+      "❌ Limite muito baixo: COUNT > 1 gera muitos falsos positivos",
+    ],
+    operadoresRelacionados: ["COUNT_GTE", "COUNT_LT", "COUNT_LTE", "SUM_GT", "VELOCITY"],
+    checklistUso: [
+      "☐ O que você quer CONTAR? (transações, logins, etc.)",
+      "☐ Em qual JANELA de tempo? (1h, 24h, 7d)",
+      "☐ Agrupar por quê? (customer_id, device, card)",
+      "☐ Qual o limite razoável? (não muito baixo, não muito alto)",
+    ],
+    exercicio: {
+      pergunta: "Crie uma regra que detecte mais de 20 transações por cartão nas últimas 24 horas",
+      resposta: "COUNT(transactions, last_24h, card_id) GT 20",
+    },
   },
 
   SUM_GT: {
@@ -1337,6 +1820,54 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
     perguntaComum: "Posso usar SUM com diferentes moedas?",
     respostaPergunta: "Depende. Geralmente você precisa converter para uma moeda base antes de somar.",
     dicaDeOuro: "💎 SUM é essencial para detectar estruturação (smurfing). Fraudadores dividem valores para não chamar atenção.",
+    
+    // AULA COMPLETA
+    definicaoSimples: "SUM_GT soma os valores de um campo em um período e verifica se o total passou de um limite. Essencial para detectar ESTRUTURAÇÃO (smurfing).",
+    comoFunciona: "O sistema olha para trás na janela temporal, soma todos os valores do campo especificado para aquele agrupamento (ex: customer_id), e compara com o limite. É como um totalizador que acumula valores ao longo do tempo.",
+    tabelaVerdade: [
+      ["Soma na Janela", "Limite (GT 10000)", "Resultado"],
+      ["R$ 5.000", "GT 10000", "❌ FALSO (soma ainda baixa)"],
+      ["R$ 10.000", "GT 10000", "❌ FALSO (soma igual, não MAIOR)"],
+      ["R$ 10.001", "GT 10000", "✅ VERDADEIRO (passou do limite)"],
+      ["R$ 50.000", "GT 10000", "✅ VERDADEIRO (muito acima, alerta crítico!)"],
+    ],
+    exemplosExtras: [
+      {
+        titulo: "Estruturação (Smurfing)",
+        cenario: "Fraudador divide R$15.000 em várias transações pequenas",
+        codigo: "SUM(transactions.amount, last_24h, customer_id) GT 10000",
+        resultado: "10 x R$1.500 = R$15.000 dispara alerta!",
+      },
+      {
+        titulo: "Limite de saque diário",
+        cenario: "Controlar saques em caixas eletrônicos",
+        codigo: "SUM(withdrawals.amount, last_24h, card_id) GT 5000",
+        resultado: "Soma de saques > R$5.000/dia bloqueia novos saques",
+      },
+      {
+        titulo: "Limite mensal por carteira",
+        cenario: "Controle de limites em carteiras digitais",
+        codigo: "SUM(transactions.amount, last_30d, wallet_id) GT 50000",
+        resultado: "Carteira com movimentação > R$50k/mês vai para análise",
+      },
+    ],
+    errosComuns: [
+      "❌ Esquecer de considerar moeda: SUM de BRL + USD dá resultado errado sem conversão",
+      "❌ Usar campo errado: somar 'quantity' em vez de 'amount'",
+      "❌ Janela muito curta: last_1h pode não capturar smurfing ao longo do dia",
+      "❌ Não considerar estornos: transações estornadas ainda contam na soma?",
+    ],
+    operadoresRelacionados: ["SUM_GTE", "SUM_LT", "SUM_LTE", "COUNT_GT", "AVG_GT"],
+    checklistUso: [
+      "☐ Qual campo você quer SOMAR? (amount, quantity)",
+      "☐ Em qual JANELA de tempo? (24h para diário, 30d para mensal)",
+      "☐ Agrupar por quê? (customer, card, wallet)",
+      "☐ Qual o limite regulatório ou de negócio?",
+    ],
+    exercicio: {
+      pergunta: "Crie uma regra para detectar saques acima de R$3.000 por cartão em 24 horas",
+      resposta: "SUM(withdrawals.amount, last_24h, card_id) GT 3000",
+    },
   },
 };
 
@@ -2173,6 +2704,159 @@ export default function Operators() {
                             </div>
                           </div>
                         </div>
+
+                        {/* ═══════════════════════════════════════════════════════════════ */}
+                        {/* 📖 SEÇÃO "AULA COMPLETA" - CONTEÚDO AVANÇADO */}
+                        {/* ═══════════════════════════════════════════════════════════════ */}
+                        
+                        {/* 📝 Definição Simples (se existir) */}
+                        {hf.definicaoSimples && (
+                          <div className="rounded-lg border-2 border-blue-300 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-950">
+                            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-blue-800 dark:text-blue-200">
+                              <span>📝</span> Definição em 1 Frase (Para Leigos)
+                            </div>
+                            <p className="text-lg font-medium text-blue-900 dark:text-blue-100">{hf.definicaoSimples}</p>
+                          </div>
+                        )}
+
+                        {/* 🔧 Como Funciona Por Dentro (se existir) */}
+                        {hf.comoFunciona && (
+                          <div className="rounded-lg bg-slate-100 p-4 dark:bg-slate-800">
+                            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
+                              <span>🔧</span> Como Funciona Por Dentro
+                            </div>
+                            <p className="text-sm text-slate-700 dark:text-slate-300">{hf.comoFunciona}</p>
+                          </div>
+                        )}
+
+                        {/* 📊 Tabela Verdade (se existir) */}
+                        {hf.tabelaVerdade && hf.tabelaVerdade.length > 0 && (
+                          <div className="rounded-lg bg-indigo-50 p-4 dark:bg-indigo-950">
+                            <div className="mb-3 flex items-center gap-2 text-sm font-bold text-indigo-800 dark:text-indigo-200">
+                              <span>📊</span> Tabela de Comportamento
+                            </div>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="border-b border-indigo-200 dark:border-indigo-700">
+                                    {hf.tabelaVerdade[0].map((header, i) => (
+                                      <th key={i} className="px-3 py-2 text-left font-semibold text-indigo-900 dark:text-indigo-100">
+                                        {header}
+                                      </th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {hf.tabelaVerdade.slice(1).map((row, i) => (
+                                    <tr key={i} className="border-b border-indigo-100 dark:border-indigo-800">
+                                      {row.map((cell, j) => (
+                                        <td key={j} className="px-3 py-2 text-indigo-700 dark:text-indigo-300">
+                                          {cell}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 🎯 Exemplos Extras (se existir) */}
+                        {hf.exemplosExtras && hf.exemplosExtras.length > 0 && (
+                          <div className="rounded-lg bg-emerald-50 p-4 dark:bg-emerald-950">
+                            <div className="mb-3 flex items-center gap-2 text-sm font-bold text-emerald-800 dark:text-emerald-200">
+                              <span>🎯</span> Exemplos Práticos ({hf.exemplosExtras.length} cenários)
+                            </div>
+                            <div className="space-y-3">
+                              {hf.exemplosExtras.map((ex, i) => (
+                                <div key={i} className="rounded-lg bg-white/60 p-3 dark:bg-black/20">
+                                  <div className="font-semibold text-emerald-900 dark:text-emerald-100">
+                                    {i + 1}. {ex.titulo}
+                                  </div>
+                                  <div className="mt-1 text-xs text-emerald-700 dark:text-emerald-300">
+                                    📍 Cenário: {ex.cenario}
+                                  </div>
+                                  <pre className="mt-2 overflow-x-auto rounded bg-slate-900 p-2 text-xs text-green-400">
+                                    {ex.codigo}
+                                  </pre>
+                                  <div className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
+                                    ✅ Resultado: {ex.resultado}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ❌ Erros Comuns (se existir) */}
+                        {hf.errosComuns && hf.errosComuns.length > 0 && (
+                          <div className="rounded-lg bg-red-50 p-4 dark:bg-red-950">
+                            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-red-800 dark:text-red-200">
+                              <span>❌</span> Erros Comuns de Iniciantes (EVITE!)
+                            </div>
+                            <ul className="space-y-2 text-sm text-red-700 dark:text-red-300">
+                              {hf.errosComuns.map((erro, i) => (
+                                <li key={i} className="flex items-start gap-2">
+                                  <span className="mt-1">•</span>
+                                  <span>{erro}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* ☑️ Checklist de Uso (se existir) */}
+                        {hf.checklistUso && hf.checklistUso.length > 0 && (
+                          <div className="rounded-lg bg-cyan-50 p-4 dark:bg-cyan-950">
+                            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-cyan-800 dark:text-cyan-200">
+                              <span>☑️</span> Checklist: Antes de Usar, Verifique...
+                            </div>
+                            <ul className="space-y-1 text-sm text-cyan-700 dark:text-cyan-300">
+                              {hf.checklistUso.map((item, i) => (
+                                <li key={i}>{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* 🔗 Operadores Relacionados (se existir) */}
+                        {hf.operadoresRelacionados && hf.operadoresRelacionados.length > 0 && (
+                          <div className="rounded-lg bg-violet-50 p-4 dark:bg-violet-950">
+                            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-violet-800 dark:text-violet-200">
+                              <span>🔗</span> Operadores Relacionados (estude também)
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {hf.operadoresRelacionados.map((op) => (
+                                <span key={op} className="rounded-full bg-violet-200 px-3 py-1 text-xs font-medium text-violet-800 dark:bg-violet-800 dark:text-violet-200">
+                                  {op}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 🧪 Mini Exercício (se existir) */}
+                        {hf.exercicio && (
+                          <div className="rounded-lg border-2 border-teal-400 bg-teal-50 p-4 dark:border-teal-600 dark:bg-teal-950">
+                            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-teal-800 dark:text-teal-200">
+                              <span>🧪</span> Mini Exercício (Pratique!)
+                            </div>
+                            <div className="rounded-lg bg-white/60 p-3 dark:bg-black/20">
+                              <div className="font-medium text-teal-900 dark:text-teal-100">
+                                📝 Desafio: {hf.exercicio.pergunta}
+                              </div>
+                              <details className="mt-3">
+                                <summary className="cursor-pointer text-sm font-medium text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-200">
+                                  👀 Ver resposta
+                                </summary>
+                                <pre className="mt-2 overflow-x-auto rounded bg-slate-900 p-2 text-xs text-green-400">
+                                  {hf.exercicio.resposta}
+                                </pre>
+                              </details>
+                            </div>
+                          </div>
+                        )}
 
                         {/* 🎒 Kit ultra-didático (gerado) */}
                         <details className="rounded-lg border bg-white/40 p-4 dark:bg-black/10">
