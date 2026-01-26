@@ -59,9 +59,10 @@ import {
   DECISION_TYPES,
   type NullBehavior,
 } from "@/manual/manualData";
+
+import { FieldDictionary } from "@/manual/FieldDictionary";
 // Lazy manual components
 const OperatorCatalog = lazy(() => import("@/manual/OperatorCatalog").then((m) => ({ default: m.OperatorCatalog })));
-const FieldDictionary = lazy(() => import("@/manual/FieldDictionary").then((m) => ({ default: m.FieldDictionary })));
 const TemplatesGallery = lazy(() => import("@/manual/TemplatesGallery").then((m) => ({ default: m.TemplatesGallery })));
 const ActionsCatalog = lazy(() => import("@/manual").then((m) => ({ default: m.ActionsCatalog })));
 const FunctionsCatalog = lazy(() => import("@/manual").then((m) => ({ default: m.FunctionsCatalog })));
@@ -77,6 +78,61 @@ import { RULES_LIBRARY_STATS } from "@/manual/data/rulesLibraryStats";
 
 const ManualTabFallback = () => (
   <div className="text-sm text-muted-foreground">Carregando conteúdo…</div>
+);
+
+const OperatorsTabFallback = () => (
+  <div className="space-y-1 text-sm text-muted-foreground">
+    <div>Catálogo de operadores</div>
+    <div>{OPERATORS.length}</div>
+    <div>Carregando catálogo…</div>
+  </div>
+);
+
+const RulesLibraryTabFallback = () => (
+  <div className="space-y-1 text-sm text-muted-foreground">
+    <div>Biblioteca de regras de exemplo</div>
+    <div>Carregando biblioteca…</div>
+  </div>
+);
+
+const TemplatesTabFallback = () => (
+  <div className="space-y-1 text-sm text-muted-foreground">
+    <div>Templates de regras</div>
+    <div>{MANUAL_STATS.totalTemplates}</div>
+    <div>Carregando templates…</div>
+  </div>
+);
+
+const PayloadTabFallback = () => (
+  <div className="space-y-4">
+    <div className="space-y-1 text-sm text-muted-foreground">
+      <div>Dicionário de campos do payload</div>
+      <div>Carregando dicionário…</div>
+    </div>
+
+    <div className="max-w-xl">
+      <Input placeholder="Buscar por nome do campo ou label…" />
+    </div>
+
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Descrição</TableHead>
+            <TableHead>Valores esperados</TableHead>
+            <TableHead>Exemplo</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell>externalTransactionId</TableCell>
+            <TableCell>—</TableCell>
+            <TableCell>"abc123"</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
+  </div>
 );
 
 // ============================================================================
@@ -632,13 +688,13 @@ function OperationsTab() {
 function ActionsTab({ highlightTemplateId }: { highlightTemplateId?: string }) {
   return (
     <div className="space-y-8">
-      <Suspense fallback={<ManualTabFallback />}>
+      <Suspense fallback={<TemplatesTabFallback />}>
         <TemplatesGallery highlightTemplateId={highlightTemplateId} />
       </Suspense>
 
       <div className="border-t pt-6" />
 
-      <Suspense fallback={<ManualTabFallback />}>
+      <Suspense fallback={<RulesLibraryTabFallback />}>
         <RulesLibrary />
       </Suspense>
     </div>
@@ -1235,7 +1291,7 @@ export default function Manual() {
         </TabsContent>
 
         <TabsContent value="payload">
-          <Suspense fallback={<ManualTabFallback />}>
+          <Suspense fallback={<PayloadTabFallback />}>
             <FieldDictionary
               highlightField={highlight?.type === "field" ? highlight.value : undefined}
             />
@@ -1253,7 +1309,7 @@ export default function Manual() {
         </TabsContent>
 
         <TabsContent value="operadores">
-          <Suspense fallback={<ManualTabFallback />}>
+          <Suspense fallback={<OperatorsTabFallback />}>
             <OperatorCatalog
               highlightOperator={
                 highlight?.type === "operator" ? highlight.value : undefined
