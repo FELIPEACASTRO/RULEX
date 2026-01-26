@@ -1316,10 +1316,26 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
     // 🔧 COMO TESTAR
     comoTestar: [
       "📝 Teste 1 (Deve disparar): Envie transação com TODAS as condições verdadeiras",
+      "  💡 Exemplo payload:",
+      "  { amount: 6000, country: 'US', hour: 3 }",
+      "  📊 Resultado esperado: triggeredRules contém 'AND' ✅",
+      "",
       "📝 Teste 2 (Não deve disparar): Envie com apenas UMA condição falsa",
-      "📝 Teste 3 (Borda): Teste valores exatamente no limite (ex: amount = 5000 quando regra é GT 5000)",
-      "📝 Teste 4 (Dados ausentes): O que acontece se um campo vier null?",
-      "📝 Teste 5 (Performance): Com 5+ condições, meça o tempo de resposta",
+      "  💡 Exemplo payload:",
+      "  { amount: 6000, country: 'BR', hour: 3 } ← país = BR (falso)",
+      "  📊 Resultado esperado: triggeredRules NÃO contém 'AND' ❌",
+      "",
+      "📝 Teste 3 (Borda): Teste valores exatamente no limite",
+      "  💡 Exemplo: amount = 5000 quando regra é (amount GT 5000)",
+      "  📊 GT exclui igualdade → não dispara ❌",
+      "",
+      "📝 Teste 4 (Dados ausentes): O que acontece se campo vier null?",
+      "  💡 Payload: { amount: null, country: 'US' }",
+      "  📊 amount null geralmente = condição FALSA → AND retorna false",
+      "",
+      "📝 Teste 5 (Performance): Com 5+ condições, meça o tempo",
+      "  ⏱️ Tempo esperado: < 1ms (curto-circuito otimiza)",
+      "  📋 Log do motor: 'RuleEngine: AND evaluated in 0.3ms'",
     ],
   },
 
@@ -1583,18 +1599,27 @@ const HEAD_FIRST_EXAMPLES: Record<string, HeadFirstExample> = {
     definicaoSimples: "GT significa 'Greater Than' (Maior Que). Compara um número e retorna VERDADEIRO se for MAIOR que o limite especificado.",
     comoFunciona: "O sistema pega o valor do campo (ex: amount = 5001), compara com o limite (5000), e verifica se é ESTRITAMENTE maior. 5001 > 5000? Sim! Retorna verdadeiro. 5000 > 5000? Não! São iguais, não é maior.",
     tabelaVerdade: [
-      ["Valor do Campo", "Limite", "Resultado GT"],
-      ["5001", "5000", "✅ VERDADEIRO (5001 > 5000)"],
-      ["5000", "5000", "❌ FALSO (5000 = 5000, não é maior)"],
-      ["4999", "5000", "❌ FALSO (4999 < 5000)"],
-      ["10000", "5000", "✅ VERDADEIRO (10000 > 5000)"],
+      ["Valor do Campo", "Limite", "Resultado GT", "Explicação Visual"],
+      ["5001", "5000", "✅ VERDADEIRO", "5001 > 5000 (passou por R$ 1)"],
+      ["5000", "5000", "❌ FALSO", "5000 = 5000 (igual, NÃO é maior!)"],
+      ["4999", "5000", "❌ FALSO", "4999 < 5000 (faltou R$ 1)"],
+      ["10000", "5000", "✅ VERDADEIRO", "10000 > 5000 (passou MUITO)"],
+      ["5000.01", "5000", "✅ VERDADEIRO", "passou por 1 centavo!"],
     ],
     exemplosExtras: [
       {
-        titulo: "Alerta de alto valor",
+        titulo: "Alerta de alto valor - EXEMPLO ULTRA DIDÁTICO",
         cenario: "Transações acima de R$10.000 precisam de aprovação extra",
         codigo: "transaction.amount GT 10000",
-        resultado: "R$10.001 dispara, R$10.000 não dispara",
+        resultado: `🧪 TESTES PRÁTICOS:
+┌─────────────┬──────────┬────────────┐
+│ Valor (R$)  │ GT 10000 │ Resultado  │
+├─────────────┼──────────┼────────────┤
+│ 10,001.00   │    ✅    │ DISPARA    │
+│ 10,000.00   │    ❌    │ não dispara│
+│  9,999.99   │    ❌    │ não dispara│
+│ 50,000.00   │    ✅    │ DISPARA    │
+└─────────────┴──────────┴────────────┘`,
       },
       {
         titulo: "Score de risco elevado",
