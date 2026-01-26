@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { List, type ListImperativeAPI, type RowComponentProps } from "react-window";
 import { BACKEND_OPERATORS } from "@/manual/generated/backendOperators.generated";
 import { OPERATOR_SPECS_BACKEND_ONLY as OPERATOR_SPECS } from "@/manual/operatorSpecsBackendOnly";
 import { type OperatorDocConfidence, type OperatorDocLevel } from "@/manual/operatorSpecs";
@@ -25,189 +26,6 @@ type OperatorNameExplain = {
   glossario: string[];
 };
 
-type DidacticKit = {
-  resumo: string;
-  modeloMental: string;
-  quandoUsar: string[];
-  quandoEvitar: string[];
-  armadilhas: string[];
-  camposSugeridos: FieldHint[];
-  exemploPayload: string;
-  exemploDsl: string;
-  casosDeTeste: TestCaseHint[];
-  relacionados: string[];
-};
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 🧠 METODOLOGIA "USE A CABEÇA" (HEAD FIRST)
-// ═══════════════════════════════════════════════════════════════════════════════
-// Esta página usa técnicas comprovadas de aprendizado:
-// ✅ Histórias do mundo real com personagens
-// ✅ Analogias do dia a dia
-// ✅ Perguntas provocativas ("E se...?")
-// ✅ Exemplos visuais passo a passo
-// ✅ Seção "Não existem perguntas idiotas"
-// ✅ Antes vs Depois (o que acontece sem/com a regra)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const normalizeCategory = (category?: string) => {
-  const normalized = category?.trim();
-  if (!normalized || normalized === "=" || normalized.toLowerCase() === "natural") {
-    return "Geral";
-  }
-  return normalized;
-};
-
-const uniq = <T,>(items: T[]) => Array.from(new Set(items));
-
-const safeJsonStringify = (value: unknown) => {
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-};
-
-const tokenizeOperatorName = (name: string) => name.split(/[_\s]+/g).filter(Boolean);
-
-const tokensToSet = (name: string) => new Set(tokenizeOperatorName(name.toUpperCase()));
-
-const pickFirst = <T,>(values: T[]) => (values.length ? values[0] : undefined);
-
-type TokenContext = {
-  entityPt: string;
-  eventPlural: string;
-  groupBy: string;
-  thresholdExample: string;
-};
-
-const inferTokenContext = (name: string): TokenContext => {
-  const t = tokensToSet(name);
-
-  // Entities (prefer more specific)
-  if (t.has("ADDRESS")) {
-    return { entityPt: "endereço", eventPlural: "address_changes", groupBy: "customer_id", thresholdExample: "2" };
-  }
-  if (t.has("BENEFICIARY")) {
-    return { entityPt: "beneficiário", eventPlural: "beneficiary_events", groupBy: "customer_id", thresholdExample: "3" };
-  }
-  if (t.has("CHARGEBACK")) {
-    return { entityPt: "chargeback", eventPlural: "chargebacks", groupBy: "merchant_id", thresholdExample: "0.02" };
-  }
-  if (t.has("CARD")) {
-    return { entityPt: "cartão", eventPlural: "card_events", groupBy: "card_id", thresholdExample: "5" };
-  }
-  if (t.has("ACCOUNT")) {
-    return { entityPt: "conta", eventPlural: "account_events", groupBy: "account_id", thresholdExample: "2" };
-  }
-  if (t.has("DEVICE")) {
-    return { entityPt: "dispositivo", eventPlural: "device_events", groupBy: "device_fingerprint", thresholdExample: "2" };
-  }
-  if (t.has("IP")) {
-    return { entityPt: "IP", eventPlural: "ip_events", groupBy: "ip", thresholdExample: "10" };
-  }
-  if (t.has("CHANNEL")) {
-    return { entityPt: "canal", eventPlural: "channel_events", groupBy: "customer_id", thresholdExample: "2" };
-  }
-  if (t.has("MERCHANT") || t.has("MCC") || t.has("STORE")) {
-    return { entityPt: "merchant", eventPlural: "merchant_events", groupBy: "merchant_id", thresholdExample: "2" };
-  }
-
-  return { entityPt: "transação", eventPlural: "transactions", groupBy: "customer_id", thresholdExample: "5" };
-};
-
-const TOKEN_PT: Record<string, string> = {
-  ACCOUNT: "conta",
-  AGE: "idade",
-  AMOUNT: "valor",
-  AVG: "média",
-  BETWEEN: "entre",
-  BIN: "BIN",
-  BOOLEAN: "booleano",
-  BROWSER: "navegador",
-  CARD: "cartão",
-  CHANNEL: "canal",
-  CITY: "cidade",
-  CONTAINS: "contém",
-  COUNT: "contagem",
-  COUNTRY: "país",
-  CPF: "CPF",
-  DATE: "data",
-  DAY: "dia",
-  DAYS: "dias",
-  DEVICE: "dispositivo",
-  DISTANCE: "distância",
-  EMAIL: "e-mail",
-  ENDS: "termina",
-  ENDS_WITH: "termina com",
-  EQ: "igual",
-  EQUAL: "igual",
-  FAILED: "falhou",
-  FINGERPRINT: "impressão digital",
-  FRAUD: "fraude",
-  GEO: "geo",
-  GT: "maior que",
-  GTE: "maior ou igual",
-  HOUR: "hora",
-  HOURS: "horas",
-  IN: "está em",
-  IP: "IP",
-  IS: "é",
-  IS_FALSE: "é falso",
-  IS_NULL: "está vazio",
-  IS_TRUE: "é verdadeiro",
-  KRI: "KRI",
-  LAST: "últimos",
-  LIST: "lista",
-  LT: "menor que",
-  LTE: "menor ou igual",
-  MAX: "máximo",
-  MCC: "MCC",
-  MIN: "mínimo",
-  MINUTES: "minutos",
-  MONTH: "mês",
-  MONTHS: "meses",
-  NEW: "novo",
-  NOT: "não",
-  NOT_IN: "não está em",
-  NULL: "vazio",
-  OR: "ou",
-  PERCENT: "percentual",
-  PER: "por",
-  PHONE: "telefone",
-  POS: "POS",
-  RATE: "taxa",
-  REGEX: "regex",
-  RISK: "risco",
-  SCORE: "score",
-  STARTS: "começa",
-  STARTS_WITH: "começa com",
-  SUM: "soma",
-  TIME: "horário",
-  TXN: "transação",
-  TRANSACTION: "transação",
-  TRUE: "verdadeiro",
-  USER: "usuário",
-  VELOCITY: "velocidade",
-  WEEK: "semana",
-  WEEKS: "semanas",
-  WITH: "com",
-  YEAR: "ano",
-  YEARS: "anos",
-};
-
-const explainOperatorName = (name: string): OperatorNameExplain => {
-  const tokens = tokenizeOperatorName(name);
-  const translated = tokens.map((t) => TOKEN_PT[t] ?? t.toLowerCase());
-  const leituraHumana = translated.join(" ");
-  const glossario = uniq(
-    tokens
-      .filter((t) => TOKEN_PT[t])
-      .map((t) => `${t} = ${TOKEN_PT[t]}`)
-  );
-  return { tokens, leituraHumana, glossario };
-};
-
 type OperatorKind =
   | "logical"
   | "compare"
@@ -229,145 +47,201 @@ type OperatorKind =
   | "statistical"
   | "unknown";
 
+type DidacticKit = {
+  resumo: string;
+  modeloMental: string;
+  quandoUsar: string[];
+  quandoEvitar: string[];
+  armadilhas: string[];
+  camposSugeridos: FieldHint[];
+  exemploPayload: string;
+  exemploDsl: string;
+  casosDeTeste: TestCaseHint[];
+  relacionados: string[];
+};
+
+type TokenContext = {
+  entityPt: string;
+  eventPlural: string;
+  groupBy: string;
+  thresholdExample: string;
+};
+
+type CategoryGuide = {
+  title: string;
+  emoji: string;
+  intro: string;
+  analogia: string;
+};
+
+type OperatorViewModel = Operator & {
+  type: string;
+  purpose: string;
+  headFirst: HeadFirstExample;
+  didactic: DidacticKit;
+  explainName: OperatorNameExplain;
+};
+
+type VirtualRow =
+  | { kind: "category"; category: string; guide: CategoryGuide; count: number }
+  | { kind: "operator"; operator: OperatorViewModel };
+
+type VirtualRowProps = {
+  rows: VirtualRow[];
+};
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const highlightText = (text: string, query: string) => {
+  const needle = query.trim();
+  if (!needle) return text;
+  const regex = new RegExp(`(${escapeRegExp(needle)})`, "ig");
+  const parts = text.split(regex);
+  return parts.map((part, index) =>
+    part.toLowerCase() === needle.toLowerCase() ? (
+      <mark key={index} className="rounded bg-yellow-200 px-0.5 text-inherit dark:bg-yellow-500/30">
+        {part}
+      </mark>
+    ) : (
+      part
+    )
+  );
+};
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+
+const normalizeCategory = (value?: string) => {
+  const raw = (value ?? "").trim();
+  if (!raw) return "Geral";
+  const lower = raw.toLowerCase();
+  if (["geral", "general", "misc", "other", "others", "miscellaneous"].includes(lower)) return "Geral";
+  return lower.replace(/\s+/g, "_");
+};
+
+const tokensToSet = (value: string) => new Set(value.toUpperCase().split(/[^A-Z0-9]+/).filter(Boolean));
+
+const inferTokenContext = (value: string): TokenContext => {
+  const tokens = tokensToSet(value);
+
+  if (tokens.has("TRANSACTION") || tokens.has("TX") || tokens.has("PAYMENT")) {
+    return { entityPt: "transação", eventPlural: "transactions", groupBy: "customer_id", thresholdExample: "5" };
+  }
+  if (tokens.has("ACCOUNT") || tokens.has("CUSTOMER") || tokens.has("USER")) {
+    return { entityPt: "conta/cliente", eventPlural: "logins", groupBy: "customer_id", thresholdExample: "3" };
+  }
+  if (tokens.has("DEVICE") || tokens.has("FINGERPRINT")) {
+    return { entityPt: "dispositivo", eventPlural: "events", groupBy: "device_id", thresholdExample: "2" };
+  }
+  if (tokens.has("CARD") || tokens.has("BIN")) {
+    return { entityPt: "cartão", eventPlural: "transactions", groupBy: "card_id", thresholdExample: "3" };
+  }
+  if (tokens.has("MERCHANT") || tokens.has("MCC")) {
+    return { entityPt: "merchant", eventPlural: "transactions", groupBy: "merchant_id", thresholdExample: "4" };
+  }
+  if (tokens.has("EMAIL") || tokens.has("PHONE") || tokens.has("CPF") || tokens.has("IDENTITY")) {
+    return { entityPt: "identidade", eventPlural: "checks", groupBy: "customer_id", thresholdExample: "1" };
+  }
+
+  return { entityPt: "evento", eventPlural: "events", groupBy: "entity_id", thresholdExample: "5" };
+};
+
+const explainOperatorName = (name: string): OperatorNameExplain => {
+  const tokens = name
+    .toUpperCase()
+    .split(/[^A-Z0-9]+/)
+    .filter(Boolean);
+
+  const glossaryMap: Record<string, string> = {
+    GT: "maior que",
+    GTE: "maior ou igual",
+    LT: "menor que",
+    LTE: "menor ou igual",
+    EQ: "igual",
+    NEQ: "diferente",
+    NE: "diferente",
+    IN: "está na lista",
+    NOT: "negação",
+    CONTAINS: "contém",
+    STARTS: "começa com",
+    ENDS: "termina com",
+    WITH: "com",
+    MATCH: "corresponde",
+    REGEX: "regex",
+    DATE: "data",
+    TIME: "tempo",
+    HOUR: "hora",
+    DAY: "dia",
+    WEEK: "semana",
+    MONTH: "mês",
+    YEAR: "ano",
+    AGE: "idade",
+    SCORE: "score",
+    COUNT: "contagem",
+    SUM: "soma",
+    AVG: "média",
+    MAX: "máximo",
+    MIN: "mínimo",
+    PERCENT: "percentual",
+    DEVICE: "dispositivo",
+    EMAIL: "e-mail",
+    PHONE: "telefone",
+    CPF: "cpf",
+    MERCHANT: "merchant",
+    MCC: "mcc",
+    COUNTRY: "país",
+    CHANNEL: "canal",
+    CARD: "cartão",
+    ACCOUNT: "conta",
+    CUSTOMER: "cliente",
+    USER: "usuário",
+    TRANSACTION: "transação",
+    AMOUNT: "valor",
+    RISK: "risco",
+    FRAUD: "fraude",
+    VELOCITY: "velocidade",
+    GRAPH: "grafo",
+    NEO4J: "grafo",
+  };
+
+  const humanTokens = tokens.map((token) => glossaryMap[token] ?? token.toLowerCase());
+  const leituraHumana = humanTokens.join(" ").replace(/\s+/g, " ").trim();
+
+  const glossario = tokens
+    .map((token) => glossaryMap[token])
+    .filter((value): value is string => Boolean(value));
+
+  return { tokens, leituraHumana: leituraHumana || name, glossario };
+};
+
 const classifyOperator = (nameRaw: string): OperatorKind => {
   const name = nameRaw.toUpperCase();
 
-  // Operadores lógicos básicos
-  if (["AND", "OR", "NOT", "NAND", "NOR", "XOR", "IMPLY"].includes(name)) return "logical";
-
-  // Range / faixa
+  if (["AND", "OR", "NOT", "NAND", "NOR", "XOR"].includes(name)) return "logical";
   if (name.includes("BETWEEN")) return "range";
-
-  // Listas
-  if (name === "IN" || name.endsWith("_IN") || name.includes("NOT_IN") || name.includes("IN_LIST")) return "list";
-
-  // Strings / texto
-  if (
-    name.includes("CONTAINS") ||
-    name.includes("REGEX") ||
-    name.includes("STARTS_WITH") ||
-    name.includes("ENDS_WITH") ||
-    name.includes("MATCH")
-  )
+  if (name.includes("IN_LIST") || name.endsWith("_IN") || name.includes("_IN_") || name.includes("NOT_IN")) return "list";
+  if (name.includes("CONTAINS") || name.includes("STARTS_WITH") || name.includes("ENDS_WITH") || name.includes("REGEX") || name.includes("MATCH"))
     return "string";
-
-  // Nulos / vazios
-  if (name.includes("NULL") || name.startsWith("IS_NULL") || name.startsWith("NOT_NULL") || name.includes("EMPTY"))
-    return "null";
-
-  // Booleanos
-  if (name.startsWith("IS_TRUE") || name.startsWith("IS_FALSE") || name === "IS_VALID" || name === "IS_INVALID")
-    return "boolean";
-
-  // Arrays / listas
-  if (name.startsWith("ARRAY_") || name.includes("ARRAY") || name.startsWith("LIST_")) return "array";
-
-  // Data/tempo
-  if (
-    name.includes("DATE") ||
-    name.includes("TIME") ||
-    name.includes("DAY") ||
-    name.includes("WEEK") ||
-    name.includes("MONTH") ||
-    name.includes("YEAR") ||
-    name.includes("AGE_") ||
-    name.includes("HOUR") ||
-    name.includes("DORMANCY") ||
-    name.includes("EXPIRED")
-  )
+  if (name.includes("NULL") || name.startsWith("IS_NULL") || name.startsWith("IS_NOT_NULL")) return "null";
+  if (name.includes("TRUE") || name.includes("FALSE") || name.startsWith("IS_")) return "boolean";
+  if (name.includes("ARRAY") || name.includes("LIST_SIZE") || name.includes("ITEMS")) return "array";
+  if (name.includes("DATE") || name.includes("TIME") || name.includes("DAY") || name.includes("WEEK") || name.includes("MONTH") || name.includes("YEAR"))
     return "datetime";
-
-  // Agregações
-  if (
-    name.includes("COUNT") ||
-    name.includes("SUM") ||
-    name.includes("AVG") ||
-    name.includes("MAX") ||
-    name.includes("MIN") ||
-    name.includes("PERCENT") ||
-    name.includes("MEDIAN") ||
-    name.includes("VARIANCE") ||
-    name.includes("STD_DEV")
-  )
+  if (name.includes("COUNT") || name.includes("SUM") || name.includes("AVG") || name.includes("MIN") || name.includes("MAX") || name.includes("PERCENT"))
     return "aggregation";
+  if (name.includes("NEO4J") || name.includes("GRAPH")) return "graph";
+  if (name.includes("DEVICE") || name.includes("FINGERPRINT") || name.includes("USER_AGENT") || name.includes("IP")) return "device";
+  if (name.includes("EMAIL") || name.includes("PHONE") || name.includes("CPF") || name.includes("IDENTITY")) return "identity";
+  if (name.includes("MERCHANT") || name.includes("MCC")) return "merchant";
+  if (name.startsWith("SCA_") || name.startsWith("PSD") || name.startsWith("DORA") || name.startsWith("GDPR")) return "platform";
+  if (name.startsWith("FATF_") || name.includes("SANCTION") || name.includes("PEP") || name.includes("ADVERSE")) return "validation";
+  if (name.includes("SCORE") || name.includes("ANOMALY") || name.includes("DEVIATION") || name.includes("STAT")) return "statistical";
 
-  // Grafos
-  if (
-    name.startsWith("NEO4J_") ||
-    name.includes("GRAPH") ||
-    name.includes("LINK_DEPTH") ||
-    name.includes("CLUSTER") ||
-    name.includes("NETWORK") ||
-    name.includes("RING")
-  )
-    return "graph";
-
-  // Dispositivo / device
-  if (
-    name.startsWith("DEVICE_") ||
-    name.includes("BROWSER") ||
-    name.includes("FINGERPRINT") ||
-    name.includes("JAILBREAK") ||
-    name.includes("ROOTED") ||
-    name.includes("AUDIO_FINGERPRINT") ||
-    name.includes("TRUST_SCORE") ||
-    name.includes("USER_AGENT")
-  )
-    return "device";
-
-  // Identidade / cadastro
-  if (
-    name.includes("EMAIL") ||
-    name.includes("PHONE") ||
-    name.includes("CPF") ||
-    name.includes("SSN") ||
-    name.includes("ADDRESS") ||
-    name.includes("NAME_") ||
-    name.includes("BIOMETRIC") ||
-    name.includes("IDENTITY") ||
-    name.includes("CREDITOR")
-  )
-    return "identity";
-
-  // Merchant / comerciante
-  if (name.startsWith("MERCHANT_") || name.includes("MCC") || name.includes("STORE") || name.includes("POS_"))
-    return "merchant";
-
-  // Plataforma (PLT_)
-  if (name.startsWith("PLT_") || name.startsWith("DORA_") || name.startsWith("EIDAS_") || name.startsWith("GDPR_"))
-    return "platform";
-
-  // Validação / verificação
-  if (
-    name.includes("VALIDATION") ||
-    name.includes("CHECK") ||
-    name.includes("VERIFY") ||
-    name.includes("VALID") ||
-    name.includes("SANCTION") ||
-    name.includes("PEP") ||
-    name.includes("ADVERSE") ||
-    name.includes("CONSORTIUM")
-  )
-    return "validation";
-
-  // Estatísticos / ML
-  if (
-    name.includes("ANOMALY") ||
-    name.includes("DEVIATION") ||
-    name.includes("TEST") ||
-    name.includes("BENFORD") ||
-    name.includes("ANDERSON") ||
-    name.includes("CHI_SQUARE") ||
-    name.includes("KOLMOGOROV") ||
-    name.includes("ADAPTIVE") ||
-    name.includes("FUZZY") ||
-    name.includes("THRESHOLD") ||
-    name.includes("SCORE") ||
-    name.includes("INDICATOR")
-  )
-    return "statistical";
-
-  // Padrões de risco / fraude (catch-all para especialistas)
   if (
     name.includes("VELOCITY") ||
     name.includes("DETECTION") ||
@@ -386,12 +260,21 @@ const classifyOperator = (nameRaw: string): OperatorKind => {
   )
     return "risk_pattern";
 
-  // Comparações (fallback para _GT, _LT, etc.)
   if (["GT", "GTE", "LT", "LTE", "EQ", "NEQ"].some((k) => name === k || name.endsWith(`_${k}`) || name.includes(`_${k}_`)))
     return "compare";
 
   return "unknown";
 };
+
+const safeJsonStringify = (value: unknown) => {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+};
+
+const uniq = <T,>(items: T[]) => Array.from(new Set(items));
 
 const defaultFieldHintsForKind = (kind: OperatorKind): FieldHint[] => {
   switch (kind) {
@@ -423,65 +306,6 @@ const defaultFieldHintsForKind = (kind: OperatorKind): FieldHint[] => {
       return [
         { path: "customer.is_vip", type: "boolean", example: "true", note: "Flag" },
         { path: "customer.email_verified", type: "boolean", example: "false", note: "Verificação" },
-      ];
-    case "array":
-      return [
-        { path: "order.items", type: "array", example: "[{...},{...}]", note: "Lista de itens" },
-        { path: "order.tags", type: "array", example: "[\"promocao\",\"vip\"]", note: "Tags" },
-      ];
-    case "datetime":
-      return [
-        { path: "transaction.date", type: "date", example: "2026-01-25", note: "Data (ISO)" },
-        { path: "transaction.time", type: "time", example: "22:30", note: "Horário" },
-        { path: "customer.created_at", type: "date", example: "2026-01-20", note: "Data de criação" },
-      ];
-    case "aggregation":
-      return [
-        { path: "transactions.amount", type: "number", example: "100", note: "Campo agregado" },
-        { path: "transactions", type: "array", example: "[...]", note: "Janela de eventos" },
-      ];
-    case "graph":
-      return [
-        { path: "customer_id", type: "string", example: "c_123", note: "Nó principal" },
-        { path: "device_id", type: "string", example: "d_999", note: "Nó relacionado" },
-      ];
-    case "risk_pattern":
-      return [
-        { path: "transaction.amount", type: "number", example: "2500", note: "Sinal de risco" },
-        { path: "transaction.ip", type: "string", example: "203.0.113.10", note: "IP" },
-        { path: "device.fingerprint", type: "string", example: "fp_xxx", note: "Fingerprint" },
-      ];
-    case "device":
-      return [
-        { path: "device.fingerprint", type: "string", example: "fp_abc123", note: "Fingerprint do device" },
-        { path: "device.trust_score", type: "number", example: "0.75", note: "Score de confiança" },
-        { path: "device.is_rooted", type: "boolean", example: "false", note: "Dispositivo rooteado?" },
-        { path: "device.browser", type: "string", example: "Chrome 120", note: "Navegador" },
-      ];
-    case "identity":
-      return [
-        { path: "customer.email", type: "string", example: "user@empresa.com", note: "E-mail do cliente" },
-        { path: "customer.phone", type: "string", example: "+5511999998888", note: "Telefone" },
-        { path: "customer.cpf", type: "string", example: "123.456.789-00", note: "CPF formatado" },
-        { path: "customer.address", type: "object", example: "{...}", note: "Endereço completo" },
-      ];
-    case "merchant":
-      return [
-        { path: "merchant.mcc", type: "string", example: "5411", note: "Código MCC" },
-        { path: "merchant.name", type: "string", example: "LOJA XYZ", note: "Nome do merchant" },
-        { path: "merchant.country", type: "string", example: "BR", note: "País do merchant" },
-        { path: "merchant.risk_level", type: "string", example: "HIGH", note: "Nível de risco" },
-      ];
-    case "platform":
-      return [
-        { path: "platform.compliance_status", type: "string", example: "COMPLIANT", note: "Status de compliance" },
-        { path: "platform.region", type: "string", example: "EU", note: "Região regulatória" },
-        { path: "platform.data_retention_days", type: "number", example: "365", note: "Dias de retenção" },
-      ];
-    case "validation":
-      return [
-        { path: "validation.result", type: "string", example: "PASS", note: "Resultado da validação" },
-        { path: "validation.pep_status", type: "boolean", example: "false", note: "É PEP?" },
         { path: "validation.sanction_hit", type: "boolean", example: "false", note: "Match em sanções?" },
       ];
     case "statistical":
@@ -3185,6 +3009,12 @@ export default function Operators() {
   const [expandedOperator, setExpandedOperator] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [strictDocs, setStrictDocs] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedDocLevel, setSelectedDocLevel] = useState<"all" | OperatorDocLevel>("all");
+  const [compactView, setCompactView] = useState(true);
+  const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
+  const [virtualizedView, setVirtualizedView] = useState(true);
+  const listRef = useRef<ListImperativeAPI | null>(null);
 
   const operatorNames = BACKEND_OPERATORS.map((o) => o.name);
   const uniqueNameCount = new Set(operatorNames).size;
@@ -3205,8 +3035,9 @@ export default function Operators() {
     return acc;
   }, {});
   const categoriesTotal = Object.keys(categoryCounts).length;
+  const categoryOptions = Object.keys(categoryCounts).sort((a, b) => a.localeCompare(b, "pt-BR"));
 
-  const operators = BACKEND_OPERATORS.map((operator) => ({
+  const operators: OperatorViewModel[] = BACKEND_OPERATORS.map((operator) => ({
     ...operator,
     type: normalizeCategory(operator.category),
     purpose: derivePurpose(operator),
@@ -3219,14 +3050,64 @@ export default function Operators() {
   const specCoverage = operators.filter((o) => Boolean(OPERATOR_SPECS[o.name.toUpperCase()])).length;
   const generatedCoverage = Math.max(0, operators.length - headFirstCoverage - specCoverage);
 
-  const filteredOperators = searchTerm
-    ? operators.filter(
-        (op) =>
-          op.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          op.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          op.type.toLowerCase().includes(searchTerm.toLowerCase())
+  const searchLower = searchTerm.trim().toLowerCase();
+
+  const filteredOperators = operators.filter((op) => {
+    const explain = op.explainName;
+    const searchHaystack = [
+      op.name,
+      op.purpose,
+      op.type,
+      explain.leituraHumana,
+      explain.tokens.join(" "),
+      explain.glossario.join(" "),
+      op.headFirst.analogia,
+      op.headFirst.problema,
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    const matchesSearch =
+      !searchLower ||
+      searchHaystack.includes(searchLower);
+
+    const matchesCategory = selectedCategory === "all" || op.type === selectedCategory;
+    const matchesDocLevel = selectedDocLevel === "all" || op.headFirst.docLevel === selectedDocLevel;
+
+    return matchesSearch && matchesCategory && matchesDocLevel;
+  });
+
+  const filtersActiveCount = [
+    searchLower ? 1 : 0,
+    selectedCategory !== "all" ? 1 : 0,
+    selectedDocLevel !== "all" ? 1 : 0,
+  ].reduce((acc, cur) => acc + cur, 0);
+
+  const searchSuggestions = useMemo(() => {
+    if (!searchLower) return [] as Array<{ name: string; purpose: string; type: string }>;
+    return operators
+      .filter((op) =>
+        op.name.toLowerCase().includes(searchLower) ||
+        op.purpose.toLowerCase().includes(searchLower) ||
+        op.explainName.leituraHumana.toLowerCase().includes(searchLower)
       )
-    : operators;
+      .slice(0, 8)
+      .map((op) => ({ name: op.name, purpose: op.purpose, type: op.type }));
+  }, [operators, searchLower]);
+
+  const quickIntents = [
+    { label: "💳 Valor alto", query: "amount gt" },
+    { label: "📈 Velocity", query: "velocity" },
+    { label: "🧾 Lista/Blacklist", query: "in list" },
+    { label: "🔤 Regex/Padrão", query: "regex" },
+    { label: "🧭 Geolocalização", query: "geo" },
+    { label: "📞 Identidade", query: "email phone cpf", category: "identity" },
+    { label: "📱 Device novo", query: "device new" },
+    { label: "🧪 Score/ML", query: "score", category: "statistical" },
+    { label: "🕸️ Grafo", query: "graph" },
+    { label: "🧑‍⚖️ Sanções/PEP", query: "sanction pep", category: "validation" },
+    { label: "🕒 Horário/Tempo", query: "date time hour" },
+  ];
 
   const grouped = filteredOperators.reduce<Record<string, typeof operators>>((acc, op) => {
     acc[op.type] ??= [];
@@ -3236,12 +3117,449 @@ export default function Operators() {
 
   const categories = Object.keys(grouped).sort((a, b) => a.localeCompare(b, "pt-BR"));
 
+  const virtualRows = useMemo<VirtualRow[]>(() => {
+    const rows: VirtualRow[] = [];
+    categories.forEach((category) => {
+      const list = grouped[category];
+      const guide = getCategoryGuide(category);
+      rows.push({ kind: "category", category, guide, count: list.length });
+      if (!collapsedCategories.includes(category)) {
+        list.forEach((operator) => rows.push({ kind: "operator", operator }));
+      }
+    });
+    return rows;
+  }, [categories, grouped, collapsedCategories]);
+
+  const getItemSize = useCallback(
+    (index: number) => {
+      const row = virtualRows[index];
+      if (!row) return 100;
+      if (row.kind === "category") return 140;
+      const isExpanded = expandedOperator === row.operator.name;
+      if (isExpanded) return 920;
+      return compactView ? 240 : 360;
+    },
+    [virtualRows, expandedOperator, compactView]
+  );
+
   const toggleExpand = (name: string) => {
     setExpandedOperator(expandedOperator === name ? null : name);
   };
 
+  const toggleCategory = (category: string) => {
+    setCollapsedCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
+    );
+  };
+
+  const renderOperatorCard = (operator: OperatorViewModel, isExpanded: boolean, onToggle: () => void) => {
+    const hf = operator.headFirst;
+    const kit = operator.didactic;
+    const explain = operator.explainName;
+    const spec = OPERATOR_SPECS[operator.name];
+    const warnings = hf.docWarnings ?? [];
+
+    return (
+      <div
+        key={operator.name}
+        className={`rounded-xl border-2 bg-card p-4 transition-all hover:border-blue-300 hover:shadow-lg ${
+          isExpanded ? "border-blue-500 shadow-xl" : ""
+        }`}
+      >
+        {/* Header sempre visível */}
+        <div
+          className="flex cursor-pointer items-start justify-between gap-2"
+          onClick={onToggle}
+          role="button"
+          tabIndex={0}
+          aria-expanded={isExpanded}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onToggle();
+            }
+          }}
+        >
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <code className="rounded bg-slate-100 px-2 py-1 text-sm font-bold text-blue-600 dark:bg-slate-800 dark:text-blue-400">
+                {highlightText(operator.name, searchTerm)}
+              </code>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                {highlightText(operator.type, searchTerm)}
+              </span>
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                  hf.docLevel === "manual"
+                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
+                    : hf.docLevel === "spec"
+                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                      : hf.docConfidence === "low"
+                        ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                }`}
+                title={
+                  hf.docLevel === "manual"
+                    ? "Documentação manual completa"
+                    : hf.docLevel === "spec"
+                      ? "Documentação técnica baseada em spec"
+                      : hf.docConfidence === "low"
+                        ? "Conteúdo gerado com baixa confiança"
+                        : "Conteúdo gerado heurístico"
+                }
+              >
+                {hf.docLevel === "manual" && "✅ Manual"}
+                {hf.docLevel === "spec" && "📘 Spec"}
+                {hf.docLevel === "generated" && (hf.docConfidence === "low" ? "⚠️ Gerado (baixo)" : "🤖 Gerado")}
+              </span>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">{highlightText(operator.purpose, searchTerm)}</p>
+          </div>
+          <span className="text-lg">{isExpanded ? "🔽" : "▶️"}</span>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* 🎯 GUIA RÁPIDO - SEMPRE VISÍVEL */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {compactView ? (
+          <div className="mt-3 space-y-2">
+            <div className="rounded-lg bg-slate-900 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">📋 Sintaxe (clique para copiar)</span>
+                <button
+                  className="rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-300 hover:bg-slate-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(hf.sintaxe);
+                  }}
+                >
+                  Copiar
+                </button>
+              </div>
+              {strictDocs && hf.docLevel === "generated" ? (
+                <div className="mt-2 rounded bg-red-900/40 p-2 text-xs text-red-200">
+                  Modo rigoroso: este operador não tem documentação fonte.
+                  Adicione uma entrada em <span className="font-semibold">client/src/manual/operatorSpecs.ts</span> para liberar exemplos.
+                </div>
+              ) : (
+                <pre className="mt-1 overflow-x-auto text-sm text-green-400">{hf.sintaxe}</pre>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3 space-y-2">
+            <div className="rounded-lg bg-slate-900 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">📋 Sintaxe (clique para copiar)</span>
+                <button
+                  className="rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-300 hover:bg-slate-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(hf.sintaxe);
+                  }}
+                >
+                  Copiar
+                </button>
+              </div>
+              {strictDocs && hf.docLevel === "generated" ? (
+                <div className="mt-2 rounded bg-red-900/40 p-2 text-xs text-red-200">
+                  Modo rigoroso: este operador não tem documentação fonte.
+                  Adicione uma entrada em <span className="font-semibold">client/src/manual/operatorSpecs.ts</span> para liberar exemplos.
+                </div>
+              ) : (
+                <pre className="mt-1 overflow-x-auto text-sm text-green-400">{hf.sintaxe}</pre>
+              )}
+            </div>
+
+            {!strictDocs && warnings.length > 0 && (
+              <div className="rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                <div className="font-semibold">⚠️ Atenção (conteúdo gerado)</div>
+                <div className="mt-1">{warnings[0]}</div>
+              </div>
+            )}
+
+            <div className="flex items-start gap-2 rounded-lg bg-green-50 p-2 text-xs dark:bg-green-950">
+              <span className="mt-0.5">✅</span>
+              <div>
+                <span className="font-semibold text-green-800 dark:text-green-200">Quando usar: </span>
+                <span className="text-green-700 dark:text-green-300">{kit.quandoUsar[0]}</span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-2 text-xs dark:bg-amber-950">
+              <span className="mt-0.5">💎</span>
+              <div>
+                <span className="font-semibold text-amber-800 dark:text-amber-200">Dica: </span>
+                <span className="text-amber-700 dark:text-amber-300">{hf.dicaDeOuro.replace("💎 ", "")}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-3 cursor-pointer text-center text-xs text-muted-foreground hover:text-foreground" onClick={onToggle}>
+          {isExpanded ? "▲ Ver menos" : "▼ Ver exemplo completo, passo a passo e mais detalhes"}
+        </div>
+
+        {isExpanded && (
+          <div className="mt-4 space-y-4 border-t pt-4 max-h-[520px] overflow-auto pr-2" onClick={(e) => e.stopPropagation()}>
+            {!strictDocs && warnings.length > 0 && (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                <div className="font-semibold">⚠️ Transparência</div>
+                <ul className="mt-2 space-y-1 text-xs">
+                  {warnings.slice(0, 5).map((w: string) => (
+                    <li key={w}>• {w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="rounded-lg bg-slate-50 p-4 dark:bg-slate-900/30">
+              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                <span>🧩</span> Como ler o nome do operador
+              </div>
+              <div className="text-xs text-muted-foreground">
+                <div>
+                  <span className="font-medium text-foreground">Tokens:</span> {explain.tokens.join(" · ")}
+                </div>
+                <div className="mt-1">
+                  <span className="font-medium text-foreground">Leitura humana:</span> {explain.leituraHumana}
+                </div>
+                {explain.glossario.length > 0 && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer select-none font-medium text-foreground">Mini glossário</summary>
+                    <ul className="mt-2 space-y-1">
+                      {explain.glossario.slice(0, 12).map((g) => (
+                        <li key={g}>{g}</li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-purple-50 p-4 dark:bg-purple-950">
+              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-purple-800 dark:text-purple-200">
+                <span>🎭</span> História do Mundo Real
+              </div>
+              <p className="text-sm text-purple-700 dark:text-purple-300">{hf.historia}</p>
+              <div className="mt-2 text-xs text-purple-600 dark:text-purple-400">— {hf.personagem}</div>
+            </div>
+
+            <div className="rounded-lg bg-orange-50 p-4 dark:bg-orange-950">
+              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-orange-800 dark:text-orange-200">
+                <span>🤔</span> O Problema
+              </div>
+              <p className="text-sm text-orange-700 dark:text-orange-300">{hf.problema}</p>
+            </div>
+
+            <div className="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-950">
+              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-yellow-800 dark:text-yellow-200">
+                <span>💡</span> Analogia do Dia a Dia
+              </div>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300">{hf.analogia}</p>
+            </div>
+
+            <div className="rounded-lg bg-green-50 p-4 dark:bg-green-950">
+              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-green-800 dark:text-green-200">
+                <span>📋</span> Passo a Passo
+              </div>
+              <ul className="space-y-1 text-sm text-green-700 dark:text-green-300">
+                {hf.passoAPasso.map((passo, i) => (
+                  <li key={i}>{passo}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="grid gap-2 md:grid-cols-2">
+              <div className="rounded-lg bg-red-50 p-3 dark:bg-red-950">
+                <div className="text-xs font-semibold text-red-800 dark:text-red-200">⚠️ ANTES (sem a regra)</div>
+                <p className="mt-1 text-xs text-red-700 dark:text-red-300">{hf.antes}</p>
+              </div>
+              <div className="rounded-lg bg-green-50 p-3 dark:bg-green-950">
+                <div className="text-xs font-semibold text-green-800 dark:text-green-200">✅ DEPOIS (com a regra)</div>
+                <p className="mt-1 text-xs text-green-700 dark:text-green-300">{hf.depois}</p>
+              </div>
+            </div>
+
+            {spec && (
+              <div className="space-y-4 rounded-xl border-2 border-blue-300 bg-blue-50/50 p-4 dark:border-blue-700 dark:bg-blue-950/30">
+                <div className="flex items-center gap-2 text-lg font-bold text-blue-800 dark:text-blue-200">
+                  <span>📘</span> Documentação Técnica (Backend Real)
+                </div>
+
+                {spec.engineBehavior && (
+                  <div className="rounded-lg bg-white/80 p-4 dark:bg-black/40">
+                    <div className="mb-3 flex items-center gap-2 text-sm font-bold text-indigo-800 dark:text-indigo-200">
+                      <span>🔄</span> Como o Motor Executa Este Operador
+                    </div>
+                    <p className="mb-3 text-sm text-indigo-700 dark:text-indigo-300">
+                      {spec.engineBehavior?.description}
+                    </p>
+                    <div className="space-y-1.5">
+                      {spec.engineBehavior?.steps.map((step: string, i: number) => (
+                        <div key={i} className="flex items-start gap-2 rounded bg-indigo-50 p-2 text-xs text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                          <span className="font-mono font-bold">{step}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {spec.engineBehavior?.performance && (
+                      <div className="mt-3 rounded-lg bg-green-50 p-3 dark:bg-green-950">
+                        <div className="text-xs font-semibold text-green-800 dark:text-green-200">⚡ Performance</div>
+                        <p className="mt-1 text-xs text-green-700 dark:text-green-300">
+                          {spec.engineBehavior?.performance}
+                        </p>
+                      </div>
+                    )}
+                    {spec.engineBehavior?.cautions && spec.engineBehavior.cautions.length > 0 && (
+                      <div className="mt-3 rounded-lg bg-amber-50 p-3 dark:bg-amber-950">
+                        <div className="text-xs font-semibold text-amber-800 dark:text-amber-200">⚠️ Cuidados Importantes</div>
+                        <ul className="mt-2 space-y-1 text-xs text-amber-700 dark:text-amber-300">
+                          {spec.engineBehavior?.cautions.map((caution: string, i: number) => (
+                            <li key={i} className="flex items-start gap-1">
+                              <span className="mt-0.5">•</span>
+                              <span>{caution}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {spec.realScenarios && spec.realScenarios.length > 0 && (
+                  <div className="rounded-lg bg-white/80 p-4 dark:bg-black/40">
+                    <div className="mb-3 flex items-center gap-2 text-sm font-bold text-purple-800 dark:text-purple-200">
+                      <span>🎬</span> Cenários Reais do Dia a Dia ({spec.realScenarios.length})
+                    </div>
+                    <div className="space-y-3">
+                      {spec.realScenarios?.map((scenario: any, i: number) => (
+                        <div key={i} className="rounded-lg border-l-4 border-purple-400 bg-purple-50 p-3 dark:border-purple-600 dark:bg-purple-950">
+                          <div className="text-sm font-bold text-purple-900 dark:text-purple-100">
+                            {i + 1}. {scenario.title}
+                          </div>
+                          <div className="mt-2 space-y-1.5 text-xs">
+                            <div>
+                              <span className="font-semibold text-purple-800 dark:text-purple-200">Contexto: </span>
+                              <span className="text-purple-700 dark:text-purple-300">{scenario.context}</span>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-purple-800 dark:text-purple-200">Problema: </span>
+                              <span className="text-purple-700 dark:text-purple-300">{scenario.problem}</span>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-purple-800 dark:text-purple-200">Solução: </span>
+                              <span className="text-purple-700 dark:text-purple-300">{scenario.solution}</span>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-purple-800 dark:text-purple-200">Impacto: </span>
+                              <span className="text-purple-700 dark:text-purple-300">{scenario.impact}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {spec.possibleOutcomes && (
+                  <div className="rounded-lg bg-white/80 p-4 dark:bg-black/40">
+                    <div className="mb-3 flex items-center gap-2 text-sm font-bold text-emerald-800 dark:text-emerald-200">
+                      <span>🎯</span> Resultado Esperado
+                    </div>
+                    <div className="grid gap-2 md:grid-cols-2">
+                      <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs dark:border-emerald-800 dark:bg-emerald-950">
+                        <div className="font-semibold text-emerald-800 dark:text-emerald-200">✅ Quando TRUE</div>
+                        <p className="mt-1 text-emerald-700 dark:text-emerald-300">
+                          {spec.possibleOutcomes?.whenTrue}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs dark:border-slate-800 dark:bg-slate-900">
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">❌ Quando FALSE</div>
+                        <p className="mt-1 text-slate-700 dark:text-slate-300">
+                          {spec.possibleOutcomes?.whenFalse}
+                        </p>
+                      </div>
+                    </div>
+                    {spec.possibleOutcomes?.recommendedAction && (
+                      <div className="mt-3 rounded-lg bg-blue-50 p-3 text-xs text-blue-800 dark:bg-blue-950 dark:text-blue-200">
+                        <span className="font-semibold">Ação recomendada: </span>
+                        {spec.possibleOutcomes?.recommendedAction}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {spec.howToTest && spec.howToTest.length > 0 && (
+                  <div className="rounded-lg bg-white/80 p-4 dark:bg-black/40">
+                    <div className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
+                      <span>🧪</span> Como Testar
+                    </div>
+                    <ol className="list-decimal space-y-1 pl-5 text-xs text-slate-700 dark:text-slate-300">
+                      {spec.howToTest?.map((step: string, i: number) => (
+                        <li key={i}>{step}</li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const listHeight = 720;
+
+  const Row = ({ index, style, rows }: RowComponentProps<VirtualRowProps>) => {
+    const row = rows[index];
+    if (!row) return null;
+
+    if (row.kind === "category") {
+      const handleCategoryToggle = () => {
+        toggleCategory(row.category);
+      };
+      return (
+        <div style={style} className="px-2">
+          <div className="rounded-xl border-2 bg-card p-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{row.guide.emoji}</span>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-bold text-foreground">{row.guide.title}</span>
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                    {row.count} operadores
+                  </span>
+                  <button
+                    className="rounded-full border px-2 py-0.5 text-xs text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+                    onClick={handleCategoryToggle}
+                  >
+                    {collapsedCategories.includes(row.category) ? "Expandir" : "Recolher"}
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{row.guide.intro}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const operator = row.operator;
+    const isExpanded = expandedOperator === operator.name;
+    const handleToggle = () => {
+      toggleExpand(operator.name);
+    };
+
+    return (
+      <div style={style} className="px-2">
+        {renderOperatorCard(operator, isExpanded, handleToggle)}
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-6">
+    <div id="top" className="space-y-6">
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* HEADER - BEM-VINDO AO GUIA */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
@@ -3293,20 +3611,184 @@ export default function Operators() {
           </div>
         </div>
 
-        {/* Barra de busca */}
-        <div className="mt-4">
-          <input
-            type="text"
-            placeholder="🔍 Buscar operador por nome, categoria ou descrição..."
-            className="w-full rounded-lg border bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+        {/* Barra de busca + filtros */}
+        <div className="sticky top-4 z-20 mt-4 rounded-xl border bg-white/90 p-4 shadow-sm backdrop-blur dark:bg-slate-950/80">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="🔍 Buscar operador por nome, categoria ou descrição..."
+                className="w-full rounded-lg border bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label="Buscar operador"
+              />
+              {searchSuggestions.length > 0 && (
+                <div className="mt-2 rounded-lg border bg-white shadow-sm dark:bg-slate-900">
+                  <div className="px-3 py-2 text-[11px] font-semibold text-muted-foreground">Sugestões</div>
+                  <ul className="max-h-56 overflow-auto">
+                    {searchSuggestions.map((item) => (
+                      <li key={item.name}>
+                        <button
+                          type="button"
+                          className="flex w-full flex-col gap-1 px-3 py-2 text-left text-xs hover:bg-slate-50 dark:hover:bg-slate-800"
+                          onClick={() => setSearchTerm(item.name)}
+                        >
+                          <span className="font-semibold text-foreground">{item.name}</span>
+                          <span className="text-muted-foreground">{item.purpose}</span>
+                          <span className="text-[10px] uppercase text-muted-foreground">{item.type}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
 
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-          📊 {filteredOperators.length} operadores disponíveis
-          {searchTerm && ` (filtrado de ${operators.length})`}
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="rounded-lg border bg-white px-3 py-2 text-xs font-medium text-foreground dark:bg-slate-800"
+                aria-label="Filtrar por categoria"
+              >
+                <option value="all">Todas as categorias</option>
+                {categoryOptions.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat} ({categoryCounts[cat]})
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedDocLevel}
+                onChange={(e) => setSelectedDocLevel(e.target.value as "all" | OperatorDocLevel)}
+                className="rounded-lg border bg-white px-3 py-2 text-xs font-medium text-foreground dark:bg-slate-800"
+                aria-label="Filtrar por nível de documentação"
+              >
+                <option value="all">Todas as docs</option>
+                <option value="manual">✅ Manual</option>
+                <option value="spec">📘 Spec</option>
+                <option value="generated">🤖 Gerado</option>
+              </select>
+
+              <label className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-xs font-medium text-foreground dark:bg-slate-800">
+                <input type="checkbox" checked={compactView} onChange={(e) => setCompactView(e.target.checked)} />
+                <span>Modo compacto</span>
+              </label>
+
+              <label className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-xs font-medium text-foreground dark:bg-slate-800">
+                <input type="checkbox" checked={virtualizedView} onChange={(e) => setVirtualizedView(e.target.checked)} />
+                <span>Lista virtualizada</span>
+              </label>
+
+              {filtersActiveCount > 0 && (
+                <button
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedCategory("all");
+                    setSelectedDocLevel("all");
+                  }}
+                >
+                  Limpar filtros
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+            <div>
+              📊 {filteredOperators.length} operadores disponíveis
+              {filtersActiveCount > 0 && ` (filtrado de ${operators.length})`}
+            </div>
+            {filtersActiveCount > 0 && (
+              <div>
+                🎛️ Filtros ativos: <span className="font-semibold text-foreground">{filtersActiveCount}</span>
+              </div>
+            )}
+          </div>
+
+          {filtersActiveCount > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {searchLower && (
+                <button
+                  className="rounded-full bg-slate-100 px-3 py-1 text-xs text-foreground hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+                  onClick={() => setSearchTerm("")}
+                >
+                  🔍 “{searchTerm}” ✕
+                </button>
+              )}
+              {selectedCategory !== "all" && (
+                <button
+                  className="rounded-full bg-slate-100 px-3 py-1 text-xs text-foreground hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+                  onClick={() => setSelectedCategory("all")}
+                >
+                  🗂️ {selectedCategory} ✕
+                </button>
+              )}
+              {selectedDocLevel !== "all" && (
+                <button
+                  className="rounded-full bg-slate-100 px-3 py-1 text-xs text-foreground hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+                  onClick={() => setSelectedDocLevel("all")}
+                >
+                  📘 {selectedDocLevel} ✕
+                </button>
+              )}
+            </div>
+          )}
+
+          <div className="mt-3 rounded-xl border bg-white/70 p-3 text-xs text-muted-foreground dark:bg-black/20">
+            <div className="font-semibold text-foreground">🔎 Encontre por objetivo</div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {quickIntents.map((intent) => (
+                <button
+                  key={intent.label}
+                  className="rounded-full bg-slate-100 px-3 py-1 text-xs text-foreground hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+                  onClick={() => {
+                    setSearchTerm(intent.query);
+                    if (intent.category) {
+                      setSelectedCategory(intent.category);
+                    }
+                  }}
+                >
+                  {intent.label}
+                </button>
+              ))}
+              <button
+                className="rounded-full border px-3 py-1 text-xs text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800"
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedCategory("all");
+                }}
+              >
+                Limpar
+              </button>
+            </div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              Dica: você pode buscar por tokens (ex: <span className="font-medium text-foreground">GT, BETWEEN, EMAIL, GEO</span>)
+              ou por intenção (ex: <span className="font-medium text-foreground">velocity, fraude, sanções</span>).
+            </div>
+          </div>
+
+          {/* Atalhos de categoria (mobile) */}
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 text-xs lg:hidden">
+            <button
+              className={`rounded-full px-3 py-1 ${selectedCategory === "all" ? "bg-blue-600 text-white" : "bg-slate-100 text-foreground dark:bg-slate-800"}`}
+              onClick={() => setSelectedCategory("all")}
+            >
+              Todas
+            </button>
+            {categoryOptions.slice(0, 12).map((cat) => (
+              <button
+                key={cat}
+                className={`rounded-full px-3 py-1 ${selectedCategory === cat ? "bg-blue-600 text-white" : "bg-slate-100 text-foreground dark:bg-slate-800"}`}
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Triple-check quick audit */}
@@ -3376,6 +3858,13 @@ export default function Operators() {
         </div>
       </div>
 
+      <a
+        href="#top"
+        className="fixed bottom-6 right-6 flex items-center gap-2 rounded-full border bg-white px-3 py-2 text-xs font-medium text-foreground shadow-lg hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800"
+      >
+        ⬆️ Topo
+      </a>
+
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* DICA INICIAL */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
@@ -3397,14 +3886,76 @@ export default function Operators() {
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* CATEGORIAS E OPERADORES */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {categories.map((category) => {
-        const guide = getCategoryGuide(category);
-        const list = grouped[category];
+      <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+        <aside className="hidden lg:block">
+          <div className="sticky top-6 space-y-3 rounded-xl border bg-card p-4">
+            <div className="text-sm font-semibold text-foreground">🧭 Navegação</div>
+            <div className="text-xs text-muted-foreground">
+              Pule direto para a categoria desejada.
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                className="rounded-md border px-2 py-1 text-xs text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-slate-800"
+                onClick={() => setCollapsedCategories([])}
+              >
+                Expandir tudo
+              </button>
+              <button
+                className="rounded-md border px-2 py-1 text-xs text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-slate-800"
+                onClick={() => setCollapsedCategories(categories)}
+              >
+                Recolher tudo
+              </button>
+            </div>
+            <div className="max-h-[65vh] space-y-1 overflow-auto pr-2">
+              {categories.map((category) => (
+                <a
+                  key={category}
+                  href={`#cat-${slugify(category)}`}
+                  className="flex items-center justify-between rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-slate-800"
+                >
+                  <span className="truncate">{category}</span>
+                  <span className="font-semibold text-foreground">{grouped[category]?.length ?? 0}</span>
+                </a>
+              ))}
+            </div>
+            <a
+              href="#top"
+              className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-slate-800"
+            >
+              ⬆️ Voltar ao topo
+            </a>
+          </div>
+        </aside>
 
-        return (
-          <section key={category} className="space-y-4">
-            {/* Category header */}
-            <div className="rounded-xl border-2 bg-card p-5">
+        <div className="space-y-6">
+          {filteredOperators.length === 0 && (
+            <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+              Nenhum operador encontrado com os filtros atuais. Ajuste a busca ou remova filtros.
+            </div>
+          )}
+          {virtualizedView ? (
+            <div className="rounded-xl border bg-card p-2">
+              <List
+                listRef={listRef}
+                defaultHeight={listHeight}
+                rowCount={virtualRows.length}
+                rowHeight={getItemSize}
+                rowComponent={Row}
+                rowProps={{ rows: virtualRows }}
+                overscanCount={6}
+                style={{ height: listHeight, width: "100%" }}
+              />
+            </div>
+          ) : (
+            categories.map((category) => {
+              const guide = getCategoryGuide(category);
+              const list = grouped[category];
+
+              return (
+                <section key={category} id={`cat-${slugify(category)}`} className="space-y-4">
+                  {/* Category header */}
+                  <div className="rounded-xl border-2 bg-card p-5">
               <div className="flex items-center gap-3">
                 <span className="text-3xl">{guide.emoji}</span>
                 <div className="flex-1">
@@ -3413,6 +3964,12 @@ export default function Operators() {
                     <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                       {list.length} operadores
                     </span>
+                    <button
+                      className="rounded-full border px-2 py-0.5 text-xs text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+                      onClick={() => toggleCategory(category)}
+                    >
+                      {collapsedCategories.includes(category) ? "Expandir" : "Recolher"}
+                    </button>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{guide.intro}</p>
                 </div>
@@ -3427,32 +3984,47 @@ export default function Operators() {
             </div>
 
             {/* Operator cards */}
-            <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-              {list.map((operator) => {
-                const isExpanded = expandedOperator === operator.name;
-                const hf = operator.headFirst;
-                const kit = operator.didactic;
-                const explain = operator.explainName;
+            {collapsedCategories.includes(category) ? (
+              <div className="rounded-lg border border-dashed p-4 text-xs text-muted-foreground">
+                Categoria recolhida. Clique em “Expandir” para ver os operadores.
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+                {list.map((operator) => {
+                  const isExpanded = expandedOperator === operator.name;
+                  const hf = operator.headFirst;
+                  const kit = operator.didactic;
+                  const explain = operator.explainName;
+                  const spec = OPERATOR_SPECS[operator.name];
 
-                return (
-                  <div
-                    key={operator.name}
-                    className={`rounded-xl border-2 bg-card p-4 transition-all hover:border-blue-300 hover:shadow-lg ${
-                      isExpanded ? "border-blue-500 shadow-xl" : ""
-                    }`}
-                  >
+                  return (
+                    <div
+                      key={operator.name}
+                      className={`rounded-xl border-2 bg-card p-4 transition-all hover:border-blue-300 hover:shadow-lg ${
+                        isExpanded ? "border-blue-500 shadow-xl" : ""
+                      }`}
+                    >
                     {/* Header sempre visível */}
-                    <div 
+                    <div
                       className="flex cursor-pointer items-start justify-between gap-2"
                       onClick={() => toggleExpand(operator.name)}
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={isExpanded}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleExpand(operator.name);
+                        }
+                      }}
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <code className="rounded bg-slate-100 px-2 py-1 text-sm font-bold text-blue-600 dark:bg-slate-800 dark:text-blue-400">
-                            {operator.name}
+                            {highlightText(operator.name, searchTerm)}
                           </code>
                           <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                            {operator.type}
+                            {highlightText(operator.type, searchTerm)}
                           </span>
                           <span
                             className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -3464,13 +4036,22 @@ export default function Operators() {
                                     ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                                     : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
                             }`}
+                            title={
+                              hf.docLevel === "manual"
+                                ? "Documentação manual completa"
+                                : hf.docLevel === "spec"
+                                  ? "Documentação técnica baseada em spec"
+                                  : hf.docConfidence === "low"
+                                    ? "Conteúdo gerado com baixa confiança"
+                                    : "Conteúdo gerado heurístico"
+                            }
                           >
                             {hf.docLevel === "manual" && "✅ Manual"}
                             {hf.docLevel === "spec" && "📘 Spec"}
                             {hf.docLevel === "generated" && (hf.docConfidence === "low" ? "⚠️ Gerado (baixo)" : "🤖 Gerado")}
                           </span>
                         </div>
-                        <p className="mt-1 text-sm text-muted-foreground">{operator.purpose}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{highlightText(operator.purpose, searchTerm)}</p>
                       </div>
                       <span className="text-lg">{isExpanded ? "🔽" : "▶️"}</span>
                     </div>
@@ -3478,56 +4059,83 @@ export default function Operators() {
                     {/* ═══════════════════════════════════════════════════════════════════ */}
                     {/* 🎯 GUIA RÁPIDO - SEMPRE VISÍVEL */}
                     {/* ═══════════════════════════════════════════════════════════════════ */}
-                    <div className="mt-3 space-y-2">
-                      {/* Sintaxe copiável */}
-                      <div className="rounded-lg bg-slate-900 p-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-400">📋 Sintaxe (clique para copiar)</span>
-                          <button
-                            className="rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-300 hover:bg-slate-600"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigator.clipboard.writeText(hf.sintaxe);
-                            }}
-                          >
-                            Copiar
-                          </button>
-                        </div>
-                        {strictDocs && hf.docLevel === "generated" ? (
-                          <div className="mt-2 rounded bg-red-900/40 p-2 text-xs text-red-200">
-                            Modo rigoroso: este operador não tem documentação fonte.
-                            Adicione uma entrada em <span className="font-semibold">client/src/manual/operatorSpecs.ts</span> para liberar exemplos.
+                    {compactView ? (
+                      <div className="mt-3 space-y-2">
+                        <div className="rounded-lg bg-slate-900 p-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-400">📋 Sintaxe (clique para copiar)</span>
+                            <button
+                              className="rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-300 hover:bg-slate-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(hf.sintaxe);
+                              }}
+                            >
+                              Copiar
+                            </button>
                           </div>
-                        ) : (
-                          <pre className="mt-1 overflow-x-auto text-sm text-green-400">{hf.sintaxe}</pre>
+                          {strictDocs && hf.docLevel === "generated" ? (
+                            <div className="mt-2 rounded bg-red-900/40 p-2 text-xs text-red-200">
+                              Modo rigoroso: este operador não tem documentação fonte.
+                              Adicione uma entrada em <span className="font-semibold">client/src/manual/operatorSpecs.ts</span> para liberar exemplos.
+                            </div>
+                          ) : (
+                            <pre className="mt-1 overflow-x-auto text-sm text-green-400">{hf.sintaxe}</pre>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-3 space-y-2">
+                        {/* Sintaxe copiável */}
+                        <div className="rounded-lg bg-slate-900 p-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-400">📋 Sintaxe (clique para copiar)</span>
+                            <button
+                              className="rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-300 hover:bg-slate-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(hf.sintaxe);
+                              }}
+                            >
+                              Copiar
+                            </button>
+                          </div>
+                          {strictDocs && hf.docLevel === "generated" ? (
+                            <div className="mt-2 rounded bg-red-900/40 p-2 text-xs text-red-200">
+                              Modo rigoroso: este operador não tem documentação fonte.
+                              Adicione uma entrada em <span className="font-semibold">client/src/manual/operatorSpecs.ts</span> para liberar exemplos.
+                            </div>
+                          ) : (
+                            <pre className="mt-1 overflow-x-auto text-sm text-green-400">{hf.sintaxe}</pre>
+                          )}
+                        </div>
+
+                        {!strictDocs && hf.docWarnings && hf.docWarnings.length > 0 && (
+                          <div className="rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                            <div className="font-semibold">⚠️ Atenção (conteúdo gerado)</div>
+                            <div className="mt-1">{hf.docWarnings[0]}</div>
+                          </div>
                         )}
-                      </div>
 
-                      {!strictDocs && hf.docWarnings && hf.docWarnings.length > 0 && (
-                        <div className="rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-200">
-                          <div className="font-semibold">⚠️ Atenção (conteúdo gerado)</div>
-                          <div className="mt-1">{hf.docWarnings[0]}</div>
+                        {/* Quando usar - resumo em 1 linha */}
+                        <div className="flex items-start gap-2 rounded-lg bg-green-50 p-2 text-xs dark:bg-green-950">
+                          <span className="mt-0.5">✅</span>
+                          <div>
+                            <span className="font-semibold text-green-800 dark:text-green-200">Quando usar: </span>
+                            <span className="text-green-700 dark:text-green-300">{kit.quandoUsar[0]}</span>
+                          </div>
                         </div>
-                      )}
 
-                      {/* Quando usar - resumo em 1 linha */}
-                      <div className="flex items-start gap-2 rounded-lg bg-green-50 p-2 text-xs dark:bg-green-950">
-                        <span className="mt-0.5">✅</span>
-                        <div>
-                          <span className="font-semibold text-green-800 dark:text-green-200">Quando usar: </span>
-                          <span className="text-green-700 dark:text-green-300">{kit.quandoUsar[0]}</span>
-                        </div>
-                      </div>
-
-                      {/* Dica rápida */}
-                      <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-2 text-xs dark:bg-amber-950">
-                        <span className="mt-0.5">💎</span>
-                        <div>
-                          <span className="font-semibold text-amber-800 dark:text-amber-200">Dica: </span>
-                          <span className="text-amber-700 dark:text-amber-300">{hf.dicaDeOuro.replace("💎 ", "")}</span>
+                        {/* Dica rápida */}
+                        <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-2 text-xs dark:bg-amber-950">
+                          <span className="mt-0.5">💎</span>
+                          <div>
+                            <span className="font-semibold text-amber-800 dark:text-amber-200">Dica: </span>
+                            <span className="text-amber-700 dark:text-amber-300">{hf.dicaDeOuro.replace("💎 ", "")}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Clique para expandir */}
                     <div 
@@ -3635,45 +4243,45 @@ export default function Operators() {
                         {/* ═══════════════════════════════════════════════════════════════════ */}
                         {/* 🏭 INFORMAÇÕES ENRIQUECIDAS DO BACKEND (OPERATOR_SPECS) */}
                         {/* ═══════════════════════════════════════════════════════════════════ */}
-                        {OPERATOR_SPECS[operator.name] && (
+                        {spec && (
                           <div className="space-y-4 rounded-xl border-2 border-blue-300 bg-blue-50/50 p-4 dark:border-blue-700 dark:bg-blue-950/30">
                             <div className="flex items-center gap-2 text-lg font-bold text-blue-800 dark:text-blue-200">
                               <span>📘</span> Documentação Técnica (Backend Real)
                             </div>
 
                             {/* 🔄 Comportamento do Motor */}
-                            {OPERATOR_SPECS[operator.name].engineBehavior && (
+                            {spec.engineBehavior && (
                               <div className="rounded-lg bg-white/80 p-4 dark:bg-black/40">
                                 <div className="mb-3 flex items-center gap-2 text-sm font-bold text-indigo-800 dark:text-indigo-200">
                                   <span>🔄</span> Como o Motor Executa Este Operador
                                 </div>
                                 <p className="mb-3 text-sm text-indigo-700 dark:text-indigo-300">
-                                  {OPERATOR_SPECS[operator.name].engineBehavior?.description}
+                                  {spec.engineBehavior?.description}
                                 </p>
                                 <div className="space-y-1.5">
-                                  {OPERATOR_SPECS[operator.name].engineBehavior?.steps.map((step, i) => (
+                                  {spec.engineBehavior?.steps.map((step, i) => (
                                     <div key={i} className="flex items-start gap-2 rounded bg-indigo-50 p-2 text-xs text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
                                       <span className="font-mono font-bold">{step}</span>
                                     </div>
                                   ))}
                                 </div>
-                                {OPERATOR_SPECS[operator.name].engineBehavior?.performance && (
+                                {spec.engineBehavior?.performance && (
                                   <div className="mt-3 rounded-lg bg-green-50 p-3 dark:bg-green-950">
                                     <div className="text-xs font-semibold text-green-800 dark:text-green-200">
                                       ⚡ Performance
                                     </div>
                                     <p className="mt-1 text-xs text-green-700 dark:text-green-300">
-                                      {OPERATOR_SPECS[operator.name].engineBehavior?.performance}
+                                      {spec.engineBehavior?.performance}
                                     </p>
                                   </div>
                                 )}
-                                {OPERATOR_SPECS[operator.name].engineBehavior?.cautions && OPERATOR_SPECS[operator.name].engineBehavior.cautions.length > 0 && (
+                                {spec.engineBehavior?.cautions && spec.engineBehavior.cautions.length > 0 && (
                                   <div className="mt-3 rounded-lg bg-amber-50 p-3 dark:bg-amber-950">
                                     <div className="text-xs font-semibold text-amber-800 dark:text-amber-200">
                                       ⚠️ Cuidados Importantes
                                     </div>
                                     <ul className="mt-2 space-y-1 text-xs text-amber-700 dark:text-amber-300">
-                                      {OPERATOR_SPECS[operator.name].engineBehavior?.cautions.map((caution, i) => (
+                                      {spec.engineBehavior?.cautions.map((caution, i) => (
                                         <li key={i} className="flex items-start gap-1">
                                           <span className="mt-0.5">•</span>
                                           <span>{caution}</span>
@@ -3686,13 +4294,13 @@ export default function Operators() {
                             )}
 
                             {/* 🎬 Cenários Reais */}
-                            {OPERATOR_SPECS[operator.name].realScenarios && OPERATOR_SPECS[operator.name].realScenarios.length > 0 && (
+                            {spec.realScenarios && spec.realScenarios.length > 0 && (
                               <div className="rounded-lg bg-white/80 p-4 dark:bg-black/40">
                                 <div className="mb-3 flex items-center gap-2 text-sm font-bold text-purple-800 dark:text-purple-200">
-                                  <span>🎬</span> Cenários Reais do Dia a Dia ({OPERATOR_SPECS[operator.name].realScenarios.length})
+                                  <span>🎬</span> Cenários Reais do Dia a Dia ({spec.realScenarios.length})
                                 </div>
                                 <div className="space-y-3">
-                                  {OPERATOR_SPECS[operator.name].realScenarios?.map((scenario, i) => (
+                                  {spec.realScenarios?.map((scenario, i) => (
                                     <div key={i} className="rounded-lg border-l-4 border-purple-400 bg-purple-50 p-3 dark:border-purple-600 dark:bg-purple-950">
                                       <div className="text-sm font-bold text-purple-900 dark:text-purple-100">
                                         {i + 1}. {scenario.title}
@@ -3722,7 +4330,7 @@ export default function Operators() {
                             )}
 
                             {/* 📊 Resultados Possíveis */}
-                            {OPERATOR_SPECS[operator.name].possibleOutcomes && (
+                            {spec.possibleOutcomes && (
                               <div className="rounded-lg bg-white/80 p-4 dark:bg-black/40">
                                 <div className="mb-3 flex items-center gap-2 text-sm font-bold text-cyan-800 dark:text-cyan-200">
                                   <span>📊</span> O Que Acontece Quando...
@@ -3733,7 +4341,7 @@ export default function Operators() {
                                       ✅ Quando a regra DISPARA (retorna true)
                                     </div>
                                     <p className="mt-1 text-xs text-green-700 dark:text-green-300">
-                                      {OPERATOR_SPECS[operator.name].possibleOutcomes?.whenTrue}
+                                      {spec.possibleOutcomes?.whenTrue}
                                     </p>
                                   </div>
                                   <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-950">
@@ -3741,16 +4349,16 @@ export default function Operators() {
                                       ⏸️ Quando a regra NÃO dispara (retorna false)
                                     </div>
                                     <p className="mt-1 text-xs text-slate-700 dark:text-slate-300">
-                                      {OPERATOR_SPECS[operator.name].possibleOutcomes?.whenFalse}
+                                      {spec.possibleOutcomes?.whenFalse}
                                     </p>
                                   </div>
-                                  {OPERATOR_SPECS[operator.name].possibleOutcomes?.recommendedAction && (
+                                  {spec.possibleOutcomes?.recommendedAction && (
                                     <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
                                       <div className="text-xs font-semibold text-blue-800 dark:text-blue-200">
                                         💡 Ação Recomendada
                                       </div>
                                       <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
-                                        {OPERATOR_SPECS[operator.name].possibleOutcomes?.recommendedAction}
+                                        {spec.possibleOutcomes?.recommendedAction}
                                       </p>
                                     </div>
                                   )}
@@ -3759,13 +4367,13 @@ export default function Operators() {
                             )}
 
                             {/* 🧪 Como Testar */}
-                            {OPERATOR_SPECS[operator.name].howToTest && OPERATOR_SPECS[operator.name].howToTest.length > 0 && (
+                            {spec.howToTest && spec.howToTest.length > 0 && (
                               <div className="rounded-lg bg-white/80 p-4 dark:bg-black/40">
                                 <div className="mb-3 flex items-center gap-2 text-sm font-bold text-teal-800 dark:text-teal-200">
                                   <span>🧪</span> Como Testar Esta Regra (Passo a Passo)
                                 </div>
                                 <div className="space-y-2">
-                                  {OPERATOR_SPECS[operator.name].howToTest?.map((step, i) => (
+                                  {spec.howToTest?.map((step, i) => (
                                     <div key={i} className="flex items-start gap-2 rounded-lg bg-teal-50 p-2 text-xs text-teal-700 dark:bg-teal-950 dark:text-teal-300">
                                       <span className="font-mono font-semibold text-teal-800 dark:text-teal-200">{step}</span>
                                     </div>
@@ -4227,12 +4835,16 @@ export default function Operators() {
                       </div>
                     )}
                   </div>
-                );
-              })}
-            </div>
-          </section>
-        );
-      })}
+                  );
+                })}
+              </div>
+            )}
+              </section>
+            );
+          })
+          )}
+        </div>
+      </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* FOOTER - PRÓXIMOS PASSOS */}
