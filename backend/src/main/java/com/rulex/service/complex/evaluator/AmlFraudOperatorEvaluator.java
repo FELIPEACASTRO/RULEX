@@ -30,8 +30,11 @@ public class AmlFraudOperatorEvaluator implements OperatorEvaluator {
   private static final BigDecimal STRUCTURING_MARGIN =
       new BigDecimal("1000"); // Margem abaixo do CTR
 
-  private static final Set<ConditionOperator> SUPPORTED =
-      Set.of(ConditionOperator.STRUCTURING_DETECTION, ConditionOperator.LAYERING_PATTERN);
+    private static final Set<ConditionOperator> SUPPORTED =
+      Set.of(
+        ConditionOperator.STRUCTURING_DETECTION,
+        ConditionOperator.LAYERING_PATTERN,
+        ConditionOperator.CRYPTO_PUMP_DUMP_DETECTION);
 
   @Override
   public Set<ConditionOperator> getSupportedOperators() {
@@ -50,6 +53,7 @@ public class AmlFraudOperatorEvaluator implements OperatorEvaluator {
       return switch (op) {
         case STRUCTURING_DETECTION -> evaluateStructuring(request, payload, condition);
         case LAYERING_PATTERN -> evaluateLayering(request, payload, condition);
+        case CRYPTO_PUMP_DUMP_DETECTION -> evaluateCryptoPumpDump(payload);
         default -> false;
       };
     } catch (Exception e) {
@@ -134,6 +138,16 @@ public class AmlFraudOperatorEvaluator implements OperatorEvaluator {
         isLayering);
 
     return isLayering;
+  }
+
+  private boolean evaluateCryptoPumpDump(Map<String, Object> payload) {
+    if (payload == null) return false;
+    Object flagged = payload.get("cryptoPumpDumpDetected");
+    if (flagged == null) {
+      flagged = payload.get("pumpDumpDetected");
+    }
+    if (flagged == null) return false;
+    return Boolean.parseBoolean(String.valueOf(flagged));
   }
 
   private boolean isRoundAmount(BigDecimal amount) {

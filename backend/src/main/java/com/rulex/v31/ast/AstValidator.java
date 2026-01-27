@@ -1,6 +1,7 @@
 package com.rulex.v31.ast;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.rulex.entity.complex.ConditionOperator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -32,7 +33,7 @@ public class AstValidator {
           "NOT_REGEX", "NOT_MATCHES_REGEX" // Consistency alias
           );
 
-  private static final Set<String> OPERATORS =
+  private static final Set<String> SIMPLE_OPERATORS =
       Set.of(
           "EQ",
           "NE",
@@ -185,7 +186,7 @@ public class AstValidator {
     String operator = text(node.get("operator"));
     // Normalize operator to handle aliases (e.g., NEQ -> NE, REGEX -> MATCHES_REGEX)
     String normalizedOperator = normalizeOperator(operator);
-    if (normalizedOperator == null || !OPERATORS.contains(normalizedOperator)) {
+    if (normalizedOperator == null || !isSupportedOperator(normalizedOperator)) {
       errors.add(new AstValidationError(path + ".operator", "operator inválido: " + operator));
     }
 
@@ -234,6 +235,32 @@ public class AstValidator {
       } else {
         validateRegex(pattern, path + ".right", errors);
       }
+    }
+  }
+
+  private boolean isSupportedOperator(String normalizedOperator) {
+    if (SIMPLE_OPERATORS.contains(normalizedOperator)) {
+      return true;
+    }
+    return mapToConditionOperator(normalizedOperator) != null;
+  }
+
+  private ConditionOperator mapToConditionOperator(String op) {
+    if (op == null) {
+      return null;
+    }
+    String mapped =
+        switch (op) {
+          case "NE" -> "NEQ";
+          case "MATCHES_REGEX" -> "REGEX";
+          case "NOT_MATCHES_REGEX" -> "NOT_REGEX";
+          case "IS_NOT_NULL" -> "NOT_NULL";
+          default -> op;
+        };
+    try {
+      return ConditionOperator.valueOf(mapped);
+    } catch (IllegalArgumentException e) {
+      return null;
     }
   }
 

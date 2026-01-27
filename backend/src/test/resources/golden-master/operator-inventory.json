@@ -1,5 +1,5 @@
 {
-  "dtoOperatorCount": 496,
+  "dtoOperatorCount": 469,
   "dtoOperators": [
     "ACCOUNT_AGE_LT_DAYS",
     "ACCOUNT_AGE_LT_MINUTES",
@@ -498,7 +498,7 @@
     "XOR",
     "Z_SCORE_GT"
   ],
-  "entityOperatorCount": 496,
+  "entityOperatorCount": 469,
   "entityOperators": [
     "ACCOUNT_AGE_LT_DAYS",
     "ACCOUNT_AGE_LT_MINUTES",

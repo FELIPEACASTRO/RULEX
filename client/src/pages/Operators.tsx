@@ -2710,6 +2710,240 @@ const gerarHistoriaContextualizada = (name: string, kind: OperatorKind): string 
   return kindHistorias[kind];
 };
 
+const gerarSituacoesReais = (name: string, kind: OperatorKind) => {
+  const upper = name.toUpperCase();
+  const ctx = inferTokenContext(upper);
+
+  const base = {
+    titulo: `Uso real de ${name}`,
+    contexto: `Equipe de fraude analisando ${ctx.entityPt} em produção.`,
+    problema: `Como decidir rapidamente se a ${ctx.entityPt} deve ser aprovada?`,
+    solucao: `${name} aplicado na regra para decidir de forma objetiva.`,
+    impacto: "Reduz risco e melhora consistência de decisão.",
+  };
+
+  switch (kind) {
+    case "compare":
+    case "range":
+      return [
+        {
+          titulo: "Valor fora do esperado",
+          contexto: "Compras acima do limite diário do cliente",
+          problema: "Como barrar transações com valor fora do padrão?",
+          solucao: `${name} com limite ajustado por política interna`,
+          impacto: "Evita aprovação de valores suspeitos sem bloquear o normal.",
+        },
+        {
+          titulo: "Limite regulatório",
+          contexto: "Regra de compliance para transferências acima de um teto",
+          problema: "Garantir que operações acima do teto sejam revisadas",
+          solucao: `${name} com limite regulatório e ação de revisão`,
+          impacto: "Conformidade com regras legais e menor risco de sanção.",
+        },
+        base,
+      ];
+    case "list":
+      return [
+        {
+          titulo: "Whitelist/Blacklist",
+          contexto: "Clientes VIP com tratamento diferenciado",
+          problema: "Como liberar rapidamente usuários confiáveis?",
+          solucao: `${name} com lista de usuários confiáveis`,
+          impacto: "Menos fricção para clientes bons.",
+        },
+        {
+          titulo: "Bloqueio por lista",
+          contexto: "MCCs de alto risco",
+          problema: "Como negar categorias específicas?",
+          solucao: `${name} com lista de MCCs bloqueados`,
+          impacto: "Reduz exposição a segmentos arriscados.",
+        },
+        base,
+      ];
+    case "string":
+      return [
+        {
+          titulo: "E-mail suspeito",
+          contexto: "Cadastro com domínio temporário",
+          problema: "Como detectar e-mails descartáveis?",
+          solucao: `${name} verificando padrões de domínio`,
+          impacto: "Menos cadastros fraudulentos.",
+        },
+        {
+          titulo: "Descrição de transação",
+          contexto: "Texto indicando estorno ou chargeback",
+          problema: "Como identificar padrões no texto?",
+          solucao: `${name} com palavra-chave crítica`,
+          impacto: "Alertas antecipados para análise.",
+        },
+        base,
+      ];
+    case "aggregation":
+    case "risk_pattern":
+      return [
+        {
+          titulo: "Velocity de transações",
+          contexto: "Múltiplas compras em poucos minutos",
+          problema: "Como detectar bursts de atividade?",
+          solucao: `${name} em janela temporal com agrupamento`,
+          impacto: "Bloqueia automações rápidas sem afetar o normal.",
+        },
+        {
+          titulo: "Soma de valores",
+          contexto: "Divisão de valores para burlar limites",
+          problema: "Como detectar estruturação?",
+          solucao: `${name} somando valores na janela`,
+          impacto: "Detecta fraudes por fragmentação.",
+        },
+        base,
+      ];
+    case "device":
+      return [
+        {
+          titulo: "Device novo",
+          contexto: "Login de dispositivo nunca visto",
+          problema: "Como tratar device desconhecido?",
+          solucao: `${name} combinado com regra de confiança`,
+          impacto: "Gatilha step-up ou revisão.",
+        },
+        {
+          titulo: "Emulador/Root",
+          contexto: "Sinais de device adulterado",
+          problema: "Como detectar ambientes suspeitos?",
+          solucao: `${name} checando sinais de root/emulador`,
+          impacto: "Bloqueia acessos com alto risco.",
+        },
+        base,
+      ];
+    case "graph":
+      return [
+        {
+          titulo: "Rede de contas",
+          contexto: "Múltiplas contas ligadas ao mesmo device",
+          problema: "Como encontrar conexões indiretas?",
+          solucao: `${name} com profundidade/cluster`,
+          impacto: "Identifica redes coordenadas.",
+        },
+        {
+          titulo: "Caminho curto",
+          contexto: "Conta ligada a outra já fraudulenta",
+          problema: "Como medir proximidade no grafo?",
+          solucao: `${name} avaliando distância entre entidades`,
+          impacto: "Acelera investigações de conluio.",
+        },
+        base,
+      ];
+    case "validation":
+      return [
+        {
+          titulo: "Sanções/PEP",
+          contexto: "Onboarding com verificação obrigatória",
+          problema: "Como bloquear nomes em listas?",
+          solucao: `${name} após checagem externa`,
+          impacto: "Conformidade AML/Compliance.",
+        },
+        {
+          titulo: "Adverse media",
+          contexto: "Alertas de mídia negativa",
+          problema: "Como sinalizar risco reputacional?",
+          solucao: `${name} com score de risco externo`,
+          impacto: "Reduz exposição jurídica.",
+        },
+        base,
+      ];
+    case "statistical":
+      return [
+        {
+          titulo: "Score de risco",
+          contexto: "Modelo preditivo calcula risco",
+          problema: "Como usar scores em decisão?",
+          solucao: `${name} comparando score com limite`,
+          impacto: "Decisões consistentes com o modelo.",
+        },
+        {
+          titulo: "Desvio estatístico",
+          contexto: "Cliente fora do comportamento típico",
+          problema: "Como detectar outliers?",
+          solucao: `${name} usando percentil ou desvio`,
+          impacto: "Captura anomalias reais.",
+        },
+        base,
+      ];
+    case "datetime":
+      return [
+        {
+          titulo: "Horário incomum",
+          contexto: "Transações altas de madrugada",
+          problema: "Como aplicar regras por horário?",
+          solucao: `${name} limitando janela temporal`,
+          impacto: "Reduz fraude noturna.",
+        },
+        {
+          titulo: "Conta recém-criada",
+          contexto: "Operação no mesmo dia de cadastro",
+          problema: "Como aplicar janela de carência?",
+          solucao: `${name} com age/creation time`,
+          impacto: "Evita abuso de contas novas.",
+        },
+        base,
+      ];
+    default:
+      return [base];
+  }
+};
+
+const gerarComoTestar = (name: string, kind: OperatorKind) => {
+  const steps = [
+    `Teste um caso comum para ${name} (valor típico)`,
+    "Teste o limite (igualdade) para validar GT/GTE ou LT/LTE",
+    "Teste um caso negativo (fora do padrão) para garantir false",
+    "Teste payload sem o campo esperado para definir comportamento",
+  ];
+
+  if (kind === "aggregation" || kind === "risk_pattern") {
+    steps.push("Teste com janela temporal curta e longa (ex.: 1h vs 24h)");
+  }
+
+  if (kind === "graph") {
+    steps.push("Teste com profundidades diferentes (1, 2, 3) e compare resultados");
+  }
+
+  return steps;
+};
+
+const gerarComportamentoMotor = (name: string, kind: OperatorKind) => {
+  const baseSteps = [
+    `Recebe os campos necessários para ${name}`,
+    "Valida formatos e tipos",
+    "Executa a lógica do operador",
+    "Retorna true/false para a regra",
+  ];
+
+  if (kind === "aggregation") {
+    baseSteps.splice(2, 0, "Consulta histórico na janela temporal e agrega dados");
+  }
+  if (kind === "graph") {
+    baseSteps.splice(2, 0, "Consulta relações no grafo e calcula proximidade");
+  }
+
+  return {
+    descricao: `O motor avalia ${name} sobre os dados recebidos e decide se a condição é verdadeira.`,
+    passos: baseSteps.map((step, i) => `${i + 1}️⃣ ${step}`),
+    performance: "Operadores com histórico/grafo podem exigir índices e caches para desempenho.",
+    cuidados: [
+      "Garanta que os campos existem no payload",
+      "Defina bem as janelas temporais e limites",
+      "Teste com dados reais antes de produção",
+    ],
+  };
+};
+
+const gerarResultadosPossiveis = (name: string) => ({
+  quandoDispara: `${name} retornou verdadeiro — a condição foi satisfeita.`,
+  quandoNaoDispara: `${name} retornou falso — a condição não foi satisfeita.`,
+  acaoRecomendada: "Revise limites e monitore falsos positivos/negativos.",
+});
+
 // Gera problema contextualizado
 const gerarProblemaContextualizado = (name: string, kind: OperatorKind): string => {
   const upper = name.toUpperCase();
@@ -2769,11 +3003,20 @@ const deriveHeadFirstExample = (name: string): HeadFirstExample => {
   const upper = name.toUpperCase();
   const found = HEAD_FIRST_EXAMPLES[name] || HEAD_FIRST_EXAMPLES[upper];
   if (found) {
-    return {
+    const kind = classifyOperator(name);
+    const base = {
       ...found,
       docLevel: "manual",
       docConfidence: "high",
       docWarnings: [],
+    };
+
+    return {
+      ...base,
+      situacoesReais: base.situacoesReais ?? gerarSituacoesReais(name, kind),
+      comoTestar: base.comoTestar ?? gerarComoTestar(name, kind),
+      comportamentoMotor: base.comportamentoMotor ?? gerarComportamentoMotor(name, kind),
+      resultadosPossiveis: base.resultadosPossiveis ?? gerarResultadosPossiveis(name),
     };
   }
 
@@ -2782,7 +3025,7 @@ const deriveHeadFirstExample = (name: string): HeadFirstExample => {
     const kind = classifyOperator(name);
     const info = ANALOGIAS_POR_TIPO[kind];
     const sintaxeGerada = spec.syntax ?? guessDslForKind(name, kind);
-    return {
+    const base = {
       docLevel: "spec",
       docConfidence: "high",
       docWarnings: [],
@@ -2829,6 +3072,14 @@ const deriveHeadFirstExample = (name: string): HeadFirstExample => {
         : undefined,
       comoTestar: spec.howToTest,
     };
+
+    return {
+      ...base,
+      situacoesReais: base.situacoesReais ?? gerarSituacoesReais(name, kind),
+      comoTestar: base.comoTestar ?? gerarComoTestar(name, kind),
+      comportamentoMotor: base.comportamentoMotor ?? gerarComportamentoMotor(name, kind),
+      resultadosPossiveis: base.resultadosPossiveis ?? gerarResultadosPossiveis(name),
+    };
   }
 
   // Gerar exemplo contextualizado baseado na classificação
@@ -2837,7 +3088,7 @@ const deriveHeadFirstExample = (name: string): HeadFirstExample => {
   const sintaxeGerada = guessDslForKind(name, kind);
   const meta = docMetaForOperator(name);
   
-  return {
+  const base = {
     docLevel: meta.level,
     docConfidence: meta.confidence,
     docWarnings: meta.warnings,
@@ -2858,6 +3109,14 @@ const deriveHeadFirstExample = (name: string): HeadFirstExample => {
     perguntaComum: gerarProblemaContextualizado(name, kind),
     respostaPergunta: `Use ${name} quando precisar de ${kind === "unknown" ? "verificação especializada" : kind.replace("_", " ")}. Veja os campos sugeridos e exemplos nesta página.`,
     dicaDeOuro: info.dicaDeOuro,
+  };
+
+  return {
+    ...base,
+    situacoesReais: base.situacoesReais ?? gerarSituacoesReais(name, kind),
+    comoTestar: base.comoTestar ?? gerarComoTestar(name, kind),
+    comportamentoMotor: base.comportamentoMotor ?? gerarComportamentoMotor(name, kind),
+    resultadosPossiveis: base.resultadosPossiveis ?? gerarResultadosPossiveis(name),
   };
 };
 
@@ -3129,6 +3388,16 @@ export default function Operators() {
     });
     return rows;
   }, [categories, grouped, collapsedCategories]);
+
+  const categoryRowIndexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    virtualRows.forEach((row, index) => {
+      if (row.kind === "category") {
+        map.set(row.category, index);
+      }
+    });
+    return map;
+  }, [virtualRows]);
 
   const getItemSize = useCallback(
     (index: number) => {
@@ -3913,6 +4182,17 @@ export default function Operators() {
                   key={category}
                   href={`#cat-${slugify(category)}`}
                   className="flex items-center justify-between rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-slate-800"
+                  onClick={(e) => {
+                    if (virtualizedView) {
+                      e.preventDefault();
+                      setSelectedCategory(category);
+                      setCollapsedCategories((prev) => prev.filter((c) => c !== category));
+                      const targetIndex = categoryRowIndexMap.get(category);
+                      if (typeof targetIndex === "number") {
+                        listRef.current?.scrollToRow({ index: targetIndex, align: "start" });
+                      }
+                    }
+                  }}
                 >
                   <span className="truncate">{category}</span>
                   <span className="font-semibold text-foreground">{grouped[category]?.length ?? 0}</span>

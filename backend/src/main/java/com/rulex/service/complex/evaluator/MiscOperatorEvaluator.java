@@ -37,6 +37,7 @@ public class MiscOperatorEvaluator implements OperatorEvaluator {
 
   private static final Set<ConditionOperator> SUPPORTED =
       Set.of(
+        ConditionOperator.INJECTION_ATTACK_DETECTION,
           ConditionOperator.IS_VOIP,
           ConditionOperator.IS_CRYPTO_RANSOM_AMOUNT,
           ConditionOperator.IS_IMPOSSIBLE_COMBINATION,
@@ -89,6 +90,7 @@ public class MiscOperatorEvaluator implements OperatorEvaluator {
     log.debug("MiscOperatorEvaluator: op={}, field={}", op, condition.getFieldName());
 
     return switch (op) {
+      case INJECTION_ATTACK_DETECTION -> evaluateInjectionAttackDetection(condition, context);
       case IS_VOIP -> evaluateIsVoip(condition, context);
       case IS_CRYPTO_RANSOM_AMOUNT -> evaluateIsCryptoRansomAmount(condition, context);
       case IS_IMPOSSIBLE_COMBINATION -> evaluateIsImpossibleCombination(condition, context);
@@ -161,6 +163,37 @@ public class MiscOperatorEvaluator implements OperatorEvaluator {
     }
 
     return false;
+  }
+
+  /** INJECTION_ATTACK_DETECTION - detecta tentativas de injeção em campos de entrada. */
+  private boolean evaluateInjectionAttackDetection(
+      RuleCondition condition, EvaluationContext context) {
+    Map<String, Object> payload = context.getPayload();
+    if (payload != null) {
+      if (getBooleanValue(payload, "injectionAttackDetected")
+          || getBooleanValue(payload, "sqlInjectionDetected")
+          || getBooleanValue(payload, "xssDetected")) {
+        return true;
+      }
+    }
+
+    Object fieldValue = getFieldValue(context, condition.getFieldName());
+    if (fieldValue == null) return false;
+
+    String input = String.valueOf(fieldValue).toLowerCase();
+    if (input.isEmpty()) return false;
+
+    // Heurísticas básicas de SQLi/XSS
+    return input.contains("' or 1=1")
+        || input.contains("\" or 1=1")
+        || input.contains("union select")
+        || input.contains("drop table")
+        || input.contains("--")
+        || input.contains("/*")
+        || input.contains("*/")
+        || input.contains("<script")
+        || input.contains("</script>")
+        || input.contains("javascript:");
   }
 
   /** IS_CRYPTO_RANSOM_AMOUNT - verifica se o valor é típico de ransomware. */

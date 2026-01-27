@@ -1,18 +1,33 @@
 package com.rulex.v31.ast;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.rulex.entity.complex.ConditionOperator;
+import com.rulex.entity.complex.RuleCondition;
+import com.rulex.service.complex.ComplexRuleEvaluator.EvaluationContext;
+import com.rulex.service.complex.evaluator.OperatorEvaluator;
+import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
 import com.rulex.util.RegexValidator;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Objects;
 
 /** Deterministic AST evaluator for V3.1 (safe subset of JSONPath: $.a.b.c). */
 public class AstEvaluator {
 
-  public AstEvaluator() {}
+  private final OperatorEvaluatorRegistry operatorEvaluatorRegistry;
+
+  public AstEvaluator() {
+    this.operatorEvaluatorRegistry = null;
+  }
+
+  public AstEvaluator(OperatorEvaluatorRegistry operatorEvaluatorRegistry) {
+    this.operatorEvaluatorRegistry = operatorEvaluatorRegistry;
+  }
 
   public boolean evaluate(JsonNode ast, JsonNode payload) {
     if (ast == null || payload == null) {
@@ -75,6 +90,13 @@ public class AstEvaluator {
     Object actual = evalExpr(left, payload);
     String op = operator.toUpperCase(Locale.ROOT);
 
+    if (operatorEvaluatorRegistry != null) {
+      ConditionOperator conditionOperator = mapToConditionOperator(op);
+      if (conditionOperator != null) {
+        return evaluateWithRegistry(node, conditionOperator, left, right, payload, actual);
+      }
+    }
+
     return switch (op) {
       case "IS_NULL" -> actual == null;
       case "IS_NOT_NULL" -> actual != null;
@@ -101,6 +123,155 @@ public class AstEvaluator {
       case "NOT_ON" -> compareDate(actual, evalRight(right, payload, actual)) != 0;
       default -> false;
     };
+  }
+
+  private boolean evaluateWithRegistry(
+      JsonNode node,
+      ConditionOperator conditionOperator,
+      JsonNode left,
+      JsonNode right,
+      JsonNode payload,
+      Object actual) {
+    Map<String, Object> payloadMap = toPayloadMap(payload);
+    String fieldPath = getFieldJsonPath(left);
+    String fieldName = deriveFieldName(fieldPath);
+    if (fieldName == null || fieldName.isBlank()) {
+      fieldName = "value";
+    }
+
+    if (actual != null && payloadMap != null && !payloadMap.containsKey(fieldName)) {
+      payloadMap.put(fieldName, actual);
+    }
+
+    RuleCondition.RuleConditionBuilder builder =
+        RuleCondition.builder()
+            .operator(conditionOperator)
+            .fieldName(fieldName)
+            .fieldPath(fieldPath)
+            .enabled(true)
+            .caseSensitive(true)
+            .negate(false);
+
+    if (right == null || right.isNull()) {
+      // no-op for unary operators
+    } else if (right.isArray()) {
+      List<String> values = new ArrayList<>();
+      for (JsonNode item : right) {
+        Object v =
+            item.isObject() && item.has("type") ? evalExpr(item, payload) : constValue(item);
+        values.add(v == null ? null : String.valueOf(v));
+      }
+      builder.valueArray(values);
+    } else if (right.isObject() && !right.has("type") && right.has("min") && right.has("max")) {
+      Object min = evalRight(right.get("min"), payload, actual);
+      Object max = evalRight(right.get("max"), payload, actual);
+      builder.valueMin(min == null ? null : String.valueOf(min));
+      builder.valueMax(max == null ? null : String.valueOf(max));
+    } else if (right.isObject() && right.has("type")) {
+      String rightType = text(right.get("type"));
+      if (rightType != null && rightType.equalsIgnoreCase("FIELD")) {
+        String refPath = getFieldJsonPath(right);
+        String refName = deriveFieldName(refPath);
+        builder.valueFieldRef(refName != null ? refName : refPath);
+      } else {
+        Object v = evalExpr(right, payload);
+        builder.valueSingle(v == null ? null : String.valueOf(v));
+      }
+    } else {
+      Object v = evalRight(right, payload, actual);
+      builder.valueSingle(v == null ? null : String.valueOf(v));
+    }
+
+    RuleCondition condition = builder.build();
+    EvaluationContext ctx =
+        EvaluationContext.builder()
+            .payload(payloadMap)
+            .transactionRequest(null)
+            .build();
+
+    OperatorEvaluator evaluator = operatorEvaluatorRegistry.getEvaluator(conditionOperator);
+    return evaluator.evaluate(condition, ctx);
+  }
+
+  private Map<String, Object> toPayloadMap(JsonNode payload) {
+    if (payload == null || payload.isNull()) {
+      return new HashMap<>();
+    }
+    Object value = convertJson(payload);
+    if (value instanceof Map<?, ?> map) {
+      Map<String, Object> result = new HashMap<>();
+      for (Map.Entry<?, ?> entry : map.entrySet()) {
+        result.put(String.valueOf(entry.getKey()), entry.getValue());
+      }
+      return result;
+    }
+    return new HashMap<>();
+  }
+
+  private Object convertJson(JsonNode node) {
+    if (node == null || node.isNull()) {
+      return null;
+    }
+    if (node.isObject()) {
+      Map<String, Object> map = new HashMap<>();
+      node.fieldNames()
+          .forEachRemaining(
+              key -> {
+                JsonNode value = node.get(key);
+                map.put(key, convertJson(value));
+              });
+      return map;
+    }
+    if (node.isArray()) {
+      List<Object> list = new ArrayList<>();
+      for (JsonNode item : node) {
+        list.add(convertJson(item));
+      }
+      return list;
+    }
+    return constValue(node);
+  }
+
+  private ConditionOperator mapToConditionOperator(String op) {
+    if (op == null) {
+      return null;
+    }
+    String mapped =
+        switch (op) {
+          case "NE" -> "NEQ";
+          case "MATCHES_REGEX" -> "REGEX";
+          case "NOT_MATCHES_REGEX" -> "NOT_REGEX";
+          case "IS_NOT_NULL" -> "NOT_NULL";
+          default -> op;
+        };
+    try {
+      return ConditionOperator.valueOf(mapped);
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
+  }
+
+  private String getFieldJsonPath(JsonNode expr) {
+    if (expr == null || !expr.isObject()) {
+      return null;
+    }
+    String type = text(expr.get("type"));
+    if (type == null || !type.equalsIgnoreCase("FIELD")) {
+      return null;
+    }
+    return text(expr.get("jsonPath"));
+  }
+
+  private String deriveFieldName(String jsonPath) {
+    if (jsonPath == null || !jsonPath.startsWith("$")) {
+      return null;
+    }
+    String trimmed = jsonPath.startsWith("$.") ? jsonPath.substring(2) : jsonPath.substring(1);
+    if (trimmed.isBlank()) {
+      return null;
+    }
+    String[] parts = trimmed.split("\\.");
+    return parts.length == 0 ? trimmed : parts[parts.length - 1];
   }
 
   private Object evalRight(JsonNode right, JsonNode payload, Object actual) {

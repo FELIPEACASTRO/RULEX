@@ -540,9 +540,20 @@ E faz normalização de operadores simbólicos:
 - Unários: `IS_NULL`, `IS_NOT_NULL`, `IS_TRUE`, `IS_FALSE`
 - Datas (comparação de date): `BEFORE`, `AFTER`, `ON`, `NOT_ON`
 
+#### Operadores avançados (ConditionOperator)
+O AST v3.1 agora aceita **qualquer operador do enum `ConditionOperator`**.
+Quando o `operator` corresponder ao enum, a avaliação é delegada ao
+`OperatorEvaluatorRegistry` (mesma lógica do motor complexo).
+
+> Importante: operadores avançados dependem de chaves/flags no payload
+> conforme cada evaluator. Para campos aninhados, o valor resolvido pelo
+> `jsonPath` do `left` é injetado no payload com a chave do campo derivado.
+
 #### Aliases normalizados pelo validador
 - `NEQ` → `NE`
 - `REGEX` → `MATCHES_REGEX`
+- `NOT_MATCHES_REGEX` → `NOT_REGEX` (na delegação para `ConditionOperator`)
+- `IS_NOT_NULL` → `NOT_NULL` (na delegação para `ConditionOperator`)
 
 #### Funções permitidas (allowlist)
 - `TRIM`, `LOWER`, `UPPER`, `LEN`, `ABS`, `COALESCE`

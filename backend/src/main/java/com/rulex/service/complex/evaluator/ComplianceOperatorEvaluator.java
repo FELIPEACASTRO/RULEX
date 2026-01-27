@@ -22,29 +22,46 @@ public class ComplianceOperatorEvaluator implements OperatorEvaluator {
           // Verificações de identidade
           ConditionOperator.ADDRESS_VERIFICATION,
           ConditionOperator.CPF_SSN_VALIDATION,
+          ConditionOperator.ECBSV_SSN_VALIDATION,
           ConditionOperator.CREDITOR_NAME_VALIDATION,
+          ConditionOperator.DOCUMENT_FORGERY_DETECTION,
+          ConditionOperator.FACE_TO_ID_PHOTO_MATCHING,
+          ConditionOperator.LIVENESS_DETECTION_FACIAL,
+          ConditionOperator.LIVENESS_DETECTION_VOICE,
           ConditionOperator.EIDAS_ASSURANCE_LEVEL,
           ConditionOperator.IDENTITY_VELOCITY,
           ConditionOperator.STRUCTURED_ADDRESS_CHECK,
 
           // Listas de sanções
           ConditionOperator.ADVERSE_MEDIA_CHECK,
+          ConditionOperator.CONSORTIUM_NEGATIVE_FILE_CHECK,
           ConditionOperator.OFAC_LIST_CHECK,
           ConditionOperator.PEP_LIST_CHECK,
           ConditionOperator.SANCTIONS_COUNTRY_CHECK,
 
           // AML
           ConditionOperator.CASH_INTENSIVE_RATIO,
+          ConditionOperator.CORRESPONDENT_ANOMALY,
+          ConditionOperator.HIGH_RISK_CORRIDOR_CHECK,
           ConditionOperator.HIGH_RISK_JURISDICTION,
+          ConditionOperator.NESTED_CORRESPONDENT_CHECK,
           ConditionOperator.PURPOSE_CODE_MISMATCH,
           ConditionOperator.REMITTANCE_INFO_ANALYSIS,
+          ConditionOperator.SHELL_BANK_INDICATOR,
           ConditionOperator.SHELL_COMPANY_INDICATOR,
           ConditionOperator.TRADE_BASED_ML_INDICATOR,
           ConditionOperator.UETR_DUPLICATE_CHECK,
 
           // Synthetic Identity
           ConditionOperator.ALIAS_DETECTION,
-          ConditionOperator.CREDIT_FILE_THIN);
+          ConditionOperator.CREDIT_FILE_THIN,
+          ConditionOperator.MULTI_LAYERED_SYNTHETIC_ID_CONTROLS,
+          ConditionOperator.SYNTHETIC_FRAUD_SCORE,
+          ConditionOperator.SYNTHETIC_IDENTITY_RING,
+          ConditionOperator.SYNTHETIC_ID_LABEL_CORRECTION,
+          ConditionOperator.APP_FRAUD_DETECTION,
+          ConditionOperator.INVESTMENT_SCAM_PATTERN,
+          ConditionOperator.ROMANCE_SCAM_INDICATOR);
 
   @Override
   public Set<ConditionOperator> getSupportedOperators() {
@@ -59,23 +76,41 @@ public class ComplianceOperatorEvaluator implements OperatorEvaluator {
     return switch (op) {
       case ADDRESS_VERIFICATION -> evaluateAddressVerification(condition, context);
       case CPF_SSN_VALIDATION -> evaluateCpfSsnValidation(condition, context);
+      case ECBSV_SSN_VALIDATION -> evaluateEcbsvSsnValidation(condition, context);
       case CREDITOR_NAME_VALIDATION -> evaluateCreditorNameValidation(condition, context);
+      case DOCUMENT_FORGERY_DETECTION -> evaluateDocumentForgery(condition, context);
+      case FACE_TO_ID_PHOTO_MATCHING -> evaluateFaceToIdPhotoMatching(condition, context);
+      case LIVENESS_DETECTION_FACIAL -> evaluateLivenessFacial(condition, context);
+      case LIVENESS_DETECTION_VOICE -> evaluateLivenessVoice(condition, context);
       case EIDAS_ASSURANCE_LEVEL -> evaluateEidasAssuranceLevel(condition, context);
       case IDENTITY_VELOCITY -> evaluateIdentityVelocity(condition, context);
       case STRUCTURED_ADDRESS_CHECK -> evaluateStructuredAddressCheck(condition, context);
       case ADVERSE_MEDIA_CHECK -> evaluateAdverseMediaCheck(condition, context);
+      case CONSORTIUM_NEGATIVE_FILE_CHECK -> evaluateConsortiumNegativeFile(condition, context);
       case OFAC_LIST_CHECK -> evaluateOfacListCheck(condition, context);
       case PEP_LIST_CHECK -> evaluatePepListCheck(condition, context);
       case SANCTIONS_COUNTRY_CHECK -> evaluateSanctionsCountryCheck(condition, context);
       case CASH_INTENSIVE_RATIO -> evaluateCashIntensiveRatio(condition, context);
+      case CORRESPONDENT_ANOMALY -> evaluateCorrespondentAnomaly(condition, context);
+      case HIGH_RISK_CORRIDOR_CHECK -> evaluateHighRiskCorridor(condition, context);
       case HIGH_RISK_JURISDICTION -> evaluateHighRiskJurisdiction(condition, context);
+      case NESTED_CORRESPONDENT_CHECK -> evaluateNestedCorrespondent(condition, context);
       case PURPOSE_CODE_MISMATCH -> evaluatePurposeCodeMismatch(condition, context);
       case REMITTANCE_INFO_ANALYSIS -> evaluateRemittanceInfoAnalysis(condition, context);
+      case SHELL_BANK_INDICATOR -> evaluateShellBankIndicator(condition, context);
       case SHELL_COMPANY_INDICATOR -> evaluateShellCompanyIndicator(condition, context);
       case TRADE_BASED_ML_INDICATOR -> evaluateTradeBasedMl(condition, context);
       case UETR_DUPLICATE_CHECK -> evaluateUetrDuplicateCheck(condition, context);
       case ALIAS_DETECTION -> evaluateAliasDetection(condition, context);
       case CREDIT_FILE_THIN -> evaluateCreditFileThin(condition, context);
+      case MULTI_LAYERED_SYNTHETIC_ID_CONTROLS ->
+          evaluateMultiLayeredSyntheticId(condition, context);
+      case SYNTHETIC_FRAUD_SCORE -> evaluateSyntheticFraudScore(condition, context);
+      case SYNTHETIC_IDENTITY_RING -> evaluateSyntheticIdentityRing(condition, context);
+      case SYNTHETIC_ID_LABEL_CORRECTION -> evaluateSyntheticIdLabelCorrection(condition, context);
+      case APP_FRAUD_DETECTION -> evaluateAppFraudDetection(condition, context);
+      case INVESTMENT_SCAM_PATTERN -> evaluateInvestmentScamPattern(condition, context);
+      case ROMANCE_SCAM_INDICATOR -> evaluateRomanceScamIndicator(condition, context);
       default -> false;
     };
   }
@@ -123,6 +158,36 @@ public class ComplianceOperatorEvaluator implements OperatorEvaluator {
     Object valid = getPayloadValue(context, "ecbsvSsnValid", "ecbsvValidationPassed");
     if (valid == null) return false;
     return !Boolean.parseBoolean(String.valueOf(valid));
+  }
+
+  private boolean evaluateFaceToIdPhotoMatching(
+      RuleCondition condition, EvaluationContext context) {
+    Object match =
+        getPayloadValue(context, "faceToIdPhotoMatch", "faceIdPhotoMatch", "faceToIdMatch");
+    if (match == null) return false;
+    return !Boolean.parseBoolean(String.valueOf(match));
+  }
+
+  private boolean evaluateLivenessFacial(RuleCondition condition, EvaluationContext context) {
+    Object passed =
+        getPayloadValue(
+            context, "livenessFacialPassed", "facialLivenessPassed", "livenessFacePassed");
+    if (passed != null) {
+      return !Boolean.parseBoolean(String.valueOf(passed));
+    }
+    return evaluateBooleanPayload(
+        context, "livenessFacialFailed", "facialLivenessFailed", "livenessFaceFailed");
+  }
+
+  private boolean evaluateLivenessVoice(RuleCondition condition, EvaluationContext context) {
+    Object passed =
+        getPayloadValue(
+            context, "livenessVoicePassed", "voiceLivenessPassed", "livenessAudioPassed");
+    if (passed != null) {
+      return !Boolean.parseBoolean(String.valueOf(passed));
+    }
+    return evaluateBooleanPayload(
+        context, "livenessVoiceFailed", "voiceLivenessFailed", "livenessAudioFailed");
   }
 
   private boolean evaluateEidasAssuranceLevel(RuleCondition condition, EvaluationContext context) {

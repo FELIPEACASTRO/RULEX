@@ -12,6 +12,7 @@
 - Tabela unificada agora mostra status real e decisão legível para regras complexas.
 - Aviso de alterações não salvas agora cobre todos os campos do formulário de regras simples.
 - Seeds pendentes de regras promovidas para migrações ativas, com normalização de operadores/campos pós-seed (V46).
+- Operadores faltantes no backend agora possuem suporte nos avaliadores (statistical, velocity e misc).
 - **[2025-01-21] Migrações V39 e V46 corrigidas:**
   - Uso de `operator::text` para comparar operadores que não existem no enum.
   - Removido uso de `shadow_mode` em `complex_rules` (coluna não existe).

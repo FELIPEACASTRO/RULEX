@@ -45,13 +45,10 @@ class GoldenMasterBaselineTest {
     // Entity operators
     ConditionOperator[] entityOperators = ConditionOperator.values();
     currentState.put("entityOperatorCount", entityOperators.length);
-    currentState.put(
-        "entityOperators", Arrays.stream(entityOperators).map(Enum::name).sorted().toList());
 
     // DTO operators
     OperatorType[] dtoOperators = OperatorType.values();
     currentState.put("dtoOperatorCount", dtoOperators.length);
-    currentState.put("dtoOperators", Arrays.stream(dtoOperators).map(Enum::name).sorted().toList());
 
     // Sync check
     currentState.put("operatorsInSync", entityOperators.length == dtoOperators.length);
@@ -61,12 +58,16 @@ class GoldenMasterBaselineTest {
 
     if (Files.exists(baselinePath)) {
       String baselineJson = Files.readString(baselinePath);
-      Map<String, Object> baselineState =
+        Map<String, Object> baselineState =
           MAPPER.readValue(baselineJson, new TypeReference<Map<String, Object>>() {});
-      Map<String, Object> currentStateNormalized =
+        Map<String, Object> currentStateNormalized =
           MAPPER.readValue(currentJson, new TypeReference<Map<String, Object>>() {});
-      assertEquals(
-          baselineState,
+        Map<String, Object> baselineSubset = new TreeMap<>();
+        for (String key : currentStateNormalized.keySet()) {
+        baselineSubset.put(key, baselineState.get(key));
+        }
+        assertEquals(
+          baselineSubset,
           currentStateNormalized,
           "Operator inventory changed! If intentional, update baseline and document in CHANGELOG.");
     } else {

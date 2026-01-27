@@ -19,6 +19,7 @@ public class StatisticalOperatorEvaluator implements OperatorEvaluator {
 
   private static final Set<ConditionOperator> SUPPORTED =
       Set.of(
+        ConditionOperator.ADAPTIVE_PARAMETRIC_THRESHOLD,
           ConditionOperator.ANDERSON_DARLING_TEST,
           ConditionOperator.BENFORD_LAW_DEVIATION,
           ConditionOperator.CHI_SQUARE_DISTRIBUTION_TEST,
@@ -26,7 +27,9 @@ public class StatisticalOperatorEvaluator implements OperatorEvaluator {
           ConditionOperator.CORRELATION_ANOMALY,
           ConditionOperator.KOLMOGOROV_SMIRNOV_TEST,
           ConditionOperator.MANN_WHITNEY_U_TEST,
+          ConditionOperator.PEER_GROUP_DEVIATION_SCORE,
           ConditionOperator.PERCENTILE_GT,
+          ConditionOperator.REAL_TIME_RISK_SCORING,
           ConditionOperator.REGRESSION_RESIDUAL_OUTLIER,
           ConditionOperator.SKEWNESS_KURTOSIS_ANOMALY,
           ConditionOperator.STANDARD_DEVIATION_GT,
@@ -45,6 +48,7 @@ public class StatisticalOperatorEvaluator implements OperatorEvaluator {
     log.debug("StatisticalOperatorEvaluator: op={}", op);
 
     return switch (op) {
+      case ADAPTIVE_PARAMETRIC_THRESHOLD -> evaluateAdaptiveParametricThreshold(condition, context);
       case ANDERSON_DARLING_TEST -> evaluateAndersonDarling(condition, context);
       case BENFORD_LAW_DEVIATION -> evaluateBenfordLaw(condition, context);
       case CHI_SQUARE_DISTRIBUTION_TEST -> evaluateChiSquare(condition, context);
@@ -52,7 +56,9 @@ public class StatisticalOperatorEvaluator implements OperatorEvaluator {
       case CORRELATION_ANOMALY -> evaluateCorrelationAnomaly(condition, context);
       case KOLMOGOROV_SMIRNOV_TEST -> evaluateKolmogorovSmirnov(condition, context);
       case MANN_WHITNEY_U_TEST -> evaluateMannWhitney(condition, context);
+      case PEER_GROUP_DEVIATION_SCORE -> evaluatePeerGroupDeviationScore(condition, context);
       case PERCENTILE_GT -> evaluatePercentileGt(condition, context);
+      case REAL_TIME_RISK_SCORING -> evaluateRealTimeRiskScoring(condition, context);
       case REGRESSION_RESIDUAL_OUTLIER -> evaluateRegressionResidual(condition, context);
       case SKEWNESS_KURTOSIS_ANOMALY -> evaluateSkewnessKurtosis(condition, context);
       case STANDARD_DEVIATION_GT -> evaluateStandardDeviationGt(condition, context);
@@ -74,6 +80,27 @@ public class StatisticalOperatorEvaluator implements OperatorEvaluator {
   }
 
   // ========== TESTES ESTATÍSTICOS ==========
+
+  private boolean evaluateAdaptiveParametricThreshold(
+      RuleCondition condition, EvaluationContext context) {
+    Object triggered =
+        getPayloadValue(
+            context,
+            "adaptiveParametricTriggered",
+            "adaptiveParametricHit",
+            "adaptiveParametricFlag");
+    if (triggered != null) {
+      return Boolean.parseBoolean(String.valueOf(triggered));
+    }
+
+    Object value =
+        getPayloadValue(
+            context, "adaptiveParametricValue", "adaptiveParametricScore", "adaptiveValue");
+    if (value == null) return false;
+    BigDecimal v = parseBigDecimal(String.valueOf(value));
+    BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), BigDecimal.ONE);
+    return v.compareTo(threshold) > 0;
+  }
 
   private boolean evaluateAnovaFTest(RuleCondition condition, EvaluationContext context) {
     Object pValue = getPayloadValue(context, "anovaFTestPValue", "fTestPValue");
@@ -245,6 +272,46 @@ public class StatisticalOperatorEvaluator implements OperatorEvaluator {
     BigDecimal perc = parseBigDecimal(String.valueOf(percentile));
     BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("95"));
     return perc.compareTo(threshold) > 0;
+  }
+
+  private boolean evaluatePeerGroupDeviationScore(
+      RuleCondition condition, EvaluationContext context) {
+    Object deviation =
+        getPayloadValue(
+            context,
+            "peerGroupDeviationScore",
+            "peerDeviationScore",
+            "peerGroupScore");
+    if (deviation == null) {
+      Object flag = getPayloadValue(context, "peerGroupDeviation", "peerDeviationFlag");
+      if (flag != null) {
+        return Boolean.parseBoolean(String.valueOf(flag));
+      }
+      return false;
+    }
+    BigDecimal dev = parseBigDecimal(String.valueOf(deviation)).abs();
+    BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("2"));
+    return dev.compareTo(threshold) > 0;
+  }
+
+  private boolean evaluateRealTimeRiskScoring(
+      RuleCondition condition, EvaluationContext context) {
+    Object flag =
+        getPayloadValue(
+            context,
+            "realTimeRiskFlag",
+            "realTimeRiskScoring",
+            "realTimeRiskAlert");
+    if (flag != null) {
+      return Boolean.parseBoolean(String.valueOf(flag));
+    }
+
+    Object score =
+        getPayloadValue(context, "realTimeRiskScore", "riskScoreRealtime", "riskScore");
+    if (score == null) return false;
+    BigDecimal riskScore = parseBigDecimal(String.valueOf(score));
+    BigDecimal threshold = parseBigDecimal(condition.getValueSingle(), new BigDecimal("0.7"));
+    return riskScore.compareTo(threshold) >= 0;
   }
 
   private boolean evaluateRegressionResidual(RuleCondition condition, EvaluationContext context) {

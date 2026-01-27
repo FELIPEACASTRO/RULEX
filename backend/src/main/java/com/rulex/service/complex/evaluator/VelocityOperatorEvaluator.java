@@ -39,6 +39,7 @@ public class VelocityOperatorEvaluator implements OperatorEvaluator {
 
   private static final Set<ConditionOperator> SUPPORTED =
       Set.of(
+        ConditionOperator.CROSS_BORDER_VELOCITY,
           ConditionOperator.VELOCITY_COUNT_GT,
           ConditionOperator.VELOCITY_COUNT_LT,
           ConditionOperator.VELOCITY_SUM_GT,
@@ -78,6 +79,7 @@ public class VelocityOperatorEvaluator implements OperatorEvaluator {
       return switch (op) {
         case VELOCITY_COUNT_GT -> evaluateVelocityCountGt(keyValue, condition, context);
         case VELOCITY_COUNT_LT -> evaluateVelocityCountLt(keyValue, condition, context);
+        case CROSS_BORDER_VELOCITY -> evaluateCrossBorderVelocity(condition, context);
         case VELOCITY_SUM_GT -> evaluateVelocitySumGt(keyValue, condition, context);
         case VELOCITY_SUM_LT -> evaluateVelocitySumLt(keyValue, condition, context);
         case VELOCITY_AVG_GT -> evaluateVelocityAvgGt(keyValue, condition, context);
@@ -157,6 +159,30 @@ public class VelocityOperatorEvaluator implements OperatorEvaluator {
     long threshold = parseThreshold(condition.getValueSingle());
     log.debug("VELOCITY_COUNT_LT: count={}, threshold={}", count, threshold);
     return count < threshold;
+  }
+
+  private boolean evaluateCrossBorderVelocity(
+      RuleCondition condition, EvaluationContext context) {
+    Map<String, Object> payload = context.getPayload();
+    if (payload == null) return false;
+
+    Object flag = payload.get("crossBorderVelocity");
+    if (flag == null) {
+      flag = payload.get("crossBorderVelocityFlag");
+    }
+    if (flag != null) {
+      return Boolean.parseBoolean(String.valueOf(flag));
+    }
+
+    Object score = payload.get("crossBorderVelocityScore");
+    if (score == null) {
+      score = payload.get("crossBorderVelocityCount");
+    }
+    if (score == null) return false;
+
+    BigDecimal value = parseBigDecimalThreshold(String.valueOf(score));
+    BigDecimal threshold = parseBigDecimalThreshold(condition.getValueSingle());
+    return value.compareTo(threshold) > 0;
   }
 
   private boolean evaluateVelocitySumGt(

@@ -2,6 +2,7 @@ package com.rulex.v31.rules;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
 import com.rulex.v31.ast.AstEvaluator;
 import com.rulex.v31.ast.AstValidationResult;
 import com.rulex.v31.ast.AstValidator;
@@ -24,10 +25,11 @@ public class RulesV31Controller {
   private final AstValidator validator;
   private final AstEvaluator evaluator;
 
-  public RulesV31Controller(ObjectMapper objectMapper) {
+  public RulesV31Controller(
+      ObjectMapper objectMapper, OperatorEvaluatorRegistry operatorEvaluatorRegistry) {
     this.objectMapper = objectMapper;
     this.validator = new AstValidator();
-    this.evaluator = new AstEvaluator();
+    this.evaluator = new AstEvaluator(operatorEvaluatorRegistry);
   }
 
   @PostMapping("/validate")

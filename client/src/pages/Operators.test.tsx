@@ -13,6 +13,6 @@ describe("Operators", () => {
   it("renders the operators list", () => {
     render(<Operators />);
     const content = document.body.textContent ?? "";
-    expect(content).toMatch(/EQ/);
+    expect(content).toMatch(/ACCOUNT_AGE_LT_DAYS/);
   });
 });

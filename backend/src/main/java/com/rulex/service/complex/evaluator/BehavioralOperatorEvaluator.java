@@ -17,6 +17,7 @@ public class BehavioralOperatorEvaluator implements OperatorEvaluator {
   private static final Set<ConditionOperator> SUPPORTED =
       Set.of(
           // Comportamentais
+          ConditionOperator.ADAPTIVE_BEHAVIORAL_ANALYTICS,
           ConditionOperator.BEHAVIORAL_BASELINE_DEVIATION,
           ConditionOperator.BUSINESS_HOURS_DEVIATION,
           ConditionOperator.CHANNEL_SWITCH_PATTERN,
@@ -25,12 +26,16 @@ public class BehavioralOperatorEvaluator implements OperatorEvaluator {
           ConditionOperator.GEOGRAPHIC_BEHAVIOR_SHIFT,
           ConditionOperator.LOGIN_PATTERN_DEVIATION,
           ConditionOperator.NAVIGATION_PATTERN_ANOMALY,
+          ConditionOperator.SEGMENT_OF_ONE_PROFILING,
           ConditionOperator.SESSION_BEHAVIOR_ANOMALY,
           ConditionOperator.SPENDING_CATEGORY_SHIFT,
           ConditionOperator.TIME_PREFERENCE_SHIFT,
           ConditionOperator.UNUSUAL_BUSINESS_PATTERN,
 
           // Biométricos
+          ConditionOperator.BIOMETRIC_KEYSTROKE_DYNAMICS,
+          ConditionOperator.BIOMETRIC_MOUSE_MOVEMENT,
+          ConditionOperator.BIOMETRIC_SCROLL_VELOCITY,
 
           // Fingerprint
           ConditionOperator.AUDIO_FINGERPRINT_NEW,
@@ -57,6 +62,8 @@ public class BehavioralOperatorEvaluator implements OperatorEvaluator {
     return switch (op) {
       case BEHAVIORAL_BASELINE_DEVIATION ->
           evaluateScore(context, "behavioralBaselineDeviation", condition, 2.0);
+        case ADAPTIVE_BEHAVIORAL_ANALYTICS ->
+          evaluateScore(context, "adaptiveBehavioralAnalyticsScore", condition, 0.7);
       case BUSINESS_HOURS_DEVIATION -> evaluateBoolean(context, "businessHoursDeviation");
       case CHANNEL_SWITCH_PATTERN -> evaluateBoolean(context, "channelSwitchPattern");
       case CHANNEL_USAGE_ANOMALY -> evaluateBoolean(context, "channelUsageAnomaly");
@@ -64,10 +71,18 @@ public class BehavioralOperatorEvaluator implements OperatorEvaluator {
       case GEOGRAPHIC_BEHAVIOR_SHIFT -> evaluateBoolean(context, "geographicBehaviorShift");
       case LOGIN_PATTERN_DEVIATION -> evaluateBoolean(context, "loginPatternDeviation");
       case NAVIGATION_PATTERN_ANOMALY -> evaluateBoolean(context, "navigationPatternAnomaly");
+        case SEGMENT_OF_ONE_PROFILING ->
+          evaluateBooleanAny(context, "segmentOfOneProfiling", "segmentOfOneProfiled");
       case SESSION_BEHAVIOR_ANOMALY -> evaluateBoolean(context, "sessionBehaviorAnomaly");
       case SPENDING_CATEGORY_SHIFT -> evaluateBoolean(context, "spendingCategoryShift");
       case TIME_PREFERENCE_SHIFT -> evaluateBoolean(context, "timePreferenceShift");
       case UNUSUAL_BUSINESS_PATTERN -> evaluateBoolean(context, "unusualBusinessPattern");
+        case BIOMETRIC_KEYSTROKE_DYNAMICS ->
+          evaluateBooleanAny(context, "keystrokeDynamicsAnomaly", "biometricKeystrokeDynamics");
+        case BIOMETRIC_MOUSE_MOVEMENT ->
+          evaluateBooleanAny(context, "mouseMovementAnomaly", "biometricMouseMovement");
+        case BIOMETRIC_SCROLL_VELOCITY ->
+          evaluateBooleanAny(context, "scrollVelocityAnomaly", "biometricScrollVelocity");
       case AUDIO_FINGERPRINT_NEW -> evaluateBoolean(context, "audioFingerprintNew");
       case CANVAS_FINGERPRINT_MISMATCH -> evaluateBoolean(context, "canvasFingerprintMismatch");
       case FONTS_FINGERPRINT_ANOMALY -> evaluateBoolean(context, "fontsFingerprintAnomaly");
@@ -86,6 +101,18 @@ public class BehavioralOperatorEvaluator implements OperatorEvaluator {
     Object value = payload.get(key);
     if (value == null) return false;
     return Boolean.parseBoolean(String.valueOf(value));
+  }
+
+  private boolean evaluateBooleanAny(EvaluationContext context, String... keys) {
+    Map<String, Object> payload = context.getPayload();
+    if (payload == null) return false;
+    for (String key : keys) {
+      Object value = payload.get(key);
+      if (value != null) {
+        return Boolean.parseBoolean(String.valueOf(value));
+      }
+    }
+    return false;
   }
 
   private boolean evaluateScore(

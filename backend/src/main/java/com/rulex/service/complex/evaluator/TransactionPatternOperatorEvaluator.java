@@ -33,6 +33,11 @@ public class TransactionPatternOperatorEvaluator implements OperatorEvaluator {
           ConditionOperator.PATTERN_ESCALATION,
           ConditionOperator.PATTERN_ROUND_NUMBERS,
           ConditionOperator.PATTERN_SPLIT_TRANSACTION,
+          ConditionOperator.BUST_OUT_PATTERN_DETECTION,
+          ConditionOperator.CARD_TESTING_RING_DETECTION,
+          ConditionOperator.CIRCULAR_PAYMENT_DETECTION,
+          ConditionOperator.RAPID_SUCCESSION_PATTERN,
+          ConditionOperator.ROUND_TRIP_DETECTION,
 
           // Splitting e structuring
           ConditionOperator.SPLIT_PAYMENT_PATTERN,
@@ -81,6 +86,11 @@ public class TransactionPatternOperatorEvaluator implements OperatorEvaluator {
       case PATTERN_ESCALATION -> evaluateBoolean(context, "patternEscalation");
       case PATTERN_ROUND_NUMBERS -> evaluateBoolean(context, "patternRoundNumbers");
       case PATTERN_SPLIT_TRANSACTION -> evaluateBoolean(context, "patternSplitTransaction");
+      case BUST_OUT_PATTERN_DETECTION -> evaluateBoolean(context, "bustOutPatternDetected");
+      case CARD_TESTING_RING_DETECTION -> evaluateBoolean(context, "cardTestingRingDetected");
+      case CIRCULAR_PAYMENT_DETECTION -> evaluateBoolean(context, "circularPaymentDetected");
+      case RAPID_SUCCESSION_PATTERN -> evaluateBoolean(context, "rapidSuccessionPattern");
+      case ROUND_TRIP_DETECTION -> evaluateBoolean(context, "roundTripDetected");
       case SPLIT_PAYMENT_PATTERN -> evaluateBoolean(context, "splitPaymentPattern");
       case STRUCTURING_DETECTION -> evaluateBoolean(context, "structuringDetected");
       case CIRCULAR_TRANSFER_DETECTION -> evaluateBoolean(context, "circularTransferDetected");
