@@ -62,7 +62,7 @@ export default function Monitoring() {
         setTimeline(timelineData);
         setHealth({
           apiGateway: "online",
-          ruleEngine: "online",
+          ruleEngine: resolveComponentStatus(components, ["ruleEngineHealth", "ruleEngine"]),
           database: resolveComponentStatus(components, ["db", "datasource"]),
           cache: resolveComponentStatus(components, ["redisHealth", "redis"]),
           responseTimeMs: healthResult.responseTime,
@@ -70,7 +70,7 @@ export default function Monitoring() {
       } else {
         setHealth({
           apiGateway: "offline",
-          ruleEngine: "offline",
+          ruleEngine: resolveComponentStatus(components, ["ruleEngineHealth", "ruleEngine"]),
           database: resolveComponentStatus(components, ["db", "datasource"]),
           cache: resolveComponentStatus(components, ["redisHealth", "redis"]),
           responseTimeMs: healthResult.responseTime,
