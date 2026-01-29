@@ -439,12 +439,16 @@ public class CardEnrichment {
       java.util.List<String> bins = testCardPatternRepository.findBlacklistedBins();
       if (!bins.isEmpty()) {
         cachedBlacklistedBins = new java.util.HashSet<>(bins);
+      } else {
+        cachedBlacklistedBins = java.util.Set.of();
       }
 
       // Carregar PANs de teste
       java.util.List<String> pans = testCardPatternRepository.findTestPans();
       if (!pans.isEmpty()) {
         cachedTestPans = new java.util.HashSet<>(pans);
+      } else {
+        cachedTestPans = java.util.Set.of();
       }
 
       // Carregar padrões regex
