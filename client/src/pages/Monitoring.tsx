@@ -2,8 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Activity, AlertTriangle, CheckCircle, Clock, TrendingUp, Zap, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useCallback } from "react";
-import { getDashboardMetrics, checkApiHealth, getMetricsTimeline } from "@/lib/javaApi";
-import type { DashboardMetrics, MetricsTimeline } from "@/lib/javaApi";
+import { getDashboardMetrics, getHealthDetails, getMetricsTimeline } from "@/lib/javaApi";
+import type { DashboardMetrics, HealthComponent, MetricsTimeline } from "@/lib/javaApi";
 
 interface SystemHealth {
   apiGateway: "online" | "offline" | "loading";
@@ -27,13 +27,29 @@ export default function Monitoring() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
+  const resolveComponentStatus = (
+    components: Record<string, HealthComponent> | undefined,
+    keys: string[]
+  ): "online" | "offline" => {
+    if (!components) {
+      return "offline";
+    }
+    for (const key of keys) {
+      const status = components[key]?.status;
+      if (status) {
+        return status === "UP" ? "online" : "offline";
+      }
+    }
+    return "offline";
+  };
+
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Fetch health check
-      const healthResult = await checkApiHealth();
+      const healthResult = await getHealthDetails();
+      const components = healthResult.components;
 
       // If API is up, fetch metrics
       if (healthResult.status === "UP") {
@@ -47,16 +63,16 @@ export default function Monitoring() {
         setHealth({
           apiGateway: "online",
           ruleEngine: "online",
-          database: "online",
-          cache: "online",
+          database: resolveComponentStatus(components, ["db", "datasource"]),
+          cache: resolveComponentStatus(components, ["redisHealth", "redis"]),
           responseTimeMs: healthResult.responseTime,
         });
       } else {
         setHealth({
           apiGateway: "offline",
           ruleEngine: "offline",
-          database: "offline",
-          cache: "offline",
+          database: resolveComponentStatus(components, ["db", "datasource"]),
+          cache: resolveComponentStatus(components, ["redisHealth", "redis"]),
           responseTimeMs: healthResult.responseTime,
         });
         setError("API está offline");

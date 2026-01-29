@@ -692,6 +692,38 @@ export async function checkApiHealth(): Promise<{
   }
 }
 
+export type HealthComponent = {
+  status?: string;
+  details?: Record<string, unknown>;
+  components?: Record<string, HealthComponent>;
+};
+
+export async function getHealthDetails(): Promise<{
+  status: "UP" | "DOWN";
+  responseTime: number;
+  components?: Record<string, HealthComponent>;
+}> {
+  const start = Date.now();
+  try {
+    const response = await fetch(buildApiUrl("/actuator/health"), {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    });
+    const responseTime = Date.now() - start;
+    if (!response.ok) {
+      return { status: "DOWN", responseTime };
+    }
+    const json = (await response.json()) as HealthComponent;
+    return {
+      status: json?.status === "UP" ? "UP" : "DOWN",
+      responseTime,
+      components: json?.components ?? undefined,
+    };
+  } catch {
+    return { status: "DOWN", responseTime: Date.now() - start };
+  }
+}
+
 // ========================================
 // NEO4J ADMIN (diagnóstico)
 // ========================================
@@ -891,6 +923,7 @@ export const javaApi = {
   exportAuditLogs,
   listFieldDictionary,
   checkApiHealth,
+  getHealthDetails,
   getNeo4jStatus,
   getNeo4jGraphStats,
   postNeo4jTestWrite,

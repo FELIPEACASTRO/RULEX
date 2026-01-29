@@ -62,7 +62,16 @@ function loadSettings(): UserSettings {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+      const parsed = JSON.parse(stored) as UserSettings;
+      return {
+        ...DEFAULT_SETTINGS,
+        ...parsed,
+        integrations: {
+          ...DEFAULT_SETTINGS.integrations,
+          ...parsed.integrations,
+          apiKey: "",
+        },
+      };
     }
   } catch (e) {
     console.error("Erro ao carregar configurações:", e);
@@ -72,7 +81,14 @@ function loadSettings(): UserSettings {
 
 function saveSettings(settings: UserSettings): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    const sanitized: UserSettings = {
+      ...settings,
+      integrations: {
+        ...settings.integrations,
+        apiKey: "",
+      },
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
   } catch (e) {
     console.error("Erro ao salvar configurações:", e);
   }
@@ -422,6 +438,9 @@ export default function Settings() {
                     updateSetting("integrations", "apiKey", e.target.value)
                   }
                 />
+                <p className="text-xs text-muted-foreground">
+                  A chave não é persistida no navegador por segurança.
+                </p>
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
