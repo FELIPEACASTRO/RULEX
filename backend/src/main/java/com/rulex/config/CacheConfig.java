@@ -1,5 +1,6 @@
 package com.rulex.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
@@ -7,7 +8,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Configuração de cache para o RULEX.
+ * Configuração de cache em memória para o RULEX (fallback).
+ *
+ * <p>Esta configuração é usada quando o Redis NÃO está habilitado
+ * (rulex.engine.velocity.redis.enabled=false ou ausente).
  *
  * <p>Usa ConcurrentMapCacheManager como implementação de cache em memória. Caches configurados:
  *
@@ -21,10 +25,14 @@ import org.springframework.context.annotation.Configuration;
  *   <li>highRiskMcc - Cache de MCCs de alto risco
  * </ul>
  *
- * <p>Nota: Para produção com TTL e limites de tamanho, considere usar Caffeine ou Redis.
+ * <p>Nota: Quando rulex.engine.velocity.redis.enabled=true, o RedisCacheConfig é usado.
  */
 @Configuration
 @EnableCaching
+@ConditionalOnProperty(
+    name = "rulex.engine.velocity.redis.enabled",
+    havingValue = "false",
+    matchIfMissing = true)
 public class CacheConfig {
 
   @Bean

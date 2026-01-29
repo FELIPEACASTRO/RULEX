@@ -126,6 +126,7 @@ public class SecurityConfig {
                     "/metrics/**",
                     "/field-dictionary/**",
                     "/homolog/**",
+                    "/admin/**",
                     "/api/**",
                     "/actuator/**"));
 
@@ -173,6 +174,9 @@ public class SecurityConfig {
                     .requestMatchers("/rules/**")
                     .hasRole("ADMIN")
                     .requestMatchers("/complex-rules/**")
+                    .hasRole("ADMIN")
+                    // FASE-1: Endpoint de diagnóstico Redis - admin only
+                    .requestMatchers("/admin/**")
                     .hasRole("ADMIN")
                     .anyRequest()
                     .authenticated())

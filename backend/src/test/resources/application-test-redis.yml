@@ -1,0 +1,57 @@
+# application-test-redis.yml
+# Perfil de teste para testes de integração com Redis (Testcontainers)
+
+spring:
+  datasource:
+    # H2 em memória para testes de integração Redis
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  
+  # Redis será configurado dinamicamente via @DynamicPropertySource
+  data:
+    redis:
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 4
+          max-idle: 2
+          min-idle: 1
+
+# Habilitar Redis para os testes
+rulex:
+  engine:
+    velocity:
+      redis:
+        enabled: true
+  
+  redis-cache:
+    key-prefix: "rulex:cache:"
+    ttl:
+      default: 3600
+      bin-lookup: 86400
+      mcc-category: 86400
+      geo-reference: 86400
+      rules: 300
+      high-risk-mcc: 43200
+
+# Desabilitar health checks não necessários
+management:
+  health:
+    db:
+      enabled: false
+    diskspace:
+      enabled: false
+
+logging:
+  level:
+    com.rulex: DEBUG
+    org.testcontainers: INFO
+    org.springframework.data.redis: DEBUG

@@ -80,8 +80,8 @@ class RuleEngineServiceTest {
   private final ImpossibleTravelService impossibleTravelService =
       Mockito.mock(ImpossibleTravelService.class);
   private final GeoService geoService = Mockito.mock(GeoService.class);
-  private final RedisVelocityService redisVelocityService =
-      Mockito.mock(RedisVelocityService.class);
+  private final VelocityServiceFacade velocityServiceFacade =
+      Mockito.mock(VelocityServiceFacade.class);
   private final com.rulex.service.enrichment.TransactionEnrichmentFacade
       transactionEnrichmentFacade = createMockEnrichmentFacade();
   // Usar instância real ao invés de mock - ConditionMatcher é stateless e não tem dependências
@@ -130,7 +130,7 @@ class RuleEngineServiceTest {
         bloomFilterService,
         impossibleTravelService,
         geoService,
-        redisVelocityService,
+        velocityServiceFacade,
         conditionMatcher);
 
   @Test

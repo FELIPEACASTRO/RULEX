@@ -93,10 +93,15 @@ management:
     health:
       probes:
         enabled: true
-      show-details: when_authorized
+      # FASE-1 FIX: Expor detalhes do health check para diagnóstico
+      show-details: always
+      show-components: always
   health:
     neo4j:
       # INFRA-001 FIX: Habilitado health check do Neo4j para detecção de falhas
+      enabled: true
+    redis:
+      # FASE-1 FIX: Habilitado health check do Redis
       enabled: true
   metrics:
     export:
@@ -148,6 +153,16 @@ rulex:
         # GAP-FIX #2: Habilitado para performance - usa cache em memória com sliding windows
         # Reduz latência de queries de agregação de ~50ms para <1ms
         enabled: true
+  # FASE 2: Configuração de TTLs para RedisCacheManager (@Cacheable)
+  redis-cache:
+    key-prefix: "rulex:cache:"
+    ttl:
+      default: 3600        # 1 hora padrão
+      bin-lookup: 86400    # 24h - dados estáticos de BIN
+      mcc-category: 86400  # 24h - categorias MCC
+      geo-reference: 86400 # 24h - dados geográficos
+      rules: 300           # 5min - regras podem mudar
+      high-risk-mcc: 43200 # 12h - MCCs de alto risco
   audit:
     enabled: true
     # ATENÇÃO: Em produção com alto TPS, considere desabilitar ou usar sampling

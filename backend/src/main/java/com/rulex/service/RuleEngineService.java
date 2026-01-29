@@ -75,7 +75,7 @@ public class RuleEngineService {
   private final BloomFilterService bloomFilterService;
   private final ImpossibleTravelService impossibleTravelService;
   private final GeoService geoService;
-  private final RedisVelocityService redisVelocityService;
+  private final VelocityServiceFacade velocityServiceFacade;
 
   // ARCH-003: Extracted helper classes
   private final ConditionMatcher conditionMatcher;
@@ -210,12 +210,15 @@ public class RuleEngineService {
       decision.setPayloadRawHash(payloadHash);
       decisionRepository.save(decision);
 
-      // V4.0: record transaction into high-performance velocity trackers (best-effort)
+      // V4.0: record transaction into VelocityServiceFacade (Redis real + DB)
       if (redisVelocityEnabled) {
         try {
-          redisVelocityService.recordTransaction(request);
+          velocityServiceFacade.recordTransaction(
+              request,
+              decision.getClassification() != null ? decision.getClassification().name() : "UNKNOWN",
+              decision.getRiskScore());
         } catch (Exception e) { // SEC-006 FIX
-          log.warn("Erro best-effort (não bloqueia decisão): {}", e.getMessage());
+          log.warn("Erro best-effort velocity tracking (não bloqueia decisão): {}", e.getMessage());
         }
       }
 
@@ -344,12 +347,15 @@ public class RuleEngineService {
       decision.setPayloadRawHash(payloadHash);
       decisionRepository.save(decision);
 
-      // V4.0: record transaction into high-performance velocity trackers (best-effort)
+      // V4.0: record transaction into VelocityServiceFacade (Redis real + DB)
       if (redisVelocityEnabled) {
         try {
-          redisVelocityService.recordTransaction(request);
+          velocityServiceFacade.recordTransaction(
+              request,
+              decision.getClassification() != null ? decision.getClassification().name() : "UNKNOWN",
+              decision.getRiskScore());
         } catch (Exception e) { // SEC-006 FIX
-          log.warn("Erro best-effort (não bloqueia decisão): {}", e.getMessage());
+          log.warn("Erro best-effort velocity tracking (não bloqueia decisão): {}", e.getMessage());
         }
       }
 

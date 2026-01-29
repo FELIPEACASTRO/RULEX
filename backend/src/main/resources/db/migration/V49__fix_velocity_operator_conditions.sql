@@ -6,7 +6,7 @@
 
 -- Mapear field_name inválido para operador correto e usar chave padrão (PAN)
 UPDATE rule_conditions
-SET operator = field_name,
+SET operator = field_name::condition_operator,
     field_name = 'pan'
 WHERE field_name IN (
     'COUNT_LAST_N_HOURS',

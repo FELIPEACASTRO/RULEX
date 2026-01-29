@@ -1,6 +1,7 @@
 package com.rulex.service;
 
 import com.rulex.dto.TransactionRequest;
+import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
@@ -41,6 +42,20 @@ public class RedisVelocityCacheService {
   private final StringRedisTemplate redisTemplate;
 
   private static final String KEY_PREFIX = "velocity:";
+
+  @PostConstruct
+  public void init() {
+    log.info("============================================================");
+    log.info("RedisVelocityCacheService INICIALIZADO - Redis REAL habilitado");
+    log.info("Prefixo de chaves: {}", KEY_PREFIX);
+    try {
+      String pong = redisTemplate.getConnectionFactory().getConnection().ping();
+      log.info("Conexão Redis verificada: {}", pong);
+    } catch (Exception e) {
+      log.error("FALHA na conexão Redis: {}", e.getMessage());
+    }
+    log.info("============================================================");
+  }
   private static final String COUNT_SUFFIX = ":count:";
   private static final String SUM_SUFFIX = ":sum:";
   private static final String DISTINCT_PREFIX = ":distinct:";

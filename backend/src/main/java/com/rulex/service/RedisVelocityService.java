@@ -1,6 +1,7 @@
 package com.rulex.service;
 
 import com.rulex.dto.TransactionRequest;
+import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
@@ -81,6 +82,22 @@ public class RedisVelocityService {
     this.velocityService = velocityService;
     this.redisTemplate = redisTemplate;
     this.redisEnabled = redisEnabled;
+  }
+
+  @PostConstruct
+  public void init() {
+    log.info("============================================================");
+    log.info("RedisVelocityService INICIALIZADO");
+    log.info("Modo: {}", redisEnabled ? "REDIS_REAL" : "MEMORY_CACHE");
+    if (redisEnabled) {
+      try {
+        String pong = redisTemplate.getConnectionFactory().getConnection().ping();
+        log.info("Conexão Redis verificada: {}", pong);
+      } catch (Exception e) {
+        log.warn("Conexão Redis falhou, usando cache em memória: {}", e.getMessage());
+      }
+    }
+    log.info("============================================================");
   }
 
   /** Time windows supported (in minutes). */

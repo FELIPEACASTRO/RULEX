@@ -1,6 +1,7 @@
 package com.rulex.service;
 
 import com.rulex.dto.TransactionRequest;
+import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,16 @@ public class VelocityServiceFacade {
     this.velocityService = velocityService;
     this.redisVelocityService = redisVelocityService;
     this.redisVelocityCacheService = redisVelocityCacheService;
+  }
+
+  @PostConstruct
+  public void init() {
+    log.info("============================================================");
+    log.info("VelocityServiceFacade INICIALIZADO");
+    log.info("Redis habilitado: {}", redisEnabled);
+    log.info("RedisVelocityCacheService disponível: {}", redisVelocityCacheService != null);
+    log.info("Status atual: {}", getCacheStatus());
+    log.info("============================================================");
   }
 
   /**

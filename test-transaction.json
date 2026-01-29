@@ -1,0 +1,23 @@
+{
+  "externalTransactionId": "TEST-REDIS-VELOCITY-001",
+  "customerIdFromHeader": "CUST-REDIS-001",
+  "customerAcctNumber": 1234567890123456,
+  "pan": "411111******1111",
+  "merchantId": "MERCHANT-REDIS-001",
+  "merchantName": "Loja Teste Redis",
+  "transactionAmount": 150.00,
+  "transactionCurrencyCode": 986,
+  "mcc": 5411,
+  "transactionDate": 20260129,
+  "transactionTime": 143052,
+  "consumerAuthenticationScore": 50,
+  "externalScore3": 10,
+  "cavvResult": 2,
+  "eciIndicator": 5,
+  "atcCard": 100,
+  "atcHost": 100,
+  "tokenAssuranceLevel": 2,
+  "availableCredit": 5000.0,
+  "cardCashBalance": 0.0,
+  "cardDelinquentAmount": 0.0
+}
