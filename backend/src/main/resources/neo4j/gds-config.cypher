@@ -22,13 +22,13 @@ RETURN graphName;
 // =====================================================================
 
 // Projetar grafo para análise de fraude
-// Inclui: Account nodes, Merchant nodes, TRANSACTED_WITH relationships
+// Inclui: Account nodes, TRANSFERRED_TO relationships
 CALL gds.graph.project(
   'fraud_detection_graph',
-  ['Account', 'Merchant'],
+  'Account',
   {
-    TRANSACTED_WITH: {
-      type: 'TRANSACTED_WITH',
+    TRANSFERRED_TO: {
+      type: 'TRANSFERRED_TO',
       orientation: 'UNDIRECTED',
       properties: {
         amount: {

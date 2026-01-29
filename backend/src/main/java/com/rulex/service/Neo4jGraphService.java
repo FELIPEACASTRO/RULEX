@@ -586,6 +586,38 @@ public class Neo4jGraphService {
     return enabled;
   }
 
+  /** Retorna a contagem total de nós no grafo. */
+  public long getNodeCount() {
+    if (!enabled || driver == null) return 0L;
+
+    String query = "MATCH (n) RETURN count(n) as nodeCount";
+    try (Session session = driver.session()) {
+      Result result = run(session, query, Map.of());
+      if (result.hasNext()) {
+        return result.next().get("nodeCount").asLong();
+      }
+    } catch (Exception e) {
+      log.debug("Node count query failed: {}", e.getMessage());
+    }
+    return 0L;
+  }
+
+  /** Retorna a contagem total de relacionamentos no grafo. */
+  public long getRelationshipCount() {
+    if (!enabled || driver == null) return 0L;
+
+    String query = "MATCH ()-[r]->() RETURN count(r) as relCount";
+    try (Session session = driver.session()) {
+      Result result = run(session, query, Map.of());
+      if (result.hasNext()) {
+        return result.next().get("relCount").asLong();
+      }
+    } catch (Exception e) {
+      log.debug("Relationship count query failed: {}", e.getMessage());
+    }
+    return 0L;
+  }
+
   /** Retorna o status atual de disponibilidade (sem verificar conexão). */
   public boolean isCurrentlyAvailable() {
     return enabled && available;

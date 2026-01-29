@@ -43,9 +43,17 @@ import org.springframework.stereotype.Component;
 public class CardEnrichment {
 
   private final EnrichmentService enrichmentService;
+  private final com.rulex.repository.TestCardPatternRepository testCardPatternRepository;
 
-  // BINs conhecidos como problemáticos (exemplo - em produção seria uma tabela)
-  private static final Set<String> BLACKLISTED_BINS =
+  // Cache de padrões carregados do banco (atualizado periodicamente)
+  private volatile Set<String> cachedBlacklistedBins = Set.of();
+  private volatile Set<String> cachedTestPans = Set.of();
+  private volatile java.util.List<java.util.regex.Pattern> cachedRegexPatterns = java.util.List.of();
+  private volatile long lastCacheRefresh = 0;
+  private static final long CACHE_TTL_MS = 60_000; // 1 minuto
+
+  // Fallback: BINs conhecidos como problemáticos (usado se banco não estiver disponível)
+  private static final Set<String> FALLBACK_BLACKLISTED_BINS =
       Set.of(
           "400000", // BIN de teste Visa
           "411111", // BIN de teste comum
@@ -53,8 +61,8 @@ public class CardEnrichment {
           "378282" // BIN de teste Amex
           );
 
-  // Padrões de PAN de teste
-  private static final Set<String> TEST_PAN_PATTERNS =
+  // Fallback: Padrões de PAN de teste
+  private static final Set<String> FALLBACK_TEST_PAN_PATTERNS =
       Set.of(
           "4111111111111111", // Visa test
           "5500000000000004", // Mastercard test
@@ -223,8 +231,9 @@ public class CardEnrichment {
       boolean isVirtual = isVirtual(request);
       boolean isTokenized = isTokenized(request);
 
-      // Verificar segurança
-      boolean isBinBlacklisted = BLACKLISTED_BINS.contains(bin);
+      // Verificar segurança (usando cache do banco)
+      refreshCacheIfNeeded();
+      boolean isBinBlacklisted = getBlacklistedBins().contains(bin);
       boolean isTestCard = isTestCard(pan);
       boolean hasTestingPattern = detectTestingPattern(request);
 
@@ -383,7 +392,80 @@ public class CardEnrichment {
   private boolean isTestCard(String pan) {
     if (pan == null) return false;
     String digitsOnly = pan.replaceAll("[^0-9]", "");
-    return TEST_PAN_PATTERNS.contains(digitsOnly);
+
+    // Verificar em PANs de teste do banco
+    if (getTestPans().contains(digitsOnly)) {
+      return true;
+    }
+
+    // Verificar padrões regex
+    for (java.util.regex.Pattern pattern : getRegexPatterns()) {
+      try {
+        if (pattern.matcher(digitsOnly).matches()) {
+          return true;
+        }
+      } catch (Exception e) {
+        log.debug("Erro ao aplicar regex pattern: {}", e.getMessage());
+      }
+    }
+
+    return false;
+  }
+
+  /** Retorna BINs blacklisted (do cache ou fallback). */
+  private Set<String> getBlacklistedBins() {
+    return cachedBlacklistedBins.isEmpty() ? FALLBACK_BLACKLISTED_BINS : cachedBlacklistedBins;
+  }
+
+  /** Retorna PANs de teste (do cache ou fallback). */
+  private Set<String> getTestPans() {
+    return cachedTestPans.isEmpty() ? FALLBACK_TEST_PAN_PATTERNS : cachedTestPans;
+  }
+
+  /** Retorna padrões regex (do cache). */
+  private java.util.List<java.util.regex.Pattern> getRegexPatterns() {
+    return cachedRegexPatterns;
+  }
+
+  /** Atualiza cache de padrões do banco se necessário. */
+  private void refreshCacheIfNeeded() {
+    long now = System.currentTimeMillis();
+    if (now - lastCacheRefresh < CACHE_TTL_MS) {
+      return;
+    }
+
+    try {
+      // Carregar BINs blacklisted
+      java.util.List<String> bins = testCardPatternRepository.findBlacklistedBins();
+      if (!bins.isEmpty()) {
+        cachedBlacklistedBins = new java.util.HashSet<>(bins);
+      }
+
+      // Carregar PANs de teste
+      java.util.List<String> pans = testCardPatternRepository.findTestPans();
+      if (!pans.isEmpty()) {
+        cachedTestPans = new java.util.HashSet<>(pans);
+      }
+
+      // Carregar padrões regex
+      java.util.List<String> regexStrings = testCardPatternRepository.findActiveRegexPatterns();
+      java.util.List<java.util.regex.Pattern> patterns = new java.util.ArrayList<>();
+      for (String regex : regexStrings) {
+        try {
+          patterns.add(java.util.regex.Pattern.compile(regex));
+        } catch (Exception e) {
+          log.warn("Regex inválido ignorado: {} - {}", regex, e.getMessage());
+        }
+      }
+      cachedRegexPatterns = patterns;
+
+      lastCacheRefresh = now;
+      log.debug("Cache de padrões de cartão atualizado: {} BINs, {} PANs, {} regex",
+          cachedBlacklistedBins.size(), cachedTestPans.size(), cachedRegexPatterns.size());
+
+    } catch (Exception e) {
+      log.warn("Erro ao atualizar cache de padrões de cartão, usando fallback: {}", e.getMessage());
+    }
   }
 
   /** Detecta padrão de teste de cartão. */

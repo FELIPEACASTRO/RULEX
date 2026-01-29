@@ -23,6 +23,10 @@ type UseAuthOptions = {
 
 const JAVA_API_BASE_URL = import.meta.env.VITE_JAVA_API_URL || "http://localhost:8080";
 const BASIC_AUTH_RAW_FROM_ENV = import.meta.env.VITE_API_BASIC_AUTH as string | undefined;
+const ENABLE_BEARER_AUTH = import.meta.env.VITE_ENABLE_BEARER_AUTH === "true";
+const AUTH_BASE_URL = JAVA_API_BASE_URL.replace(/\/$/, "").endsWith("/api")
+  ? JAVA_API_BASE_URL.replace(/\/$/, "")
+  : `${JAVA_API_BASE_URL.replace(/\/$/, "")}/api`;
 
 function basicAuthToUser(raw: string): User {
   const username = raw.split(":")[0]?.trim() || "user";
@@ -34,7 +38,7 @@ function basicAuthToUser(raw: string): User {
 }
 
 async function fetchMe(token: string, signal?: AbortSignal): Promise<User> {
-  const response = await fetch(`${JAVA_API_BASE_URL}/api/auth/me`, {
+  const response = await fetch(`${AUTH_BASE_URL}/auth/me`, {
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
@@ -56,7 +60,7 @@ async function refreshTokens(): Promise<{ accessToken: string; refreshToken?: st
     throw new Error("Refresh token ausente");
   }
 
-  const response = await fetch(`${JAVA_API_BASE_URL}/api/auth/refresh`, {
+  const response = await fetch(`${AUTH_BASE_URL}/auth/refresh`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -89,7 +93,7 @@ export function useAuth(options?: UseAuthOptions) {
     const controller = new AbortController();
 
     const loadUser = async () => {
-      const token = getAccessToken();
+      const token = ENABLE_BEARER_AUTH ? getAccessToken() : null;
       const basicAuthRaw = BASIC_AUTH_RAW_FROM_ENV || getBasicAuthRaw() || null;
 
       // Dev/HML: se houver Basic Auth configurado, consideramos "logado" sem depender
@@ -98,6 +102,14 @@ export function useAuth(options?: UseAuthOptions) {
         setUser(basicAuthToUser(basicAuthRaw));
         setError(null);
         setLoading(false);
+        return;
+      }
+
+      if (!ENABLE_BEARER_AUTH) {
+        setLoading(false);
+        if (redirectOnUnauthenticated) {
+          window.location.href = getLoginUrl();
+        }
         return;
       }
 
@@ -148,8 +160,17 @@ export function useAuth(options?: UseAuthOptions) {
   }, [redirectOnUnauthenticated]);
 
   const logout = useCallback(async () => {
+    if (!ENABLE_BEARER_AUTH) {
+      clearTokens();
+      clearBasicAuth();
+      setUser(null);
+      setError(null);
+      setLoading(false);
+      window.location.href = getLoginUrl();
+      return;
+    }
     try {
-      await fetch(`${JAVA_API_BASE_URL}/api/auth/logout`, {
+      await fetch(`${AUTH_BASE_URL}/auth/logout`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
       });
@@ -166,6 +187,9 @@ export function useAuth(options?: UseAuthOptions) {
   }, []);
 
   const loginWithToken = useCallback(async (accessToken: string, refreshToken?: string) => {
+    if (!ENABLE_BEARER_AUTH) {
+      throw new Error("Bearer auth disabled in this environment");
+    }
     setTokens(accessToken, refreshToken);
     const me = await fetchMe(accessToken);
     setUser(me);
@@ -184,6 +208,9 @@ export function useAuth(options?: UseAuthOptions) {
   }, []);
 
   const refresh = useCallback(async () => {
+    if (!ENABLE_BEARER_AUTH) {
+      throw new Error("Bearer auth disabled in this environment");
+    }
     const refreshed = await refreshTokens();
     const me = await fetchMe(refreshed.accessToken);
     setUser(me);

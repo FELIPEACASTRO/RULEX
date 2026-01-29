@@ -17,6 +17,22 @@ const JAVA_API_BASE_URL: string = import.meta.env.VITE_JAVA_API_URL || "";
 const DEFAULT_API_BASE_URL =
   JAVA_API_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost");
 
+// Bearer auth is optional; backend default is HTTP Basic only.
+const ENABLE_BEARER_AUTH = import.meta.env.VITE_ENABLE_BEARER_AUTH === "true";
+
+const API_BASE_URL = DEFAULT_API_BASE_URL.replace(/\/$/, "");
+const API_PREFIX = API_BASE_URL.endsWith("/api") ? "" : "/api";
+
+function buildApiUrl(endpoint: string): string {
+  const normalized = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  if (normalized.startsWith("/api/")) {
+    return API_BASE_URL.endsWith("/api")
+      ? `${API_BASE_URL}${normalized.slice(4)}`
+      : `${API_BASE_URL}${normalized}`;
+  }
+  return `${API_BASE_URL}${API_PREFIX}${normalized}`;
+}
+
 // Opcional: Basic Auth (Spring Security HTTP Basic).
 // Formato: "usuario:senha" (ex.: "admin:rulex").
 const BASIC_AUTH_RAW = import.meta.env.VITE_API_BASIC_AUTH as string | undefined;
@@ -260,9 +276,9 @@ export interface FieldDictionaryItem {
 // ========================================
 
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${DEFAULT_API_BASE_URL}${endpoint}`;
+  const url = buildApiUrl(endpoint);
 
-  const token = getAccessToken();
+  const token = ENABLE_BEARER_AUTH ? getAccessToken() : null;
   const basicAuthRaw = ALLOW_INSECURE_AUTH ? BASIC_AUTH_RAW || getBasicAuthRaw() || undefined : undefined;
   const basicAuthHeader =
     !token && basicAuthRaw ? `Basic ${btoa(basicAuthRaw)}` : undefined;
@@ -348,8 +364,8 @@ export async function exportTransactions(
   if (filters.startDate) params.append("startDate", filters.startDate);
   if (filters.endDate) params.append("endDate", filters.endDate);
 
-  const url = `${DEFAULT_API_BASE_URL}/api/transactions/export?${params.toString()}`;
-  const token = getAccessToken();
+  const url = `${buildApiUrl("/transactions/export")}?${params.toString()}`;
+  const token = ENABLE_BEARER_AUTH ? getAccessToken() : null;
   const basicAuthHeader =
     !token && ALLOW_INSECURE_AUTH && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
 
@@ -615,7 +631,7 @@ export async function exportAuditLogs(
   if (filters.endDate) params.append("endDate", filters.endDate);
   params.append("limit", String(filters.limit ?? 10000));
 
-  const url = `${DEFAULT_API_BASE_URL}/api/audit/export?${params.toString()}`;
+  const url = `${buildApiUrl("/audit/export")}?${params.toString()}`;
   const token = getAccessToken();
   const basicAuthHeader =
     !token && ALLOW_INSECURE_AUTH && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
@@ -665,7 +681,7 @@ export async function checkApiHealth(): Promise<{
 }> {
   const start = Date.now();
   try {
-    const response = await fetch(`${DEFAULT_API_BASE_URL}/actuator/health`, {
+    const response = await fetch(buildApiUrl("/actuator/health"), {
       method: "GET",
       headers: { Accept: "application/json" },
     });
@@ -674,6 +690,32 @@ export async function checkApiHealth(): Promise<{
   } catch {
     return { status: "DOWN", responseTime: Date.now() - start };
   }
+}
+
+// ========================================
+// NEO4J ADMIN (diagnóstico)
+// ========================================
+
+export type Neo4jStatusResponse = Record<string, unknown>;
+
+export async function getNeo4jStatus(): Promise<Neo4jStatusResponse> {
+  return apiRequest<Neo4jStatusResponse>("/api/admin/neo4j/status");
+}
+
+export async function getNeo4jGraphStats(): Promise<Neo4jStatusResponse> {
+  return apiRequest<Neo4jStatusResponse>("/api/admin/neo4j/graph-stats");
+}
+
+export async function postNeo4jTestWrite(): Promise<Neo4jStatusResponse> {
+  return apiRequest<Neo4jStatusResponse>("/api/admin/neo4j/test-write", { method: "POST" });
+}
+
+export async function getNeo4jGdsStatus(): Promise<Neo4jStatusResponse> {
+  return apiRequest<Neo4jStatusResponse>("/api/admin/neo4j/gds-status");
+}
+
+export async function initializeNeo4jGraph(): Promise<Neo4jStatusResponse> {
+  return apiRequest<Neo4jStatusResponse>("/api/admin/neo4j/initialize", { method: "POST" });
 }
 
 // ========================================
@@ -849,6 +891,11 @@ export const javaApi = {
   exportAuditLogs,
   listFieldDictionary,
   checkApiHealth,
+  getNeo4jStatus,
+  getNeo4jGraphStats,
+  postNeo4jTestWrite,
+  getNeo4jGdsStatus,
+  initializeNeo4jGraph,
   // Complex Rules
   listComplexRules,
   getComplexRule,

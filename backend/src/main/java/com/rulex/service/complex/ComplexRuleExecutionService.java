@@ -3,6 +3,7 @@ package com.rulex.service.complex;
 import com.rulex.dto.complex.*;
 import com.rulex.entity.complex.*;
 import com.rulex.repository.complex.*;
+import com.rulex.service.WebhookClient;
 import jakarta.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,6 +31,8 @@ public class ComplexRuleExecutionService {
   private final RuleExpressionRepository expressionRepository;
   private final RuleActionRepository actionRepository;
   private final RuleExecutionDetailRepository executionDetailRepository;
+  private final ContextVariableResolver contextVariableResolver;
+  private final WebhookClient webhookClient;
 
   /** Resultado completo da execução de uma regra */
   @Data
@@ -205,19 +208,16 @@ public class ComplexRuleExecutionService {
         yield expressionEvaluator.evaluate(expression, context);
       }
       case LOOKUP -> {
-        // Implementação simplificada - em produção, faria lookup real
-        log.debug("Lookup não implementado para variável: {}", var.getName());
-        yield null;
+        log.debug("Resolvendo LOOKUP para variável: {}", var.getName());
+        yield contextVariableResolver.resolveLookup(var, payload, variables);
       }
       case AGGREGATION -> {
-        // Implementação simplificada - em produção, faria agregação real
-        log.debug("Agregação não implementada para variável: {}", var.getName());
-        yield null;
+        log.debug("Resolvendo AGGREGATION para variável: {}", var.getName());
+        yield contextVariableResolver.resolveAggregation(var, payload, variables);
       }
       case EXTERNAL_SERVICE -> {
-        // Implementação simplificada - em produção, chamaria serviço externo
-        log.debug("Serviço externo não implementado para variável: {}", var.getName());
-        yield null;
+        log.debug("Resolvendo EXTERNAL_SERVICE para variável: {}", var.getName());
+        yield contextVariableResolver.resolveExternalService(var, payload, variables);
       }
       case RULE_RESULT -> {
         String ruleKey = (String) config.get("ruleKey");
@@ -325,10 +325,36 @@ public class ComplexRuleExecutionService {
           result.put("value", value);
         }
         case CALL_WEBHOOK -> {
-          // Implementação simplificada - em produção, faria chamada HTTP real
-          log.info("Webhook seria chamado: {}", config.get("url"));
-          result.put("webhookUrl", config.get("url"));
-          result.put("status", "PENDING");
+          String webhookUrl = (String) config.get("url");
+          @SuppressWarnings("unchecked")
+          Map<String, String> webhookHeaders = (Map<String, String>) config.get("headers");
+
+          // Preparar payload do webhook
+          Map<String, Object> webhookPayload = new HashMap<>();
+          webhookPayload.put("transactionData", payload);
+          webhookPayload.put("variables", variables);
+          webhookPayload.put("ruleId", action.getId());
+          webhookPayload.put("timestamp", System.currentTimeMillis());
+
+          // Adicionar campos customizados do config
+          @SuppressWarnings("unchecked")
+          Map<String, Object> customPayload = (Map<String, Object>) config.get("payload");
+          if (customPayload != null) {
+            webhookPayload.putAll(customPayload);
+          }
+
+          log.info("Executando webhook para: {}", webhookUrl);
+          WebhookClient.WebhookResult webhookResult = webhookClient.callWebhook(
+              webhookUrl, webhookPayload, webhookHeaders);
+
+          result.put("webhookUrl", webhookUrl);
+          result.put("success", webhookResult.isSuccess());
+          result.put("statusCode", webhookResult.getStatusCode());
+          result.put("durationMs", webhookResult.getDurationMs());
+          result.put("status", webhookResult.isSuccess() ? "COMPLETED" : "FAILED");
+          if (!webhookResult.isSuccess()) {
+            result.put("error", webhookResult.getErrorMessage());
+          }
         }
         case SEND_NOTIFICATION -> {
           log.info(

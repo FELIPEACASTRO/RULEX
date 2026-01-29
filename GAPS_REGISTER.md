@@ -6,6 +6,11 @@
  	- Status: workaround validado com sucesso em execução recente.
 
 ## Closed
+- **[2026-01-29] Instruções Neo4j/GDS alinhadas ao relacionamento TRANSFERRED_TO.**
+- **[2026-01-29] Diagnóstico Neo4j agora usa contagem real de nós/relacionamentos.**
+- **[2026-01-29] Normalização de base URL evita /api/api no frontend.**
+- **[2026-01-29] Frontend healthcheck alinhado com /api/actuator/health.**
+- **[2026-01-29] Frontend Bearer auth protegido por flag (backend expõe apenas Basic Auth).**
 - **[2026-01-26] Neo4j graph tracking ligado no RuleEngineService (analyze/evaluate).**
 - **[2026-01-26] Endpoint admin de diagnóstico Neo4j adicionado (/admin/neo4j/**).**
 - **[2026-01-26] Scripts de inicialização e GDS do Neo4j adicionados (init.cypher, gds-config.cypher).**

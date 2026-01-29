@@ -168,11 +168,14 @@ public class Neo4jHealthController {
         "gdsCommands",
         Map.of(
             "listGraphs", "CALL gds.graph.list()",
-            "createGraph", "CALL gds.graph.project('account-graph', 'Account', 'TRANSFERRED_TO')",
+        "createGraph",
+          "CALL gds.graph.project('fraud_detection_graph', 'Account', 'TRANSFERRED_TO')",
             "runPageRank",
-                "CALL gds.pageRank.write('account-graph', {writeProperty: 'pageRankScore'})",
-            "runLouvain", "CALL gds.louvain.write('account-graph', {writeProperty: 'communityId'})",
-            "runWcc", "CALL gds.wcc.write('account-graph', {writeProperty: 'componentId'})"));
+          "CALL gds.pageRank.write('fraud_detection_graph', {writeProperty: 'pageRankScore'})",
+        "runLouvain",
+          "CALL gds.louvain.write('fraud_detection_graph', {writeProperty: 'communityId'})",
+        "runWcc",
+          "CALL gds.wcc.write('fraud_detection_graph', {writeProperty: 'componentId'})"));
 
     return ResponseEntity.ok(result);
   }
@@ -202,7 +205,6 @@ public class Neo4jHealthController {
             "step1_constraints",
                 """
             CREATE CONSTRAINT account_id IF NOT EXISTS FOR (a:Account) REQUIRE a.id IS UNIQUE;
-            CREATE CONSTRAINT transaction_id IF NOT EXISTS FOR (t:Transaction) REQUIRE t.id IS UNIQUE;
             """,
             "step2_indexes",
                 """
@@ -213,7 +215,7 @@ public class Neo4jHealthController {
             "step3_gds_projection",
                 """
             CALL gds.graph.project(
-              'account-graph',
+              'fraud_detection_graph',
               'Account',
               {TRANSFERRED_TO: {orientation: 'UNDIRECTED'}}
             )
@@ -230,11 +232,11 @@ public class Neo4jHealthController {
     stats.put("note", "Estatísticas detalhadas requerem queries diretas ao Neo4j");
     stats.put("serviceEnabled", neo4jGraphService.isEnabled());
     stats.put("serviceAvailable", neo4jGraphService.isCurrentlyAvailable());
-
-    // Testar um accountId fictício para verificar se o grafo tem dados
-    int testDegree = neo4jGraphService.getDegreeCentrality("TEST_ACCOUNT");
-    stats.put("testQueryResult", testDegree);
-    stats.put("hasData", testDegree > 0);
+    long nodeCount = neo4jGraphService.getNodeCount();
+    long relationshipCount = neo4jGraphService.getRelationshipCount();
+    stats.put("nodeCount", nodeCount);
+    stats.put("relationshipCount", relationshipCount);
+    stats.put("hasData", nodeCount > 0 && relationshipCount > 0);
 
     return stats;
   }

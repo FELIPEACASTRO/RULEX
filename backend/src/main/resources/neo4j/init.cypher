@@ -17,11 +17,6 @@ CREATE CONSTRAINT account_id_unique IF NOT EXISTS
 FOR (a:Account)
 REQUIRE a.id IS UNIQUE;
 
-// Merchant nodes - transaction destinations
-CREATE CONSTRAINT merchant_id_unique IF NOT EXISTS
-FOR (m:Merchant)
-REQUIRE m.id IS UNIQUE;
-
 // Customer nodes - alternative representation
 CREATE CONSTRAINT customer_id_unique IF NOT EXISTS
 FOR (c:Customer)
@@ -50,22 +45,13 @@ CREATE INDEX account_risk_score_idx IF NOT EXISTS
 FOR (a:Account)
 ON (a.riskScore);
 
-// Merchant indexes
-CREATE INDEX merchant_mcc_idx IF NOT EXISTS
-FOR (m:Merchant)
-ON (m.mcc);
-
-CREATE INDEX merchant_country_idx IF NOT EXISTS
-FOR (m:Merchant)
-ON (m.country);
-
 // Transaction relationship properties index
 CREATE INDEX tx_timestamp_idx IF NOT EXISTS
-FOR ()-[t:TRANSACTED_WITH]-()
+FOR ()-[t:TRANSFERRED_TO]-()
 ON (t.timestamp);
 
 CREATE INDEX tx_amount_idx IF NOT EXISTS
-FOR ()-[t:TRANSACTED_WITH]-()
+FOR ()-[t:TRANSFERRED_TO]-()
 ON (t.amount);
 
 // =====================================================================
@@ -92,31 +78,24 @@ ON CREATE SET a2.createdAt = datetime(), a2.riskScore = 0;
 MERGE (a3:Account {id: 'ACCT_1003'})
 ON CREATE SET a3.createdAt = datetime(), a3.riskScore = 0;
 
-// Create sample merchants
-MERGE (m1:Merchant {id: 'MERCH_AMAZON_001'})
-ON CREATE SET m1.name = 'Amazon', m1.mcc = '5411', m1.country = 'US';
-
-MERGE (m2:Merchant {id: 'MERCH_WALMART_001'})
-ON CREATE SET m2.name = 'Walmart', m2.mcc = '5411', m2.country = 'US';
-
 // Create sample transactions
-MERGE (a1)-[:TRANSACTED_WITH {
+MERGE (a1)-[:TRANSFERRED_TO {
   amount: 150.00,
   timestamp: datetime() - duration('P1D'),
   txId: 'TX_SAMPLE_001'
-}]->(m1);
+}]->(a2);
 
-MERGE (a2)-[:TRANSACTED_WITH {
+MERGE (a2)-[:TRANSFERRED_TO {
   amount: 200.00,
   timestamp: datetime() - duration('P2D'),
   txId: 'TX_SAMPLE_002'
-}]->(m1);
+}]->(a3);
 
-MERGE (a1)-[:TRANSACTED_WITH {
+MERGE (a1)-[:TRANSFERRED_TO {
   amount: 75.00,
   timestamp: datetime(),
   txId: 'TX_SAMPLE_003'
-}]->(m2);
+}]->(a3);
 
 // =====================================================================
 // 6. VERIFY DATA

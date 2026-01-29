@@ -501,8 +501,63 @@ public class RuleSimulationService {
 
   private List<TransactionRequest> getHistoricalTransactions(
       LocalDateTime startDate, LocalDateTime endDate, int limit) {
-    // Simplificado - em produção, buscaria do repositório
-    return new ArrayList<>();
+    try {
+      // Buscar transações do repositório
+      var pageable = org.springframework.data.domain.PageRequest.of(0, limit,
+          org.springframework.data.domain.Sort.by("createdAt").descending());
+
+      var page = transactionRepository.findByFilters(
+          null, // customerIdFromHeader
+          null, // merchantId
+          null, // mcc
+          null, // minAmount
+          null, // maxAmount
+          startDate,
+          endDate,
+          pageable);
+
+      // Converter Transaction para TransactionRequest
+      return page.getContent().stream()
+          .map(this::convertToTransactionRequest)
+          .collect(java.util.stream.Collectors.toList());
+    } catch (Exception e) {
+      log.error("Erro ao buscar transações históricas: {}", e.getMessage());
+      return new ArrayList<>();
+    }
+  }
+
+  /**
+   * Converte uma entidade Transaction para TransactionRequest.
+   */
+  private TransactionRequest convertToTransactionRequest(com.rulex.entity.Transaction tx) {
+    TransactionRequest request = new TransactionRequest();
+
+    // Identificação
+    request.setExternalTransactionId(tx.getExternalTransactionId());
+    request.setCustomerIdFromHeader(tx.getCustomerIdFromHeader());
+    request.setCustomerAcctNumber(tx.getCustomerAcctNumber());
+    request.setPan(tx.getPan());
+    request.setMerchantId(tx.getMerchantId());
+    request.setMerchantName(tx.getMerchantName());
+
+    // Valores e Datas
+    request.setTransactionAmount(tx.getTransactionAmount());
+    request.setTransactionDate(tx.getTransactionDate());
+    request.setTransactionTime(tx.getTransactionTime());
+    request.setGmtOffset(tx.getGmtOffset());
+    request.setTransactionCurrencyCode(tx.getTransactionCurrencyCode());
+    request.setTransactionCurrencyConversionRate(tx.getTransactionCurrencyConversionRate());
+
+    // Localização
+    request.setMerchantCountryCode(tx.getMerchantCountryCode());
+    request.setMcc(tx.getMcc());
+
+    // Outros campos disponíveis na entidade Transaction
+    if (tx.getPosEntryMode() != null) {
+      request.setPosEntryMode(tx.getPosEntryMode());
+    }
+
+    return request;
   }
 
   private RuleConfigurationDTO convertToDTO(RuleConfiguration rule) {
