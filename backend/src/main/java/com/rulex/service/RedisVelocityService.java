@@ -10,12 +10,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -91,8 +91,13 @@ public class RedisVelocityService {
     log.info("Modo: {}", redisEnabled ? "REDIS_REAL" : "MEMORY_CACHE");
     if (redisEnabled) {
       try {
-        String pong = redisTemplate.getConnectionFactory().getConnection().ping();
-        log.info("Conexão Redis verificada: {}", pong);
+        var connectionFactory = redisTemplate.getConnectionFactory();
+        if (connectionFactory == null) {
+          log.warn("Redis connection factory ausente; conexão não verificada");
+        } else {
+          String pong = connectionFactory.getConnection().ping();
+          log.info("Conexão Redis verificada: {}", pong);
+        }
       } catch (Exception e) {
         log.warn("Conexão Redis falhou, usando cache em memória: {}", e.getMessage());
       }
@@ -399,7 +404,11 @@ public class RedisVelocityService {
     if (keys.isEmpty()) {
       return 0;
     }
-    Long count = redisTemplate.opsForHyperLogLog().size(keys.toArray(new String[0]));
+    String[] keyArray = keys.stream().filter(Objects::nonNull).toArray(String[]::new);
+    if (keyArray.length == 0) {
+      return 0;
+    }
+    Long count = redisTemplate.opsForHyperLogLog().size(keyArray);
     return count == null ? 0 : count;
   }
 

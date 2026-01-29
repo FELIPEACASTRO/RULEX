@@ -7,6 +7,7 @@ import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,8 +50,13 @@ public class RedisVelocityCacheService {
     log.info("RedisVelocityCacheService INICIALIZADO - Redis REAL habilitado");
     log.info("Prefixo de chaves: {}", KEY_PREFIX);
     try {
-      String pong = redisTemplate.getConnectionFactory().getConnection().ping();
-      log.info("Conexão Redis verificada: {}", pong);
+      var connectionFactory = redisTemplate.getConnectionFactory();
+      if (connectionFactory == null) {
+        log.warn("Redis connection factory ausente; conexão não verificada");
+      } else {
+        String pong = connectionFactory.getConnection().ping();
+        log.info("Conexão Redis verificada: {}", pong);
+      }
     } catch (Exception e) {
       log.error("FALHA na conexão Redis: {}", e.getMessage());
     }
@@ -311,8 +317,8 @@ public class RedisVelocityCacheService {
 
     // Incrementar contadores para todas as janelas
     for (TimeWindow window : TimeWindow.values()) {
-      String countKey = buildCountKey(keyType, keyValue, window);
-      String sumKey = buildSumKey(keyType, keyValue, window);
+      String countKey = Objects.requireNonNull(buildCountKey(keyType, keyValue, window), "countKey");
+      String sumKey = Objects.requireNonNull(buildSumKey(keyType, keyValue, window), "sumKey");
 
       // Incrementar contador
       redisTemplate.opsForValue().increment(countKey);
@@ -325,19 +331,22 @@ public class RedisVelocityCacheService {
 
       // Adicionar aos HyperLogLogs por janela
       if (request.getMerchantId() != null) {
-        String merchantKey = buildDistinctKey(keyType, keyValue, "merchants", window);
+        String merchantKey = Objects.requireNonNull(
+            buildDistinctKey(keyType, keyValue, "merchants", window), "merchantKey");
         redisTemplate.opsForHyperLogLog().add(merchantKey, request.getMerchantId());
         setTtlIfNew(merchantKey, window.getTtl());
       }
 
       if (request.getMcc() != null) {
-        String mccKey = buildDistinctKey(keyType, keyValue, "mccs", window);
+        String mccKey = Objects.requireNonNull(
+            buildDistinctKey(keyType, keyValue, "mccs", window), "mccKey");
         redisTemplate.opsForHyperLogLog().add(mccKey, String.valueOf(request.getMcc()));
         setTtlIfNew(mccKey, window.getTtl());
       }
 
       if (request.getMerchantCountryCode() != null) {
-        String countryKey = buildDistinctKey(keyType, keyValue, "countries", window);
+        String countryKey = Objects.requireNonNull(
+            buildDistinctKey(keyType, keyValue, "countries", window), "countryKey");
         redisTemplate.opsForHyperLogLog().add(countryKey, request.getMerchantCountryCode());
         setTtlIfNew(countryKey, window.getTtl());
       }
@@ -345,6 +354,9 @@ public class RedisVelocityCacheService {
   }
 
   private void setTtlIfNew(String key, Duration ttl) {
+    if (key == null || ttl == null) {
+      return;
+    }
     // Só define TTL se a chave não tiver um
     Long currentTtl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
     if (currentTtl == null || currentTtl < 0) {

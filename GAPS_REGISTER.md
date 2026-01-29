@@ -1,26 +1,35 @@
 # Gaps Register
 
 ## Open
-- Backend tests falham localmente no Windows por lock de arquivo em `ComplexRuleEvaluator.class` durante `testCompile`.
-	- Workaround: scripts/run-backend-tests-clean.ps1 (executa testes fora do workspace).
- 	- Status: workaround validado com sucesso em execução recente.
+- Backend tests falham localmente no Windows por lock de arquivo em
+  `ComplexRuleEvaluator.class` durante `testCompile`.
+  - Workaround: scripts/run-backend-tests-clean.ps1 (executa testes fora
+    do workspace).
+  - Status: workaround validado com sucesso em execução recente.
 
 ## Closed
 - **[2026-01-29] Instruções Neo4j/GDS alinhadas ao relacionamento TRANSFERRED_TO.**
 - **[2026-01-29] Diagnóstico Neo4j agora usa contagem real de nós/relacionamentos.**
 - **[2026-01-29] Normalização de base URL evita /api/api no frontend.**
 - **[2026-01-29] Frontend healthcheck alinhado com /api/actuator/health.**
-- **[2026-01-29] Frontend Bearer auth protegido por flag (backend expõe apenas Basic Auth).**
+- **[2026-01-29] Frontend Bearer auth protegido por flag
+  (backend expõe apenas Basic Auth).**
 - **[2026-01-26] Neo4j graph tracking ligado no RuleEngineService (analyze/evaluate).**
 - **[2026-01-26] Endpoint admin de diagnóstico Neo4j adicionado (/admin/neo4j/**).**
-- **[2026-01-26] Scripts de inicialização e GDS do Neo4j adicionados (init.cypher, gds-config.cypher).**
-- E2E navigation selectors referenced a legacy label ("Regras de Fraude"). Updated to current UI label ("Regras Complexas").
+- **[2026-01-26] Scripts de inicialização e GDS do Neo4j adicionados
+  (init.cypher, gds-config.cypher).**
+- E2E navigation selectors referenced a legacy label ("Regras de Fraude").
+  Updated to current UI label ("Regras Complexas").
 - Status DEPRECATED alinhado entre backend e frontend (tipos, filtros e badges).
-- Ações de toggle/delete de regras complexas agora usam ID real e bloqueiam operações sem ID.
+- Ações de toggle/delete de regras complexas agora usam ID real e bloqueiam
+  operações sem ID.
 - Tabela unificada agora mostra status real e decisão legível para regras complexas.
-- Aviso de alterações não salvas agora cobre todos os campos do formulário de regras simples.
-- Seeds pendentes de regras promovidas para migrações ativas, com normalização de operadores/campos pós-seed (V46).
-- Operadores faltantes no backend agora possuem suporte nos avaliadores (statistical, velocity e misc).
+- Aviso de alterações não salvas agora cobre todos os campos do formulário
+  de regras simples.
+- Seeds pendentes de regras promovidas para migrações ativas, com
+  normalização de operadores/campos pós-seed (V46).
+- Operadores faltantes no backend agora possuem suporte nos avaliadores
+  (statistical, velocity e misc).
 - **[2025-01-21] Migrações V39 e V46 corrigidas:**
   - Uso de `operator::text` para comparar operadores que não existem no enum.
   - Removido uso de `shadow_mode` em `complex_rules` (coluna não existe).
