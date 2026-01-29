@@ -32,6 +32,12 @@ public class WebhookClient {
   @Value("${rulex.webhook.enabled:true}")
   private boolean webhooksEnabled;
 
+  @Value("${rulex.webhook.max-retries:0}")
+  private int maxRetries;
+
+  @Value("${rulex.webhook.retry-backoff-ms:250}")
+  private long retryBackoffMs;
+
   public WebhookClient(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
     this.httpClient = HttpClient.newBuilder()
@@ -66,50 +72,10 @@ public class WebhookClient {
           .errorMessage("Webhooks desabilitados")
           .build();
     }
-
-    long startTime = System.currentTimeMillis();
-
-    try {
-      String jsonBody = objectMapper.writeValueAsString(payload);
-
-      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-          .uri(URI.create(url))
-          .timeout(Duration.ofSeconds(timeoutSeconds))
-          .header("Content-Type", "application/json")
-          .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
-
-      // Adicionar headers customizados
-      if (headers != null) {
-        headers.forEach(requestBuilder::header);
-      }
-
-      HttpRequest request = requestBuilder.build();
-
-      log.info("Executando webhook POST para: {}", url);
-      HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-      long durationMs = System.currentTimeMillis() - startTime;
-      boolean success = response.statusCode() >= 200 && response.statusCode() < 300;
-
-      log.info("Webhook {} respondeu com status {} em {}ms", url, response.statusCode(), durationMs);
-
-      return WebhookResult.builder()
-          .success(success)
-          .statusCode(response.statusCode())
-          .responseBody(response.body())
-          .durationMs(durationMs)
-          .build();
-
-    } catch (Exception e) {
-      long durationMs = System.currentTimeMillis() - startTime;
-      log.error("Erro ao chamar webhook {}: {}", url, e.getMessage());
-
-      return WebhookResult.builder()
-          .success(false)
-          .errorMessage(e.getMessage())
-          .durationMs(durationMs)
-          .build();
-    }
+    return executeWithRetry(
+        () -> executeWebhookPost(url, payload, headers),
+        "webhook",
+        url);
   }
 
   /**
@@ -139,47 +105,120 @@ public class WebhookClient {
           .errorMessage("Serviços externos desabilitados")
           .build();
     }
+    return executeWithRetry(
+        () -> executeExternalGet(url, headers),
+        "external",
+        url);
+  }
 
+  private WebhookResult executeWebhookPost(
+      String url, Map<String, Object> payload, Map<String, String> headers) throws Exception {
+    String jsonBody = objectMapper.writeValueAsString(payload);
+
+    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+        .uri(URI.create(url))
+        .timeout(Duration.ofSeconds(timeoutSeconds))
+        .header("Content-Type", "application/json")
+        .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
+
+    if (headers != null) {
+      headers.forEach(requestBuilder::header);
+    }
+
+    HttpRequest request = requestBuilder.build();
+
+    log.info("Executando webhook POST para: {}", url);
+    HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+    boolean success = response.statusCode() >= 200 && response.statusCode() < 300;
+
+    return WebhookResult.builder()
+        .success(success)
+        .statusCode(response.statusCode())
+        .responseBody(response.body())
+        .build();
+  }
+
+  private WebhookResult executeExternalGet(String url, Map<String, String> headers) throws Exception {
+    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+        .uri(URI.create(url))
+        .timeout(Duration.ofSeconds(timeoutSeconds))
+        .header("Accept", "application/json")
+        .GET();
+
+    if (headers != null) {
+      headers.forEach(requestBuilder::header);
+    }
+
+    HttpRequest request = requestBuilder.build();
+
+    log.info("Chamando serviço externo GET: {}", url);
+    HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+    boolean success = response.statusCode() >= 200 && response.statusCode() < 300;
+
+    return WebhookResult.builder()
+        .success(success)
+        .statusCode(response.statusCode())
+        .responseBody(response.body())
+        .build();
+  }
+
+  private WebhookResult executeWithRetry(
+      WebhookCall call,
+      String callType,
+      String url) {
+    int attempts = Math.max(0, maxRetries) + 1;
     long startTime = System.currentTimeMillis();
+    WebhookResult lastResult = null;
 
-    try {
-      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-          .uri(URI.create(url))
-          .timeout(Duration.ofSeconds(timeoutSeconds))
-          .header("Accept", "application/json")
-          .GET();
-
-      if (headers != null) {
-        headers.forEach(requestBuilder::header);
+    for (int attempt = 1; attempt <= attempts; attempt++) {
+      try {
+        WebhookResult result = call.execute();
+        if (result.isSuccess() || result.getStatusCode() < 500 || attempt == attempts) {
+          long durationMs = System.currentTimeMillis() - startTime;
+          log.info("{} {} respondeu com status {} em {}ms", callType, url, result.getStatusCode(), durationMs);
+          return WebhookResult.builder()
+              .success(result.isSuccess())
+              .statusCode(result.getStatusCode())
+              .responseBody(result.getResponseBody())
+              .errorMessage(result.getErrorMessage())
+              .durationMs(durationMs)
+              .build();
+        }
+        log.warn("{} {} falhou com status {} (tentativa {}/{})", callType, url, result.getStatusCode(), attempt, attempts);
+        lastResult = result;
+      } catch (Exception e) {
+        log.error("Erro ao chamar {} {} (tentativa {}/{}): {}", callType, url, attempt, attempts, e.getMessage());
+        lastResult = WebhookResult.builder()
+            .success(false)
+            .errorMessage(e.getMessage())
+            .build();
       }
 
-      HttpRequest request = requestBuilder.build();
-
-      log.info("Chamando serviço externo GET: {}", url);
-      HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-      long durationMs = System.currentTimeMillis() - startTime;
-      boolean success = response.statusCode() >= 200 && response.statusCode() < 300;
-
-      log.info("Serviço externo {} respondeu com status {} em {}ms", url, response.statusCode(), durationMs);
-
-      return WebhookResult.builder()
-          .success(success)
-          .statusCode(response.statusCode())
-          .responseBody(response.body())
-          .durationMs(durationMs)
-          .build();
-
-    } catch (Exception e) {
-      long durationMs = System.currentTimeMillis() - startTime;
-      log.error("Erro ao chamar serviço externo {}: {}", url, e.getMessage());
-
-      return WebhookResult.builder()
-          .success(false)
-          .errorMessage(e.getMessage())
-          .durationMs(durationMs)
-          .build();
+      if (attempt < attempts && retryBackoffMs > 0) {
+        try {
+          Thread.sleep(retryBackoffMs * attempt);
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          break;
+        }
+      }
     }
+
+    long durationMs = System.currentTimeMillis() - startTime;
+    return WebhookResult.builder()
+        .success(false)
+        .statusCode(lastResult != null ? lastResult.getStatusCode() : 0)
+        .responseBody(lastResult != null ? lastResult.getResponseBody() : null)
+        .errorMessage(lastResult != null ? lastResult.getErrorMessage() : "Erro desconhecido")
+        .durationMs(durationMs)
+        .build();
+  }
+
+  @FunctionalInterface
+  private interface WebhookCall {
+    WebhookResult execute() throws Exception;
   }
 
   /**

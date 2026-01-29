@@ -197,10 +197,31 @@ public class ContextVariableResolver {
       return null;
     }
 
-    String sql = String.format("SELECT %s FROM %s WHERE %s = ? LIMIT 1",
-        valueField != null ? valueField : "*",
-        sanitizeIdentifier(table),
-        sanitizeIdentifier(keyField));
+    String safeTable = sanitizeIdentifier(table);
+    String safeKeyField = sanitizeIdentifier(keyField);
+    if (!isSafeIdentifier(table, safeTable) || !isSafeIdentifier(keyField, safeKeyField)) {
+      log.warn("LOOKUP table/key inválidos: table={}, keyField={}", table, keyField);
+      return null;
+    }
+
+    String safeValueField = null;
+    if (valueField == null || valueField.isBlank()) {
+      safeValueField = "*";
+    } else if ("*".equals(valueField)) {
+      safeValueField = "*";
+    } else {
+      safeValueField = sanitizeIdentifier(valueField);
+      if (!isSafeIdentifier(valueField, safeValueField)) {
+        log.warn("LOOKUP valueField inválido: {}", valueField);
+        return null;
+      }
+    }
+
+    String sql = String.format(
+        "SELECT %s FROM %s WHERE %s = ? LIMIT 1",
+        safeValueField,
+        safeTable,
+        safeKeyField);
 
     try {
       List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, keyValue);
@@ -326,10 +347,16 @@ public class ContextVariableResolver {
       case "merchantId", "merchant_id" ->
           transactionRepository.sumAmountByMerchantSince(groupByValue, since);
       default -> {
+        String safeGroupBy = sanitizeIdentifier(groupBy);
+        String safeField = sanitizeIdentifier(field);
+        if (!isSafeIdentifier(groupBy, safeGroupBy) || !isSafeIdentifier(field, safeField)) {
+          log.warn("AGGREGATION sum inválido: groupBy={}, field={}", groupBy, field);
+          yield BigDecimal.ZERO;
+        }
         String sql = String.format(
             "SELECT COALESCE(SUM(%s), 0) FROM transactions WHERE %s = ? AND created_at >= ?",
-            sanitizeIdentifier(field),
-            sanitizeIdentifier(groupBy));
+            safeField,
+            safeGroupBy);
         yield jdbcTemplate.queryForObject(sql, BigDecimal.class, groupByValue, since);
       }
     };
@@ -339,10 +366,16 @@ public class ContextVariableResolver {
     if (field == null) {
       field = "transaction_amount";
     }
+    String safeGroupBy = sanitizeIdentifier(groupBy);
+    String safeField = sanitizeIdentifier(field);
+    if (!isSafeIdentifier(groupBy, safeGroupBy) || !isSafeIdentifier(field, safeField)) {
+      log.warn("AGGREGATION avg inválido: groupBy={}, field={}", groupBy, field);
+      return BigDecimal.ZERO;
+    }
     String sql = String.format(
         "SELECT COALESCE(AVG(%s), 0) FROM transactions WHERE %s = ? AND created_at >= ?",
-        sanitizeIdentifier(field),
-        sanitizeIdentifier(groupBy));
+        safeField,
+        safeGroupBy);
     return jdbcTemplate.queryForObject(sql, BigDecimal.class, groupByValue, since);
   }
 
@@ -350,10 +383,16 @@ public class ContextVariableResolver {
     if (field == null) {
       field = "transaction_amount";
     }
+    String safeGroupBy = sanitizeIdentifier(groupBy);
+    String safeField = sanitizeIdentifier(field);
+    if (!isSafeIdentifier(groupBy, safeGroupBy) || !isSafeIdentifier(field, safeField)) {
+      log.warn("AGGREGATION max inválido: groupBy={}, field={}", groupBy, field);
+      return null;
+    }
     String sql = String.format(
         "SELECT MAX(%s) FROM transactions WHERE %s = ? AND created_at >= ?",
-        sanitizeIdentifier(field),
-        sanitizeIdentifier(groupBy));
+        safeField,
+        safeGroupBy);
     return jdbcTemplate.queryForObject(sql, Object.class, groupByValue, since);
   }
 
@@ -361,10 +400,16 @@ public class ContextVariableResolver {
     if (field == null) {
       field = "transaction_amount";
     }
+    String safeGroupBy = sanitizeIdentifier(groupBy);
+    String safeField = sanitizeIdentifier(field);
+    if (!isSafeIdentifier(groupBy, safeGroupBy) || !isSafeIdentifier(field, safeField)) {
+      log.warn("AGGREGATION min inválido: groupBy={}, field={}", groupBy, field);
+      return null;
+    }
     String sql = String.format(
         "SELECT MIN(%s) FROM transactions WHERE %s = ? AND created_at >= ?",
-        sanitizeIdentifier(field),
-        sanitizeIdentifier(groupBy));
+        safeField,
+        safeGroupBy);
     return jdbcTemplate.queryForObject(sql, Object.class, groupByValue, since);
   }
 
@@ -439,5 +484,15 @@ public class ContextVariableResolver {
       return null;
     }
     return identifier.replaceAll("[^a-zA-Z0-9_]", "");
+  }
+
+  private boolean isSafeIdentifier(String original, String sanitized) {
+    if (original == null || sanitized == null) {
+      return false;
+    }
+    if (sanitized.isBlank()) {
+      return false;
+    }
+    return original.equals(sanitized);
   }
 }
