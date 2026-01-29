@@ -163,6 +163,12 @@ rulex:
       geo-reference: 86400 # 24h - dados geográficos
       rules: 300           # 5min - regras podem mudar
       high-risk-mcc: 43200 # 12h - MCCs de alto risco
+  # V5.0: Neo4j Graph Tracking para detecção de fraud rings
+  neo4j:
+    graph-tracking:
+      # Habilita gravação de transações no grafo Neo4j para análise de redes de fraude
+      # Permite detecção de WCC, PageRank, Louvain clustering, etc.
+      enabled: ${RULEX_NEO4J_GRAPH_TRACKING_ENABLED:true}
   audit:
     enabled: true
     # ATENÇÃO: Em produção com alto TPS, considere desabilitar ou usar sampling

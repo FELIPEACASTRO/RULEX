@@ -76,6 +76,7 @@ public class RuleEngineService {
   private final ImpossibleTravelService impossibleTravelService;
   private final GeoService geoService;
   private final VelocityServiceFacade velocityServiceFacade;
+  private final Neo4jGraphService neo4jGraphService;
 
   // ARCH-003: Extracted helper classes
   private final ConditionMatcher conditionMatcher;
@@ -100,6 +101,9 @@ public class RuleEngineService {
 
   @Value("${rulex.engine.velocity.redis.enabled:false}")
   private boolean redisVelocityEnabled;
+
+  @Value("${rulex.neo4j.graph-tracking.enabled:true}")
+  private boolean neo4jGraphTrackingEnabled;
 
   /** Processa uma transação e retorna a classificação de fraude. */
   public TransactionResponse analyzeTransaction(TransactionRequest request) {
@@ -219,6 +223,16 @@ public class RuleEngineService {
               decision.getRiskScore());
         } catch (Exception e) { // SEC-006 FIX
           log.warn("Erro best-effort velocity tracking (não bloqueia decisão): {}", e.getMessage());
+        }
+      }
+
+      // V5.0: record transaction into Neo4j Graph for fraud ring detection
+      if (neo4jGraphTrackingEnabled && neo4jGraphService.isCurrentlyAvailable()) {
+        try {
+          recordTransactionInGraph(request, decision);
+        } catch (Exception e) {
+          log.warn(
+              "Erro best-effort Neo4j graph tracking (não bloqueia decisão): {}", e.getMessage());
         }
       }
 
@@ -356,6 +370,16 @@ public class RuleEngineService {
               decision.getRiskScore());
         } catch (Exception e) { // SEC-006 FIX
           log.warn("Erro best-effort velocity tracking (não bloqueia decisão): {}", e.getMessage());
+        }
+      }
+
+      // V5.0: record transaction into Neo4j Graph for fraud ring detection
+      if (neo4jGraphTrackingEnabled && neo4jGraphService.isCurrentlyAvailable()) {
+        try {
+          recordTransactionInGraph(request, decision);
+        } catch (Exception e) {
+          log.warn(
+              "Erro best-effort Neo4j graph tracking (não bloqueia decisão): {}", e.getMessage());
         }
       }
 
@@ -975,6 +999,69 @@ public class RuleEngineService {
     } catch (Exception e) {
       return null;
     }
+  }
+
+  /**
+   * V5.0: Record transaction into Neo4j graph for fraud ring detection. Extracts source and
+   * destination entities from the request and creates relationship in the graph database.
+   */
+  private void recordTransactionInGraph(TransactionRequest request, TransactionDecision decision) {
+    String fromAccount = extractSourceAccount(request);
+    String toAccount = extractDestinationEntity(request);
+
+    // Skip if either entity is missing - can't create valid relationship
+    if (fromAccount == null || toAccount == null || fromAccount.isBlank() || toAccount.isBlank()) {
+      log.debug(
+          "Neo4j graph tracking skipped: missing entity info (from={}, to={})",
+          fromAccount,
+          toAccount);
+      return;
+    }
+
+    double amount =
+        request.getTransactionAmount() != null ? request.getTransactionAmount().doubleValue() : 0.0;
+    long timestamp = System.currentTimeMillis();
+
+    neo4jGraphService.recordTransaction(fromAccount, toAccount, amount, timestamp);
+
+    log.debug(
+        "Neo4j graph: recorded transaction {} -> {} amount={} decision={}",
+        fromAccount,
+        toAccount,
+        amount,
+        decision.getClassification());
+  }
+
+  /**
+   * Extract source account identifier from transaction request. Uses customerAcctNumber or
+   * customerIdFromHeader.
+   */
+  private String extractSourceAccount(TransactionRequest request) {
+    // Prefer customerAcctNumber as primary account identifier
+    if (request.getCustomerAcctNumber() != null) {
+      return "ACCT_" + request.getCustomerAcctNumber();
+    }
+    // Fallback to customerIdFromHeader
+    if (request.getCustomerIdFromHeader() != null && !request.getCustomerIdFromHeader().isBlank()) {
+      return "CUST_" + request.getCustomerIdFromHeader();
+    }
+    return null;
+  }
+
+  /**
+   * Extract destination entity from transaction request. For credit transactions, the destination
+   * is typically the merchant.
+   */
+  private String extractDestinationEntity(TransactionRequest request) {
+    // For most transactions, the destination is the merchant
+    if (request.getMerchantId() != null && !request.getMerchantId().isBlank()) {
+      return "MERCH_" + request.getMerchantId();
+    }
+    // Fallback to acquirer if merchant is not available
+    if (request.getAcquirerId() != null && !request.getAcquirerId().isBlank()) {
+      return "ACQ_" + request.getAcquirerId();
+    }
+    return null;
   }
 
   /** Classe interna para armazenar resultado da avaliação de regras. */
