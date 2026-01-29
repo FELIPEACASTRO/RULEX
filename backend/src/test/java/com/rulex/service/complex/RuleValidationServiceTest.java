@@ -1,17 +1,21 @@
 package com.rulex.service.complex;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import com.rulex.dto.complex.ConditionDTO;
 import com.rulex.dto.complex.ConditionGroupDTO;
 import com.rulex.dto.complex.ConditionGroupDTO.LogicOperatorType;
 import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleCondition;
+import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 /**
  * Testes unitários para RuleValidationService. Valida a validação de regras e operadores.
@@ -25,7 +29,9 @@ class RuleValidationServiceTest {
 
   @BeforeEach
   void setUp() {
-    validationService = new RuleValidationService();
+    OperatorEvaluatorRegistry operatorRegistry = Mockito.mock(OperatorEvaluatorRegistry.class);
+    when(operatorRegistry.isImplemented(any(ConditionOperator.class))).thenReturn(true);
+    validationService = new RuleValidationService(operatorRegistry);
   }
 
   @Nested
