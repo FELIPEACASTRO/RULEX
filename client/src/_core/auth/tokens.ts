@@ -79,6 +79,9 @@ export function clearTokens(): void {
  * - Session-based authentication
  */
 export function getBasicAuthRaw(): string | null {
+  if (isProduction) {
+    return null;
+  }
   return localStorage.getItem(BASIC_AUTH_KEY) || null;
 }
 
@@ -87,6 +90,10 @@ export function getBasicAuthRaw(): string | null {
  * Apenas para desenvolvimento/staging.
  */
 export function setBasicAuthRaw(username: string, password: string): void {
+  if (isProduction) {
+    console.error("SEC-002: Basic Auth bloqueado em produção");
+    return;
+  }
   warnIfProduction("Armazenamento de credenciais Basic Auth");
   
   // SEC-002: Validação básica para evitar credenciais vazias

@@ -20,6 +20,7 @@ const DEFAULT_API_BASE_URL =
 // Opcional: Basic Auth (Spring Security HTTP Basic).
 // Formato: "usuario:senha" (ex.: "admin:rulex").
 const BASIC_AUTH_RAW = import.meta.env.VITE_API_BASIC_AUTH as string | undefined;
+const ALLOW_INSECURE_AUTH = !import.meta.env.PROD || import.meta.env.VITE_ALLOW_INSECURE_AUTH;
 
 // ========================================
 // TYPES
@@ -262,7 +263,7 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
   const url = `${DEFAULT_API_BASE_URL}${endpoint}`;
 
   const token = getAccessToken();
-  const basicAuthRaw = BASIC_AUTH_RAW || getBasicAuthRaw() || undefined;
+  const basicAuthRaw = ALLOW_INSECURE_AUTH ? BASIC_AUTH_RAW || getBasicAuthRaw() || undefined : undefined;
   const basicAuthHeader =
     !token && basicAuthRaw ? `Basic ${btoa(basicAuthRaw)}` : undefined;
 
@@ -350,7 +351,7 @@ export async function exportTransactions(
   const url = `${DEFAULT_API_BASE_URL}/api/transactions/export?${params.toString()}`;
   const token = getAccessToken();
   const basicAuthHeader =
-    !token && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
+    !token && ALLOW_INSECURE_AUTH && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
 
   const response = await fetch(url, {
     headers: {
@@ -617,7 +618,7 @@ export async function exportAuditLogs(
   const url = `${DEFAULT_API_BASE_URL}/api/audit/export?${params.toString()}`;
   const token = getAccessToken();
   const basicAuthHeader =
-    !token && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
+    !token && ALLOW_INSECURE_AUTH && BASIC_AUTH_RAW ? `Basic ${btoa(BASIC_AUTH_RAW)}` : undefined;
 
   const response = await fetch(url, {
     headers: {

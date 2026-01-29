@@ -6,6 +6,7 @@ import com.rulex.dto.RuleConditionDTO;
 import com.rulex.dto.RuleConfigurationDTO;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.entity.RuleConfiguration;
+import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.RuleConfigurationHistory;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.RuleConfigurationHistoryRepository;
@@ -35,6 +36,14 @@ public class RuleConfigurationService {
   private final AuditService auditService;
   private final SecurityContextService securityContextService;
   private final ObjectMapper objectMapper;
+
+    private static final Set<String> UNARY_OPERATORS =
+      Set.of("IS_NULL", "NOT_NULL", "IS_TRUE", "IS_FALSE");
+
+    private static final Set<String> RANGE_OPERATORS = Set.of("BETWEEN", "NOT_BETWEEN");
+
+    private static final Set<String> LEGACY_OPERATOR_ALIASES =
+      Set.of("MODULO_ZERO", "IN_LIST", "NOT_IN_LIST", "EQ_FIELD", "NEQ_FIELD", "GT_FIELD");
 
   /** Lista todas as regras. */
   public Page<RuleConfigurationDTO> listRules(Pageable pageable) {
@@ -329,6 +338,8 @@ public class RuleConfigurationService {
       return;
     }
 
+    validateOperatorsAndValues(conditions);
+
     final Set<String> allowedFields = getTransactionRequestFieldNames();
 
     List<String> invalidFields =
@@ -411,6 +422,69 @@ public class RuleConfigurationService {
           "Campos inválidos em conditions.field (não existem no payload TransactionRequest): "
               + String.join(", ", invalidFields));
     }
+  }
+
+  private void validateOperatorsAndValues(List<RuleConditionDTO> conditions) {
+    Set<String> validOperators = getAllowedOperators();
+
+    List<String> invalidOperators =
+        conditions.stream()
+            .map(RuleConditionDTO::getOperator)
+            .filter(op -> op != null && !op.isBlank())
+            .map(String::trim)
+            .map(op -> op.toUpperCase(java.util.Locale.ROOT))
+            .filter(op -> !validOperators.contains(op))
+            .distinct()
+            .toList();
+
+    if (!invalidOperators.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Operadores inválidos em conditions.operator: " + String.join(", ", invalidOperators));
+    }
+
+    List<String> invalidValues =
+        conditions.stream()
+            .filter(c -> c.getOperator() != null)
+            .filter(
+                c -> {
+                  String op = c.getOperator().trim().toUpperCase(java.util.Locale.ROOT);
+                  String value = c.getValue();
+                  if (UNARY_OPERATORS.contains(op)) {
+                    return value != null && !value.isBlank();
+                  }
+                  if (value == null || value.isBlank()) {
+                    return true;
+                  }
+                  if (RANGE_OPERATORS.contains(op) && !value.contains(",")) {
+                    return true;
+                  }
+                  return false;
+                })
+            .map(
+                c ->
+                    c.getField()
+                        + ":"
+                        + c.getOperator()
+                        + "='"
+                        + c.getValue()
+                        + "'")
+            .distinct()
+            .toList();
+
+    if (!invalidValues.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Valores inválidos em conditions.value (verifique operadores unários e BETWEEN): "
+              + String.join(", ", invalidValues));
+    }
+  }
+
+  private Set<String> getAllowedOperators() {
+    Set<String> operators =
+        Arrays.stream(ConditionOperator.values())
+            .map(Enum::name)
+            .collect(Collectors.toSet());
+    operators.addAll(LEGACY_OPERATOR_ALIASES);
+    return operators;
   }
 
   private Set<String> getTransactionRequestFieldNames() {

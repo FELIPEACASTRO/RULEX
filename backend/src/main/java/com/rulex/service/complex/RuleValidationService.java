@@ -4,9 +4,11 @@ import com.rulex.dto.complex.ConditionDTO;
 import com.rulex.dto.complex.ConditionGroupDTO;
 import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleCondition;
+import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +19,10 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class RuleValidationService {
+
+  private final OperatorEvaluatorRegistry operatorRegistry;
 
   // ========== Limites Anti-Abuso ==========
   /** Profundidade máxima de aninhamento de grupos */
@@ -163,6 +168,21 @@ public class RuleValidationService {
                 "Operador '%s' no campo '%s' não está implementado. "
                     + "Operadores de geolocalização (GEO_DISTANCE_LT, GEO_DISTANCE_GT, GEO_IN_POLYGON) "
                     + "requerem integração com serviço externo que ainda não está disponível.",
+                operatorName, fieldName != null ? fieldName : "desconhecido"));
+      }
+
+      try {
+        ConditionOperator op = ConditionOperator.valueOf(operatorName);
+        if (!operatorRegistry.isImplemented(op)) {
+          errors.add(
+              String.format(
+                  "Operador '%s' no campo '%s' não está implementado no engine",
+                  operatorName, fieldName != null ? fieldName : "desconhecido"));
+        }
+      } catch (IllegalArgumentException e) {
+        errors.add(
+            String.format(
+                "Operador '%s' no campo '%s' não existe no enum de operadores",
                 operatorName, fieldName != null ? fieldName : "desconhecido"));
       }
     }

@@ -3004,7 +3004,7 @@ const deriveHeadFirstExample = (name: string): HeadFirstExample => {
   const found = HEAD_FIRST_EXAMPLES[name] || HEAD_FIRST_EXAMPLES[upper];
   if (found) {
     const kind = classifyOperator(name);
-    const base = {
+    const base: HeadFirstExample = {
       ...found,
       docLevel: "manual",
       docConfidence: "high",
@@ -3025,7 +3025,7 @@ const deriveHeadFirstExample = (name: string): HeadFirstExample => {
     const kind = classifyOperator(name);
     const info = ANALOGIAS_POR_TIPO[kind];
     const sintaxeGerada = spec.syntax ?? guessDslForKind(name, kind);
-    const base = {
+    const base: HeadFirstExample = {
       docLevel: "spec",
       docConfidence: "high",
       docWarnings: [],
@@ -3088,7 +3088,7 @@ const deriveHeadFirstExample = (name: string): HeadFirstExample => {
   const sintaxeGerada = guessDslForKind(name, kind);
   const meta = docMetaForOperator(name);
   
-  const base = {
+  const base: HeadFirstExample = {
     docLevel: meta.level,
     docConfidence: meta.confidence,
     docWarnings: meta.warnings,
