@@ -14,19 +14,27 @@ import com.rulex.adapter.engine.RuleEngineRuleConfigurationAdapter;
 import com.rulex.adapter.engine.RuleEngineTransactionRepositoryAdapter;
 import com.rulex.core.engine.port.PayloadHashPort;
 import com.rulex.core.engine.port.RuleEngineAuditPort;
+import com.rulex.adapter.engine.RuleEngineConditionAdapter;
 import com.rulex.adapter.engine.RuleEngineContractValidationAdapter;
 import com.rulex.adapter.engine.RuleEngineDecisionAdapter;
 import com.rulex.adapter.engine.RuleEngineEnrichmentAdapter;
 import com.rulex.adapter.engine.RuleEngineGraphAdapter;
+import com.rulex.adapter.engine.RuleEngineLegacyRuleAdapter;
+import com.rulex.adapter.engine.RuleEnginePrecheckAdapter;
 import com.rulex.adapter.engine.RuleEngineVelocityAdapter;
 import com.rulex.adapter.engine.RuleOrderingAdapter;
+import com.rulex.adapter.engine.RuleEngineShadowAdapter;
 import com.rulex.adapter.engine.RuleEngineResponseAdapter;
 import com.rulex.core.engine.port.RuleEngineContractValidationPort;
+import com.rulex.core.engine.port.RuleEngineConditionPort;
 import com.rulex.core.engine.port.RuleEngineDecisionPort;
 import com.rulex.core.engine.port.RuleEngineDecisionRepositoryPort;
 import com.rulex.core.engine.port.RuleEngineEnrichmentPort;
 import com.rulex.core.engine.port.RuleEngineGraphPort;
+import com.rulex.core.engine.port.RuleEngineLegacyRulePort;
+import com.rulex.core.engine.port.RuleEnginePrecheckPort;
 import com.rulex.core.engine.port.RuleEngineResponsePort;
+import com.rulex.core.engine.port.RuleEngineShadowPort;
 import com.rulex.core.engine.port.RuleEngineRawStorePort;
 import com.rulex.core.engine.port.RuleEngineRuleConfigurationPort;
 import com.rulex.core.engine.port.RuleEngineTransactionRepositoryPort;
@@ -130,6 +138,8 @@ class RuleEngineServiceTest {
       new RuleEngineResponseAdapter(responseBuilder);
     private final RuleEngineConditionHelper conditionHelper =
       new RuleEngineConditionHelper(conditionMatcher);
+  private final RuleEngineConditionPort conditionPort =
+      new RuleEngineConditionAdapter(conditionHelper);
     private final ContractValidationHelper contractValidationHelper =
       new ContractValidationHelper(objectMapper, ruleExecutionLogService, clock);
   private final RuleEngineContractValidationPort contractValidationPort =
@@ -140,10 +150,16 @@ class RuleEngineServiceTest {
       new RuleEngineDecisionAdapter(decisionHelper);
     private final RuleEnginePrecheckHelper precheckHelper =
       new RuleEnginePrecheckHelper(bloomFilterService, impossibleTravelService, geoService);
+  private final RuleEnginePrecheckPort precheckPort =
+      new RuleEnginePrecheckAdapter(precheckHelper);
     private final ShadowRuleExecutionHelper shadowRuleExecutionHelper =
       new ShadowRuleExecutionHelper(shadowModeService);
+  private final RuleEngineShadowPort shadowPort =
+      new RuleEngineShadowAdapter(shadowRuleExecutionHelper);
     private final RuleEngineLegacyRuleHelper legacyRuleHelper =
       new RuleEngineLegacyRuleHelper(enrichmentService);
+  private final RuleEngineLegacyRulePort legacyPort =
+      new RuleEngineLegacyRuleAdapter(legacyRuleHelper);
     private final RuleCandidateIndexHelper candidateIndexHelper =
       new RuleCandidateIndexHelper(objectMapper, conditionMatcher);
 
@@ -162,12 +178,12 @@ class RuleEngineServiceTest {
           ruleOrderingPort,
           enrichmentPort,
         responsePort,
-        conditionHelper,
+        conditionPort,
         contractValidationPort,
         decisionPort,
-        precheckHelper,
-        shadowRuleExecutionHelper,
-        legacyRuleHelper,
+        precheckPort,
+        shadowPort,
+        legacyPort,
         candidateIndexHelper,
         bloomFilterService,
         impossibleTravelService,
