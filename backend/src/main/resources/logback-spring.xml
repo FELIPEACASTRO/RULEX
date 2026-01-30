@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  OPS-003 FIX: Configuração de logging estruturado para produção
+  
+  - Profile 'dev': Console com formato legível para desenvolvimento
+  - Profile 'prod': JSON estruturado para agregadores (ELK, Datadog, etc.)
+  
+  Uso:
+    - Dev: java -jar app.jar (usa console padrão)
+    - Prod: java -jar app.jar -Dspring.profiles.active=prod (usa JSON)
+-->
+<configuration>
+    
+    <!-- Propriedades comuns -->
+    <property name="LOG_PATH" value="${LOG_PATH:-logs}"/>
+    <property name="APP_NAME" value="${spring.application.name:-rulex-fraud-detection}"/>
+    
+    <!-- ========================================
+         APPENDERS
+         ======================================== -->
+    
+    <!-- Console Appender - Formato legível (dev) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    
+    <!-- Console JSON Appender - Formato estruturado (prod) -->
+    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+            <includeMdcKeyName>transactionId</includeMdcKeyName>
+            <customFields>{"service":"${APP_NAME}","environment":"${SPRING_PROFILES_ACTIVE:-unknown}"}</customFields>
+            <timeZone>UTC</timeZone>
+        </encoder>
+    </appender>
+    
+    <!-- File Appender - Rotação diária (opcional para prod) -->
+    <appender name="FILE_JSON" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${APP_NAME}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/${APP_NAME}.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+            <includeMdcKeyName>transactionId</includeMdcKeyName>
+            <customFields>{"service":"${APP_NAME}"}</customFields>
+            <timeZone>UTC</timeZone>
+        </encoder>
+    </appender>
+    
+    <!-- Async Appender para não bloquear threads -->
+    <appender name="ASYNC_JSON" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+        <appender-ref ref="CONSOLE_JSON"/>
+    </appender>
+    
+    <!-- ========================================
+         LOGGERS
+         ======================================== -->
+    
+    <!-- Reduzir verbosidade de frameworks -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="org.apache" level="WARN"/>
+    <logger name="io.netty" level="WARN"/>
+    <logger name="io.lettuce" level="WARN"/>
+    <logger name="org.neo4j" level="WARN"/>
+    
+    <!-- RULEX application logs -->
+    <logger name="com.rulex" level="${RULEX_LOG_LEVEL:-INFO}"/>
+    
+    <!-- SQL logging (apenas em dev) -->
+    <logger name="org.hibernate.SQL" level="${HIBERNATE_SQL_LOG_LEVEL:-WARN}"/>
+    <logger name="org.hibernate.type.descriptor.sql" level="WARN"/>
+    
+    <!-- ========================================
+         PROFILES
+         ======================================== -->
+    
+    <!-- Profile: dev (padrão) - Console legível -->
+    <springProfile name="!prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+    
+    <!-- Profile: prod - JSON estruturado -->
+    <springProfile name="prod">
+        <root level="${ROOT_LOG_LEVEL:-INFO}">
+            <appender-ref ref="ASYNC_JSON"/>
+        </root>
+    </springProfile>
+    
+</configuration>

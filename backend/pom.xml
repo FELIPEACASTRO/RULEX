@@ -275,6 +275,13 @@
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-exporter-logging</artifactId>
         </dependency>
+
+        <!-- OPS-003 FIX: Logstash Logback Encoder for JSON structured logging in production -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>7.4</version>
+        </dependency>
     </dependencies>
 
     <build>

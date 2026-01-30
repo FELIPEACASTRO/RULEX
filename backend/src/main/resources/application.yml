@@ -93,9 +93,11 @@ management:
     health:
       probes:
         enabled: true
-      # FASE-1 FIX: Expor detalhes do health check para diagnóstico
-      show-details: always
-      show-components: always
+      # SEC-001 FIX: Detalhes do health check apenas para usuários autenticados
+      # Em produção, evita expor informações sensíveis sobre infraestrutura
+      # Valores: never | when_authorized | always
+      show-details: ${ACTUATOR_HEALTH_SHOW_DETAILS:when_authorized}
+      show-components: ${ACTUATOR_HEALTH_SHOW_COMPONENTS:when_authorized}
   health:
     neo4j:
       # INFRA-001 FIX: Habilitado health check do Neo4j para detecção de falhas
