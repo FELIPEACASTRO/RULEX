@@ -14,13 +14,19 @@ import com.rulex.adapter.engine.RuleEngineRuleConfigurationAdapter;
 import com.rulex.adapter.engine.RuleEngineTransactionRepositoryAdapter;
 import com.rulex.core.engine.port.PayloadHashPort;
 import com.rulex.core.engine.port.RuleEngineAuditPort;
+import com.rulex.adapter.engine.RuleEngineContractValidationAdapter;
+import com.rulex.adapter.engine.RuleEngineDecisionAdapter;
 import com.rulex.adapter.engine.RuleEngineEnrichmentAdapter;
 import com.rulex.adapter.engine.RuleEngineGraphAdapter;
 import com.rulex.adapter.engine.RuleEngineVelocityAdapter;
 import com.rulex.adapter.engine.RuleOrderingAdapter;
+import com.rulex.adapter.engine.RuleEngineResponseAdapter;
+import com.rulex.core.engine.port.RuleEngineContractValidationPort;
+import com.rulex.core.engine.port.RuleEngineDecisionPort;
 import com.rulex.core.engine.port.RuleEngineDecisionRepositoryPort;
 import com.rulex.core.engine.port.RuleEngineEnrichmentPort;
 import com.rulex.core.engine.port.RuleEngineGraphPort;
+import com.rulex.core.engine.port.RuleEngineResponsePort;
 import com.rulex.core.engine.port.RuleEngineRawStorePort;
 import com.rulex.core.engine.port.RuleEngineRuleConfigurationPort;
 import com.rulex.core.engine.port.RuleEngineTransactionRepositoryPort;
@@ -120,12 +126,18 @@ class RuleEngineServiceTest {
     private final RuleEngineResponseBuilder responseBuilder =
       new RuleEngineResponseBuilder(
         decisionRepository, ruleConfigRepository, ruleExecutionLogService, objectMapper, clock);
+  private final RuleEngineResponsePort responsePort =
+      new RuleEngineResponseAdapter(responseBuilder);
     private final RuleEngineConditionHelper conditionHelper =
       new RuleEngineConditionHelper(conditionMatcher);
     private final ContractValidationHelper contractValidationHelper =
       new ContractValidationHelper(objectMapper, ruleExecutionLogService, clock);
+  private final RuleEngineContractValidationPort contractValidationPort =
+      new RuleEngineContractValidationAdapter(contractValidationHelper);
     private final RuleEngineDecisionHelper decisionHelper =
       new RuleEngineDecisionHelper(transactionRepository, objectMapper, clock);
+  private final RuleEngineDecisionPort decisionPort =
+      new RuleEngineDecisionAdapter(decisionHelper);
     private final RuleEnginePrecheckHelper precheckHelper =
       new RuleEnginePrecheckHelper(bloomFilterService, impossibleTravelService, geoService);
     private final ShadowRuleExecutionHelper shadowRuleExecutionHelper =
@@ -149,10 +161,10 @@ class RuleEngineServiceTest {
           enrichmentService,
           ruleOrderingPort,
           enrichmentPort,
-        responseBuilder,
+        responsePort,
         conditionHelper,
-        contractValidationHelper,
-        decisionHelper,
+        contractValidationPort,
+        decisionPort,
         precheckHelper,
         shadowRuleExecutionHelper,
         legacyRuleHelper,
