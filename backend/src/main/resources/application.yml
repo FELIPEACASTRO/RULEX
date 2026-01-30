@@ -256,6 +256,14 @@ rulex:
     timeout-seconds: ${RULEX_WEBHOOK_TIMEOUT:10}
     max-retries: ${RULEX_WEBHOOK_MAX_RETRIES:3}
     retry-backoff-ms: ${RULEX_WEBHOOK_RETRY_BACKOFF:500}
+    # RES-003 FIX: Dead Letter Queue para webhooks falhados
+    dlq:
+      enabled: ${RULEX_WEBHOOK_DLQ_ENABLED:true}
+      retry-interval-ms: ${RULEX_WEBHOOK_DLQ_RETRY_INTERVAL:30000}
+      retry-backoff-ms: ${RULEX_WEBHOOK_DLQ_BACKOFF:1000}
+      max-retries: ${RULEX_WEBHOOK_DLQ_MAX_RETRIES:5}
+      expire-after-hours: ${RULEX_WEBHOOK_DLQ_EXPIRE_HOURS:72}
+      cleanup-after-days: ${RULEX_WEBHOOK_DLQ_CLEANUP_DAYS:30}
 
 # GAP-E: Configuração SpringDoc OpenAPI
 springdoc:

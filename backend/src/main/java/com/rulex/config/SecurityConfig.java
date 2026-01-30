@@ -2,7 +2,9 @@ package com.rulex.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+import com.rulex.config.security.AuditBasicAuthenticationEntryPoint;
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -93,7 +95,10 @@ public class SecurityConfig {
   }
 
   @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http, RulexSecurityProperties props)
+  SecurityFilterChain securityFilterChain(
+      HttpSecurity http,
+      RulexSecurityProperties props,
+      org.springframework.beans.factory.ObjectProvider<AuditBasicAuthenticationEntryPoint> authEntryPointProvider)
       throws Exception {
 
     if (!props.enabled()) {
@@ -179,8 +184,16 @@ public class SecurityConfig {
                     .requestMatchers("/admin/**")
                     .hasRole("ADMIN")
                     .anyRequest()
-                    .authenticated())
-        .httpBasic(withDefaults());
+                    .authenticated());
+
+    // SEC-005 FIX: Usar entry point customizado para registrar falhas de autenticação
+    AuditBasicAuthenticationEntryPoint entryPoint = authEntryPointProvider.getIfAvailable();
+    if (entryPoint != null) {
+      http.httpBasic(basic -> basic.authenticationEntryPoint(entryPoint));
+    } else {
+      // Fallback para Basic Auth padrão se o bean não estiver disponível (ex: testes)
+      http.httpBasic(withDefaults());
+    }
 
     return http.build();
   }
