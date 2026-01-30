@@ -190,7 +190,13 @@ class RuleEngineServiceTest {
         geoService,
           velocityPort,
           graphPort,
-        conditionMatcher);
+        conditionMatcher,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true);
 
   @Test
   void returnsApproved_whenNoEnabledRules() {
