@@ -14,10 +14,16 @@ import com.rulex.adapter.engine.RuleEngineRuleConfigurationAdapter;
 import com.rulex.adapter.engine.RuleEngineTransactionRepositoryAdapter;
 import com.rulex.core.engine.port.PayloadHashPort;
 import com.rulex.core.engine.port.RuleEngineAuditPort;
+import com.rulex.adapter.engine.RuleEngineGraphAdapter;
+import com.rulex.adapter.engine.RuleEngineVelocityAdapter;
+import com.rulex.adapter.engine.RuleOrderingAdapter;
 import com.rulex.core.engine.port.RuleEngineDecisionRepositoryPort;
+import com.rulex.core.engine.port.RuleEngineGraphPort;
 import com.rulex.core.engine.port.RuleEngineRawStorePort;
 import com.rulex.core.engine.port.RuleEngineRuleConfigurationPort;
 import com.rulex.core.engine.port.RuleEngineTransactionRepositoryPort;
+import com.rulex.core.engine.port.RuleEngineVelocityPort;
+import com.rulex.core.engine.port.RuleOrderingPort;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
 import com.rulex.entity.RuleConfiguration;
@@ -90,6 +96,7 @@ class RuleEngineServiceTest {
   private final EnrichmentService enrichmentService = Mockito.mock(EnrichmentService.class);
 
   private final RuleOrderingService ruleOrderingService = Mockito.mock(RuleOrderingService.class);
+  private final RuleOrderingPort ruleOrderingPort = new RuleOrderingAdapter(ruleOrderingService);
 
   private final BloomFilterService bloomFilterService = Mockito.mock(BloomFilterService.class);
     private final ShadowModeService shadowModeService = Mockito.mock(ShadowModeService.class);
@@ -98,7 +105,9 @@ class RuleEngineServiceTest {
   private final GeoService geoService = Mockito.mock(GeoService.class);
   private final VelocityServiceFacade velocityServiceFacade =
       Mockito.mock(VelocityServiceFacade.class);
+  private final RuleEngineVelocityPort velocityPort = new RuleEngineVelocityAdapter(velocityServiceFacade);
     private final Neo4jGraphService neo4jGraphService = Mockito.mock(Neo4jGraphService.class);
+  private final RuleEngineGraphPort graphPort = new RuleEngineGraphAdapter(neo4jGraphService);
   private final com.rulex.service.enrichment.TransactionEnrichmentFacade
       transactionEnrichmentFacade = createMockEnrichmentFacade();
   // Usar instância real ao invés de mock - ConditionMatcher é stateless e não tem dependências
@@ -134,7 +143,7 @@ class RuleEngineServiceTest {
           rawStoreService,
           ruleExecutionLogService,
           enrichmentService,
-          ruleOrderingService,
+          ruleOrderingPort,
           transactionEnrichmentFacade,
         responseBuilder,
         conditionHelper,
@@ -147,8 +156,8 @@ class RuleEngineServiceTest {
         bloomFilterService,
         impossibleTravelService,
         geoService,
-        velocityServiceFacade,
-          neo4jGraphService,
+          velocityPort,
+          graphPort,
         conditionMatcher);
 
   @Test

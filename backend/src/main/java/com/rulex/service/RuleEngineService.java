@@ -12,8 +12,11 @@ import com.rulex.entity.Transaction;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.entity.TransactionRawStore;
 import com.rulex.core.engine.port.RuleEngineDecisionRepositoryPort;
+import com.rulex.core.engine.port.RuleEngineGraphPort;
 import com.rulex.core.engine.port.RuleEngineRuleConfigurationPort;
 import com.rulex.core.engine.port.RuleEngineTransactionRepositoryPort;
+import com.rulex.core.engine.port.RuleEngineVelocityPort;
+import com.rulex.core.engine.port.RuleOrderingPort;
 import com.rulex.service.engine.ConditionMatcher;
 import com.rulex.service.engine.ContractValidationHelper;
 import com.rulex.service.engine.RuleCandidateIndexHelper;
@@ -64,7 +67,7 @@ public class RuleEngineService implements com.rulex.core.engine.port.RuleEngineI
   private final RuleEngineRawStorePort rawStoreService;
   private final RuleExecutionLogService ruleExecutionLogService;
   private final EnrichmentService enrichmentService;
-  private final RuleOrderingService ruleOrderingService;
+  private final RuleOrderingPort ruleOrderingService;
   private final TransactionEnrichmentFacade transactionEnrichmentFacade;
   private final RuleEngineResponseBuilder responseBuilder;
   private final RuleEngineConditionHelper conditionHelper;
@@ -79,8 +82,8 @@ public class RuleEngineService implements com.rulex.core.engine.port.RuleEngineI
   private final BloomFilterService bloomFilterService;
   private final ImpossibleTravelService impossibleTravelService;
   private final GeoService geoService;
-  private final VelocityServiceFacade velocityServiceFacade;
-  private final Neo4jGraphService neo4jGraphService;
+  private final RuleEngineVelocityPort velocityServiceFacade;
+  private final RuleEngineGraphPort neo4jGraphService;
 
   // ARCH-003: Extracted helper classes
   private final ConditionMatcher conditionMatcher;
