@@ -11,9 +11,9 @@ import com.rulex.entity.RuleConfiguration;
 import com.rulex.entity.Transaction;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.entity.TransactionRawStore;
-import com.rulex.repository.RuleConfigurationRepository;
-import com.rulex.repository.TransactionDecisionRepository;
-import com.rulex.repository.TransactionRepository;
+import com.rulex.core.engine.port.RuleEngineDecisionRepositoryPort;
+import com.rulex.core.engine.port.RuleEngineRuleConfigurationPort;
+import com.rulex.core.engine.port.RuleEngineTransactionRepositoryPort;
 import com.rulex.service.engine.ConditionMatcher;
 import com.rulex.service.engine.ContractValidationHelper;
 import com.rulex.service.engine.RuleCandidateIndexHelper;
@@ -54,9 +54,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class RuleEngineService implements com.rulex.core.engine.port.RuleEngineInputPort {
 
-  private final TransactionRepository transactionRepository;
-  private final TransactionDecisionRepository decisionRepository;
-  private final RuleConfigurationRepository ruleConfigRepository;
+  private final RuleEngineTransactionRepositoryPort transactionRepository;
+  private final RuleEngineDecisionRepositoryPort decisionRepository;
+  private final RuleEngineRuleConfigurationPort ruleConfigRepository;
   private final RuleEngineAuditPort auditService;
   private final ObjectMapper objectMapper;
   private final Clock clock;

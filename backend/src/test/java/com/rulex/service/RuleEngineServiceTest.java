@@ -9,9 +9,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rulex.adapter.engine.RuleEngineDecisionRepositoryAdapter;
+import com.rulex.adapter.engine.RuleEngineRuleConfigurationAdapter;
+import com.rulex.adapter.engine.RuleEngineTransactionRepositoryAdapter;
 import com.rulex.core.engine.port.PayloadHashPort;
 import com.rulex.core.engine.port.RuleEngineAuditPort;
+import com.rulex.core.engine.port.RuleEngineDecisionRepositoryPort;
 import com.rulex.core.engine.port.RuleEngineRawStorePort;
+import com.rulex.core.engine.port.RuleEngineRuleConfigurationPort;
+import com.rulex.core.engine.port.RuleEngineTransactionRepositoryPort;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
 import com.rulex.entity.RuleConfiguration;
@@ -60,6 +66,12 @@ class RuleEngineServiceTest {
       Mockito.mock(TransactionDecisionRepository.class);
   private final RuleConfigurationRepository ruleConfigRepository =
       Mockito.mock(RuleConfigurationRepository.class);
+    private final RuleEngineTransactionRepositoryPort transactionRepositoryPort =
+      new RuleEngineTransactionRepositoryAdapter(transactionRepository);
+    private final RuleEngineDecisionRepositoryPort decisionRepositoryPort =
+      new RuleEngineDecisionRepositoryAdapter(decisionRepository);
+    private final RuleEngineRuleConfigurationPort ruleConfigRepositoryPort =
+      new RuleEngineRuleConfigurationAdapter(ruleConfigRepository);
   private final RuleEngineAuditPort auditService = Mockito.mock(RuleEngineAuditPort.class);
   private final ObjectMapper objectMapper = new ObjectMapper()
       .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
@@ -112,9 +124,9 @@ class RuleEngineServiceTest {
 
   private final RuleEngineService service =
       new RuleEngineService(
-          transactionRepository,
-          decisionRepository,
-          ruleConfigRepository,
+          transactionRepositoryPort,
+          decisionRepositoryPort,
+          ruleConfigRepositoryPort,
           auditService,
           objectMapper,
           clock,
