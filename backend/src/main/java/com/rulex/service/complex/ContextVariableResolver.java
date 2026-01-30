@@ -6,6 +6,7 @@ import com.rulex.entity.complex.RuleContextVariable;
 import com.rulex.repository.TransactionRepository;
 import com.rulex.service.VelocityService;
 import com.rulex.service.WebhookClient;
+import com.rulex.service.WebhookRetryService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ public class ContextVariableResolver {
   private final TransactionRepository transactionRepository;
   private final VelocityService velocityService;
   private final WebhookClient webhookClient;
+  private final WebhookRetryService webhookRetryService;
   private final JdbcTemplate jdbcTemplate;
   private final ObjectMapper objectMapper;
 
@@ -156,12 +158,15 @@ public class ContextVariableResolver {
 
     try {
       WebhookClient.WebhookResult result;
+      String resolvedMethod = method != null ? method.trim().toUpperCase() : "GET";
+      Map<String, Object> bodyToSend = null;
 
-      if ("POST".equalsIgnoreCase(method)) {
+      if ("POST".equalsIgnoreCase(resolvedMethod)) {
         Map<String, Object> body = (Map<String, Object>) config.get("body");
         if (body == null) {
           body = new HashMap<>(payload);
         }
+        bodyToSend = body;
         result = webhookClient.callWebhook(url, body, headers);
       } else {
         result = webhookClient.callExternalService(url, headers);
@@ -169,6 +174,15 @@ public class ContextVariableResolver {
 
       if (!result.isSuccess()) {
         log.warn("Serviço externo falhou para {}: {}", var.getName(), result.getErrorMessage());
+        webhookRetryService.recordFailure(
+            url,
+            bodyToSend != null ? bodyToSend : new HashMap<>(),
+            headers,
+            resolvedMethod,
+          var.getRuleVersionId(),
+            resolveTransactionId(payload),
+            resolveWebhookError(result),
+            result.getStatusCode());
         return null;
       }
 
@@ -234,6 +248,38 @@ public class ContextVariableResolver {
       log.debug("LOOKUP table falhou: {}", e.getMessage());
       return null;
     }
+  }
+
+  private String resolveTransactionId(Map<String, Object> payload) {
+    if (payload == null || payload.isEmpty()) {
+      return null;
+    }
+
+    Object value = payload.get("transactionId");
+    if (value == null) {
+      value = payload.get("externalTransactionId");
+    }
+    if (value == null) {
+      value = payload.get("transaction_id");
+    }
+    if (value == null) {
+      value = payload.get("id");
+    }
+
+    return value != null ? String.valueOf(value) : null;
+  }
+
+  private String resolveWebhookError(WebhookClient.WebhookResult result) {
+    if (result == null) {
+      return "External service failed";
+    }
+    if (result.getErrorMessage() != null && !result.getErrorMessage().isBlank()) {
+      return result.getErrorMessage();
+    }
+    if (result.getStatusCode() > 0) {
+      return "HTTP " + result.getStatusCode();
+    }
+    return "External service failed";
   }
 
   private Object resolveLookupList(Map<String, Object> config, Map<String, Object> payload, Map<String, Object> variables) {

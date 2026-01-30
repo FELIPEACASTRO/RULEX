@@ -35,13 +35,7 @@ public class AuditAuthenticationFailureHandler implements AuthenticationFailureH
 
   private final AuthenticationFailureRepository authenticationFailureRepository;
 
-  @Override
-  public void onAuthenticationFailure(
-      HttpServletRequest request,
-      HttpServletResponse response,
-      AuthenticationException exception)
-      throws IOException {
-
+  public void recordFailure(HttpServletRequest request, AuthenticationException exception) {
     String username = extractUsername(request);
     String ipAddress = extractClientIp(request);
     String userAgent = request.getHeader("User-Agent");
@@ -74,6 +68,16 @@ public class AuditAuthenticationFailureHandler implements AuthenticationFailureH
       // Não falhar a resposta se o registro de auditoria falhar
       log.error("Failed to persist authentication failure audit: {}", e.getMessage());
     }
+  }
+
+  @Override
+  public void onAuthenticationFailure(
+      HttpServletRequest request,
+      HttpServletResponse response,
+      AuthenticationException exception)
+      throws IOException {
+
+    recordFailure(request, exception);
 
     // Retornar 401 Unauthorized
     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

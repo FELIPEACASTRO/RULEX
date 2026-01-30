@@ -4,6 +4,7 @@ import com.rulex.dto.complex.*;
 import com.rulex.entity.complex.*;
 import com.rulex.repository.complex.*;
 import com.rulex.service.WebhookClient;
+import com.rulex.service.WebhookRetryService;
 import jakarta.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,6 +34,8 @@ public class ComplexRuleExecutionService {
   private final RuleExecutionDetailRepository executionDetailRepository;
   private final ContextVariableResolver contextVariableResolver;
   private final WebhookClient webhookClient;
+  private final WebhookRetryService webhookRetryService;
+  private final ComplexRuleRepository complexRuleRepository;
 
   /** Resultado completo da execução de uma regra */
   @Data
@@ -347,6 +350,18 @@ public class ComplexRuleExecutionService {
           WebhookClient.WebhookResult webhookResult = webhookClient.callWebhook(
               webhookUrl, webhookPayload, webhookHeaders);
 
+          if (!webhookResult.isSuccess()) {
+            webhookRetryService.recordFailure(
+                webhookUrl,
+                webhookPayload,
+                webhookHeaders,
+              "POST",
+              resolveRootRuleId(action.getRuleVersionId()),
+                resolveTransactionId(payload),
+                resolveWebhookError(webhookResult),
+                webhookResult.getStatusCode());
+          }
+
           result.put("webhookUrl", webhookUrl);
           result.put("success", webhookResult.isSuccess());
           result.put("statusCode", webhookResult.getStatusCode());
@@ -416,6 +431,48 @@ public class ComplexRuleExecutionService {
       }
     }
     return current;
+  }
+
+  private String resolveTransactionId(Map<String, Object> payload) {
+    if (payload == null || payload.isEmpty()) {
+      return null;
+    }
+
+    Object value = payload.get("transactionId");
+    if (value == null) {
+      value = payload.get("externalTransactionId");
+    }
+    if (value == null) {
+      value = payload.get("transaction_id");
+    }
+    if (value == null) {
+      value = payload.get("id");
+    }
+
+    return value != null ? String.valueOf(value) : null;
+  }
+
+  private String resolveWebhookError(WebhookClient.WebhookResult result) {
+    if (result == null) {
+      return "Webhook failed";
+    }
+    if (result.getErrorMessage() != null && !result.getErrorMessage().isBlank()) {
+      return result.getErrorMessage();
+    }
+    if (result.getStatusCode() > 0) {
+      return "HTTP " + result.getStatusCode();
+    }
+    return "Webhook failed";
+  }
+
+  private UUID resolveRootRuleId(UUID ruleVersionId) {
+    if (ruleVersionId == null) {
+      return null;
+    }
+    if (complexRuleRepository != null && complexRuleRepository.existsById(ruleVersionId)) {
+      return ruleVersionId;
+    }
+    return ruleVersionId;
   }
 
   /** Executa múltiplas regras e retorna resultados agregados */

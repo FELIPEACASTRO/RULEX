@@ -7,6 +7,7 @@ import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleConditionGroup.GroupLogicOperator;
 import com.rulex.entity.complex.RuleExecutionDetail;
 import com.rulex.exception.UnsupportedOperatorException;
+import com.rulex.service.OperatorMetricsService;
 import com.rulex.service.complex.evaluation.ConditionGroupEvaluator;
 import com.rulex.service.complex.evaluation.ExpectedValueFormatter;
 import com.rulex.service.complex.evaluator.OperatorEvaluator;
@@ -46,6 +47,7 @@ public class ComplexRuleEvaluator {
 
   private final OperatorEvaluatorRegistry operatorEvaluatorRegistry;
   private final ConditionGroupEvaluator conditionGroupEvaluator;
+  private final OperatorMetricsService operatorMetricsService;
 
   /** Resultado da avaliação de uma regra */
   @Data
@@ -249,7 +251,13 @@ public class ComplexRuleEvaluator {
           operator,
           evaluator.getClass().getSimpleName());
 
-      return evaluator.evaluate(condition, context);
+        if (operatorMetricsService != null) {
+        return operatorMetricsService.recordTimed(
+          operator,
+          () -> evaluator.evaluate(condition, context));
+        }
+
+        return evaluator.evaluate(condition, context);
 
     } catch (UnsupportedOperatorException e) {
       log.error("Operador não suportado no registry: {}", operator);

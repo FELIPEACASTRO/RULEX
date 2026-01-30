@@ -12,12 +12,14 @@ import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleCondition;
 import com.rulex.entity.complex.RuleConditionGroup;
 import com.rulex.entity.complex.RuleConditionGroup.GroupLogicOperator;
+import com.rulex.service.OperatorMetricsService;
 import com.rulex.service.complex.evaluator.OperatorEvaluator;
 import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
 import com.rulex.service.complex.evaluation.ConditionGroupEvaluator;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,6 +38,7 @@ class ComplexRuleEvaluatorTest {
   private OperatorEvaluatorRegistry operatorEvaluatorRegistry;
   private OperatorEvaluator mockEvaluator;
   private ConditionGroupEvaluator conditionGroupEvaluator;
+  private OperatorMetricsService operatorMetricsService;
   private ComplexRuleEvaluator evaluator;
 
   @BeforeEach
@@ -43,11 +46,20 @@ class ComplexRuleEvaluatorTest {
     operatorEvaluatorRegistry = Mockito.mock(OperatorEvaluatorRegistry.class);
     mockEvaluator = Mockito.mock(OperatorEvaluator.class);
     conditionGroupEvaluator = new ConditionGroupEvaluator();
+    operatorMetricsService = Mockito.mock(OperatorMetricsService.class);
 
     when(operatorEvaluatorRegistry.getEvaluator(any(ConditionOperator.class)))
         .thenReturn(mockEvaluator);
 
-    evaluator = new ComplexRuleEvaluator(operatorEvaluatorRegistry, conditionGroupEvaluator);
+    when(operatorMetricsService.recordTimed(any(), any())).thenAnswer(invocation -> {
+      @SuppressWarnings("unchecked")
+      Supplier<Boolean> supplier = (Supplier<Boolean>) invocation.getArgument(1);
+      return supplier.get();
+    });
+
+    evaluator =
+        new ComplexRuleEvaluator(
+            operatorEvaluatorRegistry, conditionGroupEvaluator, operatorMetricsService);
   }
 
   @Nested

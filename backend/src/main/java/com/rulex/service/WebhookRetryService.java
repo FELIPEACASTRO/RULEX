@@ -4,6 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rulex.entity.WebhookDeliveryFailure;
 import com.rulex.repository.WebhookDeliveryFailureRepository;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +14,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +36,7 @@ public class WebhookRetryService {
   private final WebhookDeliveryFailureRepository dlqRepository;
   private final WebhookClient webhookClient;
   private final ObjectMapper objectMapper;
+  private final MeterRegistry meterRegistry;
 
   @Value("${rulex.webhook.dlq.enabled:true}")
   private boolean dlqEnabled;
@@ -47,6 +52,37 @@ public class WebhookRetryService {
 
   @Value("${rulex.webhook.dlq.cleanup-after-days:30}")
   private int cleanupAfterDays;
+
+  @Value("${rulex.webhook.dlq.batch-size:100}")
+  private int batchSize;
+
+    @PostConstruct
+    void registerMetrics() {
+    Gauge.builder("rulex.webhook.dlq.pending", dlqRepository,
+        repo -> repo.countByStatus(WebhookDeliveryFailure.STATUS_PENDING))
+      .description("Webhooks pendentes na DLQ")
+      .register(meterRegistry);
+
+    Gauge.builder("rulex.webhook.dlq.retrying", dlqRepository,
+        repo -> repo.countByStatus(WebhookDeliveryFailure.STATUS_RETRYING))
+      .description("Webhooks em retry na DLQ")
+      .register(meterRegistry);
+
+    Gauge.builder("rulex.webhook.dlq.success", dlqRepository,
+        repo -> repo.countByStatus(WebhookDeliveryFailure.STATUS_SUCCESS))
+      .description("Webhooks concluídos com sucesso na DLQ")
+      .register(meterRegistry);
+
+    Gauge.builder("rulex.webhook.dlq.failed", dlqRepository,
+        repo -> repo.countByStatus(WebhookDeliveryFailure.STATUS_FAILED))
+      .description("Webhooks falhados na DLQ")
+      .register(meterRegistry);
+
+    Gauge.builder("rulex.webhook.dlq.expired", dlqRepository,
+        repo -> repo.countByStatus(WebhookDeliveryFailure.STATUS_EXPIRED))
+      .description("Webhooks expirados na DLQ")
+      .register(meterRegistry);
+    }
 
   /**
    * Registra uma falha de webhook na DLQ.
@@ -64,6 +100,7 @@ public class WebhookRetryService {
       String url,
       Map<String, Object> payload,
       Map<String, String> headers,
+      String httpMethod,
       UUID ruleId,
       String transactionId,
       String error,
@@ -80,6 +117,7 @@ public class WebhookRetryService {
               .webhookUrl(url)
               .payload(objectMapper.writeValueAsString(payload))
               .headers(headers != null ? objectMapper.writeValueAsString(headers) : null)
+            .httpMethod(normalizeMethod(httpMethod))
               .ruleId(ruleId)
               .transactionId(transactionId)
               .status(WebhookDeliveryFailure.STATUS_PENDING)
@@ -114,7 +152,8 @@ public class WebhookRetryService {
     }
 
     List<WebhookDeliveryFailure> pending =
-        dlqRepository.findPendingRetries(OffsetDateTime.now());
+        dlqRepository.findPendingRetriesLocked(
+            OffsetDateTime.now(), PageRequest.of(0, Math.max(1, batchSize)));
 
     if (pending.isEmpty()) {
       return;
@@ -144,7 +183,7 @@ public class WebhookRetryService {
           failure.getRetryCount() + 1);
 
       WebhookClient.WebhookResult result =
-          webhookClient.callWebhook(failure.getWebhookUrl(), payload, headers);
+          callWebhookByMethod(failure, payload, headers);
 
       if (result.isSuccess()) {
         failure.markSuccess();
@@ -233,5 +272,23 @@ public class WebhookRetryService {
   private String truncate(String value, int maxLength) {
     if (value == null) return null;
     return value.length() > maxLength ? value.substring(0, maxLength) : value;
+  }
+
+  private WebhookClient.WebhookResult callWebhookByMethod(
+      WebhookDeliveryFailure failure,
+      Map<String, Object> payload,
+      Map<String, String> headers) {
+    String method = normalizeMethod(failure.getHttpMethod());
+    if ("GET".equals(method)) {
+      return webhookClient.callExternalService(failure.getWebhookUrl(), headers);
+    }
+    return webhookClient.callWebhook(failure.getWebhookUrl(), payload, headers);
+  }
+
+  private String normalizeMethod(String method) {
+    if (method == null || method.isBlank()) {
+      return "POST";
+    }
+    return method.trim().toUpperCase();
   }
 }

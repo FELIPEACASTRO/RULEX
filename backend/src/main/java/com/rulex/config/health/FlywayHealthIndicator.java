@@ -2,11 +2,15 @@ package com.rulex.config.health;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationInfo;
 import org.flywaydb.core.api.MigrationInfoService;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
@@ -26,6 +30,19 @@ import org.springframework.stereotype.Component;
 public class FlywayHealthIndicator implements HealthIndicator {
 
   private final Flyway flyway;
+  private final MeterRegistry meterRegistry;
+  private final AtomicInteger failedMigrations = new AtomicInteger(0);
+  private final AtomicInteger pendingMigrations = new AtomicInteger(0);
+
+  @PostConstruct
+  void registerMetrics() {
+    Gauge.builder("rulex.flyway.migrations.failed", failedMigrations, AtomicInteger::get)
+        .description("Quantidade de migrations Flyway falhadas")
+        .register(meterRegistry);
+    Gauge.builder("rulex.flyway.migrations.pending", pendingMigrations, AtomicInteger::get)
+        .description("Quantidade de migrations Flyway pendentes")
+        .register(meterRegistry);
+  }
 
   @Override
   public Health health() {
@@ -55,6 +72,9 @@ public class FlywayHealthIndicator implements HealthIndicator {
       details.put("appliedMigrations", applied != null ? applied.length : 0);
       details.put("pendingMigrations", pending != null ? pending.length : 0);
       details.put("failedMigrations", failed != null ? failed.length : 0);
+
+      failedMigrations.set(failed != null ? failed.length : 0);
+      pendingMigrations.set(pending != null ? pending.length : 0);
 
       // Se há migrations falhadas, status DOWN
       if (failed != null && failed.length > 0) {

@@ -3,6 +3,7 @@ package com.rulex.v31.ast;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleCondition;
+import com.rulex.service.OperatorMetricsService;
 import com.rulex.service.complex.ComplexRuleEvaluator.EvaluationContext;
 import com.rulex.service.complex.evaluator.OperatorEvaluator;
 import com.rulex.service.complex.evaluator.OperatorEvaluatorRegistry;
@@ -20,13 +21,23 @@ import java.util.Objects;
 public class AstEvaluator {
 
   private final OperatorEvaluatorRegistry operatorEvaluatorRegistry;
+  private final OperatorMetricsService operatorMetricsService;
 
   public AstEvaluator() {
     this.operatorEvaluatorRegistry = null;
+    this.operatorMetricsService = null;
   }
 
   public AstEvaluator(OperatorEvaluatorRegistry operatorEvaluatorRegistry) {
     this.operatorEvaluatorRegistry = operatorEvaluatorRegistry;
+    this.operatorMetricsService = null;
+  }
+
+  public AstEvaluator(
+      OperatorEvaluatorRegistry operatorEvaluatorRegistry,
+      OperatorMetricsService operatorMetricsService) {
+    this.operatorEvaluatorRegistry = operatorEvaluatorRegistry;
+    this.operatorMetricsService = operatorMetricsService;
   }
 
   public boolean evaluate(JsonNode ast, JsonNode payload) {
@@ -190,6 +201,11 @@ public class AstEvaluator {
             .build();
 
     OperatorEvaluator evaluator = operatorEvaluatorRegistry.getEvaluator(conditionOperator);
+    if (operatorMetricsService != null) {
+      return operatorMetricsService.recordTimed(
+          conditionOperator,
+          () -> evaluator.evaluate(condition, ctx));
+    }
     return evaluator.evaluate(condition, ctx);
   }
 

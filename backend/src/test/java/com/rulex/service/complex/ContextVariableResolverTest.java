@@ -15,6 +15,7 @@ import com.rulex.entity.complex.RuleContextVariable;
 import com.rulex.repository.TransactionRepository;
 import com.rulex.service.VelocityService;
 import com.rulex.service.WebhookClient;
+import com.rulex.service.WebhookRetryService;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ class ContextVariableResolverTest {
   @Mock private TransactionRepository transactionRepository;
   @Mock private VelocityService velocityService;
   @Mock private WebhookClient webhookClient;
+    @Mock private WebhookRetryService webhookRetryService;
   @Mock private JdbcTemplate jdbcTemplate;
 
   private ContextVariableResolver resolver;
@@ -41,7 +43,12 @@ class ContextVariableResolverTest {
   void setUp() {
     resolver =
         new ContextVariableResolver(
-            transactionRepository, velocityService, webhookClient, jdbcTemplate, new ObjectMapper());
+            transactionRepository,
+            velocityService,
+            webhookClient,
+            webhookRetryService,
+            jdbcTemplate,
+            new ObjectMapper());
   }
 
   @Test

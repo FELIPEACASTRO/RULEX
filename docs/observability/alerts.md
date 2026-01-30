@@ -5,7 +5,7 @@
 ### SLOs Primários
 
 | Métrica | Target | Crítico |
-|---------|--------|---------|
+| ------- | ------ | ------- |
 | Disponibilidade | 99.9% | < 99.5% |
 | Latência P95 (evaluate) | < 100ms | > 500ms |
 | Latência P99 (evaluate) | < 200ms | > 1s |
@@ -15,7 +15,7 @@
 ### SLOs por Componente
 
 | Componente | Disponibilidade | Latência P95 |
-|------------|-----------------|--------------|
+| ---------- | --------------- | ------------ |
 | API Gateway | 99.95% | 50ms |
 | Rule Engine | 99.9% | 80ms |
 | PostgreSQL | 99.9% | 20ms |
@@ -23,6 +23,11 @@
 | Neo4j | 99.5% | 100ms |
 
 ## Alertas Prometheus
+
+> Nota: métricas Micrometer com pontos (`.`) são exportadas no Prometheus com
+> underscores (`_`). Ex.: `rulex.webhook.dlq.pending` ->
+> `rulex_webhook_dlq_pending` e `rulex.flyway.migrations.failed` ->
+> `rulex_flyway_migrations_failed`.
 
 ### 1. Disponibilidade
 
@@ -38,7 +43,8 @@ groups:
           severity: critical
         annotations:
           summary: "RULEX API está DOWN"
-          description: "Instância {{ $labels.instance }} não está respondendo há mais de 1 minuto"
+          description: >-
+            Instância {{ $labels.instance }} não está respondendo há mais de 1 minuto
 
       - alert: RulexHighErrorRate
         expr: |
@@ -49,7 +55,8 @@ groups:
           severity: warning
         annotations:
           summary: "Taxa de erro alta no RULEX"
-          description: "Taxa de erro 5xx está em {{ $value | humanizePercentage }}"
+          description: >-
+            Taxa de erro 5xx está em {{ $value | humanizePercentage }}
 
       - alert: RulexCriticalErrorRate
         expr: |
@@ -60,7 +67,9 @@ groups:
           severity: critical
         annotations:
           summary: "Taxa de erro CRÍTICA no RULEX"
-          description: "Taxa de erro 5xx está em {{ $value | humanizePercentage }} - AÇÃO IMEDIATA NECESSÁRIA"
+          description: >-
+            Taxa de erro 5xx está em {{ $value | humanizePercentage }} - AÇÃO
+            IMEDIATA NECESSÁRIA
 ```
 
 ### 2. Latência
@@ -73,7 +82,8 @@ groups:
       - alert: RulexHighLatencyP95
         expr: |
           histogram_quantile(0.95, 
-            sum(rate(http_server_requests_seconds_bucket{uri="/api/evaluate"}[5m])) by (le)
+            sum(rate(http_server_requests_seconds_bucket{uri="/api/evaluate"}[5m]))
+            by (le)
           ) > 0.1
         for: 5m
         labels:
@@ -85,14 +95,16 @@ groups:
       - alert: RulexCriticalLatencyP99
         expr: |
           histogram_quantile(0.99, 
-            sum(rate(http_server_requests_seconds_bucket{uri="/api/evaluate"}[5m])) by (le)
+            sum(rate(http_server_requests_seconds_bucket{uri="/api/evaluate"}[5m]))
+            by (le)
           ) > 1
         for: 2m
         labels:
           severity: critical
         annotations:
           summary: "Latência P99 CRÍTICA no endpoint /evaluate"
-          description: "P99 está em {{ $value | humanizeDuration }} - Investigar imediatamente"
+          description: >-
+            P99 está em {{ $value | humanizeDuration }} - Investigar imediatamente
 
       - alert: RulexSlowRuleEvaluation
         expr: |
@@ -104,7 +116,8 @@ groups:
           severity: warning
         annotations:
           summary: "Avaliação de regras lenta"
-          description: "P95 de avaliação de regras está em {{ $value | humanizeDuration }}"
+          description: >-
+            P95 de avaliação de regras está em {{ $value | humanizeDuration }}
 ```
 
 ### 3. Infraestrutura

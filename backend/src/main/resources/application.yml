@@ -264,6 +264,7 @@ rulex:
       max-retries: ${RULEX_WEBHOOK_DLQ_MAX_RETRIES:5}
       expire-after-hours: ${RULEX_WEBHOOK_DLQ_EXPIRE_HOURS:72}
       cleanup-after-days: ${RULEX_WEBHOOK_DLQ_CLEANUP_DAYS:30}
+      batch-size: ${RULEX_WEBHOOK_DLQ_BATCH_SIZE:100}
 
 # GAP-E: Configuração SpringDoc OpenAPI
 springdoc:

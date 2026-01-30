@@ -45,6 +45,11 @@ public class WebhookDeliveryFailure {
   @JdbcTypeCode(SqlTypes.JSON)
   private String headers;
 
+  @Column(name = "http_method", nullable = false, length = 10)
+  @Builder.Default
+  private String httpMethod = "POST";
+
+  /** ID da regra raiz (ex: complex_rule.id) responsável pelo webhook */
   @Column(name = "rule_id")
   private UUID ruleId;
 
