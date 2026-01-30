@@ -6,7 +6,7 @@ import com.rulex.entity.AuditLog;
 import com.rulex.entity.Transaction;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.AuditLogRepository;
-import com.rulex.service.RuleEngineService.RuleEvaluationResult;
+import com.rulex.core.engine.model.RuleEvaluationResult;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.HashMap;

@@ -5,6 +5,7 @@ import com.rulex.dto.EvaluateResponse;
 import com.rulex.dto.RuleConditionDTO;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
+import com.rulex.core.engine.model.RuleEvaluationResult;
 import com.rulex.dto.TriggeredRuleDTO;
 import com.rulex.entity.RuleConfiguration;
 import com.rulex.entity.Transaction;
@@ -1062,18 +1063,6 @@ public class RuleEngineService implements com.rulex.core.engine.port.RuleEngineI
       return "ACQ_" + request.getAcquirerId();
     }
     return null;
-  }
-
-  /** Classe interna para armazenar resultado da avaliação de regras. */
-  @lombok.Data
-  @lombok.NoArgsConstructor
-  @lombok.AllArgsConstructor
-  public static class RuleEvaluationResult {
-    private int riskScore;
-    private List<TriggeredRuleDTO> triggeredRules;
-    private Map<String, Object> scoreDetails;
-    private TransactionDecision.TransactionClassification classification;
-    private String reason;
   }
 
   private record RuleMatch(boolean triggered, String detail) {}

@@ -11,7 +11,7 @@ import com.rulex.entity.Transaction;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.repository.RuleConfigurationRepository;
 import com.rulex.repository.TransactionDecisionRepository;
-import com.rulex.service.RuleEngineService;
+import com.rulex.core.engine.model.RuleEvaluationResult;
 import com.rulex.v31.execlog.ExecutionEventType;
 import com.rulex.v31.execlog.RuleExecutionLogService;
 import java.time.Clock;
@@ -96,7 +96,7 @@ public class RuleEngineResponseBuilder {
   public EvaluateResponse buildEvaluateResponse(
       Transaction transaction,
       TransactionDecision decision,
-      RuleEngineService.RuleEvaluationResult result,
+      RuleEvaluationResult result,
       long processingTime) {
     List<RuleHitDTO> ruleHits = enrichRuleHits(result.getTriggeredRules());
     List<PopupDTO> popups = aggregatePopups(ruleHits);
@@ -118,7 +118,7 @@ public class RuleEngineResponseBuilder {
         public TransactionResponse buildResponse(
         Transaction transaction,
         TransactionDecision decision,
-        RuleEngineService.RuleEvaluationResult result,
+        RuleEvaluationResult result,
         long processingTime) {
           return TransactionResponse.builder()
           .id(transaction.getId())
