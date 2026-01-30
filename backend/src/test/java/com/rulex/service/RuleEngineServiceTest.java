@@ -14,10 +14,12 @@ import com.rulex.adapter.engine.RuleEngineRuleConfigurationAdapter;
 import com.rulex.adapter.engine.RuleEngineTransactionRepositoryAdapter;
 import com.rulex.core.engine.port.PayloadHashPort;
 import com.rulex.core.engine.port.RuleEngineAuditPort;
+import com.rulex.adapter.engine.RuleEngineEnrichmentAdapter;
 import com.rulex.adapter.engine.RuleEngineGraphAdapter;
 import com.rulex.adapter.engine.RuleEngineVelocityAdapter;
 import com.rulex.adapter.engine.RuleOrderingAdapter;
 import com.rulex.core.engine.port.RuleEngineDecisionRepositoryPort;
+import com.rulex.core.engine.port.RuleEngineEnrichmentPort;
 import com.rulex.core.engine.port.RuleEngineGraphPort;
 import com.rulex.core.engine.port.RuleEngineRawStorePort;
 import com.rulex.core.engine.port.RuleEngineRuleConfigurationPort;
@@ -108,8 +110,10 @@ class RuleEngineServiceTest {
   private final RuleEngineVelocityPort velocityPort = new RuleEngineVelocityAdapter(velocityServiceFacade);
     private final Neo4jGraphService neo4jGraphService = Mockito.mock(Neo4jGraphService.class);
   private final RuleEngineGraphPort graphPort = new RuleEngineGraphAdapter(neo4jGraphService);
-  private final com.rulex.service.enrichment.TransactionEnrichmentFacade
+    private final com.rulex.service.enrichment.TransactionEnrichmentFacade
       transactionEnrichmentFacade = createMockEnrichmentFacade();
+    private final RuleEngineEnrichmentPort enrichmentPort =
+      new RuleEngineEnrichmentAdapter(transactionEnrichmentFacade);
   // Usar instância real ao invés de mock - ConditionMatcher é stateless e não tem dependências
     private final ConditionMatcher conditionMatcher = new ConditionMatcher();
 
@@ -144,7 +148,7 @@ class RuleEngineServiceTest {
           ruleExecutionLogService,
           enrichmentService,
           ruleOrderingPort,
-          transactionEnrichmentFacade,
+          enrichmentPort,
         responseBuilder,
         conditionHelper,
         contractValidationHelper,

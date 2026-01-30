@@ -12,6 +12,7 @@ import com.rulex.entity.Transaction;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.entity.TransactionRawStore;
 import com.rulex.core.engine.port.RuleEngineDecisionRepositoryPort;
+import com.rulex.core.engine.port.RuleEngineEnrichmentPort;
 import com.rulex.core.engine.port.RuleEngineGraphPort;
 import com.rulex.core.engine.port.RuleEngineRuleConfigurationPort;
 import com.rulex.core.engine.port.RuleEngineTransactionRepositoryPort;
@@ -29,7 +30,6 @@ import com.rulex.service.engine.ShadowRuleExecutionHelper;
 import com.rulex.core.engine.port.PayloadHashPort;
 import com.rulex.core.engine.port.RuleEngineAuditPort;
 import com.rulex.core.engine.port.RuleEngineRawStorePort;
-import com.rulex.service.enrichment.TransactionEnrichmentFacade;
 import com.rulex.util.PanMaskingUtil;
 import com.rulex.v31.execlog.ExecutionEventType;
 import com.rulex.v31.execlog.RuleExecutionLogService;
@@ -68,7 +68,7 @@ public class RuleEngineService implements com.rulex.core.engine.port.RuleEngineI
   private final RuleExecutionLogService ruleExecutionLogService;
   private final EnrichmentService enrichmentService;
   private final RuleOrderingPort ruleOrderingService;
-  private final TransactionEnrichmentFacade transactionEnrichmentFacade;
+  private final RuleEngineEnrichmentPort transactionEnrichmentFacade;
   private final RuleEngineResponseBuilder responseBuilder;
   private final RuleEngineConditionHelper conditionHelper;
   private final ContractValidationHelper contractValidationHelper;
@@ -501,7 +501,7 @@ public class RuleEngineService implements com.rulex.core.engine.port.RuleEngineI
 
     // V4.1: Enriquecimento completo da transação usando TransactionEnrichmentFacade
     // Isso disponibiliza todos os 103+ campos derivados para avaliação de regras
-    TransactionEnrichmentFacade.FullEnrichmentContext enrichmentContext =
+    com.rulex.service.enrichment.TransactionEnrichmentFacade.FullEnrichmentContext enrichmentContext =
         transactionEnrichmentFacade.enrichFull(request);
     Map<String, Object> enrichedFields = enrichmentContext.toFlatMap();
     log.debug(
