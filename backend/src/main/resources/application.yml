@@ -147,7 +147,10 @@ rulex:
     shadowMode:
       enabled: true
     impossibleTravel:
-      enabled: false
+      # GAP-002 FIX: Habilitado via variável de ambiente (default: true para staging/prod)
+      # Detecta viagens fisicamente impossíveis entre transações consecutivas
+      # Thresholds configuráveis em rulex.fraud.impossible-travel-*
+      enabled: ${RULEX_IMPOSSIBLE_TRAVEL_ENABLED:true}
     velocity:
       redis:
         # GAP-FIX #2: Habilitado para performance - usa cache em memória com sliding windows
@@ -175,9 +178,10 @@ rulex:
     log-all-decisions: ${RULEX_AUDIT_LOG_ALL:false}
   access-log:
     enabled: ${RULEX_ACCESS_LOG_ENABLED:true}
+    # GAP-011 FIX: Aumentado sampling rate de 10% para 25% para melhor debugging
     # Sampling rate para logs de sucesso (0.0 = nenhum, 1.0 = todos)
     # Erros (4xx/5xx) e mutações (POST/PUT/DELETE) são sempre logados
-    success-sampling-rate: ${RULEX_ACCESS_LOG_SAMPLING:0.1}
+    success-sampling-rate: ${RULEX_ACCESS_LOG_SAMPLING:0.25}
     retention-days: ${RULEX_ACCESS_LOG_RETENTION_DAYS:30}
     cleanup-enabled: ${RULEX_ACCESS_LOG_CLEANUP_ENABLED:true}
   retention:
@@ -244,6 +248,12 @@ rulex:
     velocity-cache-ttl-seconds: ${RULEX_VELOCITY_CACHE_TTL:30}
     velocity-cache-max-size: ${RULEX_VELOCITY_CACHE_SIZE:10000}
     bin-cache-ttl-seconds: ${RULEX_BIN_CACHE_TTL:3600}
+  # GAP-007 FIX: Configuração de Webhooks com retry habilitado
+  webhook:
+    enabled: ${RULEX_WEBHOOK_ENABLED:true}
+    timeout-seconds: ${RULEX_WEBHOOK_TIMEOUT:10}
+    max-retries: ${RULEX_WEBHOOK_MAX_RETRIES:3}
+    retry-backoff-ms: ${RULEX_WEBHOOK_RETRY_BACKOFF:500}
 
 # GAP-E: Configuração SpringDoc OpenAPI
 springdoc:

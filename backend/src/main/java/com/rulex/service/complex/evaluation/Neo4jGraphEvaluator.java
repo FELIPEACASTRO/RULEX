@@ -1,9 +1,7 @@
 package com.rulex.service.complex.evaluation;
 
 import com.rulex.dto.TransactionRequest;
-import com.rulex.entity.complex.ConditionOperator;
 import com.rulex.entity.complex.RuleCondition;
-import com.rulex.exception.UnsupportedOperatorException;
 import com.rulex.service.Neo4jGraphService;
 import com.rulex.service.complex.ComplexRuleEvaluator.EvaluationContext;
 import com.rulex.service.complex.parsing.NumericParser;
@@ -203,11 +201,77 @@ public final class Neo4jGraphEvaluator {
     return probability > threshold;
   }
 
+  /**
+   * Detecta padrões temporais de motif no grafo de transações.
+   *
+   * <p>Motifs são padrões estruturais recorrentes em grafos temporais que podem indicar:
+   * - TRIANGLE: Três contas transacionando entre si em sequência
+   * - STAR: Uma conta central recebendo/enviando para múltiplas contas
+   * - CHAIN: Sequência linear de transações (A→B→C→D)
+   * - CYCLE: Transações que retornam à origem
+   *
+   * <p>Formato do valor: "pattern|threshold" ou apenas "threshold"
+   * Exemplos: "TRIANGLE|3", "STAR|5", "2" (usa TRIANGLE como padrão)
+   *
+   * @param condition Condição com o padrão e threshold
+   * @param context Contexto de avaliação
+   * @param neo4jGraphService Serviço Neo4j
+   * @return true se o número de motifs encontrados >= threshold
+   */
   public static boolean evaluateNeo4jTemporalMotifPattern(
       RuleCondition condition, EvaluationContext context, Neo4jGraphService neo4jGraphService) {
-    throw new UnsupportedOperatorException(
-        ConditionOperator.NEO4J_TEMPORAL_MOTIF_PATTERN,
-        "Operador PLANNED - não implementado. Consulte GET /api/operators/status.");
+    String accountId = getAccountId(context);
+    if (accountId == null) return false;
+
+    // Parse do valor: "pattern|threshold" ou apenas "threshold"
+    String valueSingle = condition.getValueSingle();
+    String motifPattern = "TRIANGLE"; // padrão default
+    int threshold = 1;
+
+    if (valueSingle != null && !valueSingle.isBlank()) {
+      String[] parts = valueSingle.split("\\|");
+      if (parts.length >= 2) {
+        motifPattern = parts[0].trim().toUpperCase();
+        threshold = parseIntSafe(parts[1].trim(), 1);
+      } else {
+        // Tenta interpretar como número (threshold) ou como pattern
+        try {
+          threshold = Integer.parseInt(parts[0].trim());
+        } catch (NumberFormatException e) {
+          motifPattern = parts[0].trim().toUpperCase();
+        }
+      }
+    }
+
+    // Validar padrão suportado
+    if (!isValidMotifPattern(motifPattern)) {
+      log.warn(
+          "NEO4J_TEMPORAL_MOTIF: Padrão '{}' não reconhecido. Usando TRIANGLE.", motifPattern);
+      motifPattern = "TRIANGLE";
+    }
+
+    int count = neo4jGraphService.getTemporalMotifCount(accountId, motifPattern);
+    log.debug(
+        "NEO4J_TEMPORAL_MOTIF: accountId={}, pattern={}, count={}, threshold={}",
+        accountId,
+        motifPattern,
+        count,
+        threshold);
+    return count >= threshold;
+  }
+
+  /**
+   * Valida se o padrão de motif é suportado.
+   */
+  private static boolean isValidMotifPattern(String pattern) {
+    return pattern != null
+        && (pattern.equals("TRIANGLE")
+            || pattern.equals("STAR")
+            || pattern.equals("CHAIN")
+            || pattern.equals("CYCLE")
+            || pattern.equals("FAN_OUT")
+            || pattern.equals("FAN_IN")
+            || pattern.equals("BIPARTITE"));
   }
 
   private static int parseIntSafe(String value, int defaultValue) {
