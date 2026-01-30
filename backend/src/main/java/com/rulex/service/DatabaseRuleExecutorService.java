@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Serviço que executa regras de fraude configuradas no banco de dados. Substitui a lógica hardcoded
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class DatabaseRuleExecutorService {
 
   private final RuleConfigurationRepository ruleConfigRepository;

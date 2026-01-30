@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Serviço de ordenação otimizada de regras para máxima eficiência de execução.
@@ -36,10 +37,10 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class RuleOrderingService {
 
   private final RuleConfigurationRepository ruleConfigRepository;
-  private final RuleMetricsService ruleMetricsService;
 
   // Cache de ordenação otimizada (atualizado periodicamente)
   private volatile List<RuleConfiguration> optimizedOrderCache = new ArrayList<>();

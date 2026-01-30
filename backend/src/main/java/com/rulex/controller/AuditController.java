@@ -1,7 +1,7 @@
 package com.rulex.controller;
 
 import com.rulex.dto.AuditLogDTO;
-import com.rulex.service.AuditQueryService;
+import com.rulex.core.audit.port.AuditQueryInputPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Auditoria", description = "Consulta e exportação de logs de auditoria")
 public class AuditController {
 
-  private final AuditQueryService auditQueryService;
+  private final AuditQueryInputPort auditQueryService;
 
   /**
    * Lista logs de auditoria com filtros. GET /api/audit?actionType=...&result=...&page=0&size=20

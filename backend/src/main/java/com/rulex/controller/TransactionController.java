@@ -6,7 +6,7 @@ import com.rulex.dto.TransactionResponse;
 import com.rulex.dto.TriggeredRuleDTO;
 import com.rulex.service.AdvancedRuleEngineService;
 import com.rulex.service.RuleEngineService;
-import com.rulex.service.TransactionQueryService;
+import com.rulex.core.transaction.port.TransactionQueryInputPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.*;
 public class TransactionController {
 
   private final RuleEngineService ruleEngineService;
-  private final TransactionQueryService transactionQueryService;
+  private final TransactionQueryInputPort transactionQueryService;
   private final AdvancedRuleEngineService advancedRuleEngineService;
   private final Clock clock;
 
@@ -246,8 +246,10 @@ public class TransactionController {
       @Parameter(description = "ID da transação") @PathVariable Long id) {
     log.info("Obtendo detalhes da transação: {}", id);
 
-    TransactionResponse transaction = transactionQueryService.getTransactionById(id);
-    return ResponseEntity.ok(transaction);
+    return transactionQueryService
+      .getTransactionById(id)
+      .map(ResponseEntity::ok)
+      .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
   /**
@@ -260,9 +262,10 @@ public class TransactionController {
       @Parameter(description = "ID externo da transação") @PathVariable String externalId) {
     log.info("Obtendo transação pelo ID externo: {}", externalId);
 
-    TransactionResponse transaction =
-        transactionQueryService.getTransactionByExternalId(externalId);
-    return ResponseEntity.ok(transaction);
+    return transactionQueryService
+      .getTransactionByExternalId(externalId)
+      .map(ResponseEntity::ok)
+      .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
   /**

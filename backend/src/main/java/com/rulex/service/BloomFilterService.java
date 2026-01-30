@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * High-performance Bloom Filter service for blocklist/allowlist lookups.
@@ -167,6 +168,7 @@ public class BloomFilterService {
    * change significantly.
    */
   @Scheduled(fixedRate = 3600_000) // Every hour
+  @Transactional(readOnly = true)
   public void rebuildFilters() {
     log.info("Rebuilding Bloom filters from database...");
     long startTime = System.currentTimeMillis();

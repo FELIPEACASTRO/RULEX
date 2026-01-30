@@ -2,8 +2,8 @@ package com.rulex.controller;
 
 import com.rulex.dto.RuleConfigurationDTO;
 import com.rulex.entity.RuleApproval;
-import com.rulex.service.RuleApprovalService;
-import com.rulex.service.RuleApprovalService.ApprovalResult;
+import com.rulex.core.approval.port.RuleApprovalInputPort;
+import com.rulex.core.approval.usecase.RuleApprovalUseCase.ApprovalResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Aprovações", description = "Workflow de aprovação de regras (4 olhos)")
 public class RuleApprovalController {
 
-  private final RuleApprovalService approvalService;
+  private final RuleApprovalInputPort approvalService;
 
   /** Solicita aprovação para criar uma regra. POST /api/rules/approvals/create */
   @Operation(summary = "Solicitar criação", description = "Solicita aprovação para criar uma regra")

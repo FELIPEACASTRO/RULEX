@@ -7,14 +7,15 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.rulex.adapter.rules.JacksonRuleExportSerializerAdapter;
+import com.rulex.core.rules.port.ComplexRulePort;
+import com.rulex.core.rules.port.RuleExportImportRepositoryPort;
+import com.rulex.core.rules.port.RuleExportSerializerPort;
 import com.rulex.dto.RuleExportDTO;
 import com.rulex.dto.RuleExportDTO.*;
 import com.rulex.entity.RuleConfiguration;
 import com.rulex.entity.TransactionDecision;
 import com.rulex.entity.homolog.*;
-import com.rulex.repository.RuleConfigurationRepository;
-import com.rulex.repository.homolog.*;
-import com.rulex.service.complex.ComplexRuleService;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -42,28 +43,22 @@ import org.mockito.Mockito;
 @DisplayName("RuleExportImportService Tests")
 class RuleExportImportServiceTest {
 
-  private RuleConfigurationRepository ruleConfigRepository;
-  private RuleRepository ruleRepository;
-  private RuleVersionRepository ruleVersionRepository;
-  private ComplexRuleService complexRuleService;
+  private RuleExportImportRepositoryPort repositoryPort;
+  private ComplexRulePort complexRulePort;
+  private RuleExportSerializerPort serializerPort;
   private ObjectMapper objectMapper;
   private RuleExportImportService exportImportService;
 
   @BeforeEach
   void setUp() {
-    ruleConfigRepository = Mockito.mock(RuleConfigurationRepository.class);
-    ruleRepository = Mockito.mock(RuleRepository.class);
-    ruleVersionRepository = Mockito.mock(RuleVersionRepository.class);
-    complexRuleService = Mockito.mock(ComplexRuleService.class);
+    repositoryPort = Mockito.mock(RuleExportImportRepositoryPort.class);
+    complexRulePort = Mockito.mock(ComplexRulePort.class);
     objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    serializerPort = new JacksonRuleExportSerializerAdapter(objectMapper);
 
     exportImportService =
         new RuleExportImportService(
-            ruleConfigRepository,
-            ruleRepository,
-            ruleVersionRepository,
-            complexRuleService,
-            objectMapper);
+        repositoryPort, complexRulePort, serializerPort);
   }
 
   @Nested
@@ -74,8 +69,8 @@ class RuleExportImportServiceTest {
     @DisplayName("Deve exportar todas as regras")
     void shouldExportAllRules() {
       RuleConfiguration simpleRule = createSimpleRule("RULE_1");
-      when(ruleConfigRepository.findAll()).thenReturn(List.of(simpleRule));
-      when(ruleRepository.findAll()).thenReturn(List.of());
+      when(repositoryPort.findAllSimpleRules()).thenReturn(List.of(simpleRule));
+      when(repositoryPort.findAllHomologRules()).thenReturn(List.of());
 
       RuleExportDTO export = exportImportService.exportAllRules("JSON", "test-user");
 
@@ -91,9 +86,9 @@ class RuleExportImportServiceTest {
     @DisplayName("Deve exportar regras específicas por chaves")
     void shouldExportRulesByKeys() {
       RuleConfiguration rule1 = createSimpleRule("RULE_1");
-      when(ruleConfigRepository.findByRuleName("RULE_1")).thenReturn(Optional.of(rule1));
-      when(ruleConfigRepository.findByRuleName("RULE_2")).thenReturn(Optional.empty());
-      when(ruleRepository.findByKey("RULE_2")).thenReturn(Optional.empty());
+      when(repositoryPort.findSimpleRuleByName("RULE_1")).thenReturn(Optional.of(rule1));
+      when(repositoryPort.findSimpleRuleByName("RULE_2")).thenReturn(Optional.empty());
+      when(repositoryPort.findHomologRuleByKey("RULE_2")).thenReturn(Optional.empty());
 
       RuleExportDTO export =
           exportImportService.exportRulesByKeys(List.of("RULE_1", "RULE_2"), "JSON", "test-user");
@@ -105,8 +100,8 @@ class RuleExportImportServiceTest {
     @Test
     @DisplayName("Deve incluir metadata completa na exportação")
     void shouldIncludeCompleteMetadata() {
-      when(ruleConfigRepository.findAll()).thenReturn(List.of());
-      when(ruleRepository.findAll()).thenReturn(List.of());
+      when(repositoryPort.findAllSimpleRules()).thenReturn(List.of());
+      when(repositoryPort.findAllHomologRules()).thenReturn(List.of());
 
       RuleExportDTO export = exportImportService.exportAllRules("JSON", "admin");
 
@@ -137,10 +132,9 @@ class RuleExportImportServiceTest {
               .enabled(true)
               .build();
 
-      when(ruleConfigRepository.findAll()).thenReturn(List.of());
-      when(ruleRepository.findAll()).thenReturn(List.of(homologRule));
-      when(ruleVersionRepository.findByRuleIdOrderByVersionDesc(ruleId))
-          .thenReturn(List.of(version));
+        when(repositoryPort.findAllSimpleRules()).thenReturn(List.of());
+        when(repositoryPort.findAllHomologRules()).thenReturn(List.of(homologRule));
+        when(repositoryPort.findRuleVersionsByRuleId(ruleId)).thenReturn(List.of(version));
 
       RuleExportDTO export = exportImportService.exportAllRules("JSON", "test-user");
 
@@ -195,9 +189,9 @@ class RuleExportImportServiceTest {
               .importDisabled(true)
               .build();
 
-      when(ruleConfigRepository.findByRuleName(any())).thenReturn(Optional.empty());
-      when(ruleRepository.findByKey(any())).thenReturn(Optional.empty());
-      when(ruleConfigRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+      when(repositoryPort.findSimpleRuleByName(any())).thenReturn(Optional.empty());
+      when(repositoryPort.findHomologRuleByKey(any())).thenReturn(Optional.empty());
+      when(repositoryPort.saveSimpleRule(any())).thenAnswer(inv -> inv.getArgument(0));
 
       ImportResult result = exportImportService.importFromJson(json, options, "test-user");
 
@@ -213,7 +207,7 @@ class RuleExportImportServiceTest {
           ImportOptions.builder().overwriteExisting(false).dryRun(false).build();
 
       // Regra já existe
-      when(ruleConfigRepository.findByRuleName("TEST_RULE"))
+        when(repositoryPort.findSimpleRuleByName("TEST_RULE"))
           .thenReturn(Optional.of(createSimpleRule("TEST_RULE")));
 
       ImportResult result = exportImportService.importFromJson(json, options, "test-user");
@@ -228,9 +222,10 @@ class RuleExportImportServiceTest {
       ImportOptions options = ImportOptions.builder().overwriteExisting(true).dryRun(false).build();
 
       RuleConfiguration existingRule = createSimpleRule("TEST_RULE");
-      when(ruleConfigRepository.findByRuleName("TEST_RULE")).thenReturn(Optional.of(existingRule));
-      when(ruleRepository.findByKey(any())).thenReturn(Optional.empty());
-      when(ruleConfigRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(repositoryPort.findSimpleRuleByName("TEST_RULE"))
+          .thenReturn(Optional.of(existingRule));
+        when(repositoryPort.findHomologRuleByKey(any())).thenReturn(Optional.empty());
+        when(repositoryPort.saveSimpleRule(any())).thenAnswer(inv -> inv.getArgument(0));
 
       ImportResult result = exportImportService.importFromJson(json, options, "test-user");
 
@@ -243,14 +238,14 @@ class RuleExportImportServiceTest {
       String json = createSampleJson();
       ImportOptions options = ImportOptions.builder().overwriteExisting(false).dryRun(true).build();
 
-      when(ruleConfigRepository.findByRuleName(any())).thenReturn(Optional.empty());
-      when(ruleRepository.findByKey(any())).thenReturn(Optional.empty());
+      when(repositoryPort.findSimpleRuleByName(any())).thenReturn(Optional.empty());
+      when(repositoryPort.findHomologRuleByKey(any())).thenReturn(Optional.empty());
 
       ImportResult result = exportImportService.importFromJson(json, options, "test-user");
 
       assertThat(result.getSuccessCount()).isGreaterThan(0);
       // Não deve ter chamado save
-      Mockito.verify(ruleConfigRepository, Mockito.never()).save(any());
+      Mockito.verify(repositoryPort, Mockito.never()).saveSimpleRule(any());
     }
 
     @Test
@@ -264,9 +259,9 @@ class RuleExportImportServiceTest {
               .keyPrefix("PREFIX_")
               .build();
 
-      when(ruleConfigRepository.findByRuleName(any())).thenReturn(Optional.empty());
-      when(ruleRepository.findByKey(any())).thenReturn(Optional.empty());
-      when(ruleConfigRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+      when(repositoryPort.findSimpleRuleByName(any())).thenReturn(Optional.empty());
+      when(repositoryPort.findHomologRuleByKey(any())).thenReturn(Optional.empty());
+      when(repositoryPort.saveSimpleRule(any())).thenAnswer(inv -> inv.getArgument(0));
 
       ImportResult result = exportImportService.importFromJson(json, options, "test-user");
 
@@ -284,9 +279,9 @@ class RuleExportImportServiceTest {
               .keySuffix("_SUFFIX")
               .build();
 
-      when(ruleConfigRepository.findByRuleName(any())).thenReturn(Optional.empty());
-      when(ruleRepository.findByKey(any())).thenReturn(Optional.empty());
-      when(ruleConfigRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+      when(repositoryPort.findSimpleRuleByName(any())).thenReturn(Optional.empty());
+      when(repositoryPort.findHomologRuleByKey(any())).thenReturn(Optional.empty());
+      when(repositoryPort.saveSimpleRule(any())).thenAnswer(inv -> inv.getArgument(0));
 
       ImportResult result = exportImportService.importFromJson(json, options, "test-user");
 
@@ -420,8 +415,8 @@ class RuleExportImportServiceTest {
       String json = createSampleJson();
       ImportOptions options = ImportOptions.builder().dryRun(true).build();
 
-      when(ruleConfigRepository.findByRuleName(any())).thenReturn(Optional.empty());
-      when(ruleRepository.findByKey(any())).thenReturn(Optional.empty());
+      when(repositoryPort.findSimpleRuleByName(any())).thenReturn(Optional.empty());
+      when(repositoryPort.findHomologRuleByKey(any())).thenReturn(Optional.empty());
 
       ImportResult result = exportImportService.importFromJson(json, options, "test-user");
 
@@ -434,8 +429,8 @@ class RuleExportImportServiceTest {
       String json = createSampleJson();
       ImportOptions options = ImportOptions.builder().dryRun(true).build();
 
-      when(ruleConfigRepository.findByRuleName(any())).thenReturn(Optional.empty());
-      when(ruleRepository.findByKey(any())).thenReturn(Optional.empty());
+      when(repositoryPort.findSimpleRuleByName(any())).thenReturn(Optional.empty());
+      when(repositoryPort.findHomologRuleByKey(any())).thenReturn(Optional.empty());
 
       ImportResult result = exportImportService.importFromJson(json, options, "test-user");
 
@@ -487,9 +482,9 @@ class RuleExportImportServiceTest {
     void shouldUseDefaultOptionsWhenNull() throws JsonProcessingException {
       String json = createSampleJson();
 
-      when(ruleConfigRepository.findByRuleName(any())).thenReturn(Optional.empty());
-      when(ruleRepository.findByKey(any())).thenReturn(Optional.empty());
-      when(ruleConfigRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+      when(repositoryPort.findSimpleRuleByName(any())).thenReturn(Optional.empty());
+      when(repositoryPort.findHomologRuleByKey(any())).thenReturn(Optional.empty());
+      when(repositoryPort.saveSimpleRule(any())).thenAnswer(inv -> inv.getArgument(0));
 
       ImportResult result = exportImportService.importFromJson(json, null, "test-user");
 

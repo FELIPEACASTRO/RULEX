@@ -2,7 +2,7 @@ package com.rulex.controller;
 
 import com.rulex.dto.RuleExportDTO;
 import com.rulex.dto.RuleExportDTO.*;
-import com.rulex.service.RuleExportImportService;
+import com.rulex.core.rules.port.RuleExportImportInputPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,7 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "Rule Export/Import", description = "APIs para exportação e importação de regras")
 public class RuleExportImportController {
 
-  private final RuleExportImportService exportImportService;
+    private final RuleExportImportInputPort exportImportService;
 
   // ========== EXPORT ==========
 

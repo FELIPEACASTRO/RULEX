@@ -1,8 +1,8 @@
 package com.rulex.controller;
 
-import com.rulex.service.RuleMetricsService;
-import com.rulex.service.RuleMetricsService.MetricsDashboard;
-import com.rulex.service.RuleMetricsService.RuleMetricsSummary;
+import com.rulex.core.metrics.port.RuleMetricsInputPort;
+import com.rulex.core.metrics.usecase.RuleMetricsUseCase.MetricsDashboard;
+import com.rulex.core.metrics.usecase.RuleMetricsUseCase.RuleMetricsSummary;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Métricas de Regras", description = "Dashboard e métricas de performance de regras")
 public class RuleMetricsController {
 
-  private final RuleMetricsService metricsService;
+  private final RuleMetricsInputPort metricsService;
 
   /** Obtém dashboard de métricas. GET /api/rules/metrics/dashboard */
   @Operation(summary = "Dashboard", description = "Retorna dashboard consolidado de métricas")

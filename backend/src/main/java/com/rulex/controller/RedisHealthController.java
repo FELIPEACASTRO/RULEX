@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -31,22 +31,33 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/admin/redis")
-@RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Redis Admin", description = "Endpoints de administração e diagnóstico do Redis")
 public class RedisHealthController {
 
   private final StringRedisTemplate redisTemplate;
   private final VelocityServiceFacade velocityServiceFacade;
+  private final RedisVelocityCacheService redisVelocityCacheService;
+  private final RedisMetricsConfig redisMetricsConfig;
+  private final CacheManager cacheManager;
 
-  @Autowired(required = false)
-  private RedisVelocityCacheService redisVelocityCacheService;
-
-  @Autowired(required = false)
-  private RedisMetricsConfig redisMetricsConfig;
-
-  @Autowired(required = false)
-  private CacheManager cacheManager;
+    public RedisHealthController(
+      StringRedisTemplate redisTemplate,
+      VelocityServiceFacade velocityServiceFacade,
+      ObjectProvider<RedisVelocityCacheService> redisVelocityCacheServiceProvider,
+      ObjectProvider<RedisMetricsConfig> redisMetricsConfigProvider,
+      ObjectProvider<CacheManager> cacheManagerProvider) {
+    this.redisTemplate = redisTemplate;
+    this.velocityServiceFacade = velocityServiceFacade;
+    this.redisVelocityCacheService =
+      redisVelocityCacheServiceProvider != null
+        ? redisVelocityCacheServiceProvider.getIfAvailable()
+        : null;
+    this.redisMetricsConfig =
+      redisMetricsConfigProvider != null ? redisMetricsConfigProvider.getIfAvailable() : null;
+    this.cacheManager =
+      cacheManagerProvider != null ? cacheManagerProvider.getIfAvailable() : null;
+    }
 
   @Value("${rulex.engine.velocity.redis.enabled:false}")
   private boolean redisEnabled;

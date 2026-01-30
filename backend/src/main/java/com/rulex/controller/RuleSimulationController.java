@@ -2,10 +2,10 @@ package com.rulex.controller;
 
 import com.rulex.dto.RuleConfigurationDTO;
 import com.rulex.dto.TransactionRequest;
-import com.rulex.service.RuleSimulationService;
-import com.rulex.service.RuleSimulationService.BacktestResult;
-import com.rulex.service.RuleSimulationService.ComparisonResult;
-import com.rulex.service.RuleSimulationService.SimulationResult;
+import com.rulex.core.simulation.port.RuleSimulationInputPort;
+import com.rulex.core.simulation.usecase.RuleSimulationUseCase.BacktestResult;
+import com.rulex.core.simulation.usecase.RuleSimulationUseCase.ComparisonResult;
+import com.rulex.core.simulation.usecase.RuleSimulationUseCase.SimulationResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Simulação", description = "Simulação e backtesting de regras")
 public class RuleSimulationController {
 
-  private final RuleSimulationService simulationService;
+  private final RuleSimulationInputPort simulationService;
 
   /** Simula uma regra contra um payload de teste. POST /api/rules/simulation/test */
   @Operation(summary = "Simular regra", description = "Simula uma regra contra um payload de teste")

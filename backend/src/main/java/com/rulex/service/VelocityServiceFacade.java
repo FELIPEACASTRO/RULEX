@@ -4,8 +4,8 @@ import com.rulex.dto.TransactionRequest;
 import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 /**
@@ -35,14 +35,16 @@ public class VelocityServiceFacade {
   @Value("${rulex.engine.velocity.redis.enabled:false}")
   private boolean redisEnabled;
 
-  @Autowired
   public VelocityServiceFacade(
       VelocityService velocityService,
       RedisVelocityService redisVelocityService,
-      @Autowired(required = false) RedisVelocityCacheService redisVelocityCacheService) {
+      ObjectProvider<RedisVelocityCacheService> redisVelocityCacheServiceProvider) {
     this.velocityService = velocityService;
     this.redisVelocityService = redisVelocityService;
-    this.redisVelocityCacheService = redisVelocityCacheService;
+    this.redisVelocityCacheService =
+        redisVelocityCacheServiceProvider != null
+            ? redisVelocityCacheServiceProvider.getIfAvailable()
+            : null;
   }
 
   @PostConstruct
