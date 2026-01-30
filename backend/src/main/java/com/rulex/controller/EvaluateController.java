@@ -100,6 +100,14 @@ public class EvaluateController {
   @PostMapping("/raw")
   public ResponseEntity<EvaluateResponse> evaluateRaw(
       @RequestBody(required = false) String rawBody, HttpServletRequest httpRequest) {
+    // GAP-005 FIX: Log de uso de endpoint deprecated para monitoramento de migração
+    log.warn(
+        "DEPRECATED_ENDPOINT_USAGE: /evaluate/raw foi chamado. "
+            + "Cliente deve migrar para POST /evaluate. "
+            + "IP: {}, User-Agent: {}",
+        httpRequest.getRemoteAddr(),
+        httpRequest.getHeader("User-Agent"));
+
     if (rawBody == null || rawBody.isBlank()) {
       log.warn("Requisição de avaliação com body vazio");
       return ResponseEntity.badRequest().build();
