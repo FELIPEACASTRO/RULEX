@@ -9,6 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rulex.core.engine.port.PayloadHashPort;
+import com.rulex.core.engine.port.RuleEngineAuditPort;
+import com.rulex.core.engine.port.RuleEngineRawStorePort;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
 import com.rulex.entity.RuleConfiguration;
@@ -57,16 +60,17 @@ class RuleEngineServiceTest {
       Mockito.mock(TransactionDecisionRepository.class);
   private final RuleConfigurationRepository ruleConfigRepository =
       Mockito.mock(RuleConfigurationRepository.class);
-  private final AuditService auditService = Mockito.mock(AuditService.class);
+  private final RuleEngineAuditPort auditService = Mockito.mock(RuleEngineAuditPort.class);
   private final ObjectMapper objectMapper = new ObjectMapper()
       .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
       .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
   private final Clock clock = Clock.fixed(Instant.parse("2025-12-19T00:00:00Z"), ZoneOffset.UTC);
 
-  private final PayloadHashService payloadHashService = new PayloadHashService(objectMapper);
-  private final TransactionRawStoreService rawStoreService =
-      Mockito.mock(TransactionRawStoreService.class);
+    private final PayloadHashPort payloadHashService =
+      new PayloadHashService(objectMapper)::sha256Hex;
+    private final RuleEngineRawStorePort rawStoreService =
+      Mockito.mock(RuleEngineRawStorePort.class);
 
   private final RuleExecutionLogService ruleExecutionLogService =
       Mockito.mock(RuleExecutionLogService.class);
