@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rulex.api.RawPayloadCaptureFilter;
 import com.rulex.dto.EvaluateRequestDTO;
 import com.rulex.dto.EvaluateResponse;
-import com.rulex.service.RuleEngineService;
+import com.rulex.core.engine.port.RuleEngineInputPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Avaliação", description = "Endpoints para avaliação de transações e decisão de risco")
 public class EvaluateController {
 
-  private final RuleEngineService ruleEngineService;
+  private final RuleEngineInputPort ruleEngineService;
   private final ObjectMapper objectMapper;
 
   /**

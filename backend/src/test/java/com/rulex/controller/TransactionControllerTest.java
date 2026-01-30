@@ -13,7 +13,7 @@ import com.rulex.api.RawPayloadCaptureFilter;
 import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
 import com.rulex.service.AdvancedRuleEngineService;
-import com.rulex.service.RuleEngineService;
+import com.rulex.core.engine.port.RuleEngineInputPort;
 import com.rulex.core.transaction.port.TransactionQueryInputPort;
 import java.time.Clock;
 import java.util.List;
@@ -51,7 +51,7 @@ class TransactionControllerTest {
   @Autowired private ObjectMapper objectMapper;
 
   @SuppressWarnings("removal")
-  @MockBean private RuleEngineService ruleEngineService;
+  @MockBean private RuleEngineInputPort ruleEngineService;
 
   @SuppressWarnings("removal")
   @MockBean private TransactionQueryInputPort transactionQueryService;

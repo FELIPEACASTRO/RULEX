@@ -17,7 +17,7 @@ import com.rulex.controller.RuleController;
 import com.rulex.dto.EvaluateResponse;
 import com.rulex.dto.RuleConfigurationDTO;
 import com.rulex.service.RuleConfigurationService;
-import com.rulex.service.RuleEngineService;
+import com.rulex.core.engine.port.RuleEngineInputPort;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -69,7 +69,7 @@ class SecurityRbacTest {
 
   @SuppressWarnings("removal")
   @MockBean
-  private RuleEngineService ruleEngineService;
+  private RuleEngineInputPort ruleEngineService;
 
   @Test
   void actuatorHealth_isPublicBySecurityMatcher() throws Exception {

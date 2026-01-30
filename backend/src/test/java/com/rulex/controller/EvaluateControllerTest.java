@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rulex.api.RawPayloadCaptureFilter;
 import com.rulex.dto.EvaluateRequestDTO;
 import com.rulex.dto.EvaluateResponse;
-import com.rulex.service.RuleEngineService;
+import com.rulex.core.engine.port.RuleEngineInputPort;
 import java.time.LocalDateTime;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -45,7 +45,7 @@ class EvaluateControllerTest {
   @Autowired private ObjectMapper objectMapper;
 
   @SuppressWarnings("removal")
-  @MockBean private RuleEngineService ruleEngineService;
+  @MockBean private RuleEngineInputPort ruleEngineService;
 
   @Test
   void evaluateReturnsOk() throws Exception {

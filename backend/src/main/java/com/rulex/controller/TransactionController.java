@@ -5,7 +5,7 @@ import com.rulex.dto.TransactionRequest;
 import com.rulex.dto.TransactionResponse;
 import com.rulex.dto.TriggeredRuleDTO;
 import com.rulex.service.AdvancedRuleEngineService;
-import com.rulex.service.RuleEngineService;
+import com.rulex.core.engine.port.RuleEngineInputPort;
 import com.rulex.core.transaction.port.TransactionQueryInputPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Transações", description = "Processamento e consulta de transações")
 public class TransactionController {
 
-  private final RuleEngineService ruleEngineService;
+  private final RuleEngineInputPort ruleEngineService;
   private final TransactionQueryInputPort transactionQueryService;
   private final AdvancedRuleEngineService advancedRuleEngineService;
   private final Clock clock;

@@ -48,7 +48,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
-public class RuleEngineService {
+public class RuleEngineService implements com.rulex.core.engine.port.RuleEngineInputPort {
 
   private final TransactionRepository transactionRepository;
   private final TransactionDecisionRepository decisionRepository;
