@@ -367,18 +367,30 @@ public class TransactionRequest {
   // --- Dados do Cliente/Beneficiário ---
 
   /** País do cliente (código ISO 2 ou 3 letras) */
+  // GAP-008 FIX: Validação de formato ISO para país
+  @Pattern(regexp = "^[A-Z]{2,3}$", message = "customerCountry deve ser código ISO (2 ou 3 letras)")
   @JsonProperty("customerCountry")
   private String customerCountry;
 
   /** Email do cliente */
+  // GAP-008 FIX: Validação de formato de email
+  @Email(message = "customerEmail deve ser um email válido")
   @JsonProperty("customerEmail")
   private String customerEmail;
 
   /** Telefone do cliente */
+  // GAP-008 FIX: Validação de formato de telefone (permite +, números, espaços, hífens)
+  @Pattern(
+      regexp = "^[+]?[0-9\\s\\-()]{7,20}$",
+      message = "customerPhone deve ser um telefone válido")
   @JsonProperty("customerPhone")
   private String customerPhone;
 
   /** País do beneficiário em transferências (código ISO) */
+  // GAP-008 FIX: Validação de formato ISO para país
+  @Pattern(
+      regexp = "^[A-Z]{2,3}$",
+      message = "beneficiaryCountry deve ser código ISO (2 ou 3 letras)")
   @JsonProperty("beneficiaryCountry")
   private String beneficiaryCountry;
 
@@ -401,18 +413,29 @@ public class TransactionRequest {
   // --- Dados de Dispositivo/Sessão ---
 
   /** ID único do dispositivo (fingerprint) */
+  // GAP-008 FIX: Validação de tamanho máximo para deviceId
+  @Size(max = 256, message = "deviceId deve ter no máximo 256 caracteres")
   @JsonProperty("deviceId")
   private String deviceId;
 
   /** Endereço IP da requisição */
+  // GAP-008 FIX: Validação de formato IPv4 ou IPv6
+  @Pattern(
+      regexp = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$",
+      message = "ipAddress deve ser um endereço IP válido (IPv4 ou IPv6)")
   @JsonProperty("ipAddress")
   private String ipAddress;
 
   /** User Agent do navegador/app */
+  // GAP-008 FIX: Validação de tamanho máximo para userAgent
+  @Size(max = 512, message = "userAgent deve ter no máximo 512 caracteres")
   @JsonProperty("userAgent")
   private String userAgent;
 
   /** Score de reputação do IP (0-100, maior = melhor) */
+  // GAP-008 FIX: Validação de range para score
+  @Min(value = 0, message = "ipReputationScore deve ser >= 0")
+  @Max(value = 100, message = "ipReputationScore deve ser <= 100")
   @JsonProperty("ipReputationScore")
   private Integer ipReputationScore;
 
@@ -431,14 +454,23 @@ public class TransactionRequest {
   private Boolean livenessCheckPassed;
 
   /** Score de verificação de identidade (0-100) */
+  // GAP-008 FIX: Validação de range para score
+  @Min(value = 0, message = "identityVerificationScore deve ser >= 0")
+  @Max(value = 100, message = "identityVerificationScore deve ser <= 100")
   @JsonProperty("identityVerificationScore")
   private Integer identityVerificationScore;
 
   /** Score de detecção de deepfake (0-100, maior = mais provável ser fake) */
+  // GAP-008 FIX: Validação de range para score
+  @Min(value = 0, message = "deepfakeScore deve ser >= 0")
+  @Max(value = 100, message = "deepfakeScore deve ser <= 100")
   @JsonProperty("deepfakeScore")
   private Integer deepfakeScore;
 
   /** Score de correspondência de nome (0-100) */
+  // GAP-008 FIX: Validação de range para score
+  @Min(value = 0, message = "nameMatchScore deve ser >= 0")
+  @Max(value = 100, message = "nameMatchScore deve ser <= 100")
   @JsonProperty("nameMatchScore")
   private Integer nameMatchScore;
 
