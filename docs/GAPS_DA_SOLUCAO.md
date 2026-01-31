@@ -19,17 +19,17 @@ Este documento lista **gaps reais** (com evidência) e **pontos a validar** ante
 - Context-path: [backend/src/main/resources/application.yml](../backend/src/main/resources/application.yml#L41-L44)
 - Controller mapping: [backend/src/main/java/com/rulex/controller/RuleExportImportController.java](../backend/src/main/java/com/rulex/controller/RuleExportImportController.java#L1-L30)
 
-## GAP-002 — Regex hardening não integrado ao operador MATCHES_REGEX
+## GAP-002 — Regex hardening integrado ao operador MATCHES_REGEX
 
 **Descrição**
-- O engine usa `Pattern.compile(rawRegex)` diretamente em `MATCHES_REGEX`.
-- Existe `RegexValidator` com timeout/denylist/limites anti-ReDoS.
+- O motor padrão usa `RegexValidator.safeFind` no caminho de `MATCHES_REGEX`.
+- Proteções anti-ReDoS (timeout/denylist/limites) estão ativas.
 
 **Impacto**
-- Risco de ReDoS e/ou latência imprevisível com regex maliciosa.
+- Risco de ReDoS mitigado no motor padrão.
 
 **Ação sugerida**
-- Integrar `RegexValidator.safeCompile` e `matchWithTimeout` no caminho do operador.
+- ✅ Resolvido no motor padrão; manter validação nos próximos refactors.
 
 **EVIDÊNCIA**
 - Engine regex atual: [backend/src/main/java/com/rulex/service/engine/RuleEngineConditionHelper.java](../backend/src/main/java/com/rulex/service/engine/RuleEngineConditionHelper.java#L98-L250)
