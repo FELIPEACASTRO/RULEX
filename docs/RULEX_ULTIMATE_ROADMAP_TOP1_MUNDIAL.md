@@ -165,33 +165,33 @@ RuleEngineService → RuleEngineUseCase → TransactionEnrichmentFacade.enrichFu
 
 **Total:** 8 story points
 
-#### Sprint 4 (Semanas 7-8): Implementar 17 Operadores Pendentes
+#### Sprint 4 (Semanas 7-8): Consolidar operadores (já implementados)
 
 > 🔴🔴🔴🔴 **QUADRUPLE-CHECK 1000X**: São **110 operadores** no enum (não 109)!
 > OUTFLOW_RATE_LAST_N_DAYS (linha 225) é o último e não tem vírgula.
 > 17 operadores JÁ EXISTEM no enum mas NÃO têm case statements.
 
-**17 Operadores no Enum SEM Case Statement:**
+**17 Operadores no Enum (implementados via registry):**
 
 | # | Operador | Linha Enum | Status |
 |---|----------|------------|--------|
-| 1 | IN_LIST | 209 | ❌ Sem case |
-| 2 | HAS_FAILED_3DS_LAST_N_MINUTES | 210 | ❌ Sem case |
-| 3 | COUNT_MFA_ABANDONMENTS | 211 | ❌ Sem case |
-| 4 | HAS_INCOMING_TRANSFER_LAST_N_HOURS | 212 | ❌ Sem case |
-| 5 | IS_IMPOSSIBLE_COMBINATION | 213 | ❌ Sem case |
-| 6 | PIX_KEY_CHANGED_LAST_N_DAYS | 214 | ❌ Sem case |
-| 7 | CONTAINS_SUSPICIOUS_KEYWORDS | 215 | ❌ Sem case |
-| 8 | COUNT_CRYPTO_TXN_LAST_N_DAYS | 216 | ❌ Sem case |
-| 9 | COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS | 217 | ❌ Sem case |
-| 10 | COUNT_DISTINCT_PAYERS_LAST_N_DAYS | 218 | ❌ Sem case |
-| 11 | COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS | 219 | ❌ Sem case |
-| 12 | COUNT_LAST_N_DAYS | 220 | ❌ Sem case |
-| 13 | COUNT_MFA_DENIALS_LAST_N_HOURS | 221 | ❌ Sem case |
-| 14 | DAYS_SINCE_LAST_ACTIVITY | 222 | ❌ Sem case |
-| 15 | DEVICE_CHANGED_IN_SESSION | 223 | ❌ Sem case |
-| 16 | IS_CRYPTO_RANSOM_AMOUNT | 224 | ❌ Sem case |
-| 17 | OUTFLOW_RATE_LAST_N_DAYS | 225 | ❌ Sem case |
+| 1 | IN_LIST | 209 | ✅ Implementado |
+| 2 | HAS_FAILED_3DS_LAST_N_MINUTES | 210 | ✅ Implementado |
+| 3 | COUNT_MFA_ABANDONMENTS | 211 | ✅ Implementado |
+| 4 | HAS_INCOMING_TRANSFER_LAST_N_HOURS | 212 | ✅ Implementado |
+| 5 | IS_IMPOSSIBLE_COMBINATION | 213 | ✅ Implementado |
+| 6 | PIX_KEY_CHANGED_LAST_N_DAYS | 214 | ✅ Implementado |
+| 7 | CONTAINS_SUSPICIOUS_KEYWORDS | 215 | ✅ Implementado |
+| 8 | COUNT_CRYPTO_TXN_LAST_N_DAYS | 216 | ✅ Implementado |
+| 9 | COUNT_DISTINCT_INSTRUMENTS_LAST_N_DAYS | 217 | ✅ Implementado |
+| 10 | COUNT_DISTINCT_PAYERS_LAST_N_DAYS | 218 | ✅ Implementado |
+| 11 | COUNT_DISTINCT_USER_AGENTS_LAST_N_HOURS | 219 | ✅ Implementado |
+| 12 | COUNT_LAST_N_DAYS | 220 | ✅ Implementado |
+| 13 | COUNT_MFA_DENIALS_LAST_N_HOURS | 221 | ✅ Implementado |
+| 14 | DAYS_SINCE_LAST_ACTIVITY | 222 | ✅ Implementado |
+| 15 | DEVICE_CHANGED_IN_SESSION | 223 | ✅ Implementado |
+| 16 | IS_CRYPTO_RANSOM_AMOUNT | 224 | ✅ Implementado |
+| 17 | OUTFLOW_RATE_LAST_N_DAYS | 225 | ✅ Implementado |
 
 **Tasks Sprint 4:**
 | ID | Task | Story Points |

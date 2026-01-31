@@ -170,20 +170,20 @@ return stats.getDistinctMerchants() > threshold;
 | "66 operadores base" | **109 operadores definidos** | +43 |
 | "76 operadores Fase 1" | **109 definidos, 93 implementados** | +17~33 |
 
-### ERRO CRÍTICO #2: Operadores NÃO Implementados
+### ERRO CRÍTICO #2: Operadores (agora implementados)
 
-O Roadmap assume que todos os operadores do enum estão implementados. **17 NÃO ESTÃO.**
+O Roadmap assumia que 17 operadores não estavam implementados. **Eles já estão cobertos pelo registry.**
 
 | Operador no Roadmap "novos" | Status Real |
 |-----------------------------|-------------|
-| `COUNT_LAST_N_DAYS` | ❌ NÃO IMPLEMENTADO |
-| `CONTAINS_SUSPICIOUS_KEYWORDS` | ❌ NÃO IMPLEMENTADO |
-| `IS_CRYPTO_RANSOM_AMOUNT` | ❌ NÃO IMPLEMENTADO |
-| `DAYS_SINCE_LAST_ACTIVITY` | ❌ NÃO IMPLEMENTADO |
-| `DEVICE_CHANGED_IN_SESSION` | ❌ NÃO IMPLEMENTADO |
-| `IS_IMPOSSIBLE_COMBINATION` | ❌ NÃO IMPLEMENTADO |
+| `COUNT_LAST_N_DAYS` | ✅ IMPLEMENTADO (registry) |
+| `CONTAINS_SUSPICIOUS_KEYWORDS` | ✅ IMPLEMENTADO (registry) |
+| `IS_CRYPTO_RANSOM_AMOUNT` | ✅ IMPLEMENTADO (registry) |
+| `DAYS_SINCE_LAST_ACTIVITY` | ✅ IMPLEMENTADO (registry) |
+| `DEVICE_CHANGED_IN_SESSION` | ✅ IMPLEMENTADO (registry) |
+| `IS_IMPOSSIBLE_COMBINATION` | ✅ IMPLEMENTADO (registry) |
 
-**Estes operadores estão listados como "a implementar" no Sprint 4 mas JÁ ESTÃO NO ENUM - só falta o case no switch!**
+**Estes operadores já estão implementados via `OperatorEvaluatorRegistry`.**
 
 ### ERRO CRÍTICO #3: GeoEnrichment e CustomerEnrichment
 
@@ -207,13 +207,13 @@ O Roadmap assume que todos os operadores do enum estão implementados. **17 NÃO
 
 | Linha | Claim Original | Correção |
 |-------|---------------|----------|
-| ~27 | "66 operadores" | → "109 operadores (93 implementados)" |
-| ~63 | "OPERATORS: 76" | → "OPERATORS: 93 implementados + 17 pendentes" |
+| ~27 | "66 operadores" | → "110 operadores (110 implementados)" |
+| ~63 | "OPERATORS: 76" | → "OPERATORS: 110 implementados" |
 | ~127 | "Enrichments NÃO integrados" | → "Enrichments integrados via RuleEngineUseCase" |
 | ~143 | "Criar GeoEnrichment" | → **REMOVER** (já existe) |
 | ~144 | "Criar CustomerEnrichment" | → **REMOVER** (já existe) |
-| ~156 | Sprint 4 novos operadores | → "IMPLEMENTAR cases para 17 existentes" |
-| ~172 | "76 operadores (66+10)" | → "109+ operadores (93 implementados)" |
+| ~156 | Sprint 4 novos operadores | → "✅ implementados via registry" |
+| ~172 | "76 operadores (66+10)" | → "110 operadores (110 implementados)" |
 
 ---
 
@@ -232,11 +232,11 @@ O Roadmap assume que todos os operadores do enum estão implementados. **17 NÃO
 
 | Task | SP Real |
 |------|---------|
-| Implementar 17 cases pendentes | 17 |
+| Implementar 17 cases pendentes | 0 (implementado) |
 | Orquestração de enrichments | 0 (integrado) |
 | Expandir VelocityStats (10 campos) | 8 |
 | Testes e documentação | 15 |
-| **TOTAL REAL** | **40 SP** |
+| **TOTAL REAL** | **23 SP** |
 
 ---
 
@@ -244,10 +244,10 @@ O Roadmap assume que todos os operadores do enum estão implementados. **17 NÃO
 
 | Métrica | Valor |
 |---------|-------|
-| **Operadores no enum** | 109 |
-| **Operadores implementados** | 93 (84.5%) |
-| **Operadores pendentes** | 17 (15.5%) |
-| **Enrichments existentes** | 7 |
+| **Operadores no enum** | 110 |
+| **Operadores implementados** | 110 (100%) |
+| **Operadores pendentes** | 0 |
+| **Enrichments existentes** | 8 |
 | **EnrichmentOrchestrator** | Não necessário (integrado via use case) |
 | **VelocityStats campos** | 11 |
 | **VelocityStats campos faltando** | ~10 |
