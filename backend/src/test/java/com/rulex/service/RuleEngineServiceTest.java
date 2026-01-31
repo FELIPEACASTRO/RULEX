@@ -174,7 +174,6 @@ class RuleEngineServiceTest {
           payloadHashService,
           rawStoreService,
           ruleExecutionLogService,
-          enrichmentService,
           ruleOrderingPort,
           enrichmentPort,
         responsePort,

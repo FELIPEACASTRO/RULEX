@@ -4,7 +4,7 @@
 
 | Componente | Antes | Depois | Status |
 |------------|-------|--------|--------|
-| RuleEngineService | 2.344 linhas | ~200 linhas | 🟡 Em progresso |
+| RuleEngineService | 2.344 linhas | ~120 linhas | 🟢 Implementado (use case) |
 | ComplexRuleEvaluator | 1.743 linhas | ~300 linhas | 🟡 Em progresso |
 | Operadores (switch) | 278 cases | Strategy Pattern | 🟢 Implementado |
 | Neo4j Resiliência | Sem Circuit Breaker | Com Resilience4j | 🟢 Implementado |
@@ -176,7 +176,7 @@ public CompletableFuture<Integer> fallback(String accountId, Throwable t) {
 
 ### Fase 2: Migração Completa
 
-1. [ ] Migrar RuleEngineService para usar TransactionAnalysisOrchestrator
+1. [x] Extrair RuleEngineService para RuleEngineUseCase (adapter fino)
 2. [ ] Migrar ComplexRuleEvaluator para usar OperatorStrategyRegistry
 3. [ ] Criar strategies para todos os 394 operadores
 4. [ ] Remover código duplicado
@@ -200,5 +200,5 @@ public CompletableFuture<Integer> fallback(String accountId, Throwable t) {
 
 ---
 
-**Última atualização:** 2024-01-22
+**Última atualização:** 2026-01-31
 **Autor:** Refactoring Team

@@ -31,7 +31,6 @@ import com.rulex.entity.TransactionDecision;
 import com.rulex.entity.TransactionRawStore;
 import com.rulex.service.BloomFilterService;
 import com.rulex.service.DerivedContext;
-import com.rulex.service.EnrichmentService;
 import com.rulex.service.GeoService;
 import com.rulex.service.ImpossibleTravelService;
 import com.rulex.service.ShadowModeService;
@@ -67,7 +66,6 @@ public class RuleEngineUseCase implements RuleEngineInputPort {
   private final PayloadHashPort payloadHashService;
   private final RuleEngineRawStorePort rawStoreService;
   private final RuleExecutionLogService ruleExecutionLogService;
-  private final EnrichmentService enrichmentService;
   private final RuleOrderingPort ruleOrderingService;
   private final RuleEngineEnrichmentPort transactionEnrichmentFacade;
   private final RuleEngineResponsePort responseBuilder;
@@ -106,7 +104,6 @@ public class RuleEngineUseCase implements RuleEngineInputPort {
       PayloadHashPort payloadHashService,
       RuleEngineRawStorePort rawStoreService,
       RuleExecutionLogService ruleExecutionLogService,
-      EnrichmentService enrichmentService,
       RuleOrderingPort ruleOrderingService,
       RuleEngineEnrichmentPort transactionEnrichmentFacade,
       RuleEngineResponsePort responseBuilder,
@@ -138,7 +135,6 @@ public class RuleEngineUseCase implements RuleEngineInputPort {
     this.payloadHashService = payloadHashService;
     this.rawStoreService = rawStoreService;
     this.ruleExecutionLogService = ruleExecutionLogService;
-    this.enrichmentService = enrichmentService;
     this.ruleOrderingService = ruleOrderingService;
     this.transactionEnrichmentFacade = transactionEnrichmentFacade;
     this.responseBuilder = responseBuilder;
