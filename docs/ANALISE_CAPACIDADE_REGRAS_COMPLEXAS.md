@@ -20,8 +20,8 @@ páginas principais de regras**.
 
 ## 🎯 ARQUITETURA DE AVALIAÇÃO (BACKEND)
 
-### 1) Motor Padrão: RuleEngineService
-**Arquivo:** `backend/src/main/java/com/rulex/service/RuleEngineService.java`
+### 1) Motor Padrão: RuleEngineUseCase (via RuleEngineService adapter)
+**Arquivo:** `backend/src/main/java/com/rulex/core/engine/usecase/RuleEngineUseCase.java`
 
 **Capacidades:**
 - ✅ 52 operadores suportados (OpenAPI enum completo)
@@ -279,7 +279,7 @@ AND NOT (
 ### 🟢 GAP 3: Operadores do OpenAPI vs Implementação
 **Problema:**
 - OpenAPI lista 52 operadores
-- Motor padrão (`RuleEngineService`) implementa ~30 operadores
+- Motor padrão (`RuleEngineUseCase`) implementa ~30 operadores
 - Motor complexo (`ComplexRuleEvaluator`) implementa todos os 52
 
 **Impacto:**

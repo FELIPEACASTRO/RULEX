@@ -417,7 +417,7 @@ end
 ### 4.3 Padrão de Candidate Filtering (Java)
 
 ```java
-// Já implementado em RuleEngineService.java do RULEX
+// Já implementado em RuleEngineUseCase.java do RULEX
 public class CandidateIndex {
     private final Set<String> requiredFields;
     
