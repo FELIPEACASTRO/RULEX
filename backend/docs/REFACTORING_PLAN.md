@@ -15,9 +15,9 @@
 ### Estrutura de Pacotes (Nova)
 
 ```
-com.rulex.service.engine/
-├── orchestrator/
-│   └── TransactionAnalysisOrchestrator.java  # Coordena o fluxo
+com.rulex.core.engine/
+├── usecase/
+│   └── RuleEngineUseCase.java                # Orquestra o fluxo
 ├── antitamper/
 │   └── AntiTamperService.java                # Hash, idempotência
 ├── contract/
@@ -43,7 +43,7 @@ com.rulex.service.engine/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                TransactionAnalysisOrchestrator                   │
+│                     RuleEngineUseCase                           │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  1. AntiTamperService.checkPayload()                            │
