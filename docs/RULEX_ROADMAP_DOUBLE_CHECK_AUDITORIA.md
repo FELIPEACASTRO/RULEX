@@ -190,15 +190,15 @@ public class CustomerEnrichment {
 
 ---
 
-### ERRO #4: EnrichmentService JÁ ESTÁ Integrado
+### ERRO #4: EnrichmentService/Facade JÁ ESTÃO Integrados
 
 **No Roadmap (linha 127):**
 ```
 PROBLEMA IDENTIFICADO:
-Os Enrichments (AuthEnrichment, VelocityEnrichment, DeviceEnrichment) existem mas NÃO estão integrados ao RuleEngineService.
+Os Enrichments (AuthEnrichment, VelocityEnrichment, DeviceEnrichment) existem e estão integrados via RuleEngineUseCase.
 ```
 
-**REALIDADE NO CÓDIGO (RuleEngineService.java linhas 59, 897-899):**
+**REALIDADE NO CÓDIGO (RuleEngineUseCase.java + RuleEngineService adapter):**
 ```java
 public class RuleEngineService {
   // LINHA 59:
@@ -214,7 +214,7 @@ public class RuleEngineService {
 
 **CORREÇÃO NECESSÁRIA:**
 - ❌ ERRADO: "Enrichments NÃO estão integrados"
-- ✅ CORRETO: **EnrichmentService JÁ ESTÁ injetado e em uso**
+- ✅ CORRETO: **EnrichmentService/Facade integrados via use case**
 
 ---
 

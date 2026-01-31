@@ -72,7 +72,7 @@ spring:
 #### 3. Avaliação de Regras (P1)
 
 **Evidência:**
-- `RuleEngineService.java` com 2205 linhas
+- `RuleEngineUseCase.java` concentra a lógica do core (RuleEngineService é adapter)
 - Avaliação sequencial de todas as regras habilitadas
 
 **Solução Proposta:**

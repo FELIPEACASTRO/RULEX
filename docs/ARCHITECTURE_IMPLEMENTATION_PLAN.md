@@ -807,8 +807,8 @@ public class GraphConfig {
 
 | Task | Arquivo | Tipo | SP | Status |
 |------|---------|------|-----|--------|
-| Injetar TransactionEnrichmentFacade | RuleEngineService.java | Modificação | 1 | ❌ |
-| Chamar enrichFull() | RuleEngineService.java | Modificação | 2 | ❌ |
+| Injetar TransactionEnrichmentFacade | RuleEngineUseCase.java | Modificação | 1 | ✅ |
+| Chamar enrichFull() | RuleEngineUseCase.java | Modificação | 2 | ✅ |
 | Case IN_LIST | ComplexRuleEvaluator.java | Adição | 0.5 | ❌ |
 | Case CONTAINS_SUSPICIOUS_KEYWORDS | ComplexRuleEvaluator.java | Adição | 1 | ❌ |
 | Case COUNT_LAST_N_DAYS | ComplexRuleEvaluator.java | Adição | 1 | ❌ |

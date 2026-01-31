@@ -96,7 +96,7 @@ default -> {
 | AnomalyEnrichment | AnomalyEnrichment.java | ~250 | ✅ Existe | ⚠️ Parcial |
 | **TOTAL** | **7 arquivos** | **~2,400** | ✅ | ⚠️ |
 
-**EVIDÊNCIA - EnrichmentService em RuleEngineService:**
+**EVIDÊNCIA - EnrichmentService/Facade integrados via use case:**
 ```java
 // RuleEngineService.java linha 59:
 private final EnrichmentService enrichmentService;
@@ -107,7 +107,7 @@ private boolean isHighRiskMcc(String mcc) {
 }
 ```
 
-**VEREDICTO:** EnrichmentService está injetado e em uso PARCIAL. Os 7 enrichments individuais NÃO estão orquestrados via EnrichmentOrchestrator (não existe).
+**VEREDICTO:** EnrichmentService/Facade integrados via `RuleEngineUseCase`.
 
 ---
 
