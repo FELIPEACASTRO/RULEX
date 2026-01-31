@@ -203,8 +203,8 @@ O Roadmap assume que todos os operadores do enum estão implementados. **17 NÃO
 
 | Afirmação | Realidade |
 |-----------|-----------|
-| "Enrichments NÃO integrados" | EnrichmentService **JÁ ESTÁ** injetado |
-| "Criar EnrichmentOrchestrator" | **VÁLIDO** - não existe ainda |
+| "Enrichments NÃO integrados" | **Integrados via RuleEngineUseCase (RuleEngineEnrichmentPort)** |
+| "Criar EnrichmentOrchestrator" | **NÃO NECESSÁRIO** (orquestração já integrada) |
 
 ---
 
@@ -214,7 +214,7 @@ O Roadmap assume que todos os operadores do enum estão implementados. **17 NÃO
 |-------|---------------|----------|
 | ~27 | "66 operadores" | → "109 operadores (93 implementados)" |
 | ~63 | "OPERATORS: 76" | → "OPERATORS: 93 implementados + 17 pendentes" |
-| ~127 | "Enrichments NÃO integrados" | → "EnrichmentService PARCIALMENTE integrado" |
+| ~127 | "Enrichments NÃO integrados" | → "Enrichments integrados via RuleEngineUseCase" |
 | ~143 | "Criar GeoEnrichment" | → **REMOVER** (já existe) |
 | ~144 | "Criar CustomerEnrichment" | → **REMOVER** (já existe) |
 | ~156 | Sprint 4 novos operadores | → "IMPLEMENTAR cases para 17 existentes" |
@@ -238,11 +238,10 @@ O Roadmap assume que todos os operadores do enum estão implementados. **17 NÃO
 | Task | SP Real |
 |------|---------|
 | Implementar 17 cases pendentes | 17 |
-| Criar EnrichmentOrchestrator | 8 |
-| Integrar 7 enrichments | 10 |
+| Orquestração de enrichments | 0 (integrado) |
 | Expandir VelocityStats (10 campos) | 8 |
 | Testes e documentação | 15 |
-| **TOTAL REAL** | **58 SP** |
+| **TOTAL REAL** | **40 SP** |
 
 ---
 
@@ -254,7 +253,7 @@ O Roadmap assume que todos os operadores do enum estão implementados. **17 NÃO
 | **Operadores implementados** | 93 (84.5%) |
 | **Operadores pendentes** | 17 (15.5%) |
 | **Enrichments existentes** | 7 |
-| **EnrichmentOrchestrator** | NÃO existe |
+| **EnrichmentOrchestrator** | Não necessário (integrado via use case) |
 | **VelocityStats campos** | 11 |
 | **VelocityStats campos faltando** | ~10 |
 | **Formatos de valueSingle** | 5 |
