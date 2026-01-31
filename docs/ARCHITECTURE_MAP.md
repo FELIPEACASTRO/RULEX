@@ -103,12 +103,16 @@ O RULEX suporta **dois tipos de regras**:
           ▼
 ┌─────────────────────────────────────────────────────────┐
 │                    RULE ENGINE                           │
-│  ┌─────────────────┐    ┌─────────────────────────────┐ │
-│  │ RuleEngineService│    │ ComplexRuleExecutionService │ │
-│  │ (Regras Simples) │    │ (Regras Complexas)          │ │
-│  └────────┬────────┘    └────────────┬────────────────┘ │
+│  ┌────────────────────┐    ┌──────────────────────────┐ │
+│  │ RuleEngineService  │    │ ComplexRuleExecutionService │ │
+│  │ (Adapter/Entrada)  │    │ (Regras Complexas)         │ │
+│  └────────┬──────────┘    └────────────┬───────────────┘ │
 │           │                          │                   │
 │           ▼                          ▼                   │
+│  ┌────────────────────┐                                  │
+│  │ RuleEngineUseCase  │                                  │
+│  │ (Core Regras Simples)                                 │
+│  └────────┬──────────┘                                  │
 │  ┌─────────────────────────────────────────────────────┐│
 │  │              ComplexRuleEvaluator                   ││
 │  │  - Avalia grupos de condições recursivamente        ││
