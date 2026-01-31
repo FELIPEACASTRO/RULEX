@@ -64,7 +64,7 @@ backend/src/main/java/com/rulex/
 │        │                                                                     │
 │        ▼                                                                     │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                    RuleEngineService.analyzeTransaction()            │    │
+│  │                    RuleEngineUseCase.analyzeTransaction()            │    │
 │  │                         (adapter fino)                               │    │
 │  │  ┌──────────────────────────────────────────────────────────────┐   │    │
 │  │  │  TransactionEnrichmentFacade.enrichFull() ✅ INTEGRADO       │   │    │
@@ -111,7 +111,7 @@ backend/src/main/java/com/rulex/
 │        │                                                                     │
 │        ▼                                                                     │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                    RuleEngineService.analyzeTransaction()            │    │
+│  │                    RuleEngineUseCase.analyzeTransaction()            │    │
 │  │                                                                      │    │
 │  │  ┌──────────────────────────────────────────────────────────────┐   │    │
 │  │  │  TransactionEnrichmentFacade.enrichFull() ✅ INTEGRAR        │   │    │
@@ -926,7 +926,7 @@ class ComplexRuleEvaluatorIntegrationTest {
         TransactionRequest request = createTestRequest();
         
         // When
-        TransactionResponse response = ruleEngineService.analyzeTransaction(request);
+        TransactionResponse response = ruleEngineUseCase.analyzeTransaction(request);
         
         // Then
         assertThat(response.getEnrichedFields()).containsKey("velocity_transaction_count_24h");
@@ -961,7 +961,7 @@ class ComplexRuleEvaluatorIntegrationTest {
 
 ### Quick Wins (Esta Semana)
 
-1. ✅ Injetar `TransactionEnrichmentFacade` no `RuleEngineService` (1 SP)
+1. ✅ Injetar `TransactionEnrichmentFacade` no `RuleEngineUseCase` (1 SP)
 2. ✅ Implementar case `IN_LIST` (0.5 SP) - é só delegar para `IN`
 3. ✅ Implementar case `DEVICE_CHANGED_IN_SESSION` (0.5 SP) - simples boolean
 4. ✅ Testes para os 3 acima (2 SP)

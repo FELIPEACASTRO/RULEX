@@ -2431,6 +2431,7 @@ flowchart TB
 - backend/src/main/java/com/rulex/controller/TransactionController.java
   > Trecho: `@RestController`
 - backend/src/main/java/com/rulex/service/RuleEngineService.java
+- backend/src/main/java/com/rulex/core/engine/usecase/RuleEngineUseCase.java
 
 **Objetivo**
 Documentar o fluxo de chamadas para análise.
@@ -2545,6 +2546,7 @@ stateDiagram-v2
 - backend/src/main/java/com/rulex/controller/TransactionController.java
   > Trecho: `@RestController`
 - backend/src/main/java/com/rulex/service/RuleEngineService.java
+- backend/src/main/java/com/rulex/core/engine/usecase/RuleEngineUseCase.java
 - openapi/rulex.yaml
 
 **Objetivo**
