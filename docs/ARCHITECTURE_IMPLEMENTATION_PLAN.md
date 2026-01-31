@@ -46,7 +46,8 @@ backend/src/main/java/com/rulex/
 │   │   ├── VelocityEnrichment.java    # 307 linhas
 │   │   └── TransactionEnrichmentFacade.java  # 345 linhas ⚠️
 │   ├── EnrichmentService.java    # BIN/MCC enrichment
-│   ├── RuleEngineService.java    # 2,206 linhas - Core engine
+│   ├── RuleEngineService.java    # ~120 linhas - Adapter (porta de entrada)
+│   ├── core/engine/usecase/RuleEngineUseCase.java  # ~1.000 linhas - Core engine
 │   ├── VelocityService.java      # 380 linhas - 11 campos
 │   └── ... (30+ services)
 └── util/                         # Utilities
@@ -64,9 +65,9 @@ backend/src/main/java/com/rulex/
 │        ▼                                                                     │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
 │  │                    RuleEngineService.analyzeTransaction()            │    │
-│  │                         (2,206 linhas)                               │    │
+│  │                         (adapter fino)                               │    │
 │  │  ┌──────────────────────────────────────────────────────────────┐   │    │
-│  │  │  EnrichmentService (apenas BIN/MCC)  ❌ PARCIAL              │   │    │
+│  │  │  TransactionEnrichmentFacade.enrichFull() ✅ INTEGRADO       │   │    │
 │  │  └──────────────────────────────────────────────────────────────┘   │    │
 │  │                             │                                        │    │
 │  │                             ▼                                        │    │
@@ -81,8 +82,7 @@ backend/src/main/java/com/rulex/
 │        ▼                                                                     │
 │  TransactionResponse                                                         │
 │                                                                              │
-│  ⚠️ PROBLEMA: TransactionEnrichmentFacade (345 linhas) NÃO ESTÁ CONECTADO!  │
-│     Ele já integra TODOS os 7 enrichments mas não é usado.                  │
+│  ✅ TransactionEnrichmentFacade integrado via port/use case.                │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -92,7 +92,7 @@ backend/src/main/java/com/rulex/
 | # | Gap | Localização | Impacto |
 |---|-----|-------------|---------|
 | 1 | 17 operadores sem case | ComplexRuleEvaluator.java | Regras falham silenciosamente |
-| 2 | TransactionEnrichmentFacade não integrado | RuleEngineService.java | Enrichments não usados |
+| 2 | TransactionEnrichmentFacade integrado (resolvido) | RuleEngineUseCase.java | Resolvido |
 | 3 | VelocityStats falta 10 campos | VelocityService.java | Operadores não funcionam |
 | 4 | 5 formatos valueSingle diferentes | ComplexRuleEvaluator.java | Inconsistência |
 
