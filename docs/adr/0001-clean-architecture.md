@@ -1,7 +1,7 @@
 # ADR-0001: Adoção de Clean Architecture para o Engine de Regras
 
 ## Status
-**Proposto** — 2026-01-05
+**Em andamento** — 2026-01-31 (RuleEngineUseCase extraído; RuleEngineService atua como adapter)
 
 ## Contexto
 
