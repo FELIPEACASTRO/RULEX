@@ -10,7 +10,7 @@
 > Este documento foi verificado LINHA-A-LINHA contra código fonte com ZERO tolerância.  
 > - **110 operadores** no enum ConditionOperator (93 implementados, **17 pendentes**)
 > - **8 enrichments** existentes (7 enrichments + **TransactionEnrichmentFacade JÁ EXISTE**)
-> - TransactionEnrichmentFacade **NÃO está integrado** no RuleEngineService
+> - TransactionEnrichmentFacade **INTEGRADO via RuleEngineUseCase**
 > - VelocityStats tem **11 campos** (faltam ~10 críticos como distinctPans)
 > - Ver: `RULEX_QUADRUPLE_CHECK_1000X_DEFINITIVO.md` para auditoria completa
 
@@ -35,7 +35,7 @@
 | ✅ **120 operadores JÁ existem** (não 66) | POSITIVO | Auditado |
 | ✅ **7 Enrichments JÁ existem** | POSITIVO | Auditado |
 | 🟡 VelocityStats não tem distinctPans real | MÉDIO | Usar proxy |
-| 🟡 EnrichmentService parcialmente integrado | MÉDIO | Completar orquestração |
+| ✅ EnrichmentService/Facade integrados | POSITIVO | Orquestração ativa |
 | 🟢 4.049 URLs pesquisadas | POSITIVO | Manter atualizado |
 | 🟢 28 frameworks regulatórios mapeados | DIFERENCIAL | Implementar |
 

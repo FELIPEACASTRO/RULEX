@@ -14,7 +14,7 @@
 |---|---------------------|---------------|-----------|
 | 1 | "109 operadores no enum" | **110 operadores** | OUTFLOW_RATE_LAST_N_DAYS (linha 225) não tem vírgula, não foi contado |
 | 2 | "Falta criar EnrichmentOrchestrator" | **TransactionEnrichmentFacade JÁ EXISTE (345 linhas)** | /service/enrichment/TransactionEnrichmentFacade.java |
-| 3 | "EnrichmentService parcialmente integrado" | **TransactionEnrichmentFacade NÃO está integrado no RuleEngineService** | grep em RuleEngineService não encontra TransactionEnrichmentFacade |
+| 3 | "EnrichmentService parcialmente integrado" | **TransactionEnrichmentFacade INTEGRADO via RuleEngineUseCase** | RuleEngineUseCase usa RuleEngineEnrichmentPort |
 
 ---
 
@@ -109,16 +109,13 @@ default -> {
 | Componente | Integrado? | Evidência |
 |------------|------------|-----------|
 | EnrichmentService → RuleEngineService | ✅ Sim | Linha 59: `private final EnrichmentService enrichmentService;` |
-| TransactionEnrichmentFacade → RuleEngineService | ❌ **NÃO** | grep não encontra TransactionEnrichmentFacade em RuleEngineService |
+| TransactionEnrichmentFacade → RuleEngineUseCase | ✅ **SIM** | RuleEngineUseCase usa RuleEngineEnrichmentPort |
 
-**🔴 GAP CRÍTICO:** `TransactionEnrichmentFacade` existe e integra todos os 7 enrichments, mas **NÃO está sendo usado** pelo `RuleEngineService`.
+**✅ ATUALIZAÇÃO (2026-01-31):** `TransactionEnrichmentFacade` está integrado via `RuleEngineUseCase`.
 
-**AÇÃO NECESSÁRIA:**
+**AÇÃO EXECUTADA (2026-01-31):**
 ```java
-// Adicionar ao RuleEngineService:
-private final TransactionEnrichmentFacade enrichmentFacade;
-
-// No método evaluate():
+// Integrado via RuleEngineUseCase (porta RuleEngineEnrichmentPort)
 FullEnrichmentContext enrichedContext = enrichmentFacade.enrichFull(request);
 Map<String, Object> payload = enrichedContext.toFlatMap();
 ```
@@ -196,7 +193,7 @@ Map<String, Object> payload = enrichedContext.toFlatMap();
 | # | Gap | Ação | Story Points |
 |---|-----|------|--------------|
 | 1 | 17 operadores sem case | Adicionar case statements | 15 |
-| 2 | TransactionEnrichmentFacade não integrado | Injetar no RuleEngineService | 3 |
+| 2 | TransactionEnrichmentFacade integrado | ✅ Resolvido (RuleEngineUseCase) | 0 |
 | 3 | VelocityStats falta 10 campos | Expandir classe | 8 |
 
 ### PRIORIDADE 2 (Importantes)
@@ -217,7 +214,7 @@ Map<String, Object> payload = enrichedContext.toFlatMap();
 - [x] Cases contados com filtro de linhas (93)
 - [x] OUTFLOW_RATE_LAST_N_DAYS confirmado (último, sem vírgula)
 - [x] TransactionEnrichmentFacade localizado (345 linhas)
-- [x] Integração RuleEngineService verificada (NÃO integrado)
+- [x] Integração RuleEngineUseCase verificada (INTEGRADO)
 - [x] VelocityStats estrutura verificada (11 campos)
 - [x] Formatos valueSingle mapeados (5 formatos)
 - [x] Todos os 17 operadores pendentes listados
@@ -231,7 +228,8 @@ Map<String, Object> payload = enrichedContext.toFlatMap();
 | RuleCondition.java | /entity/complex/ | 244 |
 | ComplexRuleEvaluator.java | /service/complex/ | 2,222 |
 | VelocityService.java | /service/ | 380 |
-| RuleEngineService.java | /service/ | ~900 |
+| RuleEngineService.java | /service/ | ~120 |
+| RuleEngineUseCase.java | /core/engine/usecase/ | ~1.000 |
 | TransactionEnrichmentFacade.java | /service/enrichment/ | 345 |
 | AnomalyEnrichment.java | /service/enrichment/ | 400 |
 | AuthEnrichment.java | /service/enrichment/ | 322 |
@@ -250,5 +248,5 @@ QUADRUPLE-CHECK 1000X CONCLUÍDO
 Data: 12/01/2026
 Auditor: GitHub Copilot - Claude Opus 4.5
 Status: ✅ ZERO GAPS RESTANTES NA DOCUMENTAÇÃO
-Próximo: Implementar 17 operadores + Integrar TransactionEnrichmentFacade
+Próximo: Implementar 17 operadores pendentes
 ```
