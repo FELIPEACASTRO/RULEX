@@ -203,13 +203,13 @@ flowchart LR
 | 5. Backend Java | C4 — Component Diagram (Backend) | Dev Backend, Arquiteto, QA, Operação | Detalhar os componentes internos do backend. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 5. Backend Java | C4 — Container Diagram | Dev Backend, Arquiteto, QA, Operação | Visão de containers do sistema e suas dependências. | ✅ OK | docker-compose.yml; backend/src/main/resources/application.yml; client/src/App.tsx |
 | 5. Backend Java | Event / Message Flow | Dev Backend, Arquiteto, QA, Operação | Documentar fluxo de eventos e mensagens (filas, tópicos). | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
-| 5. Backend Java | Fluxo — Análise de Transação (/api/transactions/analyze) | Dev Backend, Arquiteto, QA, Operação | Documentar o fluxo completo de análise. | ✅ OK | backend/src/main/java/com/rulex/controller/TransactionController.java; backend/src/main/java/com/rulex/service/RuleEngineService.java; openapi/rulex.yaml |
+| 5. Backend Java | Fluxo — Análise de Transação (/api/transactions/analyze) | Dev Backend, Arquiteto, QA, Operação | Documentar o fluxo completo de análise. | ✅ OK | backend/src/main/java/com/rulex/controller/TransactionController.java; backend/src/main/java/com/rulex/service/RuleEngineService.java; backend/src/main/java/com/rulex/core/engine/usecase/RuleEngineUseCase.java; openapi/rulex.yaml |
 | 5. Backend Java | Fluxo — Tratamento de Exceções | Dev Backend, Arquiteto, QA, Operação | Documentar como exceções são tratadas. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 5. Backend Java | Integrações Externas | Dev Backend, Arquiteto, QA, Operação | Documentar sistemas externos que se integram ao RULEX. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 5. Backend Java | UML — Diagrama de Classes (Entidades Core) | Dev Backend, Arquiteto, QA, Operação | Documentar as principais entidades do domínio. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 5. Backend Java | UML — Diagrama de Estados (Regra) | Dev Backend, Arquiteto, QA, Operação | Documentar os estados possíveis de uma regra. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 5. Backend Java | UML — Diagrama de Pacotes | Dev Backend, Arquiteto, QA, Operação | Documentar a organização de pacotes do backend. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
-| 5. Backend Java | UML — Diagrama de Sequência (Análise de Transação) | Dev Backend, Arquiteto, QA, Operação | Documentar o fluxo de chamadas para análise. | ✅ OK | backend/src/main/java/com/rulex/controller/TransactionController.java; backend/src/main/java/com/rulex/service/RuleEngineService.java |
+| 5. Backend Java | UML — Diagrama de Sequência (Análise de Transação) | Dev Backend, Arquiteto, QA, Operação | Documentar o fluxo de chamadas para análise. | ✅ OK | backend/src/main/java/com/rulex/controller/TransactionController.java; backend/src/main/java/com/rulex/service/RuleEngineService.java; backend/src/main/java/com/rulex/core/engine/usecase/RuleEngineUseCase.java |
 | 6. PostgreSQL | Armazenamento PostgreSQL | Dev Backend, DBA, Arquiteto, Operação | Documentar pages, WAL, files. | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 6. PostgreSQL | Data Lifecycle — Retenção e LGPD | Dev Backend, DBA, Arquiteto, Operação | Documentar ciclo de vida dos dados, retenção e conformida... | 🟥 SEM EVIDÊNCIA | SEM EVIDÊNCIA |
 | 6. PostgreSQL | ERD — Completo | Dev Backend, DBA, Arquiteto, Operação | Diagrama ER de todas as tabelas. | ✅ OK | backend/src/main/resources/db/migration |
@@ -743,7 +743,7 @@ Fluxo interno: carregar regras → avaliar → aplicar score → decidir.
 Motor opaco, difícil de debugar e evoluir.
 
 **Notas**
-Derivado de RuleEngineService.java verificado no backend.
+Derivado de RuleEngineUseCase.java (core) verificado no backend.
 
 
 
@@ -2126,7 +2126,7 @@ flowchart TB
         Filters[Filters: Auth, CORS, RateLimit]
     end
     subgraph Service["⚙️ Service Layer"]
-        RuleEngine[RuleEngineService]
+        RuleEngine[RuleEngineUseCase]
         VelocityFacade[VelocityServiceFacade]
         AuditService[AuditService]
         Neo4jService[Neo4jGraphService]
@@ -2461,7 +2461,7 @@ Sequência real do request /api/transactions/analyze e persistência/auditoria.
 sequenceDiagram
   participant FE as RULEX Web
   participant API as TransactionController
-  participant ENG as RuleEngineService
+    participant ENG as RuleEngineUseCase
   participant DB as PostgreSQL
   participant AUD as AccessLogService
   FE->>API: POST /api/transactions/analyze (transaction)
@@ -2576,7 +2576,7 @@ Representação fiel do fluxo ponta-a-ponta (FE→API→Engine→DB/Audit).
 flowchart TD
   FE[Frontend / Simulator] -->|POST /api/transactions/analyze| API[API (Spring Boot)]
   API --> V[Validate + Normalize payload]
-  V --> ENG[RuleEngineService]
+    V --> ENG[RuleEngineUseCase]
   ENG -->|load rules| DB[(PostgreSQL)]
   ENG --> C[Compute score + matches]
   C --> D{Classificação}
@@ -2684,7 +2684,7 @@ Operadores, condições, encadeamento, prioridade, curto-circuito.
 Motor inflexível, regras mal configuradas.
 
 **Notas**
-Derivado de RuleEngineService.java, ParallelRuleExecutionService.java, RuleCondition.java.
+Derivado de RuleEngineUseCase.java e RuleCondition.java.
 
 
 
@@ -4343,7 +4343,7 @@ Processos: Receber, Avaliar, Decidir, Registrar.
 Processos opacos, auditoria difícil.
 
 **Notas**
-Derivado do fluxo de TransactionController → RuleEngineService.
+Derivado do fluxo de TransactionController → RuleEngineUseCase.
 
 
 
