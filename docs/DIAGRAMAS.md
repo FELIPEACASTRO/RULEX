@@ -4805,7 +4805,7 @@ Estratégias implementadas no código (quando evidenciadas): circuit breaker (re
 Sistema frágil, cascata de falhas.
 
 **Notas**
-Derivado de VelocityServiceFacade.java, ParallelRuleExecutionService.java, RegexValidator.java.
+Derivado de VelocityServiceFacade.java e RegexValidator.java.
 
 
 
@@ -5094,7 +5094,7 @@ Latência por endpoint, por tier de processamento.
 SLOs não definidos, performance degradada sem alerta.
 
 **Notas**
-Derivado de ParallelRuleExecutionService.java (tiers) e prometheus-alerts.yml (alertas de latência).
+Derivado de prometheus-alerts.yml (alertas de latência).
 
 
 
