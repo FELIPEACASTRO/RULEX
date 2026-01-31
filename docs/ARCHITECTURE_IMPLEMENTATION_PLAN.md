@@ -802,14 +802,14 @@ public class GraphConfig {
 |------|---------|------|-----|--------|
 | Injetar TransactionEnrichmentFacade | RuleEngineUseCase.java | Modificação | 1 | ✅ |
 | Chamar enrichFull() | RuleEngineUseCase.java | Modificação | 2 | ✅ |
-| Case IN_LIST | ComplexRuleEvaluator.java | Adição | 0.5 | ❌ |
-| Case CONTAINS_SUSPICIOUS_KEYWORDS | ComplexRuleEvaluator.java | Adição | 1 | ❌ |
-| Case COUNT_LAST_N_DAYS | ComplexRuleEvaluator.java | Adição | 1 | ❌ |
-| Case DAYS_SINCE_LAST_ACTIVITY | ComplexRuleEvaluator.java | Adição | 1 | ❌ |
-| Case DEVICE_CHANGED_IN_SESSION | ComplexRuleEvaluator.java | Adição | 0.5 | ❌ |
-| Case IS_CRYPTO_RANSOM_AMOUNT | ComplexRuleEvaluator.java | Adição | 1 | ❌ |
-| Case OUTFLOW_RATE_LAST_N_DAYS | ComplexRuleEvaluator.java | Adição | 1 | ❌ |
-| Demais 10 cases | ComplexRuleEvaluator.java | Adição | 8 | ❌ |
+| Case IN_LIST | ComplexRuleEvaluator.java | Adição | 0.5 | ✅ |
+| Case CONTAINS_SUSPICIOUS_KEYWORDS | ComplexRuleEvaluator.java | Adição | 1 | ✅ |
+| Case COUNT_LAST_N_DAYS | ComplexRuleEvaluator.java | Adição | 1 | ✅ |
+| Case DAYS_SINCE_LAST_ACTIVITY | ComplexRuleEvaluator.java | Adição | 1 | ✅ |
+| Case DEVICE_CHANGED_IN_SESSION | ComplexRuleEvaluator.java | Adição | 0.5 | ✅ |
+| Case IS_CRYPTO_RANSOM_AMOUNT | ComplexRuleEvaluator.java | Adição | 1 | ✅ |
+| Case OUTFLOW_RATE_LAST_N_DAYS | ComplexRuleEvaluator.java | Adição | 1 | ✅ |
+| Demais 10 cases | ComplexRuleEvaluator.java | Adição | 8 | ✅ |
 | Testes unitários (17 operadores) | ComplexRuleEvaluatorTest.java | Novo | 8 | ❌ |
 
 **Total Sprint 1**: 25 SP
