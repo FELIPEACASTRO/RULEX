@@ -200,15 +200,11 @@ Os Enrichments (AuthEnrichment, VelocityEnrichment, DeviceEnrichment) existem e 
 
 **REALIDADE NO CÓDIGO (RuleEngineUseCase.java + RuleEngineService adapter):**
 ```java
-public class RuleEngineService {
-  // LINHA 59:
-  private final EnrichmentService enrichmentService;
+public class RuleEngineUseCase {
+  private final RuleEngineEnrichmentPort transactionEnrichmentFacade;
 
-  // LINHAS 897-899:
-  /** Verifica se o MCC é de alto risco usando EnrichmentService com fallback. */
-  private boolean isHighRiskMcc(String mcc) {
-    return enrichmentService.isHighRiskMcc(mcc);
-  }
+  // Uso do facade durante a análise
+  // FullEnrichmentContext enriched = transactionEnrichmentFacade.enrichFull(request);
 }
 ```
 
@@ -418,7 +414,7 @@ JÁ EXISTEM: 120 operadores
 | ID | Task Original | Task Corrigida | SP |
 |----|---------------|----------------|-----|
 | 3.1 | Criar EnrichmentOrchestrator | **MANTÉM** | 8 |
-| 3.2 | Integrar no RuleEngineService | **MANTÉM** | 5 |
+| 3.2 | Integrar no RuleEngineUseCase | **CONCLUÍDO** | 0 |
 | 3.3 | ~~Criar GeoEnrichment~~ | Verificar integração GeoEnrichment | 2 |
 | 3.4 | ~~Criar CustomerEnrichment~~ | Verificar integração CustomerEnrichment | 2 |
 | 3.5 | Merge enrichments | **MANTÉM** | 5 |

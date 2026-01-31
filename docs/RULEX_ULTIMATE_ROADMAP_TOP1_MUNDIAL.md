@@ -131,21 +131,19 @@ VelocityStats {
 
 #### Sprint 3 (Semanas 5-6): Integração Completa Enrichments
 
-> 🔴🔴🔴🔴 **QUADRUPLE-CHECK 1000X**: TransactionEnrichmentFacade **JÁ EXISTE** (345 linhas)!
-> Localização: /service/enrichment/TransactionEnrichmentFacade.java
-> Ele já integra TODOS os 7 enrichments, mas **NÃO está sendo usado** pelo RuleEngineService.
+> ✅ **ATUALIZAÇÃO (2026-01-31)**: TransactionEnrichmentFacade está integrado via RuleEngineUseCase.
 
 **SITUAÇÃO ATUAL (verificada 1000X):**
 - **8 arquivos de enrichment** existem (7 enrichments + TransactionEnrichmentFacade)
 - TransactionEnrichmentFacade já tem `enrichFull()` e `toFlatMap()`
-- RuleEngineService usa apenas `EnrichmentService` (linha 59), **NÃO usa o Facade**
+- Integração ativa via RuleEngineUseCase (RuleEngineEnrichmentPort)
 
 ```java
-// ARQUITETURA ATUAL (incompleta)
-RuleEngineService → EnrichmentService (apenas BIN/MCC)
-                  → ComplexRuleEvaluator → payload (TransactionRequest)
+// ARQUITETURA ATUAL (completa)
+RuleEngineService (adapter) → RuleEngineUseCase → TransactionEnrichmentFacade.enrichFull()
+                           → ComplexRuleEvaluator → payload enriquecido
 
-// TransactionEnrichmentFacade JÁ EXISTE mas NÃO ESTÁ CONECTADO!
+// TransactionEnrichmentFacade integrado via use case
 TransactionEnrichmentFacade (345 linhas)
      ├── AuthEnrichment.enrich() (322 linhas)
      ├── VelocityEnrichment.enrich() (307 linhas)
@@ -155,20 +153,17 @@ TransactionEnrichmentFacade (345 linhas)
      ├── CardEnrichment.enrich() (373 linhas)
      └── AnomalyEnrichment.enrich() (400 linhas)
 
-// ARQUITETURA PROPOSTA (simples - apenas CONECTAR!)
-RuleEngineService → TransactionEnrichmentFacade.enrichFull() → ComplexRuleEvaluator
+// ARQUITETURA PROPOSTA
+RuleEngineService → RuleEngineUseCase → TransactionEnrichmentFacade.enrichFull() → ComplexRuleEvaluator
 ```
 
 **Tasks Sprint 3 (REDUZIDO - apenas integrar!):**
 | ID | Task | Story Points |
 |----|------|--------------|
-| 3.1 | ~~Criar EnrichmentOrchestrator.java~~ **JÁ EXISTE!** | ~~8~~ **0** |
-| 3.2 | Injetar TransactionEnrichmentFacade no RuleEngineService | **3** |
-| 3.3 | Chamar enrichFull() antes de evaluate() | **2** |
-| 3.4 | Passar toFlatMap() para EvaluationContext.payload | **2** |
-| 3.5 | Testes de integração | 8 |
+| 3.1 | Orquestração de enrichments (RuleEngineUseCase) | **✅ Concluído** |
+| 3.2 | Testes de integração | 8 |
 
-**Total:** 15 story points (economia de 15 SP - TransactionEnrichmentFacade já existe!)
+**Total:** 8 story points
 
 #### Sprint 4 (Semanas 7-8): Implementar 17 Operadores Pendentes
 
@@ -431,7 +426,7 @@ open_source_strategy:
   
   open_source_components:
     - ComplexRuleEvaluator (100+ operators)
-    - RuleEngineService
+    - RuleEngineUseCase
     - VelocityService
     - GeoService
     - Basic UI

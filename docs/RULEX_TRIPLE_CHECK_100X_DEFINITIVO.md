@@ -98,13 +98,8 @@ default -> {
 
 **EVIDÊNCIA - EnrichmentService/Facade integrados via use case:**
 ```java
-// RuleEngineService.java linha 59:
-private final EnrichmentService enrichmentService;
-
-// Linha 897-899:
-private boolean isHighRiskMcc(String mcc) {
-    return enrichmentService.isHighRiskMcc(mcc);
-}
+// RuleEngineUseCase.java
+private final RuleEngineEnrichmentPort transactionEnrichmentFacade;
 ```
 
 **VEREDICTO:** EnrichmentService/Facade integrados via `RuleEngineUseCase`.

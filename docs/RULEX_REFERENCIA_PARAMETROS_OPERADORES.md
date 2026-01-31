@@ -5,7 +5,7 @@
 > na modelagem de regras e **como os parâmetros de saída são gerados**.
 >
 > Fonte: `openapi/rulex.yaml` + implementação Java
-> (motor padrão `RuleEngineService`, motor avançado `AdvancedRuleEngineService`
+> (motor padrão `RuleEngineUseCase` via `RuleEngineService` adapter, motor avançado `AdvancedRuleEngineService`
 > e AST V3.1 em `com.rulex.v31.ast`).
 
 ---
@@ -472,7 +472,7 @@ O RULEX tem **dois formatos principais** de avaliação de condições,
 dependendo do “motor” usado:
 
 1) **Motor padrão** (regras de `/api/rules`, avaliadas em
-  `RuleEngineService.evaluateCondition`) — simples e direto.
+  `RuleEngineConditionHelper` via `RuleEngineUseCase`) — simples e direto.
 2) **AST V3.1** (motor determinístico em `com.rulex.v31.ast`) —
   mais estruturado, com nós `FIELD/FUNC/CONST` e validação de segurança.
 
@@ -509,7 +509,7 @@ Ex.: `COALESCE(merchantCountryCode, '076')`
 
 ### 5.2) Motor padrão — operadores realmente implementados na avaliação genérica
 Apesar do OpenAPI listar um enum amplo, o método
-`RuleEngineService.evaluateCondition()` implementa (no formato atual)
+`RuleEngineConditionHelper` implementa (no formato atual)
 principalmente:
 
 - Unários: `IS_NULL`, `IS_NOT_NULL`, `IS_TRUE`, `IS_FALSE`
@@ -602,7 +602,7 @@ Cada item (`TriggeredRule`) tem:
 ### 6.2) Como o motor padrão gera `riskScore`, `classification`, `reason`
 
 #### 6.2.1) Geração do `riskScore`
-No motor padrão (`RuleEngineService.evaluateRules`):
+No motor padrão (`RuleEngineUseCase.evaluateRules`):
 - Para cada regra habilitada que **disparar**, soma
   `contribution = clamp(weight)` ao total.
 - Ao final, faz `riskScore = min(totalScore, 100)`.

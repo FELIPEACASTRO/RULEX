@@ -120,7 +120,7 @@ TARGET_ARCHITECTURE:
 │                               │                                      │
 │  ┌─────────────────────────────────────────────────────────────┐   │
 │  │                    SERVICE LAYER                             │   │
-│  │  [RuleEngineService]  [ComplexRuleEvaluator]  [GeoService]   │   │
+│  │  [RuleEngineUseCase]  [ComplexRuleEvaluator]  [GeoService]   │   │
 │  │  [VelocityService]  [RiskScoreService]  [AuditService]       │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                               │                                      │
@@ -302,7 +302,7 @@ SERVICES_V3:
   # PRESERVED SERVICES
   core_services:
     - ComplexRuleEvaluator: "2,500+ lines (expanded from 2,222)"
-    - RuleEngineService: "Rule orchestration"
+    - RuleEngineUseCase: "Rule orchestration"
     - GeoService: "Geolocation operations"
     - VelocityService: "Redis velocity counters"
     - RiskScoreService: "Score calculation"

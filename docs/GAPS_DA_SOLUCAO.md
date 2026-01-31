@@ -32,7 +32,7 @@ Este documento lista **gaps reais** (com evidência) e **pontos a validar** ante
 - Integrar `RegexValidator.safeCompile` e `matchWithTimeout` no caminho do operador.
 
 **EVIDÊNCIA**
-- Engine regex atual: [backend/src/main/java/com/rulex/service/RuleEngineService.java](../backend/src/main/java/com/rulex/service/RuleEngineService.java#L1740-L1760)
+- Engine regex atual: [backend/src/main/java/com/rulex/service/engine/RuleEngineConditionHelper.java](../backend/src/main/java/com/rulex/service/engine/RuleEngineConditionHelper.java#L98-L250)
 - RegexValidator: [backend/src/main/java/com/rulex/util/RegexValidator.java](../backend/src/main/java/com/rulex/util/RegexValidator.java#L1-L120)
 
 ## GAP-003 — Shadow mode duplicado em schemas/entidades (tabela `rules` vs `rule_configurations`)
@@ -50,7 +50,7 @@ Este documento lista **gaps reais** (com evidência) e **pontos a validar** ante
 
 **EVIDÊNCIA**
 - Migration V20: [backend/src/main/resources/db/migration/V20__shadow_mode_and_device_fingerprinting.sql](../backend/src/main/resources/db/migration/V20__shadow_mode_and_device_fingerprinting.sql#L1-L20)
-- Engine usa shadow em `rule_configurations`: [backend/src/main/java/com/rulex/service/RuleEngineService.java](../backend/src/main/java/com/rulex/service/RuleEngineService.java#L520-L610)
+- Engine usa shadow em `rule_configurations`: [backend/src/main/java/com/rulex/core/engine/usecase/RuleEngineUseCase.java](../backend/src/main/java/com/rulex/core/engine/usecase/RuleEngineUseCase.java#L534-L635)
 
 ## GAP-004 — Catalog coverage limitada ao TransactionRequest (CRTRAN25)
 

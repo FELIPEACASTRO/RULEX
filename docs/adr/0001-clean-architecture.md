@@ -9,13 +9,13 @@ O RULEX é um motor de regras duras (hard rules) para detecção de fraude em tr
 
 ### Problemas Evidenciados
 
-1. **Classe "Deus" — RuleEngineService**
-   - Arquivo: `backend/src/main/java/com/rulex/service/RuleEngineService.java`
-   - Linhas: 2205
+1. **Classe "Deus" — RuleEngineUseCase**
+    - Arquivo: `backend/src/main/java/com/rulex/core/engine/usecase/RuleEngineUseCase.java`
+    - Linhas: ~1.000
    - Responsabilidades misturadas: avaliação, persistência, métricas, logging, enriquecimento
 
 2. **Duplicação de Lógica de Operadores**
-   - `RuleEngineService.evaluateCondition()` — linhas 1677-1850
+    - `RuleEngineConditionHelper.evaluateCondition()` — lógica base
    - `AstEvaluator.evalCondition()` — linhas 60-110
    - Frontend: `client/src/components/RuleFormDialog/schema.ts` — linhas 14-40
 
@@ -168,7 +168,7 @@ public enum ComparisonOperator implements Operator {
 
 ### Fase 1: Operadores (P0)
 1. Criar `domain/operator/` com Strategy pattern
-2. Migrar operadores de `RuleEngineService.evaluateCondition()`
+2. Migrar operadores de `RuleEngineConditionHelper.evaluateCondition()`
 3. Criar testes unitários para cada operador
 4. Substituir switch/case por lookup em Map
 
@@ -179,11 +179,11 @@ public enum ComparisonOperator implements Operator {
 
 ### Fase 3: Use Cases (P1)
 1. Criar ports em `application/port/`
-2. Migrar `RuleEngineService.evaluate()` para `EvaluateTransactionService`
+2. Migrar `RuleEngineUseCase.evaluate()` para `EvaluateTransactionService`
 3. Criar adapters em `infrastructure/`
 
 ### Fase 4: Consolidação (P2)
-1. Remover código legado de `RuleEngineService`
+1. Remover código legado de `RuleEngineUseCase`
 2. Unificar com estrutura `homolog/`
 3. Atualizar documentação
 

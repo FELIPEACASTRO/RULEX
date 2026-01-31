@@ -108,7 +108,7 @@ default -> {
 
 | Componente | Integrado? | Evidência |
 |------------|------------|-----------|
-| EnrichmentService → RuleEngineService | ✅ Sim | Linha 59: `private final EnrichmentService enrichmentService;` |
+| RuleEngineEnrichmentPort → RuleEngineUseCase | ✅ Sim | Use case injeta facade via port |
 | TransactionEnrichmentFacade → RuleEngineUseCase | ✅ **SIM** | RuleEngineUseCase usa RuleEngineEnrichmentPort |
 
 **✅ ATUALIZAÇÃO (2026-01-31):** `TransactionEnrichmentFacade` está integrado via `RuleEngineUseCase`.

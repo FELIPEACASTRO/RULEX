@@ -197,22 +197,15 @@ backend/src/main/java/com/rulex/
 
 #### 3.1.1 Integrar TransactionEnrichmentFacade
 
-**Arquivo**: `RuleEngineService.java`
+**Arquivo**: `RuleEngineUseCase.java`
 
 **Mudança**:
 ```java
-// ANTES (linha 59):
-private final EnrichmentService enrichmentService;
+// Integração via port (já aplicada)
+private final RuleEngineEnrichmentPort transactionEnrichmentFacade;
 
-// DEPOIS:
-private final EnrichmentService enrichmentService;
-private final TransactionEnrichmentFacade transactionEnrichmentFacade; // ADICIONAR
-
-// No construtor (gerado pelo @RequiredArgsConstructor do Lombok)
-// Lombok irá adicionar automaticamente
-
-// No método analyzeTransaction(), ANTES de chamar ComplexRuleEvaluator:
-public TransactionResponse analyzeTransaction(TransactionRequest request, 
+// No fluxo de análise:
+// FullEnrichmentContext enriched = transactionEnrichmentFacade.enrichFull(request);
                                                byte[] rawPayload, 
                                                String contentType) {
     // ... código existente ...
